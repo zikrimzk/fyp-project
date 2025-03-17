@@ -42,36 +42,38 @@
 
 
                  <!-- Start::slide__category -->
-                 <li class="slide__category"><span class="category-name">General</span></li>
+                 <li class="slide__category"><span class="category-name">System Setting</span></li>
                  <!-- End::slide__category -->
 
-            
+
                  <!-- Start::slide -->
                  <li class="slide has-sub">
                      <a href="javascript:void(0);" class="side-menu__item">
-                         <i class="bx bx-table side-menu__icon"></i>
-                         <span class="side-menu__label">Tables<span
-                                 class="badge bg-success-transparent ms-2">3</span></span>
+                         <i class="bx bx-cog side-menu__icon"></i>
+                         <span class="side-menu__label">Setting</span>
                          <i class="fe fe-chevron-right side-menu__angle"></i>
                      </a>
                      <ul class="slide-menu child1">
                          <li class="slide side-menu__label1">
-                             <a href="javascript:void(0)">Tables</a>
+                             <a href="javascript:void(0)">Setting</a>
                          </li>
                          <li class="slide">
-                             <a href="tables.html" class="side-menu__item">Tables</a>
+                             <a href="tables.html" class="side-menu__item">Faculty Setting</a>
                          </li>
                          <li class="slide">
-                             <a href="grid-tables.html" class="side-menu__item">Grid JS Tables</a>
+                             <a href="grid-tables.html" class="side-menu__item">Department Setting</a>
                          </li>
                          <li class="slide">
-                             <a href="data-tables.html" class="side-menu__item">Data Tables</a>
+                             <a href="data-tables.html" class="side-menu__item">Semester Setting</a>
                          </li>
+                         <li class="slide">
+                            <a href="data-tables.html" class="side-menu__item">Programme Setting</a>
+                        </li>
                      </ul>
                  </li>
                  <!-- End::slide -->
 
-                
+
              </ul>
              <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"
                      width="24" height="24" viewBox="0 0 24 24">
