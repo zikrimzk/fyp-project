@@ -85,7 +85,7 @@ class SettingController extends Controller
                 'facs' => Faculty::all()
             ]);
         } catch (Exception $e) {
-            return abort(404);
+            return abort(500);
         }
     }
 
@@ -241,7 +241,7 @@ class SettingController extends Controller
                 'facs' => Faculty::all()
             ]);
         } catch (Exception $e) {
-            return abort(404);
+            return abort(500);
         }
     }
 
@@ -398,7 +398,7 @@ class SettingController extends Controller
                 'facs' => Faculty::all()
             ]);
         } catch (Exception $e) {
-            return abort(404);
+            return abort(500);
         }
     }
 
@@ -580,7 +580,7 @@ class SettingController extends Controller
                 'sems' => Semester::all()
             ]);
         } catch (Exception $e) {
-            return abort(404);
+            return abort(500);
         }
     }
 

@@ -50,14 +50,14 @@
                                 <use xlink:href="#custom-document"></use>
                             </svg>
                         </span>
-                        <span class="pc-mtext">SOP ##</span>
+                        <span class="pc-mtext">SOP</span>
                         <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                     </a>
                     <ul class="pc-submenu">
                         <li class="pc-item"><a class="pc-link" href="">Procedure Setting</a>
                         </li>
                         <li class="pc-item">
-                            <a class="pc-link" href="">Activity Setting</a>
+                            <a class="pc-link" href="{{ route('activity-setting') }}">Activity Setting</a>
                         </li>
                         <li class="pc-item">
                             <a class="pc-link" href="">Document Setting</a>

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SOPController;
 use App\Http\Controllers\SettingController;
 
 /*
@@ -22,6 +23,16 @@ Route::get('/', function () {
 
 
 Route::prefix('staff')->group(function () {
+
+    //Standard Operation Procedure (SOP)
+
+     /* Activity Setting */
+     Route::get('/activity-setting', [SOPController::class, 'activitySetting'])->name('activity-setting');
+     Route::post('/add-activity', [SOPController::class, 'addActivity'])->name('add-activity-post');
+     Route::post('/update-activity/{id}', [SOPController::class, 'updateActivity'])->name('update-activity-post');
+     Route::get('/delete-activity-{id}-{opt}', [SOPController::class, 'deleteActivity'])->name('delete-activity-get');
+
+    // System Setting 
 
     /* Faculty Setting */
     Route::get('/faculty-setting', [SettingController::class, 'facultySetting'])->name('faculty-setting');
