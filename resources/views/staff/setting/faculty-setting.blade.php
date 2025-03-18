@@ -225,9 +225,11 @@
                                                     <select name="fac_status_up" id="fac_status"
                                                         class="form-select  @error('fac_status_up') is-invalid @enderror"
                                                         required>
-                                                        <option value="" disabled>- Select Status -</option>
+                                                        <option value=""
+                                                            @if ($upd->fac_status == 0) selected @else disabled @endif>
+                                                            - Select Status -</option>
                                                         <option value="1"
-                                                            @if ($upd->fac_status == 1) selected @endif)>Active
+                                                            @if ($upd->fac_status == 1) selected @endif>Active
                                                         </option>
                                                         <option value="2"
                                                             @if ($upd->fac_status == 2) selected @endif>Inactive
@@ -307,7 +309,7 @@
                                     <div class="row">
                                         <div class="col-sm-12 mb-4">
                                             <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-warning text-warning" style="font-size: 100px"></i>
+                                                <i class="ti ti-alert-circle text-warning" style="font-size: 100px"></i>
                                             </div>
 
                                         </div>
@@ -318,8 +320,11 @@
                                         </div>
                                         <div class="col-sm-12 mb-3">
                                             <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">Oops! You can't delete this data.
-                                                    However, you can disable it. Are you want to disable this data ?</p>
+                                                <p class="fw-normal f-18 text-center">
+                                                    Oops! You can't delete this data.
+                                                    However, you can disable it instead. Would you like to proceed with
+                                                    disabling this data?
+                                                </p>
                                             </div>
                                         </div>
                                         <div class="col-sm-12">
@@ -327,7 +332,7 @@
                                                 <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                     data-bs-dismiss="modal">Cancel</button>
                                                 <a href="{{ route('delete-faculty-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
-                                                    class="btn btn-danger w-100">Disable</a>
+                                                    class="btn btn-warning w-100">Disable</a>
                                             </div>
                                         </div>
                                     </div>

@@ -33,7 +33,7 @@ Route::prefix('staff')->group(function () {
     Route::get('/department-setting', [SettingController::class, 'departmentSetting'])->name('department-setting');
     Route::post('/add-department', [SettingController::class, 'addDepartment'])->name('add-department-post');
     Route::post('/update-department/{id}', [SettingController::class, 'updateDepartment'])->name('update-department-post');
-    Route::get('/delete-department-{id}-{opt}', [SettingController::class, 'deleteDepartment'])->name('delete-department-get');
+    Route::get('/delete-department-{id}-{opt}', [SettingController::class, 'deleteDepartment'])->name('delete-department-get'); 
 
     /* Programme Setting */
     Route::get('/programme-setting', [SettingController::class, 'programmeSetting'])->name('programme-setting');
@@ -46,4 +46,6 @@ Route::prefix('staff')->group(function () {
     Route::post('/add-semester', [SettingController::class, 'addSemester'])->name('add-semester-post');
     Route::post('/update-semester/{id}', [SettingController::class, 'updateSemester'])->name('update-semester-post');
     Route::get('/delete-semester-{id}-{opt}', [SettingController::class, 'deleteSemester'])->name('delete-semester-get');
+    Route::post('/change-current-semester', [SettingController::class, 'changeCurrentSemester'])->name('change-semester-post');
+
 });

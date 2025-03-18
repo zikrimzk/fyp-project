@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('sem_label');
             $table->date('sem_startdate');
             $table->date('sem_enddate');
-            $table->integer('sem_status')->default(0);
+            $table->integer('sem_status')->default(2);
             $table->timestamps();
         });
     }
