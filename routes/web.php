@@ -15,16 +15,35 @@ use App\Http\Controllers\SettingController;
 */
 
 Route::get('/', function () {
-    return view('staff.index',[
+    return view('staff.index', [
         'title' => 'Dashboard'
     ]);
 });
 
-/* Faculty Setting */
-Route::get('/test/faculty-setting',[SettingController::class,'facultySetting'])->name('faculty-setting');
-Route::post('/test/add-faculty',[SettingController::class,'addFaculty'])->name('add-faculty-post');
-Route::post('/test/update-faculty/{id}',[SettingController::class,'updateFaculty'])->name('update-faculty-post');
-Route::get('/test/delete-faculty/{id}/{opt}',[SettingController::class,'facultySetting'])->name('delete-faculty-get');
 
-/* Department Setting */
-Route::get('/test/department-setting',[SettingController::class,'departmentSetting'])->name('department-setting');
+Route::prefix('staff')->group(function () {
+
+    /* Faculty Setting */
+    Route::get('/faculty-setting', [SettingController::class, 'facultySetting'])->name('faculty-setting');
+    Route::post('/add-faculty', [SettingController::class, 'addFaculty'])->name('add-faculty-post');
+    Route::post('/update-faculty/{id}', [SettingController::class, 'updateFaculty'])->name('update-faculty-post');
+    Route::get('/delete-faculty-{id}-{opt}', [SettingController::class, 'deleteFaculty'])->name('delete-faculty-get');
+
+    /* Department Setting */
+    Route::get('/department-setting', [SettingController::class, 'departmentSetting'])->name('department-setting');
+    Route::post('/add-department', [SettingController::class, 'addDepartment'])->name('add-department-post');
+    Route::post('/update-department/{id}', [SettingController::class, 'updateDepartment'])->name('update-department-post');
+    Route::get('/delete-department-{id}-{opt}', [SettingController::class, 'deleteDepartment'])->name('delete-department-get');
+
+    /* Programme Setting */
+    Route::get('/programme-setting', [SettingController::class, 'programmeSetting'])->name('programme-setting');
+    Route::post('/add-programme', [SettingController::class, 'addProgramme'])->name('add-programme-post');
+    Route::post('/update-programme/{id}', [SettingController::class, 'updateProgramme'])->name('update-programme-post');
+    Route::get('/delete-programme-{id}-{opt}', [SettingController::class, 'deleteProgramme'])->name('delete-programme-get');
+
+    /* Semester Setting */
+    Route::get('/semester-setting', [SettingController::class, 'semesterSetting'])->name('semester-setting');
+    Route::post('/add-semester', [SettingController::class, 'addSemester'])->name('add-semester-post');
+    Route::post('/update-semester/{id}', [SettingController::class, 'updateSemester'])->name('update-semester-post');
+    Route::get('/delete-semester-{id}-{opt}', [SettingController::class, 'deleteSemester'])->name('delete-semester-get');
+});

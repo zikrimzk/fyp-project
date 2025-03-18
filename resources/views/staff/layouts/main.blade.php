@@ -29,6 +29,32 @@
     <!-- [Template CSS Files] -->
     <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
     <link rel="stylesheet" href="../assets/css/style-preset.css" />
+     <!-- [DataTables Style Links] -->
+     <link rel="stylesheet" href="../assets/css/plugins/dataTables.bootstrap5.min.css" />
+     <link rel="stylesheet" href="../assets/css/plugins/responsive.bootstrap5.min.css" />
+     <link href="../assets/css/plugins/animate.min.css" rel="stylesheet" type="text/css" />
+    <!-- [DataTables Scripts] -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="../assets/js/plugins/dataTables.min.js"></script>
+    <script src="../assets/js/plugins/dataTables.bootstrap5.min.js"></script>
+    <script src="../assets/js/plugins/dataTables.responsive.min.js"></script>
+    <script src="../assets/js/plugins/responsive.bootstrap5.min.js"></script>
+    <!-- [Flatpickr Style Links] -->
+    <link rel="stylesheet" href="../assets/css/plugins/flatpickr.min.css" />
+    <!-- [Flatpickr Scripts] -->
+    <script src="../assets/js/plugins/flatpickr.min.js"></script>
+
+    <style>
+        .data-table td {
+            white-space: normal !important;
+        }
+
+        .disabled-a {
+            pointer-events: none;
+            opacity: 0.6;
+            text-decoration: none;
+        }
+    </style>
 
 </head>
 <!-- [Head] end -->
@@ -41,7 +67,7 @@
         <div class="bar"></div>
     </div>
     <!-- [ Pre-loader ] End -->
-   
+
     <!-- [ Sidebar Menu ] start -->
     @include('staff.layouts.sidebar')
     <!-- [ Sidebar Menu ] end -->
