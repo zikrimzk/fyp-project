@@ -19,4 +19,20 @@ class SettingController extends Controller
         }
 
     }
+
+    public function departmentSetting()
+    {
+        try{
+            return view('staff.setting.department-setting',[
+                'title' => 'Department Setting'
+            ]);
+        }
+        catch(Exception $e){
+            return abort(404);
+        }
+
+    }
+
+    
+
 }

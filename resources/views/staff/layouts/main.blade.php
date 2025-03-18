@@ -1,592 +1,323 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="ltr" data-nav-layout="vertical" data-theme-mode="light" data-header-styles="light"
-    data-menu-styles="dark" data-toggled="close">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<!-- [Head] start -->
 
 <head>
-
-    <!-- Meta Data -->
-    <meta charset="UTF-8">
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>e-PostGrad | {{ $title }}</title>
-    <meta name="Description" content="Bootstrap Responsive Admin Web Dashboard HTML5 Template">
-    <meta name="Author" content="Spruko Technologies Private Limited">
-    <meta name="keywords"
-        content="admin,admin dashboard,admin panel,admin template,bootstrap,clean,dashboard,flat,jquery,modern,responsive,premium admin templates,responsive admin,ui,ui kit.">
+    <!-- [Meta] -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="-" />
+    <meta name="keywords" content="-" />
+    <meta name="author" content="ZikriMzk" />
 
-    <!-- Favicon -->
-    <link rel="icon" href="../assets/images/brand-logos/favicon.ico" type="image/x-icon">
-
-    <!-- Choices JS -->
-    <script src="../assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
-
-    <!-- Main Theme Js -->
-    <script src="../assets/js/main.js"></script>
-
-    <!-- Bootstrap Css -->
-    <link id="style" href="../assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Style Css -->
-    <link href="../assets/css/styles.min.css" rel="stylesheet">
-
-    <!-- Icons Css -->
-    <link href="../assets/css/icons.css" rel="stylesheet">
-
-    <!-- Node Waves Css -->
-    <link href="../assets/libs/node-waves/waves.min.css" rel="stylesheet">
-
-    <!-- Simplebar Css -->
-    <link href="../assets/libs/simplebar/simplebar.min.css" rel="stylesheet">
-
-    <!-- Color Picker Css -->
-    <link rel="stylesheet" href="../assets/libs/flatpickr/flatpickr.min.css">
-    <link rel="stylesheet" href="../assets/libs/@simonwep/pickr/themes/nano.min.css">
-
-    <!-- Choices Css -->
-    <link rel="stylesheet" href="../assets/libs/choices.js/public/assets/styles/choices.min.css">
-
+    <!-- [Favicon] icon -->
+    <link rel="icon" href="../assets/images/favicon.svg" type="image/x-icon" />
+    <!-- [Font] Family -->
+    <link rel="stylesheet" href="../assets/fonts/inter/inter.css" id="main-font-link" />
+    <!-- [phosphor Icons] https://phosphoricons.com/ -->
+    <link rel="stylesheet" href="../assets/fonts/phosphor/duotone/style.css" />
+    <!-- [Tabler Icons] https://tablericons.com -->
+    <link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css" />
+    <!-- [Feather Icons] https://feathericons.com -->
+    <link rel="stylesheet" href="../assets/fonts/feather.css" />
+    <!-- [Font Awesome Icons] https://fontawesome.com/icons -->
+    <link rel="stylesheet" href="../assets/fonts/fontawesome.css" />
+    <!-- [Material Icons] https://fonts.google.com/icons -->
+    <link rel="stylesheet" href="../assets/fonts/material.css" />
+    <!-- [Template CSS Files] -->
+    <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
+    <link rel="stylesheet" href="../assets/css/style-preset.css" />
 
 </head>
+<!-- [Head] end -->
+<!-- [Body] Start -->
 
-<body>
+<body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"
+    data-pc-theme_contrast="" data-pc-theme="light">
+    <!-- [ Pre-loader ] start -->
+    <div class="page-loader">
+        <div class="bar"></div>
+    </div>
+    <!-- [ Pre-loader ] End -->
+   
+    <!-- [ Sidebar Menu ] start -->
+    @include('staff.layouts.sidebar')
+    <!-- [ Sidebar Menu ] end -->
 
-    <!-- Start Switcher -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="switcher-canvas" aria-labelledby="offcanvasRightLabel">
-        <div class="offcanvas-header border-bottom">
-            <h5 class="offcanvas-title text-default" id="offcanvasRightLabel">Switcher</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <!-- [ Header Topbar ] start -->
+    @include('staff.layouts.header')
+    <!-- [ Header ] end -->
+
+    <!-- [ Main Content ] start -->
+    @yield('content')
+    <!-- [ Main Content ] end -->
+
+    <!-- [ Footer ] start -->
+    @include('staff.layouts.footer')
+    <!-- [ Footer ] end -->
+
+    <!-- Required Js -->
+    <script src="../assets/js/plugins/popper.min.js"></script>
+    <script src="../assets/js/plugins/simplebar.min.js"></script>
+    <script src="../assets/js/plugins/bootstrap.min.js"></script>
+    <script src="../assets/js/fonts/custom-font.js"></script>
+    <script src="../assets/js/pcoded.js"></script>
+    <script src="../assets/js/plugins/feather.min.js"></script>
+
+    <script>
+        layout_change('light');
+    </script>
+
+    <script>
+        change_box_container('false');
+    </script>
+
+    <script>
+        layout_caption_change('true');
+    </script>
+
+    <script>
+        layout_rtl_change('false');
+    </script>
+
+    <script>
+        preset_change('preset-1');
+    </script>
+
+    <script>
+        main_layout_change('vertical');
+    </script>
+
+    <div class="pct-c-btn">
+        <a href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvas_pc_layout">
+            <i class="ph-duotone ph-gear-six"></i>
+        </a>
+    </div>
+
+    <div class="offcanvas border-0 pct-offcanvas offcanvas-end" tabindex="-1" id="offcanvas_pc_layout">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Settings</h5>
+            <button type="button" class="btn btn-icon btn-link-danger ms-auto" data-bs-dismiss="offcanvas"
+                aria-label="Close"><i class="ti ti-x"></i></button>
         </div>
-        <div class="offcanvas-body">
-            <nav class="border-bottom border-block-end-dashed">
-                <div class="nav nav-tabs nav-justified" id="switcher-main-tab" role="tablist">
-                    <button class="nav-link active" id="switcher-home-tab" data-bs-toggle="tab"
-                        data-bs-target="#switcher-home" type="button" role="tab" aria-controls="switcher-home"
-                        aria-selected="true">Theme Styles</button>
-                    <button class="nav-link" id="switcher-profile-tab" data-bs-toggle="tab"
-                        data-bs-target="#switcher-profile" type="button" role="tab"
-                        aria-controls="switcher-profile" aria-selected="false">Theme Colors</button>
-                </div>
-            </nav>
-            <div class="tab-content" id="nav-tabContent">
-                <div class="tab-pane fade show active border-0" id="switcher-home" role="tabpanel"
-                    aria-labelledby="switcher-home-tab" tabindex="0">
-                    <div class="">
-                        <p class="switcher-style-head">Theme Color Mode:</p>
-                        <div class="row switcher-style gx-0">
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-light-theme">
-                                        Light
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="theme-style"
-                                        id="switcher-light-theme" checked>
+        <div class="pct-body customizer-body">
+            <div class="offcanvas-body py-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <div class="pc-dark">
+                            <h6 class="mb-1">Theme Mode</h6>
+                            <p class="text-muted text-sm">Choose light or dark mode or Auto</p>
+                            <div class="row theme-color theme-layout">
+                                <div class="col-4">
+                                    <div class="d-grid">
+                                        <button class="preset-btn btn active" data-value="true"
+                                            onclick="layout_change('light');" data-bs-toggle="tooltip" title="Light">
+                                            <svg class="pc-icon text-warning">
+                                                <use xlink:href="#custom-sun-1"></use>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-dark-theme">
-                                        Dark
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="theme-style"
-                                        id="switcher-dark-theme">
+                                <div class="col-4">
+                                    <div class="d-grid">
+                                        <button class="preset-btn btn" data-value="false"
+                                            onclick="layout_change('dark');" data-bs-toggle="tooltip" title="Dark">
+                                            <svg class="pc-icon">
+                                                <use xlink:href="#custom-moon"></use>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="">
-                        <p class="switcher-style-head">Directions:</p>
-                        <div class="row switcher-style gx-0">
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-ltr">
-                                        LTR
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="direction"
-                                        id="switcher-ltr" checked>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-rtl">
-                                        RTL
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="direction"
-                                        id="switcher-rtl">
+                                <div class="col-4">
+                                    <div class="d-grid">
+                                        <button class="preset-btn btn" data-value="default"
+                                            onclick="layout_change_default();" data-bs-toggle="tooltip"
+                                            title="Automatically sets the theme based on user's operating system's color scheme.">
+                                            <span class="pc-lay-icon d-flex align-items-center justify-content-center">
+                                                <i class="ph-duotone ph-cpu"></i>
+                                            </span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="">
-                        <p class="switcher-style-head">Navigation Styles:</p>
-                        <div class="row switcher-style gx-0">
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-vertical">
-                                        Vertical
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="navigation-style"
-                                        id="switcher-vertical" checked>
+                    </li>
+                    <li class="list-group-item">
+                        <h6 class="mb-1">Theme Contrast</h6>
+                        <p class="text-muted text-sm">Choose theme contrast</p>
+                        <div class="row theme-contrast">
+                            <div class="col-6">
+                                <div class="d-grid">
+                                    <button class="preset-btn btn" data-value="true"
+                                        onclick="layout_theme_contrast_change('true');" data-bs-toggle="tooltip"
+                                        title="True">
+                                        <svg class="pc-icon">
+                                            <use xlink:href="#custom-mask"></use>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-horizontal">
-                                        Horizontal
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="navigation-style"
-                                        id="switcher-horizontal">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="navigation-menu-styles">
-                        <p class="switcher-style-head">Vertical & Horizontal Menu Styles:</p>
-                        <div class="row switcher-style gx-0 pb-2 gy-2">
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-menu-click">
-                                        Menu Click
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="navigation-menu-styles"
-                                        id="switcher-menu-click">
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-menu-hover">
-                                        Menu Hover
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="navigation-menu-styles"
-                                        id="switcher-menu-hover">
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-icon-click">
-                                        Icon Click
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="navigation-menu-styles"
-                                        id="switcher-icon-click">
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-icon-hover">
-                                        Icon Hover
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="navigation-menu-styles"
-                                        id="switcher-icon-hover">
+                            <div class="col-6">
+                                <div class="d-grid">
+                                    <button class="preset-btn btn active" data-value="false"
+                                        onclick="layout_theme_contrast_change('false');" data-bs-toggle="tooltip"
+                                        title="False">
+                                        <svg class="pc-icon">
+                                            <use xlink:href="#custom-mask-1-outline"></use>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="sidemenu-layout-styles">
-                        <p class="switcher-style-head">Sidemenu Layout Styles:</p>
-                        <div class="row switcher-style gx-0 pb-2 gy-2">
-                            <div class="col-sm-6">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-default-menu">
-                                        Default Menu
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
-                                        id="switcher-default-menu" checked>
+                    </li>
+                    <li class="list-group-item">
+                        <h6 class="mb-1">Custom Theme</h6>
+                        <p class="text-muted text-sm">Choose your primary theme color</p>
+                        <div class="theme-color preset-color">
+                            <a href="#!" data-bs-toggle="tooltip" title="Blue" class="active"
+                                data-value="preset-1"><i class="ti ti-checks"></i></a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Indigo" data-value="preset-2"><i
+                                    class="ti ti-checks"></i></a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Purple" data-value="preset-3"><i
+                                    class="ti ti-checks"></i></a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Pink" data-value="preset-4"><i
+                                    class="ti ti-checks"></i></a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Red" data-value="preset-5"><i
+                                    class="ti ti-checks"></i></a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Orange" data-value="preset-6"><i
+                                    class="ti ti-checks"></i></a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Yellow" data-value="preset-7"><i
+                                    class="ti ti-checks"></i></a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Green" data-value="preset-8"><i
+                                    class="ti ti-checks"></i></a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Teal" data-value="preset-9"><i
+                                    class="ti ti-checks"></i></a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Cyan" data-value="preset-10"><i
+                                    class="ti ti-checks"></i></a>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <h6 class="mb-1">Theme layout</h6>
+                        <p class="text-muted text-sm">Choose your layout</p>
+                        <div class="theme-main-layout d-flex align-center gap-1 w-100">
+                            <a href="#!" data-bs-toggle="tooltip" title="Vertical" class="active"
+                                data-value="vertical">
+                                <img src="../assets/images/customizer/caption-on.svg" alt="img"
+                                    class="img-fluid" />
+                            </a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Horizontal" data-value="horizontal">
+                                <img src="../assets/images/customizer/horizontal.svg" alt="img"
+                                    class="img-fluid" />
+                            </a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Color Header"
+                                data-value="color-header">
+                                <img src="../assets/images/customizer/color-header.svg" alt="img"
+                                    class="img-fluid" />
+                            </a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Compact" data-value="compact">
+                                <img src="../assets/images/customizer/compact.svg" alt="img"
+                                    class="img-fluid" />
+                            </a>
+                            <a href="#!" data-bs-toggle="tooltip" title="Tab" data-value="tab">
+                                <img src="../assets/images/customizer/tab.svg" alt="img" class="img-fluid" />
+                            </a>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <h6 class="mb-1">Sidebar Caption</h6>
+                        <p class="text-muted text-sm">Sidebar Caption Hide/Show</p>
+                        <div class="row theme-color theme-nav-caption">
+                            <div class="col-6">
+                                <div class="d-grid">
+                                    <button class="preset-btn btn-img btn active" data-value="true"
+                                        onclick="layout_caption_change('true');" data-bs-toggle="tooltip"
+                                        title="Caption Show">
+                                        <img src="../assets/images/customizer/caption-on.svg" alt="img"
+                                            class="img-fluid" />
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-sm-6">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-closed-menu">
-                                        Closed Menu
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
-                                        id="switcher-closed-menu">
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-icontext-menu">
-                                        Icon Text
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
-                                        id="switcher-icontext-menu">
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-icon-overlay">
-                                        Icon Overlay
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
-                                        id="switcher-icon-overlay">
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-detached">
-                                        Detached
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
-                                        id="switcher-detached">
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-double-menu">
-                                        Double Menu
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
-                                        id="switcher-double-menu">
+                            <div class="col-6">
+                                <div class="d-grid">
+                                    <button class="preset-btn btn-img btn" data-value="false"
+                                        onclick="layout_caption_change('false');" data-bs-toggle="tooltip"
+                                        title="Caption Hide">
+                                        <img src="../assets/images/customizer/caption-off.svg" alt="img"
+                                            class="img-fluid" />
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="">
-                        <p class="switcher-style-head">Page Styles:</p>
-                        <div class="row switcher-style gx-0">
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-regular">
-                                        Regular
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="page-styles"
-                                        id="switcher-regular" checked>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="pc-rtl">
+                            <h6 class="mb-1">Theme Layout</h6>
+                            <p class="text-muted text-sm">LTR/RTL</p>
+                            <div class="row theme-color theme-direction">
+                                <div class="col-6">
+                                    <div class="d-grid">
+                                        <button class="preset-btn btn-img btn active" data-value="false"
+                                            onclick="layout_rtl_change('false');" data-bs-toggle="tooltip"
+                                            title="LTR">
+                                            <img src="../assets/images/customizer/ltr.svg" alt="img"
+                                                class="img-fluid" />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-classic">
-                                        Classic
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="page-styles"
-                                        id="switcher-classic">
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-modern">
-                                        Modern
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="page-styles"
-                                        id="switcher-modern">
+                                <div class="col-6">
+                                    <div class="d-grid">
+                                        <button class="preset-btn btn-img btn" data-value="true"
+                                            onclick="layout_rtl_change('true');" data-bs-toggle="tooltip"
+                                            title="RTL">
+                                            <img src="../assets/images/customizer/rtl.svg" alt="img"
+                                                class="img-fluid" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="">
-                        <p class="switcher-style-head">Layout Width Styles:</p>
-                        <div class="row switcher-style gx-0">
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-full-width">
-                                        Full Width
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="layout-width"
-                                        id="switcher-full-width" checked>
+                    </li>
+                    <li class="list-group-item pc-box-width">
+                        <div class="pc-container-width">
+                            <h6 class="mb-1">Layout Width</h6>
+                            <p class="text-muted text-sm">Choose Full or Container Layout</p>
+                            <div class="row theme-color theme-container">
+                                <div class="col-6">
+                                    <div class="d-grid">
+                                        <button class="preset-btn btn-img btn active" data-value="false"
+                                            onclick="change_box_container('false')" data-bs-toggle="tooltip"
+                                            title="Full Width">
+                                            <img src="../assets/images/customizer/full.svg" alt="img"
+                                                class="img-fluid" />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-boxed">
-                                        Boxed
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="layout-width"
-                                        id="switcher-boxed">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="">
-                        <p class="switcher-style-head">Menu Positions:</p>
-                        <div class="row switcher-style gx-0">
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-menu-fixed">
-                                        Fixed
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="menu-positions"
-                                        id="switcher-menu-fixed" checked>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-menu-scroll">
-                                        Scrollable
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="menu-positions"
-                                        id="switcher-menu-scroll">
+                                <div class="col-6">
+                                    <div class="d-grid">
+                                        <button class="preset-btn btn-img btn" data-value="true"
+                                            onclick="change_box_container('true')" data-bs-toggle="tooltip"
+                                            title="Fixed Width">
+                                            <img src="../assets/images/customizer/fixed.svg" alt="img"
+                                                class="img-fluid" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="">
-                        <p class="switcher-style-head">Header Positions:</p>
-                        <div class="row switcher-style gx-0">
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-header-fixed">
-                                        Fixed
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="header-positions"
-                                        id="switcher-header-fixed" checked>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-header-scroll">
-                                        Scrollable
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="header-positions"
-                                        id="switcher-header-scroll">
-                                </div>
-                            </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="d-grid">
+                            <button class="btn btn-light-danger" id="layoutreset">Reset Layout</button>
                         </div>
-                    </div>
-                    <div class="">
-                        <p class="switcher-style-head">Loader:</p>
-                        <div class="row switcher-style gx-0">
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-loader-enable">
-                                        Enable
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="page-loader"
-                                        id="switcher-loader-enable">
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-check switch-select">
-                                    <label class="form-check-label" for="switcher-loader-disable">
-                                        Disable
-                                    </label>
-                                    <input class="form-check-input" type="radio" name="page-loader"
-                                        id="switcher-loader-disable" checked>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab-pane fade border-0" id="switcher-profile" role="tabpanel"
-                    aria-labelledby="switcher-profile-tab" tabindex="0">
-                    <div>
-                        <div class="theme-colors">
-                            <p class="switcher-style-head">Menu Colors:</p>
-                            <div class="d-flex switcher-style pb-2">
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-white" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" title="Light Menu" type="radio" name="menu-colors"
-                                        id="switcher-menu-light">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-dark" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" title="Dark Menu" type="radio" name="menu-colors"
-                                        id="switcher-menu-dark" checked>
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-primary" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" title="Color Menu" type="radio" name="menu-colors"
-                                        id="switcher-menu-primary">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-gradient"
-                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Gradient Menu"
-                                        type="radio" name="menu-colors" id="switcher-menu-gradient">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-transparent"
-                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Transparent Menu"
-                                        type="radio" name="menu-colors" id="switcher-menu-transparent">
-                                </div>
-                            </div>
-                            <div class="px-4 pb-3 text-muted fs-11">Note:If you want to change color Menu dynamically
-                                change from below Theme Primary color picker</div>
-                        </div>
-                        <div class="theme-colors">
-                            <p class="switcher-style-head">Header Colors:</p>
-                            <div class="d-flex switcher-style pb-2">
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-white" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" title="Light Header" type="radio"
-                                        name="header-colors" id="switcher-header-light" checked>
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-dark" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" title="Dark Header" type="radio"
-                                        name="header-colors" id="switcher-header-dark">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-primary" data-bs-toggle="tooltip"
-                                        data-bs-placement="top" title="Color Header" type="radio"
-                                        name="header-colors" id="switcher-header-primary">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-gradient"
-                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Gradient Header"
-                                        type="radio" name="header-colors" id="switcher-header-gradient">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-transparent"
-                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Transparent Header"
-                                        type="radio" name="header-colors" id="switcher-header-transparent">
-                                </div>
-                            </div>
-                            <div class="px-4 pb-3 text-muted fs-11">Note:If you want to change color Header dynamically
-                                change from below Theme Primary color picker</div>
-                        </div>
-                        <div class="theme-colors">
-                            <p class="switcher-style-head">Theme Primary:</p>
-                            <div class="d-flex flex-wrap align-items-center switcher-style">
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-primary-1" type="radio"
-                                        name="theme-primary" id="switcher-primary">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-primary-2" type="radio"
-                                        name="theme-primary" id="switcher-primary1">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-primary-3" type="radio"
-                                        name="theme-primary" id="switcher-primary2">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-primary-4" type="radio"
-                                        name="theme-primary" id="switcher-primary3">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-primary-5" type="radio"
-                                        name="theme-primary" id="switcher-primary4">
-                                </div>
-                                <div class="form-check switch-select ps-0 mt-1 color-primary-light">
-                                    <div class="theme-container-primary"></div>
-                                    <div class="pickr-container-primary"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="theme-colors">
-                            <p class="switcher-style-head">Theme Background:</p>
-                            <div class="d-flex flex-wrap align-items-center switcher-style">
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-bg-1" type="radio"
-                                        name="theme-background" id="switcher-background">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-bg-2" type="radio"
-                                        name="theme-background" id="switcher-background1">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-bg-3" type="radio"
-                                        name="theme-background" id="switcher-background2">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-bg-4" type="radio"
-                                        name="theme-background" id="switcher-background3">
-                                </div>
-                                <div class="form-check switch-select me-3">
-                                    <input class="form-check-input color-input color-bg-5" type="radio"
-                                        name="theme-background" id="switcher-background4">
-                                </div>
-                                <div
-                                    class="form-check switch-select ps-0 mt-1 tooltip-static-demo color-bg-transparent">
-                                    <div class="theme-container-background"></div>
-                                    <div class="pickr-container-background"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="menu-image mb-3">
-                            <p class="switcher-style-head">Menu With Background Image:</p>
-                            <div class="d-flex flex-wrap align-items-center switcher-style">
-                                <div class="form-check switch-select m-2">
-                                    <input class="form-check-input bgimage-input bg-img1" type="radio"
-                                        name="theme-background" id="switcher-bg-img">
-                                </div>
-                                <div class="form-check switch-select m-2">
-                                    <input class="form-check-input bgimage-input bg-img2" type="radio"
-                                        name="theme-background" id="switcher-bg-img1">
-                                </div>
-                                <div class="form-check switch-select m-2">
-                                    <input class="form-check-input bgimage-input bg-img3" type="radio"
-                                        name="theme-background" id="switcher-bg-img2">
-                                </div>
-                                <div class="form-check switch-select m-2">
-                                    <input class="form-check-input bgimage-input bg-img4" type="radio"
-                                        name="theme-background" id="switcher-bg-img3">
-                                </div>
-                                <div class="form-check switch-select m-2">
-                                    <input class="form-check-input bgimage-input bg-img5" type="radio"
-                                        name="theme-background" id="switcher-bg-img4">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="d-grid canvas-footer">
-                    <a href="javascript:void(0);" id="reset-all" class="btn btn-danger m-1">Reset</a>
-                </div>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
-    <!-- End Switcher -->
-
-
-    <!-- Loader -->
-    <div id="loader">
-        <img src="../assets/images/media/loader.svg" alt="">
-    </div>
-    <!-- Loader -->
-
-    <div class="page">
-        <!-- app-header -->
-        @include('staff.layouts.header')
-        <!-- /app-header -->
-
-        <!-- Start::app-sidebar -->
-        @include('staff.layouts.sidebar')
-        <!-- End::app-sidebar -->
-
-        <!-- Start::app-content -->
-        @yield('content')
-        <!-- End::app-content -->
-
-        <!-- Footer Start -->
-        @include('staff.layouts.footer')
-        <!-- Footer End -->
-
-    </div>
-
-
-    <!-- Scroll To Top -->
-    <div class="scrollToTop">
-        <span class="arrow"><i class="ri-arrow-up-s-fill fs-20"></i></span>
-    </div>
-    <div id="responsive-overlay"></div>
-    <!-- Scroll To Top -->
-
-    <!-- Popper JS -->
-    <script src="../assets/libs/@popperjs/core/umd/popper.min.js"></script>
-
-    <!-- Bootstrap JS -->
-    <script src="../assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Defaultmenu JS -->
-    <script src="../assets/js/defaultmenu.min.js"></script>
-
-    <!-- Node Waves JS-->
-    <script src="../assets/libs/node-waves/waves.min.js"></script>
-
-    <!-- Sticky JS -->
-    <script src="../assets/js/sticky.js"></script>
-
-    <!-- Simplebar JS -->
-    <script src="../assets/libs/simplebar/simplebar.min.js"></script>
-    <script src="../assets/js/simplebar.js"></script>
-
-    <!-- Color Picker JS -->
-    <script src="../assets/libs/@simonwep/pickr/pickr.es5.min.js"></script>
-
-    <!-- Custom-Switcher JS -->
-    <script src="../assets/js/custom-switcher.min.js"></script>
-
-    <!-- Custom JS -->
-    <script src="../assets/js/custom.js"></script>
 
 </body>
+<!-- [Body] end -->
 
 </html>

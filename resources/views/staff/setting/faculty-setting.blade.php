@@ -1,30 +1,43 @@
 @extends('staff.layouts.main')
 
 @section('content')
-    <div class="main-content app-content">
-        <div class="container">
-
-            <!-- Page Header -->
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <h1 class="page-title fw-semibold fs-22 mb-0">Faculty Setting</h1>
-                <div class="ms-md-1 ms-0">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="javascript:void(0);">Setting</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Faculty Setting</li>
-                        </ol>
-                    </nav>
-                    
+    <div class="pc-container">
+        <div class="pc-content">
+            <!-- [ breadcrumb ] start -->
+            <div class="page-header">
+                <div class="page-block">
+                    <div class="row align-items-center">
+                        <div class="col-md-12">
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Setting</a></li>
+                                <li class="breadcrumb-item" aria-current="page">Faculty Setting</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="page-header-title">
+                                <h2 class="mb-0">Faculty Setting</h2>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!-- Page Header Close -->
+            <!-- [ breadcrumb ] end -->
 
-            <!-- Start::row-1 -->
+
+            <!-- [ Main Content ] start -->
             <div class="row">
-
+                <!-- [ sample-page ] start -->
+                <div class="col-sm-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Hello card</h5>
+                        </div>
+                        <div class="card-body"> </div>
+                    </div>
+                </div>
+                <!-- [ sample-page ] end -->
             </div>
-            <!--End::row-1 -->
-
+            <!-- [ Main Content ] end -->
         </div>
     </div>
 @endsection

@@ -26,3 +26,5 @@ Route::post('/test/add-faculty',[SettingController::class,'addFaculty'])->name('
 Route::post('/test/update-faculty/{id}',[SettingController::class,'updateFaculty'])->name('update-faculty-post');
 Route::get('/test/delete-faculty/{id}/{opt}',[SettingController::class,'facultySetting'])->name('delete-faculty-get');
 
+/* Department Setting */
+Route::get('/test/department-setting',[SettingController::class,'departmentSetting'])->name('department-setting');

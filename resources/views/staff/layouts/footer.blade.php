@@ -1,7 +1,11 @@
  <!-- Footer Start -->
- <footer class="footer mt-auto py-3 bg-white text-center">
-     <div class="container">
-         <p class="m-0 text-muted">e-PostGrad System Copyright © @php echo date("Y"); @endphp  All rights reserved</p>
-     </div>
- </footer>
+ <footer class="pc-footer text-center">
+    <div class="footer-wrapper container-fluid">
+        <div class="row">
+            <div class="col my-1">
+                <p class="m-0 ">e-PostGrad System Copyright © @php echo date("Y"); @endphp  All rights reserved</p>
+            </div>
+        </div>
+    </div>
+</footer>
  <!-- Footer End -->
