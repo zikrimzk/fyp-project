@@ -38,9 +38,34 @@
                     </a>
                 </li>
 
+
+
                 <li class="pc-item pc-caption">
                     <label>System Setting</label>
                 </li>
+                <li class="pc-item pc-hasmenu">
+                    <a href="javascript:void(0)" class="pc-link">
+                        <span class="pc-micon">
+                            <svg class="pc-icon">
+                                <use xlink:href="#custom-document"></use>
+                            </svg>
+                        </span>
+                        <span class="pc-mtext">SOP ##</span>
+                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                    </a>
+                    <ul class="pc-submenu">
+                        <li class="pc-item"><a class="pc-link" href="">Procedure Setting</a>
+                        </li>
+                        <li class="pc-item">
+                            <a class="pc-link" href="">Activity Setting</a>
+                        </li>
+                        <li class="pc-item">
+                            <a class="pc-link" href="">Document Setting</a>
+                        </li>
+                    </ul>
+                </li>
+
+
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
                         <span class="pc-micon">
