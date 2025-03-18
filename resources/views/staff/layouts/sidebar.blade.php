@@ -34,8 +34,7 @@
                  <li class="slide">
                      <a href="javascript:void(0);" class="side-menu__item">
                          <i class="bx bx-home side-menu__icon"></i>
-                         <span class="side-menu__label">Dashboards<span
-                                 class="badge bg-warning-transparent ms-2">12</span></span>
+                         <span class="side-menu__label">Dashboards</span>
                      </a>
                  </li>
                  <!-- End::slide -->
@@ -58,7 +57,7 @@
                              <a href="javascript:void(0)">Setting</a>
                          </li>
                          <li class="slide">
-                             <a href="tables.html" class="side-menu__item">Faculty Setting</a>
+                             <a href="{{ route('faculty-setting') }}" class="side-menu__item">Faculty Setting</a>
                          </li>
                          <li class="slide">
                              <a href="grid-tables.html" class="side-menu__item">Department Setting</a>
