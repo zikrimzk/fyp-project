@@ -60,7 +60,7 @@
                             <a class="pc-link" href="{{ route('activity-setting') }}">Activity Setting</a>
                         </li>
                         <li class="pc-item">
-                            <a class="pc-link" href="">Document Setting</a>
+                            <a class="pc-link" href="{{ route('document-setting') }}">Document Setting</a>
                         </li>
                     </ul>
                 </li>

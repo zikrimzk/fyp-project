@@ -26,11 +26,17 @@ Route::prefix('staff')->group(function () {
 
     //Standard Operation Procedure (SOP)
 
-     /* Activity Setting */
-     Route::get('/activity-setting', [SOPController::class, 'activitySetting'])->name('activity-setting');
-     Route::post('/add-activity', [SOPController::class, 'addActivity'])->name('add-activity-post');
-     Route::post('/update-activity/{id}', [SOPController::class, 'updateActivity'])->name('update-activity-post');
-     Route::get('/delete-activity-{id}-{opt}', [SOPController::class, 'deleteActivity'])->name('delete-activity-get');
+    /* Activity Setting */
+    Route::get('/activity-setting', [SOPController::class, 'activitySetting'])->name('activity-setting');
+    Route::post('/add-activity', [SOPController::class, 'addActivity'])->name('add-activity-post');
+    Route::post('/update-activity/{id}', [SOPController::class, 'updateActivity'])->name('update-activity-post');
+    Route::get('/delete-activity-{id}-{opt}', [SOPController::class, 'deleteActivity'])->name('delete-activity-get');
+
+    /* Document Setting */
+    Route::get('/document-setting', [SOPController::class, 'documentSetting'])->name('document-setting');
+    Route::post('/add-document', [SOPController::class, 'addDocument'])->name('add-document-post');
+    Route::post('/update-document/{id}', [SOPController::class, 'updateDocument'])->name('update-document-post');
+    Route::get('/delete-document-{id}-{opt}', [SOPController::class, 'deleteDocument'])->name('delete-document-get');
 
     // System Setting 
 
@@ -44,7 +50,7 @@ Route::prefix('staff')->group(function () {
     Route::get('/department-setting', [SettingController::class, 'departmentSetting'])->name('department-setting');
     Route::post('/add-department', [SettingController::class, 'addDepartment'])->name('add-department-post');
     Route::post('/update-department/{id}', [SettingController::class, 'updateDepartment'])->name('update-department-post');
-    Route::get('/delete-department-{id}-{opt}', [SettingController::class, 'deleteDepartment'])->name('delete-department-get'); 
+    Route::get('/delete-department-{id}-{opt}', [SettingController::class, 'deleteDepartment'])->name('delete-department-get');
 
     /* Programme Setting */
     Route::get('/programme-setting', [SettingController::class, 'programmeSetting'])->name('programme-setting');
@@ -58,5 +64,4 @@ Route::prefix('staff')->group(function () {
     Route::post('/update-semester/{id}', [SettingController::class, 'updateSemester'])->name('update-semester-post');
     Route::get('/delete-semester-{id}-{opt}', [SettingController::class, 'deleteSemester'])->name('delete-semester-get');
     Route::post('/change-current-semester', [SettingController::class, 'changeCurrentSemester'])->name('change-semester-post');
-
 });
