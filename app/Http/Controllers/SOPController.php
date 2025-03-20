@@ -205,39 +205,76 @@ class SOPController extends Controller
         }
     }
 
+    public function viewDocumentByActivity($id)
+    {
+        try {
+            $data = DB::table('documents')
+                ->where('activity_id', $id)
+                ->get();
+            return response()->json([
+                    'success' => true,
+                    'data' => $data,
+                ],200
+            );
+        } catch (Exception $e) {
+            return response()->json([
+                    'success' => false,
+                    'message' => 'Error: ' . $e->getMessage(),
+                ],500
+            );
+        }
+    }
+
     public function addDocument(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'act_name' => 'required|string|unique:activities,act_name,',
+            'doc_name' => 'required|string',
+            'isRequired' => 'required|integer',
+            'isShowDoc' => 'required|integer',
+            'doc_status' => 'required|integer',
+            'act_id' => 'required|integer',
+
         ], [], [
-            'act_name' => 'activity name',
+            'doc_name' => 'document name',
+            'isRequired' => 'document required',
+            'isShowDoc' => 'document appear in form',
+            'doc_status' => 'document status',
+            'act_id' => 'activity',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
-                ->with('modal', 'addModal');
+                ->with('modal', 'addDocModal');
         }
         try {
             $validated = $validator->validated();
-            Activity::create([
-                'act_name' => $validated['act_name'],
+            $document = Document::create([
+                'doc_name' => $validated['doc_name'],
+                'isRequired' => $validated['isRequired'],
+                'isShowDoc' => $validated['isShowDoc'],
+                'doc_status' => $validated['doc_status'],
+                'activity_id' => $validated['act_id'],
             ]);
-
-            return back()->with('success', 'Activity added successfully.');
+            return response()->json(['success' => true, 'document' => $document], 200);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding activity.');
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function updateDocument(Request $req, $id)
+    public function updateDocument(Request $req)
     {
-        $id = decrypt($id);
         $validator = Validator::make($req->all(), [
-            'act_name_up' => 'required|string|unique:activities,act_name,' . $id,
+            'doc_name' => 'required|string',
+            'isRequired' => 'required|integer',
+            'isShowDoc' => 'required|integer',
+            'doc_status' => 'required|integer',
         ], [], [
-            'act_name_up' => 'activity name',
+            'doc_name' => 'document name',
+            'isRequired' => 'document required',
+            'isShowDoc' => 'document appear in form',
+            'doc_status' => 'document status',
         ]);
 
 
@@ -250,13 +287,17 @@ class SOPController extends Controller
 
         try {
             $validated = $validator->validated();
-            Activity::find($id)->update([
-                'act_name' => $validated['act_name_up'],
+            $document = Document::find($req->id)->update([
+                'doc_name' => $validated['doc_name'],
+                'isRequired' => $validated['isRequired'],
+                'isShowDoc' => $validated['isShowDoc'],
+                'doc_status' => $validated['doc_status'],
+                'activity_id' => $document->activity_id,
             ]);
-
-            return back()->with('success', 'Activity updated successfully.');
+            return response()->json(['success' => true, 'document' => $document], 200);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating activity.');
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+
         }
     }
 

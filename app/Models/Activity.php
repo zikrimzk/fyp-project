@@ -8,8 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class Activity extends Model
 {
     use HasFactory;
-    
+
     protected $fillable = [
         'act_name'
     ];
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
+    }
 }
