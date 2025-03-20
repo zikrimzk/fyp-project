@@ -37,7 +37,7 @@ Route::prefix('staff')->group(function () {
     Route::get('/view-document-by-activity-{id}', [SOPController::class, 'viewDocumentByActivity'])->name('view-document-by-activity-get');
     Route::post('/add-document', [SOPController::class, 'addDocument'])->name('add-document-post');
     Route::post('/update-document', [SOPController::class, 'updateDocument'])->name('update-document-post');
-    Route::get('/delete-document-{id}-{opt}', [SOPController::class, 'deleteDocument'])->name('delete-document-get');
+    Route::get('/delete-document-{id}', [SOPController::class, 'deleteDocument'])->name('delete-document-get');
 
     // System Setting 
 

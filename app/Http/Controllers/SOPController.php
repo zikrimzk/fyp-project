@@ -31,18 +31,18 @@ class SOPController extends Controller
 
                     $buttonEdit =
                         '
-                            <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
+                            <a href="javascript: void(0)" class="btn-light-primary avtar avtar-xs" data-bs-toggle="modal"
                                 data-bs-target="#updateModal-' . $row->id . '">
-                                <i class="ti ti-edit f-20"></i>
+                                <i class="f-20 ti ti-edit"></i>
                             </a>
                         ';
 
                     if (!$isReferenced) {
                         $buttonRemove =
                             '
-                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
+                                <a href="javascript: void(0)" class="btn-light-danger avtar avtar-xs" data-bs-toggle="modal"
                                     data-bs-target="#deleteModal-' . $row->id . '">
-                                    <i class="ti ti-trash f-20"></i>
+                                    <i class="f-20 ti ti-trash"></i>
                                 </a>
                             ';
                     } else {
@@ -50,9 +50,9 @@ class SOPController extends Controller
 
                         $buttonRemove =
                             '
-                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger disabled-a" data-bs-toggle="modal"
+                                <a href="javascript: void(0)" class="btn-light-danger avtar avtar-xs disabled-a" data-bs-toggle="modal"
                                     data-bs-target="#disableModal">
-                                    <i class="ti ti-trash f-20"></i>
+                                    <i class="f-20 ti ti-trash"></i>
                                 </a>
                             ';
                     }
@@ -162,18 +162,18 @@ class SOPController extends Controller
 
             //         $buttonEdit =
             //             '
-            //                 <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
+            //                 <a href="javascript: void(0)" class="btn-light-primary avtar avtar-xs" data-bs-toggle="modal"
             //                     data-bs-target="#updateModal-' . $row->id . '">
-            //                     <i class="ti ti-edit f-20"></i>
+            //                     <i class="f-20 ti ti-edit"></i>
             //                 </a>
             //             ';
 
             //         if (!$isReferenced) {
             //             $buttonRemove =
             //                 '
-            //                     <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
+            //                     <a href="javascript: void(0)" class="btn-light-danger avtar avtar-xs" data-bs-toggle="modal"
             //                         data-bs-target="#deleteModal-' . $row->id . '">
-            //                         <i class="ti ti-trash f-20"></i>
+            //                         <i class="f-20 ti ti-trash"></i>
             //                     </a>
             //                 ';
             //         } else {
@@ -181,9 +181,9 @@ class SOPController extends Controller
 
             //             $buttonRemove =
             //                 '
-            //                     <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger disabled-a" data-bs-toggle="modal"
+            //                     <a href="javascript: void(0)" class="btn-light-danger avtar avtar-xs disabled-a" data-bs-toggle="modal"
             //                         data-bs-target="#disableModal">
-            //                         <i class="ti ti-trash f-20"></i>
+            //                         <i class="f-20 ti ti-trash"></i>
             //                     </a>
             //                 ';
             //         }
@@ -211,19 +211,98 @@ class SOPController extends Controller
             $data = DB::table('documents')
                 ->where('activity_id', $id)
                 ->get();
-            return response()->json([
+            return response()->json(
+                [
                     'success' => true,
                     'data' => $data,
-                ],200
+                ],
+                200
             );
         } catch (Exception $e) {
-            return response()->json([
+            return response()->json(
+                [
                     'success' => false,
                     'message' => 'Error: ' . $e->getMessage(),
-                ],500
+                ],
+                500
             );
         }
     }
+
+    // public function addDocument(Request $req)
+    // {
+    //     $validator = Validator::make($req->all(), [
+    //         'doc_name' => 'required|string',
+    //         'isRequired' => 'required|integer',
+    //         'isShowDoc' => 'required|integer',
+    //         'doc_status' => 'required|integer',
+    //         'act_id' => 'required|integer',
+
+    //     ], [], [
+    //         'doc_name' => 'document name',
+    //         'isRequired' => 'document required',
+    //         'isShowDoc' => 'document appear in form',
+    //         'doc_status' => 'document status',
+    //         'act_id' => 'activity',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return redirect()->back()
+    //             ->withErrors($validator)
+    //             ->withInput()
+    //             ->with('modal', 'addDocModal');
+    //     }
+    //     try {
+    //         $validated = $validator->validated();
+    //         $document = Document::create([
+    //             'doc_name' => $validated['doc_name'],
+    //             'isRequired' => $validated['isRequired'],
+    //             'isShowDoc' => $validated['isShowDoc'],
+    //             'doc_status' => $validated['doc_status'],
+    //             'activity_id' => $validated['act_id'],
+    //         ]);
+    //         return response()->json(['success' => true, 'document' => $document], 200);
+    //     } catch (Exception $e) {
+    //         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    //     }
+    // }
+
+    // public function updateDocument(Request $req)
+    // {
+    //     $validator = Validator::make($req->all(), [
+    //         'doc_name_up' => 'required|string',
+    //         'isRequired_up' => 'required|integer',
+    //         'isShowDoc_up' => 'required|integer',
+    //         'doc_status_up' => 'required|integer',
+    //     ], [], [
+    //         'doc_name_up' => 'document name',
+    //         'isRequired_up' => 'document required',
+    //         'isShowDoc_up' => 'document appear in form',
+    //         'doc_status_up' => 'document status',
+    //     ]);
+
+
+    //     if ($validator->fails()) {
+    //         return redirect()->back()
+    //             ->withErrors($validator)
+    //             ->withInput()
+    //             ->with('modal', 'updateDocModal');
+    //     }
+
+    //     try {
+    //         $validated = $validator->validated();
+    //         Document::find($req->id)->update([
+    //             'doc_name' => $validated['doc_name_up'],
+    //             'isRequired' => $validated['isRequired_up'],
+    //             'isShowDoc' => $validated['isShowDoc_up'],
+    //             'doc_status' => $validated['doc_status_up'],
+    //         ]);
+    //         $document = Document::find($req->id);
+    //         return response()->json(['success' => true, 'document' => $document], 200);
+    //     } catch (Exception $e) {
+    //         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    //     }
+    // }
 
     public function addDocument(Request $req)
     {
@@ -233,7 +312,6 @@ class SOPController extends Controller
             'isShowDoc' => 'required|integer',
             'doc_status' => 'required|integer',
             'act_id' => 'required|integer',
-
         ], [], [
             'doc_name' => 'document name',
             'isRequired' => 'document required',
@@ -243,21 +321,18 @@ class SOPController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput()
-                ->with('modal', 'addDocModal');
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
+
         try {
-            $validated = $validator->validated();
             $document = Document::create([
-                'doc_name' => $validated['doc_name'],
-                'isRequired' => $validated['isRequired'],
-                'isShowDoc' => $validated['isShowDoc'],
-                'doc_status' => $validated['doc_status'],
-                'activity_id' => $validated['act_id'],
+                'doc_name' => $req->doc_name,
+                'isRequired' => $req->isRequired,
+                'isShowDoc' => $req->isShowDoc,
+                'doc_status' => $req->doc_status,
+                'activity_id' => $req->act_id,
             ]);
-            return response()->json(['success' => true, 'document' => $document], 200);
+            return response()->json(['success' => true, 'document' => $document, 'message' => 'Document added successfully.'], 200);
         } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
@@ -265,55 +340,50 @@ class SOPController extends Controller
 
     public function updateDocument(Request $req)
     {
-        $validator = Validator::make($req->all(), [
-            'doc_name' => 'required|string',
-            'isRequired' => 'required|integer',
-            'isShowDoc' => 'required|integer',
-            'doc_status' => 'required|integer',
+            $validator = Validator::make($req->all(), [
+            'doc_name_up' => 'required|string',
+            'isRequired_up' => 'required|integer',
+            'isShowDoc_up' => 'required|integer',
+            'doc_status_up' => 'required|integer',
         ], [], [
-            'doc_name' => 'document name',
-            'isRequired' => 'document required',
-            'isShowDoc' => 'document appear in form',
-            'doc_status' => 'document status',
+            'doc_name_up' => 'document name',
+            'isRequired_up' => 'document required',
+            'isShowDoc_up' => 'document appear in form',
+            'doc_status_up' => 'document status',
         ]);
-
-
+        
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput()
-                ->with('modal', 'updateModal-' . $id);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
         try {
-            $validated = $validator->validated();
-            $document = Document::find($req->id)->update([
-                'doc_name' => $validated['doc_name'],
-                'isRequired' => $validated['isRequired'],
-                'isShowDoc' => $validated['isShowDoc'],
-                'doc_status' => $validated['doc_status'],
-                'activity_id' => $document->activity_id,
+            $document = Document::findOrFail($req->doc_id_up);
+            $document->update([
+                'doc_name' => $req->doc_name_up,
+                'isRequired' => $req->isRequired_up,
+                'isShowDoc' => $req->isShowDoc_up,
+                'doc_status' => $req->doc_status_up,
             ]);
-            return response()->json(['success' => true, 'document' => $document], 200);
+            return response()->json(['success' => true, 'document' => $document, 'message' => 'Document updated successfully.'], 200);
         } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-
         }
     }
 
-    public function deleteDocument($id, $opt)
+    public function deleteDocument($id)
     {
         try {
-            $id = decrypt($id);
-            if ($opt == 1) {
-                Activity::where('id', $id)->delete();
-                return  back()->with('success', 'Activity deleted successfully.');
-            } elseif ($opt == 2) {
-                Activity::where('id', $id)->update(['fac_status' => 0]);
-                return  back()->with('success', 'Activity disabled successfully.');
-            }
+
+            Document::where('id', $id)->delete();
+            return response()->json([
+                'success' => true,
+                'message' => 'Document deleted successfully.'
+            ], 200);
         } catch (Exception $e) {
-            return  back()->with('error', 'Oops! Error deleting activity.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Error deleting activity.' . $e->getMessage()
+            ], 500);
         }
     }
 }
