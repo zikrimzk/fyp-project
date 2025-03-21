@@ -39,8 +39,10 @@ Route::prefix('staff')->group(function () {
 
     /* Procedure Setting */
     Route::get('/procedure-setting',[SOPController::class,'procedureSetting'])->name('procedure-setting');
+    Route::post('/add-procedure', [SOPController::class, 'addProcedure'])->name('add-procedure-post');
+    Route::post('/update-procedure-{actID}-{progID}', [SOPController::class, 'updateProcedure'])->name('update-procedure-post');
+    Route::get('/delete-procedure-{actID}-{progID}', [SOPController::class, 'deleteProcedure'])->name('delete-procedure-get');
 
-    
 
     // System Setting 
 
