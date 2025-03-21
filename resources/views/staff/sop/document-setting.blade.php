@@ -3,7 +3,39 @@
 @section('content')
     <!--[ Page Specific Style ] start -->
     <style>
+        /* Pastikan teks aktiviti tidak overflow */
+        .text-truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 90%;
+        }
+
+        /* Pastikan Edit & Delete butang lebih kecil & kemas */
+        .edit-act,
+        .delete-act {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Tukar ikon panah bila accordion dibuka */
+        .accordion-button:not(.collapsed) .toggle-icon {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+
         @media (max-width: 768px) {
+
+            .accordion-button {
+                flex-wrap: wrap;
+            }
+
+            .text-truncate {
+                max-width: 80%;
+            }
 
             .list-group-item {
                 flex-direction: column;
@@ -32,12 +64,12 @@
                         <div class="col-md-12">
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">SOP</a></li>
-                                <li class="breadcrumb-item" aria-current="page">Activity Management</li>
+                                <li class="breadcrumb-item" aria-current="page">Activity Setting</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">Activity Management</h2>
+                                <h2 class="mb-0">Activity Setting</h2>
                             </div>
                         </div>
                     </div>
@@ -84,7 +116,8 @@
                         <div class="card-body">
                             <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
                                 <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addModal"><i class="ti ti-plus f-18"></i>
+                                    data-bs-toggle="modal" data-bs-target="#addActivityModal"><i
+                                        class="ti ti-plus f-18"></i>
                                     Add Activity
                                 </button>
                             </div>
@@ -93,11 +126,19 @@
                 </div>
 
                 <div class="col-sm-12">
+                    <div class="alert alert-info d-flex align-items-center gap-2 p-3">
+                        <i class="ti ti-info-circle f-18"></i>
+                        <span><strong>Note : </strong>You can add a document for each activity by click the (+)
+                            button.</span>
+                    </div>
+                </div>
+
+                <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
 
                             <div class="accordion accordion-flush" id="accordionFlushExample">
-                                @foreach ($acts as $act)
+                                {{-- @foreach ($acts as $act)
                                     <div class="accordion-item">
                                         <h2 class="accordion-header" id="flush-heading-{{ $act->id }}">
                                             <button class="accordion-button collapsed p-4" type="button"
@@ -112,10 +153,10 @@
                                             aria-labelledby="flush-heading-{{ $act->id }}"
                                             data-bs-parent="#accordionFlushExample">
                                             <div class="accordion-body">
-                                                <!-- Document List -->
+                                                <!-- Dynamic : Document List -->
                                                 <ul class="list-group mb-3" id="document-list-{{ $act->id }}"></ul>
 
-                                                <!-- Butang Tambah Dokumen -->
+                                                <!-- Button : Add Document -->
                                                 <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
                                                     <button type="button"
                                                         class="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
@@ -128,16 +169,23 @@
                                             </div>
                                         </div>
                                     </div>
-                                @endforeach
+                                @endforeach --}}
+
+
+
+
+
                             </div>
+
                         </div>
                     </div>
                 </div>
 
-                <!-- [ Add Modal ] start -->
-                <form action="{{ route('add-activity-post') }}" method="POST">
+                <!-- [ Add Activity Modal ] start -->
+                <form id="addActivityForm">
                     @csrf
-                    <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModal" aria-hidden="true">
+                    <div class="modal fade" id="addActivityModal" tabindex="-1" aria-labelledby="addActivityModal"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -168,8 +216,7 @@
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="button" class="btn btn-light btn-pc-default w-100"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-primary w-100"
-                                                    id="addApplicationBtn">
+                                                <button type="submit" class="btn btn-primary w-100">
                                                     Add Activity
                                                 </button>
                                             </div>
@@ -180,7 +227,63 @@
                         </div>
                     </div>
                 </form>
-                <!-- [ Add Modal ] end -->
+                <!-- [ Add Activity Modal ] end -->
+
+                <!-- [ Update Activity Modal ] start -->
+                <form id="updateActivityForm">
+                    @csrf
+                    <div class="modal fade" id="updateActModal" tabindex="-1" aria-labelledby="updateActModals"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="updateActivityLabel">Update Activity</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <input type="text" class="form-control" id="activity_id_up"
+                                                name="id">
+                                        </div>
+
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="act_name_up" class="form-label">Activity Name <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text"
+                                                    class="form-control @error('act_name_up') is-invalid @enderror"
+                                                    id="act_name_up" name="act_name_up" placeholder="Enter Activity Name"
+                                                    required>
+                                                @error('act_name_up')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="modal-footer justify-content-end">
+                                    <div class="flex-grow-1 text-end">
+                                        <div class="col-sm-12">
+                                            <div class="d-flex justify-content-between gap-3 align-items-center">
+                                                <button type="button" class="btn btn-light btn-pc-default w-100"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    Save Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!-- [ Update Activity Modal ] end -->
 
                 <!-- [ Add Document Modal ] start -->
                 <form id="addDocumentForm">
@@ -597,7 +700,7 @@
                 form.find(".invalid-feedback").remove();
             }
 
-            function handleFormSubmit(form, url, modalId) {
+            function handleDocumentFormSubmit(form, url, modalId) {
                 let formData = new FormData(form[0]);
 
                 $.ajax({
@@ -624,6 +727,133 @@
                     }
                 });
             }
+
+            function handleActivityFormSubmit(form, url, modalId) {
+                let formData = new FormData(form[0]);
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            showAlert("success", response.message);
+                            getActivityList();
+                            $(modalId).modal("hide");
+                            form[0].reset();
+                            clearValidationErrors(form);
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            displayValidationErrors(form, xhr.responseJSON.errors);
+                        } else {
+                            showAlert("danger", "An error occurred. Please try again.");
+                        }
+                    }
+                });
+            }
+
+            // READ : VIEW ACTIVITY LIST
+            function getActivityList() {
+                $.ajax({
+                    url: "{{ route('view-activity-get') }}",
+                    type: "GET",
+                    success: function(activities) {
+                        let accordionHtml = "";
+
+                        activities.forEach((act) => {
+                            let activityHtml = `
+                                <div class="accordion-item">
+                                    <div class="d-flex align-items-center justify-content-between p-3">
+                                        <!-- Accordion Header -->
+                                        <h2 class="accordion-header flex-grow-1 me-0 me-md-2">
+                                            <button
+                                                class="accordion-button collapsed p-3 w-100 d-flex align-items-center justify-content-between"
+                                                type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#flush-collapse-${act.id}" aria-expanded="false"
+                                                aria-controls="flush-collapse-${act.id}" data-activity-id="${act.id}">
+                                                <span class="fw-bold text-truncate">${act.act_name}</span>
+                                            </button>
+                                        </h2>
+
+                                        <!-- Buttons (Desktop) -->
+                                        <div class="d-none d-md-flex align-items-center gap-2">
+                                            <a class="btn btn-secondary btn-sm edit-act" data-id="${act.id}"
+                                                data-act_name="${act.act_name}" data-bs-toggle="modal"
+                                                data-bs-target="#updateActModal">
+                                                <i class="ti ti-edit text-white"></i>
+                                            </a>
+                                            <a class="btn btn-danger btn-sm delete-act" data-id="${act.id}">
+                                                <i class="ti ti-trash text-white"></i>
+                                            </a>
+                                            <a class="btn btn-warning btn-sm edit-act" data-act-id="${act.id}"
+                                                data-bs-toggle="modal" data-bs-target="#addDocModal">
+                                                <i class="ti ti-plus text-white"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Buttons (Mobile) - Full Width -->
+                                    <div class="d-md-none d-flex gap-2 p-3">
+                                        <a class="btn btn-secondary w-100 edit-act" data-id="${act.id}"
+                                            data-act_name="${act.act_name}" data-bs-toggle="modal"
+                                            data-bs-target="#updateActModal">
+                                            <i class="ti ti-edit text-white"></i>
+                                        </a>
+                                        <a class="btn btn-danger w-100 delete-act" data-id="${act.id}">
+                                            <i class="ti ti-trash text-white"></i>
+                                        </a>
+                                        <a class="btn btn-warning w-100 edit-act" data-act-id="${act.id}"
+                                            data-bs-toggle="modal" data-bs-target="#addDocModal">
+                                            <i class="ti ti-plus text-white"></i>
+                                        </a>
+                                    </div>
+
+                                    <div id="flush-collapse-${act.id}" class="accordion-collapse collapse"
+                                        aria-labelledby="flush-heading-${act.id}" data-bs-parent="#accordionFlushExample">
+                                        <div class="accordion-body bg-light">
+                                            <!-- Dynamic: Document List -->
+                                            <ul class="list-group mb-3" id="document-list-${act.id}"></ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            accordionHtml += activityHtml;
+                        });
+
+                        $("#accordionFlushExample").html(accordionHtml);
+                    },
+                    error: function(xhr) {
+                        alert("Error fetching activities: " + xhr.responseText);
+                    }
+                });
+            }
+
+            // TOGGLER : FUNCTION DECLARATION
+            getActivityList();
+
+            // CREATE : ADD ACTIVITY
+            $("#addActivityForm").submit(function(e) {
+                e.preventDefault();
+                handleActivityFormSubmit($(this), "{{ route('add-activity-post') }}", "#addActivityModal");
+            });
+
+            // UPDATE : UPDATE ACTIVITY
+            $('#updateActModal').on('show.bs.modal', function(event) {
+                var button = $(event.relatedTarget);
+                $('#activity_id_up').val(button.data('id'));
+                $('#act_name_up').val(button.data('act_name'));
+            });
+
+            // TOGGLER : UPDATE FORM
+            $("#updateActivityForm").submit(function(e) {
+                e.preventDefault();
+                handleActivityFormSubmit($(this), "{{ route('update-activity-post') }}",
+                    "#updateActModal");
+            });
 
             // READ : VIEW DOCUMENT LIST
             function getDocumentList(activityId) {
@@ -667,7 +897,7 @@
                                                 data-bs-toggle="modal" data-bs-target="#updateDocModal">
                                                 <i class="ti ti-edit f-20"></i>
                                             </a>
-                                            <button class="btn btn-light-danger avtar avtar-xs deletes"
+                                            <button class="btn btn-light-danger avtar avtar-xs delete-doc"
                                                 data-id="${doc.id}"  data-activity_id="${doc.activity_id}">
                                                 <i class="ti ti-trash f-20"></i>
                                             </button>
@@ -693,7 +923,7 @@
             }
 
             // TOGGLER : TOGGLE ACCORDION
-            $(".accordion-button").on("click", function() {
+            $(document).on("click", ".accordion-button", function() {
                 let activityId = $(this).data("activity-id");
                 let documentList = $("#document-list-" + activityId);
                 if (!documentList.hasClass("loaded")) {
@@ -710,7 +940,7 @@
             // TOGGLER : ADD FORM
             $("#addDocumentForm").submit(function(e) {
                 e.preventDefault();
-                handleFormSubmit($(this), "{{ route('add-document-post') }}", "#addDocModal");
+                handleDocumentFormSubmit($(this), "{{ route('add-document-post') }}", "#addDocModal");
             });
 
             // UPDATE : UPDATE DOCUMENT
@@ -727,11 +957,12 @@
             // TOGGLER : UPDATE FORM
             $("#updateDocumentForm").submit(function(e) {
                 e.preventDefault();
-                handleFormSubmit($(this), "{{ route('update-document-post') }}", "#updateDocModal");
+                handleDocumentFormSubmit($(this), "{{ route('update-document-post') }}",
+                    "#updateDocModal");
             });
 
             //DELETE : DELETE DOCUMENT
-            $(document).on("click", ".deletes", function() {
+            $(document).on("click", ".delete-doc", function() {
                 let docId = $(this).data("id");
                 let actId = $(this).data("activity_id");
 

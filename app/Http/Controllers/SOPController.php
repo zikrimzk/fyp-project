@@ -73,60 +73,60 @@ class SOPController extends Controller
         }
     }
 
-    public function addActivity(Request $req)
-    {
-        $validator = Validator::make($req->all(), [
-            'act_name' => 'required|string|unique:activities,act_name,',
-        ], [], [
-            'act_name' => 'activity name',
-        ]);
+    // public function addActivity(Request $req)
+    // {
+    //     $validator = Validator::make($req->all(), [
+    //         'act_name' => 'required|string|unique:activities,act_name,',
+    //     ], [], [
+    //         'act_name' => 'activity name',
+    //     ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput()
-                ->with('modal', 'addModal');
-        }
-        try {
-            $validated = $validator->validated();
-            Activity::create([
-                'act_name' => $validated['act_name'],
-            ]);
+    //     if ($validator->fails()) {
+    //         return redirect()->back()
+    //             ->withErrors($validator)
+    //             ->withInput()
+    //             ->with('modal', 'addModal');
+    //     }
+    //     try {
+    //         $validated = $validator->validated();
+    //         Activity::create([
+    //             'act_name' => $validated['act_name'],
+    //         ]);
 
-            return back()->with('success', 'Activity added successfully.');
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding activity.');
-        }
-    }
+    //         return back()->with('success', 'Activity added successfully.');
+    //     } catch (Exception $e) {
+    //         return back()->with('error', 'Oops! Error adding activity.');
+    //     }
+    // }
 
-    public function updateActivity(Request $req, $id)
-    {
-        $id = decrypt($id);
-        $validator = Validator::make($req->all(), [
-            'act_name_up' => 'required|string|unique:activities,act_name,' . $id,
-        ], [], [
-            'act_name_up' => 'activity name',
-        ]);
+    // public function updateActivity(Request $req, $id)
+    // {
+    //     $id = decrypt($id);
+    //     $validator = Validator::make($req->all(), [
+    //         'act_name_up' => 'required|string|unique:activities,act_name,' . $id,
+    //     ], [], [
+    //         'act_name_up' => 'activity name',
+    //     ]);
 
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput()
-                ->with('modal', 'updateModal-' . $id);
-        }
+    //     if ($validator->fails()) {
+    //         return redirect()->back()
+    //             ->withErrors($validator)
+    //             ->withInput()
+    //             ->with('modal', 'updateModal-' . $id);
+    //     }
 
-        try {
-            $validated = $validator->validated();
-            Activity::find($id)->update([
-                'act_name' => $validated['act_name_up'],
-            ]);
+    //     try {
+    //         $validated = $validator->validated();
+    //         Activity::find($id)->update([
+    //             'act_name' => $validated['act_name_up'],
+    //         ]);
 
-            return back()->with('success', 'Activity updated successfully.');
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating activity.');
-        }
-    }
+    //         return back()->with('success', 'Activity updated successfully.');
+    //     } catch (Exception $e) {
+    //         return back()->with('error', 'Oops! Error updating activity.');
+    //     }
+    // }
 
     public function deleteActivity($id, $opt)
     {
@@ -202,6 +202,92 @@ class SOPController extends Controller
             ]);
         } catch (Exception $e) {
             return abort(500);
+        }
+    }
+
+    public function viewActivity()
+    {
+        try {
+            $data = Activity::all();
+            return response()->json($data);
+        } catch (Exception $e) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Error: ' . $e->getMessage(),
+                ],
+                500
+            );
+        }
+    }
+
+    public function addActivity(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'act_name' => 'required|string|unique:activities,act_name,',
+        ], [], [
+            'act_name' => 'activity name',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $validated = $validator->validated();
+            $activity = Activity::create([
+                'act_name' => $validated['act_name'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'activity' => $activity,
+                'message' => 'Activity added successfully.'
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateActivity(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'act_name_up' => 'required|string|unique:activities,act_name,' . $req->id,
+        ], [], [
+            'act_name_up' => 'activity name',
+        ]);
+
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $validated = $validator->validated();
+            
+            $activity = Activity::findOrFail($req->id);
+            $activity->update([
+                'act_name' => $validated['act_name_up'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Activity updated successfully.'
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -340,7 +426,7 @@ class SOPController extends Controller
 
     public function updateDocument(Request $req)
     {
-            $validator = Validator::make($req->all(), [
+        $validator = Validator::make($req->all(), [
             'doc_name_up' => 'required|string',
             'isRequired_up' => 'required|integer',
             'isShowDoc_up' => 'required|integer',
@@ -351,7 +437,7 @@ class SOPController extends Controller
             'isShowDoc_up' => 'document appear in form',
             'doc_status_up' => 'document status',
         ]);
-        
+
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
