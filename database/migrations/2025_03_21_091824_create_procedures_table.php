@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('act_seq');
             $table->integer('timeline_sem');
             $table->integer('timeline_week');
-            $table->string('init_status')->comment('1-Open Always 2-Locked');
+            $table->integer('init_status')->default(2)->comment('1-Open Always 2-Locked');
             $table->integer('is_haveEva')->default(0)->comment('1-Yes 0-No');
             $table->text('material')->nullable();
             $table->timestamps();

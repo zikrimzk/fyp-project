@@ -96,7 +96,7 @@
                 </div>
 
                 <!-- [ Add Modal ] start -->
-                <form action="{{ route('add-procedure-post') }}" method="POST">
+                <form action="{{ route('add-procedure-post') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModal" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -282,7 +282,7 @@
                     <!-- [ Update Modal ] start -->
                     <form
                         action="{{ route('update-procedure-post', ['actID' => Crypt::encrypt($upd->activity_id), 'progID' => Crypt::encrypt($upd->programme_id)]) }}"
-                        method="POST">
+                        method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="modal fade" id="updateModal-{{ $upd->activity_id }}-{{ $upd->programme_id }}"
                             tabindex="-1" aria-labelledby="updateModal" aria-hidden="true">
@@ -350,39 +350,42 @@
                                                 </div>
                                             </div>
                                             <!--Activity Sequence Input-->
-                                            <div class="col-sm-12 col-md-3 col-lg-3">
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
                                                     <label for="act_seq_up" class="form-label">Activity Sequence <span
                                                             class="text-danger">*</span></label>
                                                     <input type="number" name="act_seq_up" id="act_seq_up"
                                                         class="form-control @error('act_seq_up') is-invalid @enderror"
-                                                        min="1" max="50" value="{{ $upd->act_seq }}" required>
+                                                        min="1" max="50" value="{{ $upd->act_seq }}"
+                                                        required>
                                                     @error('act_seq_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
                                             </div>
                                             <!--Semester Timeline Input-->
-                                            <div class="col-sm-12 col-md-3 col-lg-3">
+                                            <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
                                                     <label for="timeline_sem_up" class="form-label">Semester Timeline
                                                         <span class="text-danger">*</span></label>
                                                     <input type="number" name="timeline_sem_up" id="timeline_sem_up"
                                                         class="form-control @error('timeline_sem_up') is-invalid @enderror"
-                                                        min="1" max="50" value="{{ $upd->timeline_sem }}" required>
+                                                        min="1" max="50" value="{{ $upd->timeline_sem }}"
+                                                        required>
                                                     @error('timeline_sem_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
                                             </div>
                                             <!--Week Timeline Input-->
-                                            <div class="col-sm-12 col-md-3 col-lg-3">
+                                            <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
                                                     <label for="timeline_week_up" class="form-label">Week Timeline <span
                                                             class="text-danger">*</span></label>
                                                     <input type="number" name="timeline_week_up" id="timeline_week_up"
                                                         class="form-control @error('timeline_week_up') is-invalid @enderror"
-                                                        min="1" max="100" value="{{ $upd->timeline_week }}" required>
+                                                        min="1" max="100" value="{{ $upd->timeline_week }}"
+                                                        required>
                                                     @error('timeline_week_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -398,14 +401,14 @@
                                                         required>
                                                         @if ($upd->init_status == 1)
                                                             <option value="1" selected>Yes</option>
-                                                            <option value="0">No</option>
+                                                            <option value="2">No</option>
                                                         @elseif($upd->init_status == 2)
                                                             <option value="1">Yes</option>
-                                                            <option value="0"selected>No</option>
+                                                            <option value="2"selected>No</option>
                                                         @else
                                                             <option value="" selected>- Select Option -</option>
                                                             <option value="1">Yes</option>
-                                                            <option value="0">No</option>
+                                                            <option value="2">No</option>
                                                         @endif
                                                     </select>
                                                     @error('init_status_up')
@@ -441,7 +444,12 @@
                                                 <div class="mb-3">
                                                     <label for="material_up" class="form-label">Activity Material </label>
                                                     <input type="file" name="material_up" id="material_up"
-                                                        class="form-control @error('material_up') is-invalid @enderror">
+                                                        class="form-control @error('material_up') is-invalid @enderror mb-2">
+                                                    @if ($upd->material)
+                                                        <a href="{{ URL::signedRoute('view-material-get', ['filename' => Crypt::encrypt($upd->material)]) }}"
+                                                            target="_blank" class="link-primary">View Uploaded
+                                                            Material</a>
+                                                    @endif
                                                     @error('material_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror

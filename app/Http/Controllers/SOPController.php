@@ -7,8 +7,12 @@ use App\Models\Activity;
 use App\Models\Document;
 use App\Models\Procedure;
 use App\Models\Programme;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 
@@ -32,7 +36,7 @@ class SOPController extends Controller
     public function viewActivity()
     {
         try {
-            $data = Activity::all();
+            $data = Activity::withCount('documents')->get();
             return response()->json($data);
         } catch (Exception $e) {
             return response()->json(
@@ -242,13 +246,6 @@ class SOPController extends Controller
     /* Procedure Setting  */
     public function procedureSetting(Request $req)
     {
-        $data = DB::table('procedures as a')
-            ->join('activities as b', 'b.id', '=', 'a.activity_id')
-            ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-            ->select('a.*', 'b.*', 'c.*')
-            ->get();
-
-        // dd($data);
         try {
             if ($req->ajax()) {
 
@@ -284,13 +281,25 @@ class SOPController extends Controller
                     return $status;
                 });
 
+                $table->addColumn('material', function ($row) {
+                    $material = '';
+                    if ($row->material != null) {
+                        $material =
+                            '
+                            <a href="' . URL::signedRoute('view-material-get', ['filename' => Crypt::encrypt($row->material)]) . '" target="_blank" class="btn">
+                                <i class="fas fa-file-pdf f-20 text-danger"></i>
+                            </a>
+                  
+                        ';
+                    }
+                    return $material;
+                });
+
                 $table->addColumn('action', function ($row) {
                     $isReferenced = false;
-                    // $isReferenced = DB::table('students')->where('semester_id', $row->id)->exists();
-
                     $buttonEdit =
                         '
-                            <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
+                            <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary mb-2" data-bs-toggle="modal"
                                 data-bs-target="#updateModal-' . $row->activity_id . '-' . $row->programme_id . '">
                                 <i class="ti ti-edit f-20"></i>
                             </a>
@@ -299,7 +308,7 @@ class SOPController extends Controller
                     if (!$isReferenced) {
                         $buttonRemove =
                             '
-                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
+                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger mb-2" data-bs-toggle="modal"
                                     data-bs-target="#deleteModal-' . $row->activity_id . '-' . $row->programme_id . '">
                                     <i class="ti ti-trash f-20"></i>
                                 </a>
@@ -318,7 +327,7 @@ class SOPController extends Controller
                     return $buttonEdit . $buttonRemove;
                 });
 
-                $table->rawColumns(['is_haveEva', 'init_status', 'action']);
+                $table->rawColumns(['is_haveEva', 'init_status', 'material', 'action']);
 
                 return $table->make(true);
             }
@@ -335,7 +344,6 @@ class SOPController extends Controller
 
     public function addProcedure(Request $req)
     {
-        // dd($req->all());
         $validator = Validator::make($req->all(), [
             'activity_id'   => 'required|integer|exists:activities,id',
             'programme_id'  => 'required|integer|exists:programmes,id',
@@ -343,8 +351,8 @@ class SOPController extends Controller
             'timeline_sem'  => 'required|integer|min:1',
             'timeline_week' => 'required|integer|min:1|max:52',
             'init_status'   => 'required|integer|in:1,2',
-            'is_haveEva'    => 'required|boolean',
-            'material'      => 'nullable|string|max:255',
+            'is_haveEva'    => 'required|boolean|in:0,1',
+            'material'      => 'nullable|file|mimes:pdf|max:5120',
         ], [], [
             'activity_id'   => 'activity',
             'programme_id'  => 'programme',
@@ -363,7 +371,30 @@ class SOPController extends Controller
                 ->with('modal', 'addModal');
         }
         try {
+
             $validated = $validator->validated();
+            $fileName = "";
+            $filePath = "";
+            if ($req->hasFile('material')) {
+                // 1 - GET THE DATA
+                $activity = Activity::findOrFail($validated['activity_id']);
+                $programme = Programme::findOrFail($validated['programme_id']);
+
+                // 2 - CALL THE DATA
+                $act_name = $activity->act_name ?? 'N/A';
+                $prog_code = $programme->prog_code ?? 'N/A';
+                $prog_mode = $programme->prog_mode ?? 'N/A';
+
+                // 3 - SET & DECLARE FILE ROUTE
+                $fileName = Str::upper(str_replace(' ', '', $act_name) . '_' . $prog_code . '(' . $prog_mode . ')') . '.pdf';
+                $filePath = "Activity/{$activity->act_name}/Material/";
+
+                // 4 - SAVE THE FILE
+
+                $file = $req->file('material');
+                $file->storeAs($filePath, $fileName, 'public');
+            }
+
             Procedure::create([
                 'activity_id'   => $validated['activity_id'],
                 'programme_id'  => $validated['programme_id'],
@@ -372,12 +403,12 @@ class SOPController extends Controller
                 'timeline_week' => $validated['timeline_week'],
                 'init_status'   => $validated['init_status'],
                 'is_haveEva'    => $validated['is_haveEva'],
-                'material'      => $validated['material'],
+                'material'      => $filePath . $fileName,
             ]);
 
             return back()->with('success', 'Procedure added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding procedure.');
+            return back()->with('error', 'Oops! Error adding procedure.' . $e->getMessage());
         }
     }
 
@@ -385,16 +416,21 @@ class SOPController extends Controller
     {
         $actID = decrypt($actID);
         $progID = decrypt($progID);
-        dd($req->all());
 
         $validator = Validator::make($req->all(), [
-            'sem_label_up' => 'required|string',
-            'sem_startdate_up' => 'required|date',
-            'sem_enddate_up' => 'required|date|after:sem_startdate_up',
+            'act_seq_up'       => 'required|integer|min:1',
+            'timeline_sem_up'  => 'required|integer|min:1',
+            'timeline_week_up' => 'required|integer|min:1|max:52',
+            'init_status_up'   => 'required|integer|in:1,2',
+            'is_haveEva_up'    => 'required|boolean|in:0,1',
+            'material_up'      => 'nullable|file|mimes:pdf|max:5120',
         ], [], [
-            'sem_label_up' => 'semester label',
-            'sem_startdate_up' => 'semester start date',
-            'sem_enddate_up' => 'semester end date',
+            'act_seq_up'       => 'activity sequence',
+            'timeline_sem_up'  => 'semester timeline',
+            'timeline_week_up' => 'week timeline',
+            'init_status_up'   => 'initial status',
+            'is_haveEva_up'    => 'evaluation',
+            'material_up'      => 'material',
         ]);
 
         if ($validator->fails()) {
@@ -405,12 +441,43 @@ class SOPController extends Controller
         }
 
         try {
+
             $validated = $validator->validated();
 
+            if ($req->hasFile('material_up')) {
+
+                // 1 - GET THE DATA
+                $activity = Activity::findOrFail($actID);
+                $programme = Programme::findOrFail($progID);
+
+                // 2 - CALL THE DATA
+                $act_name = $activity->act_name ?? 'N/A';
+                $prog_code = $programme->prog_code ?? 'N/A';
+                $prog_mode = $programme->prog_mode ?? 'N/A';
+
+                // 3 - SET & DECLARE FILE ROUTE
+                $fileName = Str::upper(str_replace(' ', '', $act_name) . '_' . $prog_code . '(' . $prog_mode . ')') . '.pdf';
+                $filePath = "Activity/{$activity->act_name}/Material/";
+
+                // 4 - CHECK FOR OLD FILE
+                $oldMaterial = Procedure::where('activity_id', $actID)->where('programme_id', $progID)->value('material');
+                if ($oldMaterial && Storage::exists($oldMaterial)) {
+                    Storage::delete($oldMaterial);
+                }
+
+                // 5 - SAVE NEW FILE
+                $filepath = $req->file('material_up')->storeAs($filePath, $fileName, 'public');
+                Procedure::where('activity_id', $actID)->where('programme_id', $progID)->update([
+                    'material' => $filepath
+                ]);
+            }
+
             Procedure::where('activity_id', $actID)->where('programme_id', $progID)->update([
-                'sem_startdate' => $validated['sem_startdate_up'],
-                'sem_enddate' => $validated['sem_enddate_up'],
-                'sem_status' => $validated['sem_status']
+                'act_seq'       => $validated['act_seq_up'],
+                'timeline_sem'  => $validated['timeline_sem_up'],
+                'timeline_week' => $validated['timeline_week_up'],
+                'init_status'   => $validated['init_status_up'],
+                'is_haveEva'    => $validated['is_haveEva_up'],
             ]);
 
             return back()->with('success', 'Procedure updated successfully.');
@@ -429,5 +496,17 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error deleting procedure.');
         }
+    }
+
+    public function viewMaterialFile($filename)
+    {
+        $filename = Crypt::decrypt($filename);
+        $path = storage_path("app/public/{$filename}");
+
+        if (!file_exists($path)) {
+            abort(404, 'File not found.');
+        }
+
+        return response()->file($path);
     }
 }

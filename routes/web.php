@@ -24,7 +24,7 @@ Route::get('/', function () {
 
 Route::prefix('staff')->group(function () {
 
-    //Standard Operation Procedure (SOP)
+    // Standard Operation Procedure (SOP)
 
     /* Activity + Document Setting */
     Route::get('/activity-setting', [SOPController::class, 'activitySetting'])->name('activity-setting');
@@ -42,9 +42,11 @@ Route::prefix('staff')->group(function () {
     Route::post('/add-procedure', [SOPController::class, 'addProcedure'])->name('add-procedure-post');
     Route::post('/update-procedure-{actID}-{progID}', [SOPController::class, 'updateProcedure'])->name('update-procedure-post');
     Route::get('/delete-procedure-{actID}-{progID}', [SOPController::class, 'deleteProcedure'])->name('delete-procedure-get');
+    Route::get('/view-material/{filename}', [SOPController::class, 'viewMaterialFile'])->where('filename', '.*')->name('view-material-get');
 
 
-    // System Setting 
+
+    // Setting 
 
     /* Faculty Setting */
     Route::get('/faculty-setting', [SettingController::class, 'facultySetting'])->name('faculty-setting');
