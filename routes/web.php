@@ -26,19 +26,21 @@ Route::prefix('staff')->group(function () {
 
     //Standard Operation Procedure (SOP)
 
-    /* Activity Setting */
+    /* Activity + Document Setting */
     Route::get('/activity-setting', [SOPController::class, 'activitySetting'])->name('activity-setting');
+    Route::get('/view-activity', [SOPController::class, 'viewActivity'])->name('view-activity-get');
     Route::post('/add-activity', [SOPController::class, 'addActivity'])->name('add-activity-post');
     Route::post('/update-activity', [SOPController::class, 'updateActivity'])->name('update-activity-post');
-    Route::get('/delete-activity-{id}-{opt}', [SOPController::class, 'deleteActivity'])->name('delete-activity-get');
-
-    /* Document Setting */
-    Route::get('/document-setting', [SOPController::class, 'documentSetting'])->name('document-setting');
-    Route::get('/view-activity', [SOPController::class, 'viewActivity'])->name('view-activity-get');
+    Route::get('/delete-activity-{id}', [SOPController::class, 'deleteActivity'])->name('delete-activity-get');
     Route::get('/view-document-by-activity-{id}', [SOPController::class, 'viewDocumentByActivity'])->name('view-document-by-activity-get');
     Route::post('/add-document', [SOPController::class, 'addDocument'])->name('add-document-post');
     Route::post('/update-document', [SOPController::class, 'updateDocument'])->name('update-document-post');
     Route::get('/delete-document-{id}', [SOPController::class, 'deleteDocument'])->name('delete-document-get');
+
+    /* Procedure Setting */
+    Route::get('/procedure-setting',[SOPController::class,'procedureSetting'])->name('procedure-setting');
+
+    
 
     // System Setting 
 

@@ -54,13 +54,10 @@
                         <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                     </a>
                     <ul class="pc-submenu">
-                        <li class="pc-item"><a class="pc-link" href="">Procedure Setting</a>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('procedure-setting') }}">Procedure Setting</a>
                         </li>
                         <li class="pc-item">
                             <a class="pc-link" href="{{ route('activity-setting') }}">Activity Setting</a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('document-setting') }}">Document Setting</a>
                         </li>
                     </ul>
                 </li>
