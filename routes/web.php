@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SOPController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SupervisionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +24,18 @@ Route::get('/', function () {
 
 
 Route::prefix('staff')->group(function () {
+
+    // Supervision
+
+    /* Student Management */
+    Route::get('/student-management', [SupervisionController::class, 'studentManagement'])->name('student-management');
+    Route::post('/add-student', [SupervisionController::class, 'addProcedure'])->name('add-student-post');
+    Route::post('/update-student-{id}', [SupervisionController::class, 'updateProcedure'])->name('update-student-post');
+    Route::get('/delete-student-{id}-{opt}', [SupervisionController::class, 'deleteProcedure'])->name('delete-student-get');
+
+   
+
+
 
     // Standard Operation Procedure (SOP)
 

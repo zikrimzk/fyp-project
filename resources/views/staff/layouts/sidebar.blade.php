@@ -38,11 +38,40 @@
                     </a>
                 </li>
 
-
-
                 <li class="pc-item pc-caption">
-                    <label>System Setting</label>
+                    <label>Committee</label>
                 </li>
+
+                <li class="pc-item pc-hasmenu">
+                    <a href="javascript:void(0)" class="pc-link">
+                        <span class="pc-micon">
+                            <svg class="pc-icon">
+                                <use xlink:href="#custom-document"></use>
+                            </svg>
+                        </span>
+                        <span class="pc-mtext">Supervision</span>
+                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                    </a>
+                    <ul class="pc-submenu">
+                        <li class="pc-item">
+                            <a class="pc-link" href="">
+                                Supervision Arrangement
+                            </a>
+                        </li>
+                        <li class="pc-item">
+                            <a class="pc-link" href="{{ route('student-management') }}">
+                                Student Management
+                            </a>
+                        </li>
+                        <li class="pc-item">
+                            <a class="pc-link" href="">
+                                Staff Management
+                            </a>
+                        </li>
+                        
+                    </ul>
+                </li>
+
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
                         <span class="pc-micon">
@@ -54,7 +83,8 @@
                         <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                     </a>
                     <ul class="pc-submenu">
-                        <li class="pc-item"><a class="pc-link" href="{{ route('procedure-setting') }}">Procedure Setting</a>
+                        <li class="pc-item"><a class="pc-link" href="{{ route('procedure-setting') }}">Procedure
+                                Setting</a>
                         </li>
                         <li class="pc-item">
                             <a class="pc-link" href="{{ route('activity-setting') }}">Activity Setting</a>
@@ -62,6 +92,10 @@
                     </ul>
                 </li>
 
+
+                <li class="pc-item pc-caption">
+                    <label>Setting</label>
+                </li>
 
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
