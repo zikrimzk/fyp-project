@@ -94,29 +94,283 @@
                 <!-- [ Add Modal ] start -->
                 <form action="{{ route('add-activity-post') }}" method="POST">
                     @csrf
-                    <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModal" aria-hidden="true">
+                    <div class="modal fade" id="addModal" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="mb-0">Add Student</h5>
+                                    <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
+                                        data-bs-dismiss="modal">
+                                        <i class="ti ti-x f-20"></i>
+                                    </a>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-center align-items-center mb-3">
+                                                    <img src="{{ asset('assets/images/user/avatar-1.jpg') }}"
+                                                        alt="Profile Photo" width="150" height="150"
+                                                        class="user-avtar rounded-circle">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-8">
+                                            <div class="row">
+                                                <h5 class="mb-2">A. Personal Information</h5>
+
+                                                <!-- Name Input -->
+                                                <div class="col-sm-12 col-md-6 col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="student_name" class="form-label">Student Name <span
+                                                                class="text-danger">*</span></label>
+                                                        <input type="text"
+                                                            class="form-control @error('student_name') is-invalid @enderror"
+                                                            id="student_name" name="student_name"
+                                                            placeholder="Enter Student Name"
+                                                            value="{{ old('student_name') }}" required>
+                                                        @error('student_name')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                                <!-- Gender Input -->
+                                                <div class="col-sm-12 col-md-6 col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="student_gender" class="form-label">Gender
+                                                            <span class="text-danger">*</span></label>
+                                                        <select name="student_gender" id="student_gender"
+                                                            class="form-select @error('student_gender') is-invalid @enderror"
+                                                            required>
+                                                            <option value="" selected>- Select Gender -</option>
+                                                            @if (old('student_gender') == 'male')
+                                                                <option value="male" selected>Male</option>
+                                                                <option value="female">Female</option>
+                                                            @elseif(old('student_gender') == 'female')
+                                                                <option value="">- Select Gender -</option>
+                                                                <option value="male">Male</option>
+                                                                <option value="female" selected>Female</option>
+                                                            @else
+                                                                <option value="male">Male</option>
+                                                                <option value="female">Female</option>
+                                                            @endif
+                                                        </select>
+                                                        @error('student_gender')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                                <!-- Email Input -->
+                                                <div class="col-sm-12 col-md-6 col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="student_email" class="form-label">Email
+                                                            <span class="text-danger">*</span></label>
+                                                        <input type="email"
+                                                            class="form-control @error('student_email') is-invalid @enderror"
+                                                            id="student_email" name="student_email"
+                                                            placeholder="Enter Student Email"
+                                                            value="{{ old('student_email') }}" required>
+                                                        @error('student_email')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                                <!-- Phone No Input -->
+                                                <div class="col-sm-12 col-md-6 col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="student_phoneno" class="form-label">
+                                                            Phone Number
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">+60</span>
+                                                            <input type="text"
+                                                                class="form-control @error('student_phoneno') is-invalid @enderror tasker-phoneno"
+                                                                placeholder="Enter Phone Number" name="student_phoneno"
+                                                                value="{{ old('student_phoneno') }}" maxlength="13" />
+                                                            @error('student_phoneno')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                            <div id="phone-error-message" class="text-danger text-sm"
+                                                                style="display: none;">
+                                                                Phone number must be in a valid format (10 or 11 digits)!
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Address Input -->
+                                                <div class="col-sm-12 col-md-12 col-lg-12">
+                                                    <div class="mb-3">
+                                                        <label for="student_matricno" class="form-label">
+                                                            Address
+                                                        </label>
+                                                        <textarea name="student_address" id="student_address" placeholder="Enter Address" cols="10" rows="5"
+                                                            class="form-control @error('student_address') is-invalid @enderror">{{ old('student_address') }}</textarea>
+                                                        @error('student_address')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+
+                                                <h5 class="mb-2">B. Academic Information</h5>
+
+                                                <!-- Matric No Input -->
+                                                <div class="col-sm-12 col-md-6 col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="student_matricno" class="form-label">Matric Number
+                                                            <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="text"
+                                                            class="form-control @error('student_matricno') is-invalid @enderror"
+                                                            id="student_matricno" name="student_matricno"
+                                                            placeholder="Enter Matric Number"
+                                                            value="{{ old('student_matricno') }}" required>
+                                                        @error('student_matricno')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                                <!-- Semester Input -->
+                                                <div class="col-sm-12 col-md-6 col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="semester_id" class="form-label">Semester
+                                                        </label>
+                                                        <input type="text"
+                                                            class="form-control @error('semester_id') is-invalid @enderror"
+                                                            id="semester_id" name="semester_id"
+                                                            placeholder="Enter Matric Number" value="{{ $current_sem }}"
+                                                            readonly>
+                                                        @error('semester_id')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                                <!--Programme Input-->
+                                                <div class="col-sm-12 col-md-6 col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="programme_id" class="form-label">Programme <span
+                                                                class="text-danger">*</span></label>
+                                                        <select name="programme_id" id="programme_id"
+                                                            class="form-select @error('programme_id') is-invalid @enderror"
+                                                            required>
+                                                            <option value="">- Select Programme -</option>
+                                                            @foreach ($progs as $prog)
+                                                                @if (old('programme_id') == $prog->id)
+                                                                    <option value="{{ $prog->id }}" selected>
+                                                                        {{ $prog->prog_code }} ({{ $prog->prog_mode }})
+                                                                    </option>
+                                                                @else
+                                                                    <option value="{{ $prog->id }}">
+                                                                        {{ $prog->prog_code }} ({{ $prog->prog_mode }})
+                                                                    </option>
+                                                                @endif
+                                                            @endforeach
+                                                        </select>
+                                                        @error('programme_id')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                                <!-- Status Input -->
+                                                <div class="col-sm-12 col-md-6 col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">
+                                                            Status <span class="text-danger">*</span>
+                                                        </label>
+                                                        <select
+                                                            class="form-select @error('student_status') is-invalid @enderror"
+                                                            name="student_status" required>
+                                                            <option value ="" selected>- Select Status -</option>
+                                                            @if (old('student_status') == 1)
+                                                                <option value ="1" selected>Active</option>
+                                                                <option value ="2">Inactive</option>
+                                                            @elseif(old('student_status') == 2)
+                                                                <option value ="1">Active</option>
+                                                                <option value ="2" selected>Inactive</option>
+                                                            @else
+                                                                <option value ="1">Active</option>
+                                                                <option value ="2">Inactive</option>
+                                                            @endif
+                                                        </select>
+                                                        @error('student_status')
+                                                            <div class="invalid-feedback">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="modal-footer justify-content-end">
+                                    <div class="flex-grow-1 text-end">
+                                        <button type="reset" class="btn btn-link-danger btn-pc-default"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Add Student</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="addModals" tabindex="-1" aria-labelledby="addModal"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="addModalLabel">Add Activity</h5>
+                                    <h5 class="modal-title" id="addModalLabel">Add Student</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
                                     <div class="row">
+
+                                        <!-- Name Input -->
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="mb-3">
-                                                <label for="act_name" class="form-label">Activity Name <span
+                                                <label for="student_name" class="form-label">Student Name <span
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
-                                                    class="form-control @error('act_name') is-invalid @enderror"
-                                                    id="act_name" name="act_name" placeholder="Enter Activity Name"
-                                                    value="{{ old('act_name') }}" required>
-                                                @error('act_name')
+                                                    class="form-control @error('student_name') is-invalid @enderror"
+                                                    id="student_name" name="student_name"
+                                                    placeholder="Enter Student Name" value="{{ old('student_name') }}"
+                                                    required>
+                                                @error('student_name')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
                                         </div>
+                                        <!-- Matric No Input -->
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="student_matricno" class="form-label">Matric Number <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text"
+                                                    class="form-control @error('student_matricno') is-invalid @enderror"
+                                                    id="student_matricno" name="student_matricno"
+                                                    placeholder="Enter Matric Number"
+                                                    value="{{ old('student_matricno') }}" required>
+                                                @error('student_matricno')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <!-- Matric No Input -->
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="student_matricno" class="form-label">Matric Number <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text"
+                                                    class="form-control @error('student_matricno') is-invalid @enderror"
+                                                    id="student_matricno" name="student_matricno"
+                                                    placeholder="Enter Matric Number"
+                                                    value="{{ old('student_matricno') }}" required>
+                                                @error('student_matricno')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                                 <div class="modal-footer justify-content-end">
@@ -125,7 +379,8 @@
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="button" class="btn btn-light btn-pc-default w-100"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-primary w-100" id="addApplicationBtn">
+                                                <button type="submit" class="btn btn-primary w-100"
+                                                    id="addApplicationBtn">
                                                     Add Activity
                                                 </button>
                                             </div>

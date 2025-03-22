@@ -29,9 +29,9 @@ Route::prefix('staff')->group(function () {
 
     /* Student Management */
     Route::get('/student-management', [SupervisionController::class, 'studentManagement'])->name('student-management');
-    Route::post('/add-student', [SupervisionController::class, 'addProcedure'])->name('add-student-post');
-    Route::post('/update-student-{id}', [SupervisionController::class, 'updateProcedure'])->name('update-student-post');
-    Route::get('/delete-student-{id}-{opt}', [SupervisionController::class, 'deleteProcedure'])->name('delete-student-get');
+    Route::post('/add-student', [SupervisionController::class, 'addStudent'])->name('add-student-post');
+    Route::post('/update-student-{id}', [SupervisionController::class, 'updateStudent'])->name('update-student-post');
+    Route::get('/delete-student-{id}-{opt}', [SupervisionController::class, 'deleteStudent'])->name('delete-student-get');
 
    
 

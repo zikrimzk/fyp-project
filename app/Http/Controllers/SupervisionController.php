@@ -80,7 +80,7 @@ class SupervisionController extends Controller
             }
             return view('staff.supervision.student-management', [
                 'title' => 'Student Management',
-                'sems' => Semester::all(),
+                'current_sem' => Semester::where('sem_status', 1)->first()->sem_label ?? 'N/A',
                 'progs' => Programme::all()
             ]);
         } catch (Exception $e) {
