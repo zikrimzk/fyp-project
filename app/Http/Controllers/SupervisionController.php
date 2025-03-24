@@ -9,6 +9,7 @@ use App\Models\Semester;
 use App\Models\Programme;
 use App\Models\Department;
 use Illuminate\Support\Str;
+use App\Exports\StaffExport;
 use App\Imports\StaffImport;
 use Illuminate\Http\Request;
 use App\Imports\StudentImport;
@@ -372,6 +373,10 @@ class SupervisionController extends Controller
 
                 $table = DataTables::of($data)->addIndexColumn();
 
+                $table->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->id . '">';
+                });
+
                 $table->addColumn('staff_photo', function ($row) {
                     $photo = '
                              <div class="row align-items-center">
@@ -461,7 +466,7 @@ class SupervisionController extends Controller
                     return $buttonEdit . $buttonRemove;
                 });
 
-                $table->rawColumns(['staff_role', 'staff_photo', 'staff_status', 'action']);
+                $table->rawColumns(['checkbox', 'staff_role', 'staff_photo', 'staff_status', 'action']);
 
                 return $table->make(true);
             }
@@ -660,15 +665,6 @@ class SupervisionController extends Controller
         }
     }
 
-    public function importStaffs(Request $req)
-    {
-        try {
-            Excel::import(new StaffImport, $req->file('file'));
-            return back()->with('success', 'Staff imported successfully.');;
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing staff.' . $e->getMessage());
-        }
-    }
     public function importStaff(Request $request)
     {
         try {
@@ -685,6 +681,178 @@ class SupervisionController extends Controller
             )->with('skippedRows', $import->skippedRows);
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error importing staff.' . $e->getMessage());
+        }
+    }
+
+    public function exportStaff(Request $req)
+    {
+        try {
+            $selectedIds = $req->query('ids');
+            return Excel::download(new StaffExport($selectedIds), 'e-PGS_STAFF_LIST_' . date('dMY') . '.xlsx');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error exporting students.' . $e->getMessage());
+        }
+    }
+
+    /* Supervision Arrangement */
+    public function supervisionArrangement(Request $req)
+    {
+        try {
+            if ($req->ajax()) {
+
+                $data = DB::table('students as a')
+                    ->join('semesters as b', 'b.id', '=', 'a.semester_id')
+                    ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+                    ->select('a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode')
+                    ->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('student_photo', function ($row) {
+                    $photo = '
+                            <div class="row align-items-center">
+                                <div class="col-auto pe-0">
+                                    <div class="avatar-sms">
+                                        <img src="' . (empty($row->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo)) . '" alt="user-image" />
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <h6 class="mb-0 text-truncate">' . $row->student_name . '</h6>
+                                            <small class="text-muted
+                                                text-truncate">' . $row->student_email . '</small>
+                                        </div>
+                                    </div>
+                                   
+                                </div>
+                            </div>
+                    ';
+
+                    return $photo;
+                });
+
+
+                $table->addColumn('action', function ($row) {
+                    $isReferenced = false;
+                    // $isReferenced = DB::table('supervision')->where('student_id', $row->id)->exists();
+
+                    $buttonEdit =
+                        '
+                            <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
+                                data-bs-target="#updateModal-' . $row->id . '">
+                                <i class="ti ti-edit f-20"></i>
+                            </a>
+                        ';
+
+                    if (!$isReferenced) {
+                        $buttonRemove =
+                            '
+                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal-' . $row->id . '">
+                                    <i class="ti ti-trash f-20"></i>
+                                </a>
+                            ';
+                    } else {
+
+                        $buttonRemove =
+                            '
+                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger ' . ($row->student_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
+                                    data-bs-target="#disableModal-' . $row->id . '">
+                                    <i class="ti ti-trash f-20"></i>
+                                </a>
+                            ';
+                    }
+
+                    return $buttonEdit . $buttonRemove;
+                });
+
+                $table->rawColumns(['student_photo', 'action']);
+
+                return $table->make(true);
+            }
+            return view('staff.supervision.supervision-arrangement', [
+                'title' => 'Supervision Arrangement',
+                'studs' => Student::all(),
+            ]);
+        } catch (Exception $e) {
+            return abort(500);
+        }
+    }
+
+    public function addSupervision(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'staff_name' => 'required|string|max:255',
+            'staff_id' => 'required|string|unique:staff,staff_id',
+            'staff_email' => 'required|email|unique:staff,staff_email',
+            'staff_password' => 'nullable|string|min:8|max:50',
+            'staff_phoneno' => 'nullable|string|max:20',
+            'staff_role' => 'required|integer|in:1,2,3,4',
+            'staff_status' => 'required|integer|in:1,2',
+            'staff_photo' => 'nullable|image|mimes:jpg,jpeg,png',
+            'department_id' => 'required|integer|exists:departments,id',
+        ], [], [
+            'staff_name' => 'staff name',
+            'staff_id' => 'staff ID',
+            'staff_email' => 'staff email',
+            'staff_password' => 'password',
+            'staff_phoneno' => 'staff phone number',
+            'staff_role' => 'staff role',
+            'staff_status' => 'staff status',
+            'staff_photo' => 'staff photo',
+            'department_id' => 'department',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('modal', 'addModal');
+        }
+
+        try {
+            $validated = $validator->validated();
+
+            /* SET STAFF INITIAL PASSWORD */
+            $password = bcrypt("pg@" . Str::lower($validated['staff_id']));
+
+            /* MAKE STAFF DIRECTORY PATH */
+            $staffDir = "Staff-Photo";
+
+            /* SAVE STAFF PHOTO */
+            $fileName = null;
+            $filePath = null;
+            if ($req->hasFile('staff_photo')) {
+
+                // 1 - GET THE SPECIFIC DATA
+                $staff_id = Str::upper($validated['staff_id']);
+
+                // 2 - SET & DECLARE FILE ROUTE
+                $fileName = Str::upper($staff_id . '_' . time() . '_PHOTO') . '.' . $req->file('staff_photo')->getClientOriginalExtension();
+                $filePath = $staffDir;
+
+                // 3 - SAVE THE FILE
+                $file = $req->file('staff_photo');
+                $filePath = $file->storeAs($filePath, $fileName, 'public');
+            }
+
+            /* CREATE STAFF DATA */
+            Staff::create([
+                'staff_name' => Str::headline($validated['staff_name']),
+                'staff_id' => Str::upper($validated['staff_id']),
+                'staff_email' => $validated['staff_email'],
+                'staff_password' => $password,
+                'staff_phoneno' => $validated['staff_phoneno'] ?? null,
+                'staff_role' => $validated['staff_role'],
+                'staff_status' => $validated['staff_status'],
+                'staff_photo' => $filePath ?? null,
+                'department_id' => $validated['department_id'],
+            ]);
+
+            return back()->with('success', 'Staff added successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error adding staff.' . $e->getMessage());
         }
     }
 }

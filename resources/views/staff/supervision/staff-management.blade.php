@@ -87,13 +87,18 @@
                         <div class="card-body">
                             <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
                                 <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addModal"><i class="ti ti-plus f-18"></i>
+                                    data-bs-toggle="modal" data-bs-target="#addModal" id="addStaffBtn"><i
+                                        class="ti ti-plus f-18"></i>
                                     Add Staff
                                 </button>
                                 <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#importModal"><i
+                                    data-bs-toggle="modal" data-bs-target="#importModal" id="importStaffBtn"><i
                                         class="ti ti-file-import f-18"></i>
                                     Import Staff
+                                </button>
+                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
+                                    id="excelExportBtn">
+                                    <i class="ti ti-file-export f-18"></i> Export Staff
                                 </button>
                             </div>
                         </div>
@@ -103,11 +108,18 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
+                            <div class="mb-3">
+                                <button type="button"
+                                    class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2 d-none"
+                                    id="clearSelectionBtn">
+                                    0 selected <i class="ms-2 ti ti-x f-18"></i>
+                                </button>
+                            </div>
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
                                         <tr>
-                                            <th scope="col">#</th>
+                                            <th><input type="checkbox" id="select-all" class="form-check-input"></th>
                                             <th scope="col">Name</th>
                                             <th scope="col">Staff ID</th>
                                             <th scope="col">Role</th>
@@ -357,7 +369,7 @@
                                     <div class="row">
                                         <!-- File Input Section -->
                                         <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="mb-3">
+                                            <div class="mb-1">
                                                 <!-- Alert Note -->
                                                 <div class="alert alert-warning d-flex align-items-center" role="alert">
                                                     <i class="ti ti-alert-circle me-2"></i>
@@ -387,8 +399,11 @@
                                                             <i class="ti ti-upload"></i> Browse
                                                         </button>
                                                     </div>
-                                                    <div class="fw-normal mt-2 text-muted">Click <a href=""
-                                                            class="link-primary">here</a> to download the template</div>
+                                                    <div class="fw-normal mt-2 text-muted">Click <a
+                                                            href="{{ asset('assets/excel-template/e-PGS_STAFF_REGISTRATION_TEMPLATE.xlsx') }}"
+                                                            class="link-primary" target="_blank"
+                                                            download="e-PGS_STAFF_REGISTRATION_TEMPLATE.xlsx">here</a> to
+                                                        download the template</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -724,63 +739,58 @@
     </div>
 
     <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function() {
+        $(document).ready(function() {
+
+            // DATATABLE : STAFF
+            var table = $('.data-table').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                autoWidth: true,
+                ajax: {
+                    url: "{{ route('staff-management') }}",
+                },
+                columns: [{
+                        data: 'checkbox',
+                        name: 'checkbox',
+                        orderable: false,
+                        searchable: false,
+
+                    },
+                    {
+                        data: 'staff_photo',
+                        name: 'staff_photo'
+                    },
+                    {
+                        data: 'staff_id',
+                        name: 'staff_id'
+                    },
+                    {
+                        data: 'staff_role',
+                        name: 'staff_role'
+                    },
+                    {
+                        data: 'staff_status',
+                        name: 'staff_status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
+
+            });
+
             var modalToShow = "{{ session('modal') }}";
             if (modalToShow) {
-                var modalElement = document.getElementById(modalToShow);
-                if (modalElement) {
-                    var modal = new bootstrap.Modal(modalElement);
+                var modalElement = $("#" + modalToShow);
+                if (modalElement.length) {
+                    var modal = new bootstrap.Modal(modalElement[0]);
                     modal.show();
                 }
             }
-        });
-
-        $(document).ready(function() {
-
-            $(function() {
-
-                // DATATABLE : STUDENT
-                var table = $('.data-table').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    responsive: true,
-                    autoWidth: true,
-                    ajax: {
-                        url: "{{ route('staff-management') }}",
-                    },
-                    columns: [{
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            searchable: false,
-                            className: "text-start"
-                        },
-                        {
-                            data: 'staff_photo',
-                            name: 'staff_photo'
-                        },
-                        {
-                            data: 'staff_id',
-                            name: 'staff_id'
-                        },
-                        {
-                            data: 'staff_role',
-                            name: 'staff_role'
-                        },
-                        {
-                            data: 'staff_status',
-                            name: 'staff_status'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false
-                        }
-                    ]
-
-                });
-
-            });
 
             $('#staff_photo').on('change', function() {
                 const file = event.target.files[0];
@@ -842,6 +852,93 @@
                 let fileName = $(this).val().split("\\").pop();
                 $('#file-name').val(fileName || "No file chosen");
                 $('#import-btn').prop('disabled', false);
+            });
+
+            /* SELECT : MULTIPLE STAFF SELECT */
+            const addBtn = $("#addStaffBtn");
+            const importBtn = $("#importStaffBtn");
+            const excelExportBtn = $("#excelExportBtn");
+            const clearBtn = $("#clearSelectionBtn");
+
+            let selectedIds = new Set();
+
+            // Handle "Select All" checkbox
+            $("#select-all").on("change", function() {
+                let isChecked = $(this).prop("checked");
+
+                $(".user-checkbox").each(function() {
+                    let id = $(this).val();
+                    this.checked = isChecked;
+
+                    if (isChecked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                });
+                toggleSelectButton();
+            });
+
+            // Handle individual checkbox selection
+            $(document).on("change", ".user-checkbox", function() {
+                let id = $(this).val();
+                if ($(this).prop("checked")) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+                toggleSelectButton();
+            });
+
+            // Restore checkbox states after DataTables refresh
+            $('.data-table').on("draw.dt", function() {
+                $(".user-checkbox").each(function() {
+                    let id = $(this).val();
+                    this.checked = selectedIds.has(id);
+                });
+
+                // If all checkboxes are selected, keep "Select All" checked
+                $("#select-all").prop(
+                    "checked",
+                    $(".user-checkbox").length === $(".user-checkbox:checked").length
+                );
+
+                toggleSelectButton();
+            });
+
+            function toggleSelectButton() {
+                let selectedCount = selectedIds.size;
+
+                addBtn.toggleClass("disabled", selectedIds.size !== 0);
+                importBtn.toggleClass("disabled", selectedIds.size !== 0);
+
+                if (selectedCount > 0) {
+                    clearBtn.removeClass("d-none").html(
+                        `${selectedCount} selected <i class="ms-2 ti ti-x f-18"></i>`);
+                } else {
+                    clearBtn.addClass("d-none");
+                }
+            }
+
+            clearBtn.on("click", function() {
+                $(".user-checkbox").prop("checked", false);
+                $("#select-all").prop("checked", false);
+                selectedIds.clear();
+                toggleSelectButton();
+            });
+
+            excelExportBtn.click(function(e) {
+                e.preventDefault();
+                let selectedIds = $(".user-checkbox:checked").map(function() {
+                    return $(this).val();
+                }).get();
+
+                let url = "{{ route('export-staff-get') }}";
+
+                if (selectedIds.length > 0) {
+                    url += "?ids=" + selectedIds.join(",");
+                }
+                window.location.href = url;
             });
 
 
