@@ -49,6 +49,32 @@
                         <p class="mb-0">{{ session('error') }}</p>
                     </div>
                 @endif
+                @if (session()->has('skippedRows'))
+                    <div class="alert alert-warning alert-dismissible" role="alert">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-info-circle"></i>
+                                Error
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <ul>
+                            @foreach (session('skippedRows') as $row)
+                                <li>
+                                    <strong>Staff ID:</strong> {{ $row['data']['staff_id'] }} -
+                                    <strong>Staff Name:</strong> {{ $row['data']['staff_name'] }}
+                                    <br>
+                                    <strong>Errors:</strong>
+                                    <ul>
+                                        @foreach ($row['errors'] as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
             </div>
             <!-- [ Alert ] end -->
 
@@ -114,26 +140,24 @@
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="d-grid justify-content-center align-items-center mb-3">
                                                 <div class="user-upload avatar-s w-100">
-                                                    <img src="{{ old('staff_photo', asset('assets/images/user/default-profile-1.jpg')) }}"
+                                                    <img src="{{ asset('assets/images/user/default-profile-1.jpg') }}"
                                                         alt="Profile Photo" width="150" height="150"
                                                         class="previewImage">
                                                     <label for="staff_photo" class="img-avtar-upload">
                                                         <i class="ti ti-camera f-24 mb-1"></i>
                                                         <span>Upload</span>
                                                     </label>
-                                                    <input type="file" id="staff_photo" name="staff_photo" class="d-none"
-                                                        accept="image/*">
+                                                    <input type="file" id="staff_photo" name="staff_photo"
+                                                        class="d-none" accept="image/*" />
+                                                    @error('staff_photo')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
                                                 </div>
                                                 <label for="staff_photo"
-                                                    class="link-dark fw-semibold w-100 text-center mt-3"
+                                                    class=" link-dark fw-semibold w-100 text-center mt-3"
                                                     style="cursor:pointer;">
                                                     Change Photo
                                                 </label>
-                                                @error('staff_photo')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                                <input type="text" name="old_staff_photo"
-                                                    value="{{ session('staff_photo') }}">
                                             </div>
 
                                         </div>
@@ -316,7 +340,7 @@
                 <!-- [ Add Modal ] end -->
 
                 <!-- [ Import Modal ] start -->
-                <form action="{{ route('import-student-post') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('import-staff-post') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal fade" id="importModal" data-bs-keyboard="false" tabindex="-1"
                         aria-hidden="true">
@@ -353,16 +377,18 @@
 
                                                 <!-- Custom File Upload -->
                                                 <div class="mt-3">
-                                                    <label for="file" class="form-label fw-bold">Upload File</label>
                                                     <div class="input-group">
-                                                        <input class="form-control d-none" type="file" name="file"
-                                                            id="file" accept=".csv, .xlsx" required>
+                                                        <input class="form-control d-none" type="file"
+                                                            name="staff_file" id="file" accept=".csv, .xlsx"
+                                                            required>
                                                         <input type="text" class="form-control" id="file-name"
                                                             placeholder="No file chosen" readonly>
                                                         <button class="btn btn-primary" type="button" id="browse-btn">
                                                             <i class="ti ti-upload"></i> Browse
                                                         </button>
                                                     </div>
+                                                    <div class="fw-normal mt-2 text-muted">Click <a href=""
+                                                            class="link-primary">here</a> to download the template</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -403,29 +429,29 @@
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="d-grid justify-content-center align-items-center mb-3">
                                                     <div class="user-upload avatar-s w-100">
-                                                        <img src="{{ old('staff_photo', asset('assets/images/user/default-profile-1.jpg')) }}"
+                                                        <img src="{{ empty($upd->staff_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->staff_photo) }}"
                                                             alt="Profile Photo" width="150" height="150"
                                                             class="previewImage">
-                                                        <label for="staff_photo" class="img-avtar-upload">
+                                                        <label for="staff_photo_up_{{ $upd->id }}"
+                                                            class="img-avtar-upload">
                                                             <i class="ti ti-camera f-24 mb-1"></i>
                                                             <span>Upload</span>
                                                         </label>
-                                                        <input type="file" id="staff_photo" name="staff_photo"
-                                                            class="d-none" accept="image/*">
-                                                        <input type="text" name="old_staff_photo"
-                                                            value="{{ old('staff_photo') }}">
-                                                        @error('staff_photo')
-                                                            <div class="invalid-feedback">{{ $message }}</div>
-                                                        @enderror
+                                                        <input type="file" id="staff_photo_up_{{ $upd->id }}"
+                                                            name="staff_photo_up" class="d-none staff_photo"
+                                                            accept="image/*" />
                                                     </div>
-                                                    <label for="staff_photo"
-                                                        class="link-dark fw-semibold w-100 text-center mt-3"
+                                                    <label for="staff_photo_up_{{ $upd->id }}"
+                                                        class=" link-dark fw-semibold w-100 text-center mt-3"
                                                         style="cursor:pointer;">
                                                         Change Photo
                                                     </label>
+
                                                 </div>
                                             </div>
-
+                                            @error('staff_photo_up')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
 
                                             <h5 class="mb-2">A. Personal Information</h5>
 
@@ -604,7 +630,6 @@
                                             <button type="submit" class="btn btn-primary">Save Changes</button>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -756,18 +781,15 @@
 
             });
 
-            let sessionImage = "{{ session('staff_photo') }}";
-            if (sessionImage) {
-                $('.previewImage').attr('src', sessionImage);
-            }
-
-            $('#staff_photo').on('change', function(event) {
+            $('#staff_photo').on('change', function() {
                 const file = event.target.files[0];
                 if (file) {
                     const reader = new FileReader();
+
                     reader.onload = function(e) {
                         $('.previewImage').attr('src', e.target.result).show();
                     };
+
                     reader.readAsDataURL(file);
                 }
             });

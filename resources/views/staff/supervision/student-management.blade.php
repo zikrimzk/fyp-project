@@ -419,7 +419,7 @@
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="d-grid justify-content-center align-items-center mb-3">
                                                     <div class="user-upload avatar-s w-100">
-                                                        <img src="{{ empty($upd->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->student_photo) }}"
+                                                        <img src="{{ empty($upd->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->student_directory .'/photo/'.$upd->student_photo) }}"
                                                             alt="Profile Photo" width="150" height="150"
                                                             class="previewImage">
                                                         <label for="student_photo_up_{{ $upd->id }}"

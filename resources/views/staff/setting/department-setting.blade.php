@@ -121,6 +121,20 @@
 
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="mb-3">
+                                                <label for="dep_code" class="form-label">Department Code <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text"
+                                                    class="form-control @error('dep_code') is-invalid @enderror code-input"
+                                                    id="dep_code" name="dep_code" placeholder="Enter Department Code"
+                                                    value="{{ old('dep_code') }}" required>
+                                                @error('dep_code')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
                                                 <label for="fac_id" class="form-label">Faculty <span
                                                         class="text-danger">*</span></label>
                                                 <select name="fac_id" id="fac_id"
@@ -211,6 +225,21 @@
                                                         placeholder="Enter Department Name" value="{{ $upd->dep_name }}"
                                                         required>
                                                     @error('dep_name_up')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                                <div class="mb-3">
+                                                    <label for="dep_code_up" class="form-label">Department Code <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="text"
+                                                        class="form-control @error('dep_code_up') is-invalid @enderror code-input"
+                                                        id="dep_code_up" name="dep_code_up"
+                                                        placeholder="Enter Department Code" value="{{ $upd->dep_code }}"
+                                                        required>
+                                                    @error('dep_code_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -437,6 +466,20 @@
 
                 });
 
+            });
+
+            $('.code-input').on('input', function() {
+                // 1. Get the current input value
+                let inputValue = $(this).val();
+
+                // 2. Remove any non-letter characters (including numbers)
+                inputValue = inputValue.replace(/[^A-Za-z]/g, '');
+
+                // 3. Convert to uppercase
+                inputValue = inputValue.toUpperCase();
+
+                // 4. Update the input field with the sanitized value
+                $(this).val(inputValue);
             });
 
         });

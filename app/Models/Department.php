@@ -11,6 +11,7 @@ class Department extends Model
 
     protected  $fillable =[
         'dep_name',
+        'dep_code',
         'dep_status',
         'fac_id',
     ];

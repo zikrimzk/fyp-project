@@ -9,12 +9,12 @@ use App\Models\Semester;
 use App\Models\Programme;
 use App\Models\Department;
 use Illuminate\Support\Str;
+use App\Imports\StaffImport;
 use Illuminate\Http\Request;
 use App\Imports\StudentImport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
@@ -40,7 +40,7 @@ class SupervisionController extends Controller
                             <div class="row align-items-center">
                                 <div class="col-auto pe-0">
                                     <div class="avatar-sms">
-                                        <img src="' . (empty($row->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $row->student_photo)) . '" alt="user-image" />
+                                        <img src="' . (empty($row->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo)) . '" alt="user-image" />
                                     </div>
                                 </div>
                                 <div class="col">
@@ -203,7 +203,7 @@ class SupervisionController extends Controller
                 'student_phoneno' => $validated['student_phoneno'] ?? null,
                 'student_gender' => $validated['student_gender'],
                 'student_status' => $validated['student_status'],
-                'student_photo' => $filePath ?? null,
+                'student_photo' => $fileName ?? null,
                 'student_directory' => $validated['student_directory'] ?? null,
                 'semester_id' =>  $curr_sem_id,
                 'programme_id' => $validated['programme_id'],
@@ -241,7 +241,7 @@ class SupervisionController extends Controller
             'student_directory_up' => 'student directory',
             'programme_id_up' => 'programme',
         ]);
-        // dd($validator);
+
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
@@ -270,21 +270,28 @@ class SupervisionController extends Controller
             } else {
                 Storage::makeDirectory($validated['student_directory_up']);
             }
+
             /* SAVE STUDENT PHOTO */
             if ($req->hasFile('student_photo_up')) {
-                // 1 - GET THE DATA
+
+                // 1 - REMOVE OLD PHOTO
+                if ($student->student_photo && Storage::exists($student->student_directory . '/photo/' . $student->student_photo)) {
+                    Storage::delete($student->student_directory . '/photo/' . $student->student_photo);
+                }
+
+                // 2 - GET THE DATA
                 $student_matricno = Str::upper($validated['student_matricno_up']);
 
-                // 2 - SET & DECLARE FILE ROUTE
+                // 3 - SET & DECLARE FILE ROUTE
                 $fileName = Str::upper($student_matricno . '_' . time() . '_PHOTO') . '.' . $req->file('student_photo_up')->getClientOriginalExtension();
                 $filePath = $validated['student_directory_up'] . "/photo";
 
-                // 3 - SAVE THE FILE
+                // 4 - SAVE THE FILE
                 $file = $req->file('student_photo_up');
                 $filePath = $file->storeAs($filePath, $fileName, 'public');
 
                 Student::where('id', $student->id)->update([
-                    'student_photo' => $filePath
+                    'student_photo' => $fileName
                 ]);
             }
             Student::where('id', $student->id)->update([
@@ -352,7 +359,7 @@ class SupervisionController extends Controller
         }
     }
 
-    /* Student Management */
+    /* Staff Management */
     public function staffManagement(Request $req)
     {
         try {
@@ -470,7 +477,6 @@ class SupervisionController extends Controller
 
     public function addStaff(Request $req)
     {
-        // dd($req->all());
         $validator = Validator::make($req->all(), [
             'staff_name' => 'required|string|max:255',
             'staff_id' => 'required|string|unique:staff,staff_id',
@@ -479,7 +485,7 @@ class SupervisionController extends Controller
             'staff_phoneno' => 'nullable|string|max:20',
             'staff_role' => 'required|integer|in:1,2,3,4',
             'staff_status' => 'required|integer|in:1,2',
-            'staff_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'staff_photo' => 'nullable|image|mimes:jpg,jpeg,png',
             'department_id' => 'required|integer|exists:departments,id',
         ], [], [
             'staff_name' => 'staff name',
@@ -494,23 +500,6 @@ class SupervisionController extends Controller
         ]);
 
         if ($validator->fails()) {
-            if ($req->hasFile('staff_photo')) {
-                $file = $req->file('staff_photo');
-                $base64Image = 'data:' . $file->getClientMimeType() . ';base64,' . base64_encode(file_get_contents($file));
-                Session::flash('staff_photo', $base64Image);
-            }
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput()
-                ->with('modal', 'addModal');
-        }
-
-        if ($validator->fails()) {
-            if ($req->hasFile('staff_photo')) {
-                $file = $req->file('staff_photo');
-                $base64Image = 'data:' . $file->getClientMimeType() . ';base64,' . base64_encode(file_get_contents($file));
-                Session::flash('staff_photo', $base64Image);
-            }
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
@@ -520,20 +509,15 @@ class SupervisionController extends Controller
         try {
             $validated = $validator->validated();
 
-            /* GET STAFF NAME */
-            $staff_name = Str::upper($validated['staff_name']);
-
             /* SET STAFF INITIAL PASSWORD */
             $password = bcrypt("pg@" . Str::lower($validated['staff_id']));
 
             /* MAKE STAFF DIRECTORY PATH */
-            $staffDir = "Staff/" . $validated['staff_id'] . "_" . str_replace(' ', '_', $staff_name);
-            Storage::makeDirectory($staffDir);
+            $staffDir = "Staff-Photo";
 
             /* SAVE STAFF PHOTO */
             $fileName = null;
-            // $filePath = null;
-            $filePath = $req->old_staff_photo;
+            $filePath = null;
             if ($req->hasFile('staff_photo')) {
 
                 // 1 - GET THE SPECIFIC DATA
@@ -541,7 +525,7 @@ class SupervisionController extends Controller
 
                 // 2 - SET & DECLARE FILE ROUTE
                 $fileName = Str::upper($staff_id . '_' . time() . '_PHOTO') . '.' . $req->file('staff_photo')->getClientOriginalExtension();
-                $filePath = $staffDir . "/photo";
+                $filePath = $staffDir;
 
                 // 3 - SAVE THE FILE
                 $file = $req->file('staff_photo');
@@ -571,29 +555,25 @@ class SupervisionController extends Controller
     {
         $id = Crypt::decrypt($id);
         $validator = Validator::make($req->all(), [
-            'student_name_up' => 'required|string',
-            'student_matricno_up' => 'required|string|unique:students,student_matricno,' . $id,
-            'student_email_up' => 'required|email|unique:students,student_email,' . $id,
-            'student_address_up' => 'nullable|string',
-            'student_phoneno_up' => 'nullable|string',
-            'student_gender_up' => 'required|string|in:male,female',
-            'student_status_up' => 'required|integer|in:1,2',
-            'student_photo_up' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'student_directory_up' => 'nullable|string',
-            'programme_id_up' => 'required|integer',
+            'staff_name_up' => 'required|string|max:255',
+            'staff_id_up' => 'required|string|unique:staff,staff_id,' . $id,
+            'staff_email_up' => 'required|email|unique:staff,staff_email,' . $id,
+            'staff_phoneno_up' => 'nullable|string|max:20',
+            'staff_role_up' => 'required|integer|in:1,2,3,4',
+            'staff_status_up' => 'required|integer|in:1,2',
+            'staff_photo_up' => 'nullable|image|mimes:jpg,jpeg,png',
+            'department_id_up' => 'required|integer|exists:departments,id',
         ], [], [
-            'student_name_up' => 'student name',
-            'student_matricno_up' => 'student matric number',
-            'student_email_up' => 'student email',
-            'student_address_up' => 'student address',
-            'student_phoneno_up' => 'student phone number',
-            'student_gender_up' => 'student gender',
-            'student_status_up' => 'student status',
-            'student_photo_up' => 'student photo',
-            'student_directory_up' => 'student directory',
-            'programme_id_up' => 'programme',
+            'staff_name_up' => 'staff name',
+            'staff_id_up' => 'staff ID',
+            'staff_email_up' => 'staff email',
+            'staff_phoneno_up' => 'staff phone number',
+            'staff_role_up' => 'staff role',
+            'staff_status_up' => 'staff status',
+            'staff_photo_up' => 'staff photo',
+            'department_id_up' => 'department',
         ]);
-        // dd($validator);
+
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
@@ -603,57 +583,51 @@ class SupervisionController extends Controller
 
         try {
             $validated = $validator->validated();
-            $student = Student::where('id', $id)->first() ?? null;
-
-            /* GET CURRENT SEMESTER */
-            $curr_sem_id = $student->semester_id;
-            $curr_sem = Semester::where('id', $curr_sem_id)->first()->sem_label ?? 'N/A';
-
-            /* GET STUDENT NAME */
-            $student_name = Str::upper($validated['student_name_up']);
-
-            /* MAKE STUDENT DIRECTORY PATH */
-            $oldDirectory = $student->student_directory;
-            $validated['student_directory_up'] = "Student/" . str_replace('/', '', $curr_sem) . "/" . $validated['student_matricno_up'] . "_" . str_replace(' ', '_', $student_name);
+            $staff = Staff::where('id', $id)->first() ?? null;
 
 
-            if ($oldDirectory !== $validated['student_directory_up']) {
-                Storage::move($oldDirectory, $validated['student_directory_up']);
-            } else {
-                Storage::makeDirectory($validated['student_directory_up']);
-            }
-            /* SAVE STUDENT PHOTO */
-            if ($req->hasFile('student_photo_up')) {
-                // 1 - GET THE DATA
-                $student_matricno = Str::upper($validated['student_matricno_up']);
+            /* MAKE STAFF DIRECTORY PATH */
+            $staffDir = "Staff-Photo";
 
-                // 2 - SET & DECLARE FILE ROUTE
-                $fileName = Str::upper($student_matricno . '_' . time() . '_PHOTO') . '.' . $req->file('student_photo_up')->getClientOriginalExtension();
-                $filePath = $validated['student_directory_up'] . "/photo";
+            /* SAVE STAFF PHOTO */
+            if ($req->hasFile('staff_photo_up')) {
 
-                // 3 - SAVE THE FILE
-                $file = $req->file('student_photo_up');
+                // 1 - REMOVE OLD PHOTO
+                if ($staff->staff_photo && Storage::exists($staff->staff_photo)) {
+                    Storage::delete($staff->staff_photo);
+                }
+
+                // 2 - GET THE SPECIFIC DATA
+                $staff_id = Str::upper($validated['staff_id_up']);
+
+                // 3 - SET & DECLARE FILE ROUTE
+                $fileName = Str::upper($staff_id . '_' . time() . '_PHOTO') . '.' . $req->file('staff_photo_up')->getClientOriginalExtension();
+                $filePath = $staffDir;
+
+                // 4 - SAVE THE FILE
+                $file = $req->file('staff_photo_up');
                 $filePath = $file->storeAs($filePath, $fileName, 'public');
 
-                Student::where('id', $student->id)->update([
-                    'student_photo' => $filePath
+                // 5 - UPDATE PHOTO PATH
+                Staff::where('id', $staff->id)->update([
+                    'staff_photo' => $filePath
                 ]);
             }
-            Student::where('id', $student->id)->update([
-                'student_name' => Str::headline($validated['student_name_up']),
-                'student_matricno' => Str::upper($validated['student_matricno_up']),
-                'student_email' => $validated['student_email_up'],
-                'student_address' => $validated['student_address_up'] ?? null,
-                'student_phoneno' => $validated['student_phoneno_up'] ?? null,
-                'student_gender' => $validated['student_gender_up'],
-                'student_status' => $validated['student_status_up'],
-                'student_directory' => $validated['student_directory_up'] ?? null,
-                'programme_id' => $validated['programme_id_up'],
+
+            /* UPDATE STAFF DATA */
+            Staff::where('id', $staff->id)->update([
+                'staff_name' => Str::headline($validated['staff_name_up']),
+                'staff_id' => Str::upper($validated['staff_id_up']),
+                'staff_email' => $validated['staff_email_up'],
+                'staff_phoneno' => $validated['staff_phoneno_up'] ?? null,
+                'staff_role' => $validated['staff_role_up'],
+                'staff_status' => $validated['staff_status_up'],
+                'department_id' => $validated['department_id_up'],
             ]);
 
-            return back()->with('success', 'Student updated successfully.');
+            return back()->with('success', 'Staff updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating student.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating staff.' . $e->getMessage());
         }
     }
 
@@ -661,27 +635,56 @@ class SupervisionController extends Controller
     {
         try {
             $id = decrypt($id);
-            $student = Student::find($id);
+            $staff = Staff::find($id);
 
-            if (!$student) {
-                return back()->with('error', 'Student not found.');
+            if (!$staff) {
+                return back()->with('error', 'Staff not found.');
             }
-
-            $dirPath = $student->student_directory;
 
             if ($opt == 1) {
-                if (!empty($student->student_directory) && Storage::exists($dirPath)) {
-                    Storage::deleteDirectory($dirPath);
+                // 1 - REMOVE OLD PHOTO
+                if ($staff->staff_photo && Storage::exists($staff->staff_photo)) {
+                    Storage::delete($staff->staff_photo);
                 }
-                $student->delete();
 
-                return back()->with('success', 'Student deleted successfully.');
+                // 2 - DELETE STAFF
+                $staff->delete();
+
+                return back()->with('success', 'Staff deleted successfully.');
             } elseif ($opt == 2) {
-                $student->update(['student_status' => 2]);
-                return back()->with('success', 'Student set as inactive successfully.');
+                $staff->update(['staff_status' => 2]);
+                return back()->with('success', 'Staff set as inactive successfully.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting student.');
+            return back()->with('error', 'Oops! Error deleting staff.');
+        }
+    }
+
+    public function importStaffs(Request $req)
+    {
+        try {
+            Excel::import(new StaffImport, $req->file('file'));
+            return back()->with('success', 'Staff imported successfully.');;
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error importing staff.' . $e->getMessage());
+        }
+    }
+    public function importStaff(Request $request)
+    {
+        try {
+            $request->validate([
+                'staff_file' => 'required|mimes:xlsx,csv'
+            ]);
+
+            $import = new StaffImport();
+            Excel::import($import, $request->file('staff_file'));
+
+            return back()->with(
+                'success',
+                "{$import->insertedCount} staff successfully inserted. {$import->skippedCount} data were not inserted."
+            )->with('skippedRows', $import->skippedRows);
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error importing staff.' . $e->getMessage());
         }
     }
 }

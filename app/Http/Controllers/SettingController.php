@@ -249,12 +249,14 @@ class SettingController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'dep_name' => 'required|string',
+            'dep_code' => 'required|string|max:15|unique:departments,dep_code,',
             'dep_status' => 'required|integer',
             'fac_id' => 'required|integer',
         ], [], [
-            'dep_name' => 'required|string',
-            'dep_status' => 'required|integer',
-            'fac_id' => 'required|integer',
+            'dep_name' => 'department name',
+            'dep_code' => 'department code',
+            'dep_status' => 'department status',
+            'fac_id' => 'faculty',
         ]);
 
         if ($validator->fails()) {
@@ -267,6 +269,7 @@ class SettingController extends Controller
             $validated = $validator->validated();
             Department::create([
                 'dep_name' => $validated['dep_name'],
+                'dep_code' => $validated['dep_code'],
                 'dep_status' => $validated['dep_status'],
                 'fac_id' => $validated['fac_id']
             ]);
@@ -283,12 +286,14 @@ class SettingController extends Controller
 
         $validator = Validator::make($req->all(), [
             'dep_name_up' => 'required|string',
+            'dep_code_up' => 'required|string|max:15|unique:departments,dep_code,' . $id,
             'dep_status_up' => 'required|integer',
             'fac_id_up' => 'required|integer',
         ], [], [
-            'dep_name_up' => 'required|string',
-            'dep_status_up' => 'required|integer',
-            'fac_id_up' => 'required|integer',
+            'dep_name_up' => 'department name',
+            'dep_code_up' => 'department code',
+            'dep_status_up' => 'department status',
+            'fac_id_up' => 'faculty',
         ]);
 
 
@@ -302,6 +307,7 @@ class SettingController extends Controller
             $validated = $validator->validated();
             Department::find($id)->update([
                 'dep_name' => $validated['dep_name_up'],
+                'dep_code' => $validated['dep_code_up'],
                 'dep_status' => $validated['dep_status_up'],
                 'fac_id' => $validated['fac_id_up']
             ]);

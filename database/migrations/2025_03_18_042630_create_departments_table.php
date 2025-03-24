@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('departments', function (Blueprint $table) {
             $table->id();
             $table->string('dep_name');
+            $table->string('dep_code')->unique();
             $table->integer('dep_status')->default(1);
             $table->foreignId('fac_id')->constrained('faculties');
             $table->timestamps();

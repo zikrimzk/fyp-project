@@ -41,7 +41,7 @@ Route::prefix('staff')->group(function () {
     Route::post('/add-staff', [SupervisionController::class, 'addStaff'])->name('add-staff-post');
     Route::post('/update-staff-{id}', [SupervisionController::class, 'updateStaff'])->name('update-staff-post');
     Route::get('/delete-staff-{id}-{opt}', [SupervisionController::class, 'deleteStaff'])->name('delete-staff-get');
-
+    Route::post('/import-staff-data', [SupervisionController::class, 'importStaff'])->name('import-staff-post');
 
 
 
