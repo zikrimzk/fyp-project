@@ -1,6 +1,3 @@
-@php
-    use App\Models\Semester;
-@endphp
 @extends('staff.layouts.main')
 
 @section('content')
@@ -13,12 +10,12 @@
                         <div class="col-md-12">
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervision</a></li>
-                                <li class="breadcrumb-item" aria-current="page">Student Management</li>
+                                <li class="breadcrumb-item" aria-current="page">Staff Management</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">Student Management</h2>
+                                <h2 class="mb-0">Staff Management</h2>
                             </div>
                         </div>
                     </div>
@@ -58,19 +55,19 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Student Management ] start -->
+                <!-- [ Staff Management ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
                                 <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
                                     data-bs-toggle="modal" data-bs-target="#addModal"><i class="ti ti-plus f-18"></i>
-                                    Add Student
+                                    Add Staff
                                 </button>
                                 <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
                                     data-bs-toggle="modal" data-bs-target="#importModal"><i
                                         class="ti ti-file-import f-18"></i>
-                                    Import Student
+                                    Import Staff
                                 </button>
                             </div>
                         </div>
@@ -86,9 +83,8 @@
                                         <tr>
                                             <th scope="col">#</th>
                                             <th scope="col">Name</th>
-                                            <th scope="col">Matric No</th>
-                                            <th scope="col">Programme</th>
-                                            <th scope="col">Mode</th>
+                                            <th scope="col">Staff ID</th>
+                                            <th scope="col">Role</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>
                                         </tr>
@@ -100,13 +96,13 @@
                 </div>
 
                 <!-- [ Add Modal ] start -->
-                <form action="{{ route('add-student-post') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('add-staff-post') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal fade" id="addModal" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="mb-0">Add Student</h5>
+                                    <h5 class="mb-0">Add Staff</h5>
                                     <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
                                         data-bs-dismiss="modal">
                                         <i class="ti ti-x f-20"></i>
@@ -118,24 +114,26 @@
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="d-grid justify-content-center align-items-center mb-3">
                                                 <div class="user-upload avatar-s w-100">
-                                                    <img src="{{ asset('assets/images/user/default-profile-1.jpg') }}"
+                                                    <img src="{{ old('staff_photo', asset('assets/images/user/default-profile-1.jpg')) }}"
                                                         alt="Profile Photo" width="150" height="150"
                                                         class="previewImage">
-                                                    <label for="student_photo" class="img-avtar-upload">
+                                                    <label for="staff_photo" class="img-avtar-upload">
                                                         <i class="ti ti-camera f-24 mb-1"></i>
                                                         <span>Upload</span>
                                                     </label>
-                                                    <input type="file" id="student_photo" name="student_photo"
-                                                        class="d-none" accept="image/*" />
-                                                    @error('student_photo')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
+                                                    <input type="file" id="staff_photo" name="staff_photo" class="d-none"
+                                                        accept="image/*">
                                                 </div>
-                                                <label for="student_photo"
-                                                    class=" link-dark fw-semibold w-100 text-center mt-3"
+                                                <label for="staff_photo"
+                                                    class="link-dark fw-semibold w-100 text-center mt-3"
                                                     style="cursor:pointer;">
                                                     Change Photo
                                                 </label>
+                                                @error('staff_photo')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                                <input type="text" name="old_staff_photo"
+                                                    value="{{ session('staff_photo') }}">
                                             </div>
 
                                         </div>
@@ -145,40 +143,13 @@
                                         <!-- Name Input -->
                                         <div class="col-sm-12 col-md-6 col-lg-6">
                                             <div class="mb-3">
-                                                <label for="student_name" class="form-label">Student Name <span
+                                                <label for="staff_name" class="form-label">Staff Name <span
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
-                                                    class="form-control @error('student_name') is-invalid @enderror"
-                                                    id="student_name" name="student_name"
-                                                    placeholder="Enter Student Name" value="{{ old('student_name') }}"
-                                                    required>
-                                                @error('student_name')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!-- Gender Input -->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="student_gender" class="form-label">Gender
-                                                    <span class="text-danger">*</span></label>
-                                                <select name="student_gender" id="student_gender"
-                                                    class="form-select @error('student_gender') is-invalid @enderror"
-                                                    required>
-                                                    <option value="" selected>- Select Gender -</option>
-                                                    @if (old('student_gender') == 'male')
-                                                        <option value="male" selected>Male</option>
-                                                        <option value="female">Female</option>
-                                                    @elseif(old('student_gender') == 'female')
-                                                        <option value="">- Select Gender -</option>
-                                                        <option value="male">Male</option>
-                                                        <option value="female" selected>Female</option>
-                                                    @else
-                                                        <option value="male">Male</option>
-                                                        <option value="female">Female</option>
-                                                    @endif
-                                                </select>
-                                                @error('student_gender')
+                                                    class="form-control @error('staff_name') is-invalid @enderror"
+                                                    id="staff_name" name="staff_name" placeholder="Enter Staff Name"
+                                                    value="{{ old('staff_name') }}" required>
+                                                @error('staff_name')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -186,14 +157,13 @@
                                         <!-- Email Input -->
                                         <div class="col-sm-12 col-md-6 col-lg-6">
                                             <div class="mb-3">
-                                                <label for="student_email" class="form-label">Email
+                                                <label for="staff_email" class="form-label">Email
                                                     <span class="text-danger">*</span></label>
                                                 <input type="email"
-                                                    class="form-control @error('student_email') is-invalid @enderror"
-                                                    id="student_email" name="student_email"
-                                                    placeholder="Enter Student Email" value="{{ old('student_email') }}"
-                                                    required>
-                                                @error('student_email')
+                                                    class="form-control @error('staff_email') is-invalid @enderror"
+                                                    id="staff_email" name="staff_email" placeholder="Enter Staff Email"
+                                                    value="{{ old('staff_email') }}" required>
+                                                @error('staff_email')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -201,16 +171,16 @@
                                         <!-- Phone No Input -->
                                         <div class="col-sm-12 col-md-6 col-lg-6">
                                             <div class="mb-3">
-                                                <label for="student_phoneno" class="form-label">
+                                                <label for="staff_phoneno" class="form-label">
                                                     Phone Number
                                                 </label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">+60</span>
                                                     <input type="text"
-                                                        class="form-control @error('student_phoneno') is-invalid @enderror phonenum-input"
-                                                        placeholder="Enter Phone Number" name="student_phoneno"
-                                                        value="{{ old('student_phoneno') }}" maxlength="13" />
-                                                    @error('student_phoneno')
+                                                        class="form-control @error('staff_phoneno') is-invalid @enderror phonenum-input"
+                                                        placeholder="Enter Phone Number" name="staff_phoneno"
+                                                        value="{{ old('staff_phoneno') }}" maxlength="13" />
+                                                    @error('staff_phoneno')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                     <div id="phone-error-message" class="text-danger text-sm"
@@ -220,74 +190,87 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Address Input -->
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="mb-3">
-                                                <label for="student_matricno" class="form-label">
-                                                    Address
-                                                </label>
-                                                <textarea name="student_address" id="student_address" placeholder="Enter Address" cols="10" rows="5"
-                                                    class="form-control @error('student_address') is-invalid @enderror">{{ old('student_address') }}</textarea>
-                                                @error('student_address')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
 
-                                        <h5 class="mb-2 mt-3">B. Academic Information</h5>
+                                        <h5 class="mb-2 mt-3">B. Work Information</h5>
 
-                                        <!-- Matric No Input -->
+                                        <!-- Staff ID Input -->
                                         <div class="col-sm-12 col-md-6 col-lg-6">
                                             <div class="mb-3">
-                                                <label for="student_matricno" class="form-label">Matric Number
+                                                <label for="staff_id" class="form-label">Staff ID
                                                     <span class="text-danger">*</span>
                                                 </label>
                                                 <input type="text"
-                                                    class="form-control @error('student_matricno') is-invalid @enderror matric-input"
-                                                    id="student_matricno" name="student_matricno"
-                                                    placeholder="Enter Matric Number"
-                                                    value="{{ old('student_matricno') }}" required>
-                                                @error('student_matricno')
+                                                    class="form-control @error('staff_id') is-invalid @enderror ids-input"
+                                                    id="staff_id" name="staff_id" placeholder="Enter Staff ID"
+                                                    value="{{ old('staff_id') }}" required>
+                                                @error('staff_id')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
                                         </div>
-                                        <!-- Semester Input -->
+                                        <!--Department Input-->
                                         <div class="col-sm-12 col-md-6 col-lg-6">
                                             <div class="mb-3">
-                                                <label for="semester_id" class="form-label">Semester
-                                                </label>
-                                                <input type="text"
-                                                    class="form-control @error('semester_id') is-invalid @enderror"
-                                                    id="semester_id" name="semester_id" placeholder="Current Semester"
-                                                    value="{{ $current_sem }}" readonly>
-                                                @error('semester_id')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!--Programme Input-->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="programme_id" class="form-label">Programme <span
+                                                <label for="department_id" class="form-label">Department <span
                                                         class="text-danger">*</span></label>
-                                                <select name="programme_id" id="programme_id"
-                                                    class="form-select @error('programme_id') is-invalid @enderror"
+                                                <select name="department_id" id="department_id"
+                                                    class="form-select @error('department_id') is-invalid @enderror"
                                                     required>
-                                                    <option value="">- Select Programme -</option>
-                                                    @foreach ($progs as $prog)
-                                                        @if (old('programme_id') == $prog->id)
-                                                            <option value="{{ $prog->id }}" selected>
-                                                                {{ $prog->prog_code }} ({{ $prog->prog_mode }})
+                                                    <option value="">- Select Department -</option>
+                                                    @foreach ($deps as $dep)
+                                                        @if (old('department_id') == $dep->id)
+                                                            <option value="{{ $dep->id }}" selected>
+                                                                {{ $dep->dep_name }}
                                                             </option>
                                                         @else
-                                                            <option value="{{ $prog->id }}">
-                                                                {{ $prog->prog_code }} ({{ $prog->prog_mode }})
+                                                            <option value="{{ $dep->id }}">
+                                                                {{ $dep->dep_name }}
                                                             </option>
                                                         @endif
                                                     @endforeach
                                                 </select>
-                                                @error('programme_id')
+                                                @error('department_id')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <!-- Role Input -->
+                                        <div class="col-sm-12 col-md-6 col-lg-6">
+                                            <div class="mb-3">
+                                                <label for="staff_role" class="form-label">
+                                                    Role <span class="text-danger">*</span>
+                                                </label>
+                                                <select class="form-select @error('staff_role') is-invalid @enderror"
+                                                    name="staff_role" required>
+                                                    <option value ="" selected>- Select Role -</option>
+                                                    @if (old('staff_role') == 1)
+                                                        <option value ="1" selected>Committee</option>
+                                                        <option value ="2">Lecturer</option>
+                                                        <option value ="3">Timbalan Dekan Pendidikan</option>
+                                                        <option value ="4">Dekan</option>
+                                                    @elseif(old('staff_role') == 2)
+                                                        <option value ="1">Committee</option>
+                                                        <option value ="2" selected>Lecturer</option>
+                                                        <option value ="3">Timbalan Dekan Pendidikan</option>
+                                                        <option value ="4">Dekan</option>
+                                                    @elseif(old('staff_role') == 3)
+                                                        <option value ="1">Committee</option>
+                                                        <option value ="2">Lecturer</option>
+                                                        <option value ="3" selected>Timbalan Dekan Pendidikan</option>
+                                                        <option value ="4">Dekan</option>
+                                                    @elseif(old('staff_role') == 4)
+                                                        <option value ="1">Committee</option>
+                                                        <option value ="2">Lecturer</option>
+                                                        <option value ="3">Timbalan Dekan Pendidikan</option>
+                                                        <option value ="4" selected>Dekan</option>
+                                                    @else
+                                                        <option value ="1">Committee</option>
+                                                        <option value ="2">Lecturer</option>
+                                                        <option value ="3">Timbalan Dekan Pendidikan</option>
+                                                        <option value ="4">Dekan</option>
+                                                    @endif
+                                                </select>
+                                                @error('staff_role')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -298,13 +281,13 @@
                                                 <label class="form-label">
                                                     Status <span class="text-danger">*</span>
                                                 </label>
-                                                <select class="form-select @error('student_status') is-invalid @enderror"
-                                                    name="student_status" required>
+                                                <select class="form-select @error('staff_status') is-invalid @enderror"
+                                                    name="staff_status" required>
                                                     <option value ="" selected>- Select Status -</option>
-                                                    @if (old('student_status') == 1)
+                                                    @if (old('staff_status') == 1)
                                                         <option value ="1" selected>Active</option>
                                                         <option value ="2">Inactive</option>
-                                                    @elseif(old('student_status') == 2)
+                                                    @elseif(old('staff_status') == 2)
                                                         <option value ="1">Active</option>
                                                         <option value ="2" selected>Inactive</option>
                                                     @else
@@ -312,7 +295,7 @@
                                                         <option value ="2">Inactive</option>
                                                     @endif
                                                 </select>
-                                                @error('student_status')
+                                                @error('staff_status')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -323,7 +306,7 @@
                                     <div class="flex-grow-1 text-end">
                                         <button type="reset" class="btn btn-link-danger btn-pc-default"
                                             data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Add Student</button>
+                                        <button type="submit" class="btn btn-primary">Add Staff</button>
                                     </div>
                                 </div>
                             </div>
@@ -340,7 +323,7 @@
                         <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="mb-0">Import Student</h5>
+                                    <h5 class="mb-0">Import Staff</h5>
                                     <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
                                         data-bs-dismiss="modal">
                                         <i class="ti ti-x f-20"></i>
@@ -389,7 +372,8 @@
                                     <div class="flex-grow-1 text-end">
                                         <button type="reset" class="btn btn-link-danger btn-pc-default"
                                             data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary" id="import-btn" disabled>Import Student</button>
+                                        <button type="submit" class="btn btn-primary" id="import-btn" disabled>Import
+                                            Staff</button>
                                     </div>
                                 </div>
                             </div>
@@ -398,9 +382,9 @@
                 </form>
                 <!-- [ Import Modal ] end -->
 
-                @foreach ($studs as $upd)
+                @foreach ($staffs as $upd)
                     <!-- [ Update Modal ] start -->
-                    <form action="{{ route('update-student-post', Crypt::encrypt($upd->id)) }}"
+                    <form action="{{ route('update-staff-post', Crypt::encrypt($upd->id)) }}"
                         enctype="multipart/form-data" method="POST">
                         @csrf
                         <div class="modal fade" id="updateModal-{{ $upd->id }}" tabindex="-1"
@@ -409,7 +393,7 @@
                                 <div class="modal-content">
 
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="updateModalLabel">Update Student</h5>
+                                        <h5 class="modal-title" id="updateModalLabel">Update Staff</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
@@ -419,68 +403,43 @@
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="d-grid justify-content-center align-items-center mb-3">
                                                     <div class="user-upload avatar-s w-100">
-                                                        <img src="{{ empty($upd->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->student_photo) }}"
+                                                        <img src="{{ old('staff_photo', asset('assets/images/user/default-profile-1.jpg')) }}"
                                                             alt="Profile Photo" width="150" height="150"
                                                             class="previewImage">
-                                                        <label for="student_photo_up_{{ $upd->id }}"
-                                                            class="img-avtar-upload">
+                                                        <label for="staff_photo" class="img-avtar-upload">
                                                             <i class="ti ti-camera f-24 mb-1"></i>
                                                             <span>Upload</span>
                                                         </label>
-                                                        <input type="file" id="student_photo_up_{{ $upd->id }}"
-                                                            name="student_photo_up" class="d-none student_photo"
-                                                            accept="image/*" />
-                                                        @error('student_photo_up')
+                                                        <input type="file" id="staff_photo" name="staff_photo"
+                                                            class="d-none" accept="image/*">
+                                                        <input type="text" name="old_staff_photo"
+                                                            value="{{ old('staff_photo') }}">
+                                                        @error('staff_photo')
                                                             <div class="invalid-feedback">{{ $message }}</div>
                                                         @enderror
                                                     </div>
-                                                    <label for="student_photo_up_{{ $upd->id }}"
-                                                        class=" link-dark fw-semibold w-100 text-center mt-3"
+                                                    <label for="staff_photo"
+                                                        class="link-dark fw-semibold w-100 text-center mt-3"
                                                         style="cursor:pointer;">
                                                         Change Photo
                                                     </label>
                                                 </div>
-
                                             </div>
+
 
                                             <h5 class="mb-2">A. Personal Information</h5>
 
                                             <!-- Name Input -->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="student_name_up" class="form-label">Student Name <span
+                                                    <label for="staff_name_up" class="form-label">Staff Name <span
                                                             class="text-danger">*</span></label>
                                                     <input type="text"
-                                                        class="form-control @error('student_name_up') is-invalid @enderror"
-                                                        id="student_name_up" name="student_name_up"
-                                                        placeholder="Enter Student Name" value="{{ $upd->student_name }}"
+                                                        class="form-control @error('staff_name_up') is-invalid @enderror"
+                                                        id="staff_name_up" name="staff_name_up"
+                                                        placeholder="Enter Staff Name" value="{{ $upd->staff_name }}"
                                                         required>
-                                                    @error('student_name_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <!-- Gender Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="student_gender_up" class="form-label">Gender
-                                                        <span class="text-danger">*</span></label>
-                                                    <select name="student_gender_up" id="student_gender_up"
-                                                        class="form-select @error('student_gender_up') is-invalid @enderror"
-                                                        required>
-                                                        <option value="" selected>- Select Gender -</option>
-                                                        @if ($upd->student_gender == 'male')
-                                                            <option value="male" selected>Male</option>
-                                                            <option value="female">Female</option>
-                                                        @elseif($upd->student_gender == 'female')
-                                                            <option value="male">Male</option>
-                                                            <option value="female" selected>Female</option>
-                                                        @else
-                                                            <option value="male">Male</option>
-                                                            <option value="female">Female</option>
-                                                        @endif
-                                                    </select>
-                                                    @error('student_gender_up')
+                                                    @error('staff_name_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -488,14 +447,14 @@
                                             <!-- Email Input -->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="student_email_up" class="form-label">Email
+                                                    <label for="staff_email_up" class="form-label">Email
                                                         <span class="text-danger">*</span></label>
                                                     <input type="email"
-                                                        class="form-control @error('student_email_up') is-invalid @enderror"
-                                                        id="student_email_up" name="student_email_up"
-                                                        placeholder="Enter Student Email"
-                                                        value="{{ $upd->student_email }}" required>
-                                                    @error('student_email')
+                                                        class="form-control @error('staff_email_up') is-invalid @enderror"
+                                                        id="staff_email_up" name="staff_email_up"
+                                                        placeholder="Enter Staff Email" value="{{ $upd->staff_email }}"
+                                                        required>
+                                                    @error('staff_email_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -503,16 +462,16 @@
                                             <!-- Phone No Input -->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="student_phoneno_up" class="form-label">
+                                                    <label for="staff_phoneno_up" class="form-label">
                                                         Phone Number
                                                     </label>
                                                     <div class="input-group">
                                                         <span class="input-group-text">+60</span>
                                                         <input type="text"
-                                                            class="form-control @error('student_phoneno_up') is-invalid @enderror phonenum-input"
-                                                            placeholder="Enter Phone Number" name="student_phoneno_up"
-                                                            value="{{ $upd->student_phoneno }}" maxlength="13" />
-                                                        @error('student_phoneno_up')
+                                                            class="form-control @error('staff_phoneno_up') is-invalid @enderror phonenum-input"
+                                                            placeholder="Enter Phone Number" name="staff_phoneno_up"
+                                                            value="{{ $upd->staff_phoneno }}" maxlength="13" />
+                                                        @error('staff_phoneno_up')
                                                             <div class="invalid-feedback">{{ $message }}</div>
                                                         @enderror
                                                         <div id="phone-error-message" class="text-danger text-sm"
@@ -522,75 +481,89 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <!-- Address Input -->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="mb-3">
-                                                    <label for="student_address_up" class="form-label">
-                                                        Address
-                                                    </label>
-                                                    <textarea name="student_address_up" id="student_address_up" placeholder="Enter Address" cols="10"
-                                                        rows="5" class="form-control @error('student_address_up') is-invalid @enderror">{{ $upd->student_address }}</textarea>
-                                                    @error('student_address_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
 
                                             <h5 class="mb-2 mt-3">B. Academic Information</h5>
 
-                                            <!-- Matric No Input -->
+                                            <!-- Staff ID Input -->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="student_matricno" class="form-label">Matric Number
+                                                    <label for="staff_id_up" class="form-label">Staff ID
                                                         <span class="text-danger">*</span>
                                                     </label>
                                                     <input type="text"
-                                                        class="form-control @error('student_matricno_up') is-invalid @enderror matric-input"
-                                                        id="student_matricno_up" name="student_matricno_up"
-                                                        placeholder="Enter Matric Number"
-                                                        value="{{ $upd->student_matricno }}" required>
-                                                    @error('student_matricno_up')
+                                                        class="form-control @error('staff_id_up') is-invalid @enderror ids-input"
+                                                        id="staff_id_up" name="staff_id_up" placeholder="Enter Staff ID"
+                                                        value="{{ $upd->staff_id }}" required>
+                                                    @error('staff_id_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <!-- Semester Input -->
+                                            <!--Department Input-->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="semester_id_up" class="form-label">Semester
-                                                    </label>
-                                                    <input type="text"
-                                                        class="form-control @error('semester_id_up') is-invalid @enderror"
-                                                        id="semester_id_up" placeholder="Current Semester"
-                                                        value="{{ Semester::where('id', $upd->semester_id)->first()->sem_label ?? '-' }}"
-                                                        readonly>
-                                                    @error('semester_id_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <!--Programme Input-->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="programme_id_up" class="form-label">Programme <span
+                                                    <label for="department_id_up" class="form-label">Department <span
                                                             class="text-danger">*</span></label>
-                                                    <select name="programme_id_up" id="programme_id_up"
-                                                        class="form-select @error('programme_id_up') is-invalid @enderror"
+                                                    <select name="department_id_up" id="department_id_up"
+                                                        class="form-select @error('department_id_up') is-invalid @enderror"
                                                         required>
-                                                        <option value="">- Select Programme -</option>
-                                                        @foreach ($progs as $prog)
-                                                            @if ($upd->programme_id == $prog->id)
-                                                                <option value="{{ $prog->id }}" selected>
-                                                                    {{ $prog->prog_code }} ({{ $prog->prog_mode }})
+                                                        <option value="">- Select Department -</option>
+                                                        @foreach ($deps as $dep)
+                                                            @if ($upd->department_id == $dep->id)
+                                                                <option value="{{ $dep->id }}" selected>
+                                                                    {{ $dep->dep_name }}
                                                                 </option>
                                                             @else
-                                                                <option value="{{ $prog->id }}">
-                                                                    {{ $prog->prog_code }} ({{ $prog->prog_mode }})
+                                                                <option value="{{ $dep->id }}">
+                                                                    {{ $dep->dep_name }}
                                                                 </option>
                                                             @endif
                                                         @endforeach
                                                     </select>
-                                                    @error('programme_id_up')
+                                                    @error('department_id_up')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <!-- Role Input -->
+                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="staff_role" class="form-label">
+                                                        Role <span class="text-danger">*</span>
+                                                    </label>
+                                                    <select
+                                                        class="form-select @error('staff_role_up') is-invalid @enderror"
+                                                        name="staff_role_up" required>
+                                                        <option value ="" selected>- Select Role -</option>
+                                                        @if ($upd->staff_role == 1)
+                                                            <option value ="1" selected>Committee</option>
+                                                            <option value ="2">Lecturer</option>
+                                                            <option value ="3">Timbalan Dekan Pendidikan</option>
+                                                            <option value ="4">Dekan</option>
+                                                        @elseif($upd->staff_role == 2)
+                                                            <option value ="1">Committee</option>
+                                                            <option value ="2" selected>Lecturer</option>
+                                                            <option value ="3">Timbalan Dekan Pendidikan</option>
+                                                            <option value ="4">Dekan</option>
+                                                        @elseif($upd->staff_role == 3)
+                                                            <option value ="1">Committee</option>
+                                                            <option value ="2">Lecturer</option>
+                                                            <option value ="3" selected>Timbalan Dekan Pendidikan
+                                                            </option>
+                                                            <option value ="4">Dekan</option>
+                                                        @elseif($upd->staff_role == 4)
+                                                            <option value ="1">Committee</option>
+                                                            <option value ="2">Lecturer</option>
+                                                            <option value ="3">Timbalan Dekan Pendidikan</option>
+                                                            <option value ="4" selected>Dekan</option>
+                                                        @else
+                                                            <option value ="1">Committee</option>
+                                                            <option value ="2">Lecturer</option>
+                                                            <option value ="3">Timbalan Dekan Pendidikan</option>
+                                                            <option value ="4">Dekan</option>
+                                                        @endif
+                                                    </select>
+                                                    @error('staff_role_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -598,17 +571,17 @@
                                             <!-- Status Input -->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="student_status_up" class="form-label">
+                                                    <label for="staff_status_up" class="form-label">
                                                         Status <span class="text-danger">*</span>
                                                     </label>
                                                     <select
-                                                        class="form-select @error('student_status') is-invalid @enderror"
-                                                        name="student_status_up" id="student_status_up" required>
+                                                        class="form-select @error('staff_status') is-invalid @enderror"
+                                                        name="staff_status_up" id="staff_status_up" required>
                                                         <option value ="" selected>- Select Status -</option>
-                                                        @if ($upd->student_status == 1)
+                                                        @if ($upd->staff_status == 1)
                                                             <option value ="1" selected>Active</option>
                                                             <option value ="2">Inactive</option>
-                                                        @elseif($upd->student_status == 2)
+                                                        @elseif($upd->staff_status == 2)
                                                             <option value ="1">Active</option>
                                                             <option value ="2" selected>Inactive</option>
                                                         @else
@@ -616,7 +589,7 @@
                                                             <option value ="2">Inactive</option>
                                                         @endif
                                                     </select>
-                                                    @error('student_status_up')
+                                                    @error('staff_status_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -665,7 +638,7 @@
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-student-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
+                                                <a href="{{ route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
                                                     class="btn btn-danger w-100">Delete Anyways</a>
                                             </div>
                                         </div>
@@ -691,15 +664,15 @@
                                         </div>
                                         <div class="col-sm-12">
                                             <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Account Inactivation</h2>
+                                                <h2>Account Deletion</h2>
                                             </div>
                                         </div>
                                         <div class="col-sm-12 mb-3">
                                             <div class="d-flex justify-content-center align-items-center">
                                                 <p class="fw-normal f-18 text-center">
-                                                    Oops! You can't delete this student.
+                                                    Oops! You can't delete this staff.
                                                     However, you can inactive it instead. Would you like to proceed with
-                                                    inactivating this student?
+                                                    inactivating this staff?
                                                 </p>
                                             </div>
                                         </div>
@@ -707,7 +680,7 @@
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-student-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
+                                                <a href="{{ route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
                                                     class="btn btn-warning w-100">Inactive</a>
                                             </div>
                                         </div>
@@ -719,7 +692,7 @@
                     <!-- [ Disable Modal ] end -->
                 @endforeach
 
-                <!-- [ Student Management ] end -->
+                <!-- [ Staff Management ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -747,7 +720,7 @@
                     responsive: true,
                     autoWidth: true,
                     ajax: {
-                        url: "{{ route('student-management') }}",
+                        url: "{{ route('staff-management') }}",
                     },
                     columns: [{
                             data: 'DT_RowIndex',
@@ -756,24 +729,20 @@
                             className: "text-start"
                         },
                         {
-                            data: 'student_photo',
-                            name: 'student_photo'
+                            data: 'staff_photo',
+                            name: 'staff_photo'
                         },
                         {
-                            data: 'student_matricno',
-                            name: 'student_matricno'
+                            data: 'staff_id',
+                            name: 'staff_id'
                         },
                         {
-                            data: 'prog_code',
-                            name: 'prog_code'
+                            data: 'staff_role',
+                            name: 'staff_role'
                         },
                         {
-                            data: 'prog_mode',
-                            name: 'prog_mode'
-                        },
-                        {
-                            data: 'student_status',
-                            name: 'student_status'
+                            data: 'staff_status',
+                            name: 'staff_status'
                         },
                         {
                             data: 'action',
@@ -787,20 +756,23 @@
 
             });
 
-            $('#student_photo').on('change', function() {
+            let sessionImage = "{{ session('staff_photo') }}";
+            if (sessionImage) {
+                $('.previewImage').attr('src', sessionImage);
+            }
+
+            $('#staff_photo').on('change', function(event) {
                 const file = event.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-
                     reader.onload = function(e) {
                         $('.previewImage').attr('src', e.target.result).show();
                     };
-
                     reader.readAsDataURL(file);
                 }
             });
 
-            $('.student_photo').on('change', function() {
+            $('.staff_photo').on('change', function() {
                 const file = event.target.files[0];
                 if (file) {
                     const reader = new FileReader();
@@ -835,7 +807,7 @@
                 }
             });
 
-            $('.matric-input').on('input', function() {
+            $('.ids-input').on('input', function() {
                 $(this).val($(this).val().toUpperCase());
             });
 

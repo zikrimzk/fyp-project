@@ -64,7 +64,7 @@
                             </a>
                         </li>
                         <li class="pc-item">
-                            <a class="pc-link" href="">
+                            <a class="pc-link" href="{{ route('staff-management') }}">
                                 Staff Management
                             </a>
                         </li>

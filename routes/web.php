@@ -36,8 +36,12 @@ Route::prefix('staff')->group(function () {
     Route::post('/import-student-data', [SupervisionController::class, 'importStudent'])->name('import-student-post');
     Route::get('/export-student-data', [SupervisionController::class, 'exportStudent'])->name('export-student-get');
 
+    /* Staff Management */
+    Route::get('/staff-management', [SupervisionController::class, 'staffManagement'])->name('staff-management');
+    Route::post('/add-staff', [SupervisionController::class, 'addStaff'])->name('add-staff-post');
+    Route::post('/update-staff-{id}', [SupervisionController::class, 'updateStaff'])->name('update-staff-post');
+    Route::get('/delete-staff-{id}-{opt}', [SupervisionController::class, 'deleteStaff'])->name('delete-staff-get');
 
-   
 
 
 
@@ -55,7 +59,7 @@ Route::prefix('staff')->group(function () {
     Route::get('/delete-document-{id}', [SOPController::class, 'deleteDocument'])->name('delete-document-get');
 
     /* Procedure Setting */
-    Route::get('/procedure-setting',[SOPController::class,'procedureSetting'])->name('procedure-setting');
+    Route::get('/procedure-setting', [SOPController::class, 'procedureSetting'])->name('procedure-setting');
     Route::post('/add-procedure', [SOPController::class, 'addProcedure'])->name('add-procedure-post');
     Route::post('/update-procedure-{actID}-{progID}', [SOPController::class, 'updateProcedure'])->name('update-procedure-post');
     Route::get('/delete-procedure-{actID}-{progID}', [SOPController::class, 'deleteProcedure'])->name('delete-procedure-get');
