@@ -29,10 +29,10 @@
     <!-- [Template CSS Files] -->
     <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
     <link rel="stylesheet" href="../assets/css/style-preset.css" />
-     <!-- [DataTables Style Links] -->
-     <link rel="stylesheet" href="../assets/css/plugins/dataTables.bootstrap5.min.css" />
-     <link rel="stylesheet" href="../assets/css/plugins/responsive.bootstrap5.min.css" />
-     <link href="../assets/css/plugins/animate.min.css" rel="stylesheet" type="text/css" />
+    <!-- [DataTables Style Links] -->
+    <link rel="stylesheet" href="../assets/css/plugins/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="../assets/css/plugins/responsive.bootstrap5.min.css" />
+    <link href="../assets/css/plugins/animate.min.css" rel="stylesheet" type="text/css" />
     <!-- [DataTables Scripts] -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="../assets/js/plugins/dataTables.min.js"></script>
@@ -53,6 +53,36 @@
             pointer-events: none;
             opacity: 0.6;
             text-decoration: none;
+        }
+
+        .avatar-s {
+            width: 150px !important;
+            height: 150px !important;
+            overflow: hidden;
+            border-radius: 50%;
+        }
+
+        .avatar-s img {
+            width: 150px !important;
+            height: 150px !important;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-sms {
+            width: 50px !important;
+            height: 50px !important;
+            overflow: hidden;
+            border-radius: 50%;
+        }
+
+        .avatar-sms img {
+            width: 50px !important;
+            height: 50px !important;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
     </style>
 
