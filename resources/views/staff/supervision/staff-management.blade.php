@@ -722,9 +722,10 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            var modalToShow = "{{ session('modal') }}"; // Ambil modal yang perlu dibuka dari session
+            var modalToShow = "{{ session('modal') }}";
             if (modalToShow) {
                 var modalElement = document.getElementById(modalToShow);
                 if (modalElement) {

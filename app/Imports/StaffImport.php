@@ -54,7 +54,7 @@ class StaffImport implements ToCollection, WithHeadingRow
                 'staff_id' => 'required|string|unique:staff,staff_id',
                 'staff_email' => 'required|email|unique:staff,staff_email',
                 'staff_password' => 'nullable|string|min:8|max:50',
-                'staff_phoneno' => 'nullable|string|max:20',
+                'staff_phoneno' => 'nullable|max:20',
                 'staff_role' => 'required|integer|in:1,2,3,4',
                 'staff_department' => 'required|integer|exists:departments,id',
             ], [], [
