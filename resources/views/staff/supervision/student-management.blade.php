@@ -88,7 +88,6 @@
                                             <th scope="col">Name</th>
                                             <th scope="col">Matric No</th>
                                             <th scope="col">Programme</th>
-                                            <th scope="col">Mode</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>
                                         </tr>
@@ -389,7 +388,8 @@
                                     <div class="flex-grow-1 text-end">
                                         <button type="reset" class="btn btn-link-danger btn-pc-default"
                                             data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary" id="import-btn" disabled>Import Student</button>
+                                        <button type="submit" class="btn btn-primary" id="import-btn" disabled>Import
+                                            Student</button>
                                     </div>
                                 </div>
                             </div>
@@ -419,7 +419,7 @@
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="d-grid justify-content-center align-items-center mb-3">
                                                     <div class="user-upload avatar-s w-100">
-                                                        <img src="{{ empty($upd->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->student_directory .'/photo/'.$upd->student_photo) }}"
+                                                        <img src="{{ empty($upd->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->student_directory . '/photo/' . $upd->student_photo) }}"
                                                             alt="Profile Photo" width="150" height="150"
                                                             class="previewImage">
                                                         <label for="student_photo_up_{{ $upd->id }}"
@@ -738,52 +738,44 @@
 
         $(document).ready(function() {
 
-            $(function() {
-
-                // DATATABLE : STUDENT
-                var table = $('.data-table').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    responsive: true,
-                    autoWidth: true,
-                    ajax: {
-                        url: "{{ route('student-management') }}",
+            // DATATABLE : STUDENT
+            var table = $('.data-table').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                autoWidth: true,
+                ajax: {
+                    url: "{{ route('student-management') }}",
+                },
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        searchable: false,
+                        className: "text-start"
                     },
-                    columns: [{
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            searchable: false,
-                            className: "text-start"
-                        },
-                        {
-                            data: 'student_photo',
-                            name: 'student_photo'
-                        },
-                        {
-                            data: 'student_matricno',
-                            name: 'student_matricno'
-                        },
-                        {
-                            data: 'prog_code',
-                            name: 'prog_code'
-                        },
-                        {
-                            data: 'prog_mode',
-                            name: 'prog_mode'
-                        },
-                        {
-                            data: 'student_status',
-                            name: 'student_status'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false
-                        }
-                    ]
-
-                });
+                    {
+                        data: 'student_photo',
+                        name: 'student_photo'
+                    },
+                    {
+                        data: 'student_matricno',
+                        name: 'student_matricno'
+                    },
+                    {
+                        data: 'student_programme',
+                        name: 'student_programme'
+                    },
+                    {
+                        data: 'student_status',
+                        name: 'student_status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
 
             });
 

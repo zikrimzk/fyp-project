@@ -20,7 +20,7 @@ Route::get('/', function () {
     return view('staff.index', [
         'title' => 'Dashboard'
     ]);
-});
+})->name('dashboard');
 
 
 Route::prefix('staff')->group(function () {
@@ -45,12 +45,13 @@ Route::prefix('staff')->group(function () {
     Route::get('/export-staff-data', [SupervisionController::class, 'exportStaff'])->name('export-staff-get');
 
     /* Supervision Arrangement */
-    //Unfinished
     Route::get('/supervision-arrangement', [SupervisionController::class, 'supervisionArrangement'])->name('supervision-arrangement');
+    Route::post('/update-title-of-research-{id}', [SupervisionController::class, 'updateTitleOfResearch'])->name('update-titleOfResearch-post');
+
+    //Unfinished
     Route::post('/add-supervision-{studentID}', [SupervisionController::class, 'addSupervision'])->name('add-supervision-post');
     Route::post('/update-supervision-{studentID}', [SupervisionController::class, 'updateSupervision'])->name('update-supervision-post');
     Route::get('/delete-supervision-{studentID}', [SupervisionController::class, 'deleteSupervision'])->name('delete-supervision-get');
-    Route::post('/update-title-of-research-{studentID}', [SupervisionController::class, 'updateTitleOfResearch'])->name('update-titleOfResearch-post');
 
 
 

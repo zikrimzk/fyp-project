@@ -1,30 +1,73 @@
 @extends('staff.layouts.main')
 
 @section('content')
-    <div class="main-content app-content">
-        <div class="container">
-
-            <!-- Page Header -->
-            <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-                <h1 class="page-title fw-semibold fs-22 mb-0">Dashboard</h1>
-                <div class="ms-md-1 ms-0">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="javascript:void(0);">Home</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Data</li>
-                        </ol>
-                    </nav>
-                    
+    <div class="pc-container">
+        <div class="pc-content">
+            <!-- [ breadcrumb ] start -->
+            <div class="page-header">
+                <div class="page-block">
+                    <div class="row align-items-center">
+                        <div class="col-md-12">
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item" aria-current="page">Dashboard</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="page-header-title">
+                                <h2 class="mb-0">Dashboard</h2>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!-- Page Header Close -->
+            <!-- [ breadcrumb ] end -->
 
-            <!-- Start::row-1 -->
+            <!-- [ Alert ] start -->
+            <div>
+                @if (session()->has('success'))
+                    <div class="alert alert-success alert-dismissible" role="alert">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-check-circle"></i>
+                                Success
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <p class="mb-0">{{ session('success') }}</p>
+                    </div>
+                @endif
+                @if (session()->has('error'))
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-info-circle"></i>
+                                Error
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <p class="mb-0">{{ session('error') }}</p>
+                    </div>
+                @endif
+            </div>
+            <!-- [ Alert ] end -->
+
+            <!-- [ Main Content ] start -->
             <div class="row">
 
-            </div>
-            <!--End::row-1 -->
+                <!-- [ Dashboard ] start -->
 
+                <div class="col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Welcome, User</h5>
+                            <p class="mb-0">You are logged in as Staff.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- [ Dashboard ] end -->
+            </div>
+            <!-- [ Main Content ] end -->
         </div>
     </div>
 @endsection

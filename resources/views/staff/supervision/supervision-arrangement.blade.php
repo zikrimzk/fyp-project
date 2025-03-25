@@ -82,11 +82,8 @@
                                         <tr>
                                             <th scope="col">#</th>
                                             <th scope="col">Name</th>
-                                            <th scope="col">Matric No</th>
-                                            <th scope="col">Programme</th>
-                                            <th scope="col">Mode</th>
+                                            <th scope="col">Research Title</th>
                                             <th scope="col">Supervisor</th>
-                                            <th scope="col">Action</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -101,7 +98,7 @@
                         @csrf
                         <div class="modal fade" id="updateTitleOfResearchModal-{{ $upd->id }}" tabindex="-1"
                             aria-labelledby="updateTitleOfResearchModal" aria-hidden="true">
-                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
 
                                     <div class="modal-header">
@@ -111,21 +108,17 @@
                                     </div>
                                     <div class="modal-body">
                                         <div class="row">
-
                                             <!-- Title Of Research Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <input type="text"
-                                                        class="form-control @error('student_titleOfResearch') is-invalid @enderror"
-                                                        id="student_titleOfResearch" name="student_titleOfResearch"
-                                                        placeholder="Enter Title Of Research"
-                                                        value="{{ $upd->student_titleOfResearch }}" required>
-                                                    @error('student_titleOfResearch')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                                <input type="text"
+                                                    class="form-control @error('student_titleOfResearch') is-invalid @enderror"
+                                                    id="student_titleOfResearch" name="student_titleOfResearch"
+                                                    placeholder="Enter Title Of Research"
+                                                    value="{{ $upd->student_titleOfResearch }}" required>
+                                                @error('student_titleOfResearch')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
-
                                         </div>
                                     </div>
                                     <div class="modal-footer justify-content-end">
@@ -389,27 +382,15 @@
                             name: 'student_photo'
                         },
                         {
-                            data: 'student_matricno',
-                            name: 'student_matricno'
+                            data: 'student_title',
+                            name: 'student_title',
+
                         },
                         {
-                            data: 'prog_code',
-                            name: 'prog_code'
+                            data: 'supervisor',
+                            name: 'supervisor'
                         },
-                        {
-                            data: 'prog_mode',
-                            name: 'prog_mode'
-                        },
-                        {
-                            data: 'supervision',
-                            name: 'supervision'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false
-                        }
+
                     ]
 
                 });

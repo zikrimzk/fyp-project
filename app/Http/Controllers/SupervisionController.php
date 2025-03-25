@@ -60,6 +60,26 @@ class SupervisionController extends Controller
                     return $photo;
                 });
 
+                $table->addColumn('student_programme', function ($row) {
+                    $mode = null;
+                    if ($row->prog_mode == "FT") {
+                        $mode = "Full-Time";
+                    } elseif ($row->prog_mode == "PT") {
+                        $mode = "Part-Time";
+                    } else {
+                        $mode = "N/A";
+                    }
+                    $programme = '
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <p class="mb-0 text-truncate">' . $row->prog_code . '</p>
+                            <small class="text-muted text-truncate">' . $mode . '</small>
+                        </div>
+                    </div>              
+                    ';
+                    return $programme;
+                });
+
                 $table->addColumn('student_status', function ($row) {
                     $status = '';
 
@@ -108,7 +128,7 @@ class SupervisionController extends Controller
                     return $buttonEdit . $buttonRemove;
                 });
 
-                $table->rawColumns(['student_photo', 'student_status', 'action']);
+                $table->rawColumns(['student_photo', 'student_programme', 'student_status', 'action']);
 
                 return $table->make(true);
             }
@@ -701,37 +721,137 @@ class SupervisionController extends Controller
             if ($req->ajax()) {
 
                 $data = DB::table('students as a')
-                    ->join('semesters as b', 'b.id', '=', 'a.semester_id')
+                    ->leftJoin('supervisions as s', 's.student_id', '=', 'a.id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-                    ->select('a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode')
+                    ->select('a.*', 'c.prog_code', 'c.prog_mode', DB::raw('COUNT(s.staff_id) as supervision_count')) 
+                    ->groupBy('a.id', 'c.prog_code', 'c.prog_mode')
+                    ->orderByRaw('supervision_count = 0 DESC')
                     ->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
 
                 $table->addColumn('student_photo', function ($row) {
-                    $photo = '
-                            <div class="row align-items-center">
-                                <div class="col-auto pe-0">
-                                    <div class="avatar-sms">
-                                        <img src="' . (empty($row->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo)) . '" alt="user-image" />
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <h6 class="mb-0 text-truncate">' . $row->student_name . '</h6>
-                                            <small class="text-muted
-                                                text-truncate">' . $row->student_email . '</small>
-                                        </div>
-                                    </div>
-                                   
-                                </div>
-                            </div>
-                    ';
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
 
-                    return $photo;
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
                 });
 
+                $table->addColumn('student_title', function ($row) {
+
+                    if (empty($row->student_titleOfResearch)) {
+                        $titleResearch = '
+                        <div class="d-flex align-items-center">
+                            <span class="text-truncate text-muted fst-italic" style="max-width: 200px;">No Title Of Research</span>
+                            <button type="button" class="ms-2 btn btn-white d-inline-flex align-items-center" 
+                                data-bs-toggle="modal" data-bs-target="#updateTitleOfResearchModal-' . $row->id . '">
+                                <i class="ti ti-plus f-18"></i>
+                            </button>
+                        </div>
+                    ';
+                    } else {
+                        $titleResearch = '
+                        <div class="d-flex align-items-center">
+                            <span class="fst-italic" style="max-width: 200px;">' . htmlspecialchars($row->student_titleOfResearch) . '</span>
+                            <button type="button" class="ms-2 btn btn-white d-inline-flex align-items-center" 
+                                data-bs-toggle="modal" data-bs-target="#updateTitleOfResearchModal-' . $row->id . '">
+                                <i class="ti ti-edit f-18"></i>
+                            </button>
+                        </div>
+                    ';
+                    }
+
+
+                    return $titleResearch;
+                });
+
+                $table->addColumn('supervisor', function ($row) {
+                    $supervisors = DB::table('supervisions as a')
+                        ->join('staff as b', 'b.id', '=', 'a.staff_id')
+                        ->where('a.student_id', $row->id)
+                        ->select('b.staff_name', 'a.staff_id', 'a.student_id', 'a.supervision_role')
+                        ->get();
+
+                    if ($supervisors->isEmpty()) {
+                        return '
+                            <span class="fst-italic text-muted d-block mb-2">No Supervisor Assigned</span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                data-bs-toggle="modal" data-bs-target="#addSupervisorModal-' . $row->id . '">
+                                <i class="ti ti-plus"></i> Add Supervisor
+                            </button>';
+                    }
+
+                    $mainSupervisors = $supervisors->where('supervision_role', 1);
+                    $coSupervisors = $supervisors->where('supervision_role', 2);
+
+                    $output = '<div class="p-2 border-0">';
+
+                    // Main Supervisor Section
+                    if ($mainSupervisors->isNotEmpty()) {
+                        $output .= '<small class="text-muted">Main Supervisor:</small>';
+                        foreach ($mainSupervisors as $sv) {
+                            $output .= '
+                                <div class="d-grid justify-content-between align-items-center rounded mb-1">
+                                    <span class="fw-medium">' . htmlspecialchars($sv->staff_name) . '</span>
+                                    <div class="mt-2 mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            data-bs-toggle="modal" data-bs-target="#editSupervisorModal-' . $sv->staff_id . '">
+                                            <i class="ti ti-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="deleteSupervisor(' . $sv->staff_id . ')">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>';
+                        }
+                    }
+
+                    // Co-Supervisor Section
+                    if ($coSupervisors->isNotEmpty()) {
+                        $output .= '<small class="text-muted">Co-Supervisor:</small>';
+                        foreach ($coSupervisors as $sv) {
+                            $output .= '
+                                <div class="d-grid justify-content-between align-items-center rounded mb-1">
+                                    <span class="fw-medium">' . htmlspecialchars($sv->staff_name) . '</span>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            data-bs-toggle="modal" data-bs-target="#editSupervisorModal-' . $sv->staff_id . '">
+                                            <i class="ti ti-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="deleteSupervisor(' . $sv->staff_id . ')">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>';
+                        }
+                    }
+
+                    $output .= '</div>';
+
+
+                    return $output;
+                });
 
                 $table->addColumn('action', function ($row) {
                     $isReferenced = false;
@@ -767,7 +887,7 @@ class SupervisionController extends Controller
                     return $buttonEdit . $buttonRemove;
                 });
 
-                $table->rawColumns(['student_photo', 'action']);
+                $table->rawColumns(['student_photo', 'student_title', 'supervisor', 'action']);
 
                 return $table->make(true);
             }
@@ -778,6 +898,37 @@ class SupervisionController extends Controller
             ]);
         } catch (Exception $e) {
             return abort(500);
+        }
+    }
+
+    public function updateTitleOfResearch(Request $req, $id)
+    {
+        $id = Crypt::decrypt($id);
+
+        $validator = Validator::make($req->all(), [
+            'student_titleOfResearch' => 'required|string|max:150',
+        ], [], [
+            'student_titleOfResearch' => 'title of research',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('modal', 'updateTitleOfResearchModal-' . $id);
+        }
+
+        try {
+            $validated = $validator->validated();
+
+            /* UPDATE STUDENT TITLE OF RESAERCH */
+            Student::where('id', $id)->update([
+                'student_titleOfResearch' => Str::headline($validated['student_titleOfResearch']),
+            ]);
+
+            return back()->with('success', 'Title of research updated successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error updating title of research.' . $e->getMessage());
         }
     }
 
