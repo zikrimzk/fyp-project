@@ -54,7 +54,7 @@
                     </a>
                     <ul class="pc-submenu">
                         <li class="pc-item">
-                            <a class="pc-link" href="">
+                            <a class="pc-link" href="{{ route('supervision-arrangement') }}">
                                 Supervision Arrangement
                             </a>
                         </li>

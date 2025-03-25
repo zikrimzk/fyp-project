@@ -46,10 +46,12 @@ Route::prefix('staff')->group(function () {
 
     /* Supervision Arrangement */
     //Unfinished
-    Route::get('/supervision-arrangement', [SupervisionController::class, 'supervisionArrangement'])->name('staff-arrangement');
-    Route::post('/add-supervision', [SupervisionController::class, 'addSupervision'])->name('add-supervision-post');
-    Route::post('/update-supervision-{staffID}-{studentID}', [SupervisionController::class, 'updateSupervision'])->name('update-supervision-post');
-    Route::get('/delete-supervision-{staffID}-{studentID}', [SupervisionController::class, 'deleteSupervision'])->name('delete-supervision-get');
+    Route::get('/supervision-arrangement', [SupervisionController::class, 'supervisionArrangement'])->name('supervision-arrangement');
+    Route::post('/add-supervision-{studentID}', [SupervisionController::class, 'addSupervision'])->name('add-supervision-post');
+    Route::post('/update-supervision-{studentID}', [SupervisionController::class, 'updateSupervision'])->name('update-supervision-post');
+    Route::get('/delete-supervision-{studentID}', [SupervisionController::class, 'deleteSupervision'])->name('delete-supervision-get');
+    Route::post('/update-title-of-research-{studentID}', [SupervisionController::class, 'updateTitleOfResearch'])->name('update-titleOfResearch-post');
+
 
 
     // Standard Operation Procedure (SOP)

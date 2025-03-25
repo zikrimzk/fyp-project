@@ -774,6 +774,7 @@ class SupervisionController extends Controller
             return view('staff.supervision.supervision-arrangement', [
                 'title' => 'Supervision Arrangement',
                 'studs' => Student::all(),
+                'staffs' => Staff::all(),
             ]);
         } catch (Exception $e) {
             return abort(500);
