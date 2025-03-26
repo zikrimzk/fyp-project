@@ -84,6 +84,7 @@
                                             <th scope="col">Name</th>
                                             <th scope="col">Research Title</th>
                                             <th scope="col">Supervisor</th>
+                                            <th scope="col">Action</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -140,25 +141,25 @@
                         @csrf
                         <div class="modal fade" id="addSupervisionModal-{{ $upd->id }}" tabindex="-1"
                             aria-labelledby="updateModal" aria-hidden="true">
-                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
 
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="addSupervisionModal">Add Supervision</h5>
+                                        <h5 class="modal-title" id="addSupervisionModalLabel">Add Supervision</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
                                         <div class="row">
                                             <!--Staff Input-->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
                                                     <label for="staff_id" class="form-label">Staff <span
                                                             class="text-danger">*</span></label>
                                                     <select name="staff_id" id="staff_id"
                                                         class="form-select @error('staff_id') is-invalid @enderror"
                                                         required>
-                                                        <option value="">- Select Programme -</option>
+                                                        <option value="">- Select Staff -</option>
                                                         @foreach ($staffs as $st)
                                                             @if (old('staff_id') == $st->id)
                                                                 <option value="{{ $st->id }}" selected>
@@ -177,7 +178,7 @@
                                                 </div>
                                             </div>
                                             <!-- Staff Role Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
                                                     <label for="supervision_role_up" class="form-label">
                                                         Role <span class="text-danger">*</span>
@@ -268,7 +269,7 @@
                                                     </label>
                                                     <select
                                                         class="form-select @error('supervision_role_up') is-invalid @enderror"
-                                                        name="supervision_role_up" id="student_status_up" required>
+                                                        name="supervision_role_up" id="supervision_role_up" required>
                                                         <option value ="" selected>- Select Role -</option>
                                                         @if ($upd->supervision_role == 1)
                                                             <option value ="1" selected>Supervisor</option>
@@ -390,6 +391,12 @@
                             data: 'supervisor',
                             name: 'supervisor'
                         },
+                        {
+                            data: 'action',
+                            name: 'action',
+                            orderable: false,
+                            searchable: false,
+                        }
 
                     ]
 

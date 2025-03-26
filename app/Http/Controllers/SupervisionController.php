@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Semester;
 use App\Models\Programme;
 use App\Models\Department;
+use App\Models\Supervision;
 use Illuminate\Support\Str;
 use App\Exports\StaffExport;
 use App\Imports\StaffImport;
@@ -389,6 +390,7 @@ class SupervisionController extends Controller
                 $data = DB::table('staff as a')
                     ->join('departments as b', 'b.id', '=', 'a.department_id')
                     ->select('a.*', 'b.dep_name')
+                    ->orderBy('staff_name', 'asc')
                     ->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
@@ -723,9 +725,9 @@ class SupervisionController extends Controller
                 $data = DB::table('students as a')
                     ->leftJoin('supervisions as s', 's.student_id', '=', 'a.id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-                    ->select('a.*', 'c.prog_code', 'c.prog_mode', DB::raw('COUNT(s.staff_id) as supervision_count')) 
+                    ->select('a.*', 'c.prog_code', 'c.prog_mode', DB::raw('COUNT(s.staff_id) as supervision_count'))
                     ->groupBy('a.id', 'c.prog_code', 'c.prog_mode')
-                    ->orderByRaw('supervision_count = 0 DESC')
+                    ->orderByRaw('supervision_count < 2 DESC')
                     ->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
@@ -794,10 +796,7 @@ class SupervisionController extends Controller
                     if ($supervisors->isEmpty()) {
                         return '
                             <span class="fst-italic text-muted d-block mb-2">No Supervisor Assigned</span>
-                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                data-bs-toggle="modal" data-bs-target="#addSupervisorModal-' . $row->id . '">
-                                <i class="ti ti-plus"></i> Add Supervisor
-                            </button>';
+                        ';
                     }
 
                     $mainSupervisors = $supervisors->where('supervision_role', 1);
@@ -854,37 +853,20 @@ class SupervisionController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
-                    $isReferenced = false;
-                    // $isReferenced = DB::table('supervision')->where('student_id', $row->id)->exists();
+                    $supervisors = DB::table('supervisions as a')
+                        ->join('staff as b', 'b.id', '=', 'a.staff_id')
+                        ->where('a.student_id', $row->id)
+                        ->select('a.staff_id')
+                        ->count();
 
-                    $buttonEdit =
-                        '
-                            <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
-                                data-bs-target="#updateModal-' . $row->id . '">
-                                <i class="ti ti-edit f-20"></i>
-                            </a>
+                    if ($supervisors < 2) {
+                        return '
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                data-bs-toggle="modal" data-bs-target="#addSupervisionModal-' . $row->id . '">
+                                <i class="ti ti-plus"></i>
+                            </button>
                         ';
-
-                    if (!$isReferenced) {
-                        $buttonRemove =
-                            '
-                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
-                                    data-bs-target="#deleteModal-' . $row->id . '">
-                                    <i class="ti ti-trash f-20"></i>
-                                </a>
-                            ';
-                    } else {
-
-                        $buttonRemove =
-                            '
-                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger ' . ($row->student_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
-                                    data-bs-target="#disableModal-' . $row->id . '">
-                                    <i class="ti ti-trash f-20"></i>
-                                </a>
-                            ';
                     }
-
-                    return $buttonEdit . $buttonRemove;
                 });
 
                 $table->rawColumns(['student_photo', 'student_title', 'supervisor', 'action']);
@@ -894,7 +876,7 @@ class SupervisionController extends Controller
             return view('staff.supervision.supervision-arrangement', [
                 'title' => 'Supervision Arrangement',
                 'studs' => Student::all(),
-                'staffs' => Staff::all(),
+                'staffs' => Staff::where('staff_status', 1)->whereIn('staff_role', [1, 2])->orderBy('staff_name', 'asc')->get(),
             ]);
         } catch (Exception $e) {
             return abort(500);
@@ -921,7 +903,7 @@ class SupervisionController extends Controller
         try {
             $validated = $validator->validated();
 
-            /* UPDATE STUDENT TITLE OF RESAERCH */
+            /* UPDATE STUDENT TITLE OF RESEARCH */
             Student::where('id', $id)->update([
                 'student_titleOfResearch' => Str::headline($validated['student_titleOfResearch']),
             ]);
@@ -932,79 +914,78 @@ class SupervisionController extends Controller
         }
     }
 
-    public function addSupervision(Request $req)
+    public function addSupervision(Request $req, $id)
     {
+        $id = Crypt::decrypt($id);
         $validator = Validator::make($req->all(), [
-            'staff_name' => 'required|string|max:255',
-            'staff_id' => 'required|string|unique:staff,staff_id',
-            'staff_email' => 'required|email|unique:staff,staff_email',
-            'staff_password' => 'nullable|string|min:8|max:50',
-            'staff_phoneno' => 'nullable|string|max:20',
-            'staff_role' => 'required|integer|in:1,2,3,4',
-            'staff_status' => 'required|integer|in:1,2',
-            'staff_photo' => 'nullable|image|mimes:jpg,jpeg,png',
-            'department_id' => 'required|integer|exists:departments,id',
+            'staff_id' => 'required|integer|exists:staff,id',
+            'supervision_role' => 'required|integer|in:1,2',
         ], [], [
-            'staff_name' => 'staff name',
-            'staff_id' => 'staff ID',
-            'staff_email' => 'staff email',
-            'staff_password' => 'password',
-            'staff_phoneno' => 'staff phone number',
-            'staff_role' => 'staff role',
-            'staff_status' => 'staff status',
-            'staff_photo' => 'staff photo',
-            'department_id' => 'department',
+            'staff_id' => 'staff',
+            'supervision_role' => 'staff role',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
-                ->with('modal', 'addModal');
+                ->with('modal', 'addSupervisionModal-' . $id);
+        }
+
+        try {
+
+            $validated = $validator->validated();
+            $checkExist = Supervision::where('student_id', $id)->where('staff_id', $validated['staff_id'])->exists() ?? false;
+
+            if ($checkExist) {
+                return back()->with('error', 'Oops! The selected staff is already assigned to student. Please check and select a different staff.');
+            }
+
+            /* CREATE SUPERVISION DATA */
+            Supervision::create([
+                'student_id' => $id,
+                'staff_id' => $validated['staff_id'],
+                'supervision_role' => $validated['supervision_role']
+            ]);
+
+            return back()->with('success', 'Supervision added successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error adding supervision.' . $e->getMessage());
+        }
+    }
+
+    public function updateSupervision(Request $req, $studID, $staffID)
+    {
+        $studID = Crypt::decrypt($studID);
+        $staffID = Crypt::decrypt($staffID);
+
+        $validator = Validator::make($req->all(), [
+            'staff_id_up' => 'required|integer|exists:staff,id',
+            'supervision_role_up' => 'required|integer|in:1,2',
+        ], [], [
+            'staff_id_up' => 'staff',
+            'supervision_role_up' => 'staff role',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('modal', 'updateSupervisionModal-' . $studID . '-' . $staffID);
         }
 
         try {
             $validated = $validator->validated();
 
-            /* SET STAFF INITIAL PASSWORD */
-            $password = bcrypt("pg@" . Str::lower($validated['staff_id']));
-
-            /* MAKE STAFF DIRECTORY PATH */
-            $staffDir = "Staff-Photo";
-
-            /* SAVE STAFF PHOTO */
-            $fileName = null;
-            $filePath = null;
-            if ($req->hasFile('staff_photo')) {
-
-                // 1 - GET THE SPECIFIC DATA
-                $staff_id = Str::upper($validated['staff_id']);
-
-                // 2 - SET & DECLARE FILE ROUTE
-                $fileName = Str::upper($staff_id . '_' . time() . '_PHOTO') . '.' . $req->file('staff_photo')->getClientOriginalExtension();
-                $filePath = $staffDir;
-
-                // 3 - SAVE THE FILE
-                $file = $req->file('staff_photo');
-                $filePath = $file->storeAs($filePath, $fileName, 'public');
-            }
-
-            /* CREATE STAFF DATA */
-            Staff::create([
-                'staff_name' => Str::headline($validated['staff_name']),
-                'staff_id' => Str::upper($validated['staff_id']),
-                'staff_email' => $validated['staff_email'],
-                'staff_password' => $password,
-                'staff_phoneno' => $validated['staff_phoneno'] ?? null,
-                'staff_role' => $validated['staff_role'],
-                'staff_status' => $validated['staff_status'],
-                'staff_photo' => $filePath ?? null,
-                'department_id' => $validated['department_id'],
+            /* UPDATE SUPERVISION DATA */
+            Supervision::where('student_id', $studID)->where('staff_id', $staffID)->update([
+                'staff_id' => $validated['staff_id_up'],
+                'supervision_role' => $validated['supervision_role_up']
             ]);
 
-            return back()->with('success', 'Staff added successfully.');
+            return back()->with('success', 'Supervision updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding staff.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating supervision.' . $e->getMessage());
         }
     }
 }
