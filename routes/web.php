@@ -49,9 +49,9 @@ Route::prefix('staff')->group(function () {
     Route::post('/update-title-of-research-{id}', [SupervisionController::class, 'updateTitleOfResearch'])->name('update-titleOfResearch-post');
 
     //Unfinished
-    Route::post('/add-supervision-{studentID}', [SupervisionController::class, 'addSupervision'])->name('add-supervision-post');
-    Route::post('/update-supervision-{studentID}', [SupervisionController::class, 'updateSupervision'])->name('update-supervision-post');
-    Route::get('/delete-supervision-{studentID}', [SupervisionController::class, 'deleteSupervision'])->name('delete-supervision-get');
+    Route::post('/add-supervision-{id}', [SupervisionController::class, 'addSupervision'])->name('add-supervision-post');
+    Route::post('/update-supervision-{id}', [SupervisionController::class, 'updateSupervision'])->name('update-supervision-post');
+    Route::get('/delete-supervision-{id}', [SupervisionController::class, 'deleteSupervision'])->name('delete-supervision-get');
 
 
 

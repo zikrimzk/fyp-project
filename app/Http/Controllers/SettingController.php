@@ -179,7 +179,7 @@ class SettingController extends Controller
 
                 $data = DB::table('departments as a')
                     ->join('faculties as b', 'b.id', '=', 'a.fac_id')
-                    ->select('a.id', 'a.dep_name', 'a.dep_status', 'b.fac_name', 'b.fac_code')
+                    ->select('a.id', 'a.dep_name', 'a.dep_status', 'a.dep_code', 'a.dep_status', 'b.fac_name', 'b.fac_code')
                     ->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
@@ -199,7 +199,7 @@ class SettingController extends Controller
 
                 $table->addColumn('action', function ($row) {
                     $isReferenced = false;
-                    // $isReferenced = DB::table('staffs')->where('dep_id', $row->id)->exists();
+                    $isReferenced = DB::table('staff')->where('department_id', $row->id)->exists();
 
                     $buttonEdit =
                         '
@@ -362,7 +362,7 @@ class SettingController extends Controller
 
                 $table->addColumn('action', function ($row) {
                     $isReferenced = false;
-                    // $isReferenced = DB::table('students')->where('programme_id', $row->id)->exists();
+                    $isReferenced = DB::table('students')->where('programme_id', $row->id)->exists();
 
                     $buttonEdit =
                         '

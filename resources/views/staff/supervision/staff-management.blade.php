@@ -253,14 +253,14 @@
                                                     class="form-select @error('department_id') is-invalid @enderror"
                                                     required>
                                                     <option value="">- Select Department -</option>
-                                                    @foreach ($deps as $dep)
+                                                    @foreach ($deps->where('dep_status', 1) as $dep)
                                                         @if (old('department_id') == $dep->id)
                                                             <option value="{{ $dep->id }}" selected>
-                                                                {{ $dep->dep_name }}
+                                                                {{ $dep->fac_code }} - {{ $dep->dep_name }}
                                                             </option>
                                                         @else
                                                             <option value="{{ $dep->id }}">
-                                                                {{ $dep->dep_name }}
+                                                                {{ $dep->fac_code }} - {{ $dep->dep_name }}
                                                             </option>
                                                         @endif
                                                     @endforeach
@@ -552,12 +552,17 @@
                                                         @foreach ($deps as $dep)
                                                             @if ($upd->department_id == $dep->id)
                                                                 <option value="{{ $dep->id }}" selected>
-                                                                    {{ $dep->dep_name }}
+                                                                    {{ $dep->fac_code }} - {{ $dep->dep_name }}
+                                                                    @if ($dep->dep_status == 2)
+                                                                        [Inactive]
+                                                                    @endif
                                                                 </option>
                                                             @else
-                                                                <option value="{{ $dep->id }}">
-                                                                    {{ $dep->dep_name }}
-                                                                </option>
+                                                                @if ($dep->dep_status == 1)
+                                                                    <option value="{{ $dep->id }}">
+                                                                        {{ $dep->fac_code }} - {{ $dep->dep_name }}
+                                                                    </option>
+                                                                @endif
                                                             @endif
                                                         @endforeach
                                                     </select>

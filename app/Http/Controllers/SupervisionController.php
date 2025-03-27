@@ -495,7 +495,10 @@ class SupervisionController extends Controller
             return view('staff.supervision.staff-management', [
                 'title' => 'Staff Management',
                 'staffs' => Staff::all(),
-                'deps' => Department::all(),
+                'deps' => DB::table('departments as a')
+                    ->join('faculties as b', 'b.id', '=', 'a.fac_id')
+                    ->select('a.*', 'b.fac_code')
+                    ->get()
             ]);
         } catch (Exception $e) {
             return abort(500);
@@ -726,6 +729,7 @@ class SupervisionController extends Controller
                     ->leftJoin('supervisions as s', 's.student_id', '=', 'a.id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                     ->select('a.*', 'c.prog_code', 'c.prog_mode', DB::raw('COUNT(s.staff_id) as supervision_count'))
+                    ->where('a.student_status', 1)
                     ->groupBy('a.id', 'c.prog_code', 'c.prog_mode')
                     ->orderByRaw('supervision_count < 2 DESC')
                     ->get();
@@ -802,7 +806,7 @@ class SupervisionController extends Controller
                     $mainSupervisors = $supervisors->where('supervision_role', 1);
                     $coSupervisors = $supervisors->where('supervision_role', 2);
 
-                    $output = '<div class="p-2 border-0">';
+                    $output = '<div class="border-0">';
 
                     // Main Supervisor Section
                     if ($mainSupervisors->isNotEmpty()) {
@@ -811,16 +815,6 @@ class SupervisionController extends Controller
                             $output .= '
                                 <div class="d-grid justify-content-between align-items-center rounded mb-1">
                                     <span class="fw-medium">' . htmlspecialchars($sv->staff_name) . '</span>
-                                    <div class="mt-2 mb-2">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                            data-bs-toggle="modal" data-bs-target="#editSupervisorModal-' . $sv->staff_id . '">
-                                            <i class="ti ti-edit"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                            onclick="deleteSupervisor(' . $sv->staff_id . ')">
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </div>
                                 </div>';
                         }
                     }
@@ -832,22 +826,11 @@ class SupervisionController extends Controller
                             $output .= '
                                 <div class="d-grid justify-content-between align-items-center rounded mb-1">
                                     <span class="fw-medium">' . htmlspecialchars($sv->staff_name) . '</span>
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                            data-bs-toggle="modal" data-bs-target="#editSupervisorModal-' . $sv->staff_id . '">
-                                            <i class="ti ti-edit"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                            onclick="deleteSupervisor(' . $sv->staff_id . ')">
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </div>
                                 </div>';
                         }
                     }
 
                     $output .= '</div>';
-
 
                     return $output;
                 });
@@ -866,6 +849,19 @@ class SupervisionController extends Controller
                                 <i class="ti ti-plus"></i>
                             </button>
                         ';
+                    } else {
+                        return '
+                            <div class="mt-2 mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="modal" data-bs-target="#updateSupervisionModal-' . $row->id . '">
+                                    <i class="ti ti-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#deleteSupervisionModal-' . $row->id . '">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            </div>
+                        ';
                     }
                 });
 
@@ -876,7 +872,9 @@ class SupervisionController extends Controller
             return view('staff.supervision.supervision-arrangement', [
                 'title' => 'Supervision Arrangement',
                 'studs' => Student::all(),
-                'staffs' => Staff::where('staff_status', 1)->whereIn('staff_role', [1, 2])->orderBy('staff_name', 'asc')->get(),
+                'staffs' => Staff::whereIn('staff_role', [1, 2])->orderBy('staff_name', 'asc')->get(),
+                'svs' => Supervision::all(),
+
             ]);
         } catch (Exception $e) {
             return abort(500);
@@ -888,7 +886,7 @@ class SupervisionController extends Controller
         $id = Crypt::decrypt($id);
 
         $validator = Validator::make($req->all(), [
-            'student_titleOfResearch' => 'required|string|max:150',
+            'student_titleOfResearch' => 'nullable|string|max:150',
         ], [], [
             'student_titleOfResearch' => 'title of research',
         ]);
@@ -918,11 +916,11 @@ class SupervisionController extends Controller
     {
         $id = Crypt::decrypt($id);
         $validator = Validator::make($req->all(), [
-            'staff_id' => 'required|integer|exists:staff,id',
-            'supervision_role' => 'required|integer|in:1,2',
+            'staff_id_sv' => 'required|integer|exists:staff,id',
+            'staff_id_cosv' => 'required|integer|exists:staff,id|different:staff_id_sv',
         ], [], [
-            'staff_id' => 'staff',
-            'supervision_role' => 'staff role',
+            'staff_id_sv' => 'supervisor',
+            'staff_id_cosv' => 'co-supervisor',
         ]);
 
         if ($validator->fails()) {
@@ -935,57 +933,92 @@ class SupervisionController extends Controller
         try {
 
             $validated = $validator->validated();
-            $checkExist = Supervision::where('student_id', $id)->where('staff_id', $validated['staff_id'])->exists() ?? false;
+            $checkSVExist = Supervision::where('student_id', $id)->where('staff_id', $validated['staff_id_sv'])->exists() ?? false;
+            $checkCOSVExist = Supervision::where('student_id', $id)->where('staff_id', $validated['staff_id_cosv'])->exists() ?? false;
 
-            if ($checkExist) {
+            if ($checkSVExist || $checkCOSVExist) {
                 return back()->with('error', 'Oops! The selected staff is already assigned to student. Please check and select a different staff.');
             }
 
-            /* CREATE SUPERVISION DATA */
+            /* CREATE SUPERVISION DATA [ MAIN SUPERVISOR ] */
             Supervision::create([
                 'student_id' => $id,
-                'staff_id' => $validated['staff_id'],
-                'supervision_role' => $validated['supervision_role']
+                'staff_id' => $validated['staff_id_sv'],
+                'supervision_role' => 1
+            ]);
+
+            /* CREATE SUPERVISION DATA [ CO-SUPERVISOR ] */
+            Supervision::create([
+                'student_id' => $id,
+                'staff_id' => $validated['staff_id_cosv'],
+                'supervision_role' => 2
             ]);
 
             return back()->with('success', 'Supervision added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding supervision.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error adding supervision.');
         }
     }
 
-    public function updateSupervision(Request $req, $studID, $staffID)
+    public function updateSupervision(Request $req, $id)
     {
-        $studID = Crypt::decrypt($studID);
-        $staffID = Crypt::decrypt($staffID);
-
+        $id = Crypt::decrypt($id);
         $validator = Validator::make($req->all(), [
-            'staff_id_up' => 'required|integer|exists:staff,id',
-            'supervision_role_up' => 'required|integer|in:1,2',
+            'staff_id_sv_up' => 'required|integer|exists:staff,id',
+            'staff_id_cosv_up' => 'required|integer|exists:staff,id|different:staff_id_sv_up',
         ], [], [
-            'staff_id_up' => 'staff',
-            'supervision_role_up' => 'staff role',
+            'staff_id_sv_up' => 'supervisor',
+            'staff_id_cosv_up' => 'co-supervisor',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
-                ->with('modal', 'updateSupervisionModal-' . $studID . '-' . $staffID);
+                ->with('modal', 'updateSupervisionModal-' . $id);
         }
 
         try {
-            $validated = $validator->validated();
 
-            /* UPDATE SUPERVISION DATA */
-            Supervision::where('student_id', $studID)->where('staff_id', $staffID)->update([
-                'staff_id' => $validated['staff_id_up'],
-                'supervision_role' => $validated['supervision_role_up']
-            ]);
+            $validated = $validator->validated();
+            $currSV = Supervision::where('student_id', $id)->where('supervision_role', 1)->first()->staff_id ?? null;
+            $currCOSV = Supervision::where('student_id', $id)->where('supervision_role', 2)->first()->staff_id ?? null;
+
+            /* UPDATE SUPERVISION DATA [ MAIN SUPERVISOR ] */
+            if ($currSV != $validated['staff_id_sv_up']) {
+                Supervision::where('student_id', $id)->where('supervision_role', 1)->update([
+                    'staff_id' => $validated['staff_id_sv_up'],
+                ]);
+            }
+
+            /* UPDATE SUPERVISION DATA [ CO-SUPERVISOR ] */
+            if ($currCOSV != $validated['staff_id_cosv_up']) {
+                Supervision::where('student_id', $id)->where('supervision_role', 2)->update([
+                    'staff_id' => $validated['staff_id_cosv_up'],
+                ]);
+            }
 
             return back()->with('success', 'Supervision updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating supervision.' . $e->getMessage());
+        }
+    }
+
+    public function deleteSupervision($id)
+    {
+        try {
+            $id = decrypt($id);
+            $svs = Supervision::where('student_id', $id);
+
+            if (!$svs->exists()) {
+                return back()->with('error', 'Supervision data not found.');
+            }
+
+            $svs->delete();
+
+            return back()->with('success', 'Supervision deleted successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error deleting supervision.' . $e->getMessage());
         }
     }
 }

@@ -115,7 +115,7 @@
                                                     class="form-control @error('student_titleOfResearch') is-invalid @enderror"
                                                     id="student_titleOfResearch" name="student_titleOfResearch"
                                                     placeholder="Enter Title Of Research"
-                                                    value="{{ $upd->student_titleOfResearch }}" required>
+                                                    value="{{ $upd->student_titleOfResearch }}">
                                                 @error('student_titleOfResearch')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
@@ -151,17 +151,17 @@
                                     </div>
                                     <div class="modal-body">
                                         <div class="row">
-                                            <!--Staff Input-->
+                                            <!--[ Main Supervisor ] Staff Input-->
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
-                                                    <label for="staff_id" class="form-label">Staff <span
+                                                    <label for="staff_id_sv" class="form-label">Main Supervisor <span
                                                             class="text-danger">*</span></label>
-                                                    <select name="staff_id" id="staff_id"
-                                                        class="form-select @error('staff_id') is-invalid @enderror"
+                                                    <select name="staff_id_sv" id="staff_id_sv"
+                                                        class="form-select @error('staff_id_sv') is-invalid @enderror"
                                                         required>
-                                                        <option value="">- Select Staff -</option>
-                                                        @foreach ($staffs as $st)
-                                                            @if (old('staff_id') == $st->id)
+                                                        <option value="">- Select Main Supervisor -</option>
+                                                        @foreach ($staffs->where('staff_status', 1) as $st)
+                                                            @if (old('staff_id_sv') == $st->id)
                                                                 <option value="{{ $st->id }}" selected>
                                                                     {{ $st->staff_name }}
                                                                 </option>
@@ -172,35 +172,40 @@
                                                             @endif
                                                         @endforeach
                                                     </select>
-                                                    @error('staff_id')
+                                                    @error('staff_id_sv')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
+                                                    <input type="hidden" name="supervision_svrole"
+                                                        id="supervision_role-sv" value="1">
                                                 </div>
                                             </div>
-                                            <!-- Staff Role Input -->
+
+                                            <!--[ Co-Supervisor ] Staff Input-->
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
-                                                    <label for="supervision_role_up" class="form-label">
-                                                        Role <span class="text-danger">*</span>
-                                                    </label>
-                                                    <select
-                                                        class="form-select @error('supervision_role') is-invalid @enderror"
-                                                        name="supervision_role" id="supervision_role" required>
-                                                        <option value ="" selected>- Select Role -</option>
-                                                        @if (old('supervision_role') == 1)
-                                                            <option value ="1" selected>Supervisor</option>
-                                                            <option value ="2">Co-Supervisor</option>
-                                                        @elseif(old('supervision_role') == 2)
-                                                            <option value ="1">Supervisor</option>
-                                                            <option value ="2" selected>Co-Supervisor</option>
-                                                        @else
-                                                            <option value ="1">Supervisor</option>
-                                                            <option value ="2">Co-Supervisor</option>
-                                                        @endif
+                                                    <label for="staff_id_cosv" class="form-label">Co-Supervisor <span
+                                                            class="text-danger">*</span></label>
+                                                    <select name="staff_id_cosv" id="staff_id_cosv"
+                                                        class="form-select @error('staff_id_cosv') is-invalid @enderror"
+                                                        required>
+                                                        <option value="">- Select Co-Supervisor -</option>
+                                                        @foreach ($staffs->where('staff_status', 1) as $st)
+                                                            @if (old('staff_id_cosv') == $st->id)
+                                                                <option value="{{ $st->id }}" selected>
+                                                                    {{ $st->staff_name }}
+                                                                </option>
+                                                            @else
+                                                                <option value="{{ $st->id }}">
+                                                                    {{ $st->staff_name }}
+                                                                </option>
+                                                            @endif
+                                                        @endforeach
                                                     </select>
-                                                    @error('supervision_role')
+                                                    @error('staff_id_cosv')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
+                                                    <input type="hidden" name="supervision_cosvrole"
+                                                        id="supervision_role-cosv" value="2">
                                                 </div>
                                             </div>
                                         </div>
@@ -220,12 +225,11 @@
                     <!-- [ Add Supervision Modal ] end -->
 
                     <!-- [ Update Supervision Modal ] start -->
-                    <form action="{{ route('update-supervision-post', Crypt::encrypt($upd->id)) }}"
-                        enctype="multipart/form-data" method="POST">
+                    <form action="{{ route('update-supervision-post', Crypt::encrypt($upd->id)) }}" method="POST">
                         @csrf
                         <div class="modal fade" id="updateSupervisionModal-{{ $upd->id }}" tabindex="-1"
                             aria-labelledby="updateModal" aria-hidden="true">
-                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
 
                                     <div class="modal-header">
@@ -235,58 +239,74 @@
                                     </div>
                                     <div class="modal-body">
                                         <div class="row">
-                                            <!--Staff Input-->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="staff_id_up" class="form-label">Staff <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="staff_id_up" id="staff_id_up"
-                                                        class="form-select @error('staff_id_up') is-invalid @enderror"
-                                                        required>
-                                                        <option value="">- Select Programme -</option>
-                                                        @foreach ($staffs as $st)
-                                                            @if ($upd->staff_id == $st->id)
-                                                                <option value="{{ $st->id }}" selected>
-                                                                    {{ $st->staff_name }}
-                                                                </option>
-                                                            @else
-                                                                <option value="{{ $st->id }}">
-                                                                    {{ $st->staff_name }}
-                                                                </option>
-                                                            @endif
-                                                        @endforeach
-                                                    </select>
-                                                    @error('staff_id_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <!-- Staff Role Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="supervision_role_up" class="form-label">
-                                                        Role <span class="text-danger">*</span>
-                                                    </label>
-                                                    <select
-                                                        class="form-select @error('supervision_role_up') is-invalid @enderror"
-                                                        name="supervision_role_up" id="supervision_role_up" required>
-                                                        <option value ="" selected>- Select Role -</option>
-                                                        @if ($upd->supervision_role == 1)
-                                                            <option value ="1" selected>Supervisor</option>
-                                                            <option value ="2">Co-Supervisor</option>
-                                                        @elseif($upd->supervision_role == 2)
-                                                            <option value ="1">Supervisor</option>
-                                                            <option value ="2" selected>Co-Supervisor</option>
-                                                        @else
-                                                            <option value ="1">Supervisor</option>
-                                                            <option value ="2">Co-Supervisor</option>
-                                                        @endif
-                                                    </select>
-                                                    @error('supervision_role_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
+                                          
+                                            @foreach ($svs->where('student_id', $upd->id) as $sv)
+                                                @if ($sv->supervision_role == 1)
+                                                    <!--[ Main Supervisor ] Staff Input-->
+                                                    <div class="col-sm-12 col-md-12 col-lg-12">
+                                                        <div class="mb-3">
+                                                            <label for="staff_id_sv_up" class="form-label">Main Supervisor
+                                                                <span class="text-danger">*</span></label>
+                                                            <select name="staff_id_sv_up" id="staff_id_sv_up"
+                                                                class="form-select @error('staff_id_sv_up') is-invalid @enderror"
+                                                                required>
+                                                                <option value="">- Select Main Supervisor -</option>
+                                                                @foreach ($staffs as $st)
+                                                                    @if ($sv->staff_id == $st->id)
+                                                                        <option value="{{ $st->id }}" selected>
+                                                                            {{ $st->staff_name }}
+                                                                            @if ($st->staff_status == 2)
+                                                                                [Inactive]
+                                                                            @endif
+                                                                        </option>
+                                                                    @else
+                                                                        @if ($st->staff_status == 1)
+                                                                            <option value="{{ $st->id }}">
+                                                                                {{ $st->staff_name }}
+                                                                            </option>
+                                                                        @endif
+                                                                    @endif
+                                                                @endforeach
+                                                            </select>
+                                                            @error('staff_id_sv_up')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                @elseif($sv->supervision_role == 2)
+                                                    <!--[ Co-Supervisor ] Staff Input-->
+                                                    <div class="col-sm-12 col-md-12 col-lg-12">
+                                                        <div class="mb-3">
+                                                            <label for="staff_id_cosv_up" class="form-label">Co-Supervisor
+                                                                <span class="text-danger">*</span></label>
+                                                            <select name="staff_id_cosv_up" id="staff_id_cosv_up"
+                                                                class="form-select @error('staff_id_cosv_up') is-invalid @enderror"
+                                                                required>
+                                                                <option value="">- Select Co-Supervisor -</option>
+                                                                @foreach ($staffs as $st)
+                                                                    @if ($sv->staff_id == $st->id)
+                                                                        <option value="{{ $st->id }}" selected>
+                                                                            {{ $st->staff_name }}
+                                                                            @if ($st->staff_status == 2)
+                                                                                [Inactive]
+                                                                            @endif
+                                                                        </option>
+                                                                    @else
+                                                                        @if ($st->staff_status == 1)
+                                                                            <option value="{{ $st->id }}">
+                                                                                {{ $st->staff_name }}
+                                                                            </option>
+                                                                        @endif
+                                                                    @endif
+                                                                @endforeach
+                                                            </select>
+                                                            @error('staff_id_cosv_up')
+                                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                            @enderror
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
                                         </div>
                                     </div>
                                     <div class="modal-footer justify-content-end">
@@ -304,7 +324,7 @@
                     <!-- [ Update Supervision Modal ] end -->
 
                     <!-- [ Delete Modal ] start -->
-                    <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-keyboard="false"
+                    <div class="modal fade" id="deleteSupervisionModal-{{ $upd->id }}" data-bs-keyboard="false"
                         tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
@@ -323,14 +343,17 @@
                                         </div>
                                         <div class="col-sm-12 mb-3">
                                             <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">This action cannot be undone.</p>
+                                                <p class="fw-normal f-18 text-center">This action will unassign both
+                                                    main supervisor and co-supervisor from the student. You will need to
+                                                    reassign them afterward.
+                                                </p>
                                             </div>
                                         </div>
                                         <div class="col-sm-12">
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-student-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
+                                                <a href="{{ route('delete-supervision-get', ['id' => Crypt::encrypt($upd->id)]) }}"
                                                     class="btn btn-danger w-100">Delete Anyways</a>
                                             </div>
                                         </div>

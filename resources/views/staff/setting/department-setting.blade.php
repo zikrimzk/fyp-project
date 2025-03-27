@@ -77,6 +77,7 @@
                                     <thead>
                                         <tr>
                                             <th scope="col">#</th>
+                                            <th scope="col">Department Code</th>
                                             <th scope="col">Department Name</th>
                                             <th scope="col">Faculty</th>
                                             <th scope="col">Status</th>
@@ -127,6 +128,8 @@
                                                     class="form-control @error('dep_code') is-invalid @enderror code-input"
                                                     id="dep_code" name="dep_code" placeholder="Enter Department Code"
                                                     value="{{ old('dep_code') }}" required>
+                                                <small class="form-label">Format: Faculty Code + Department Code. Example:
+                                                    FTMKSE</small>
                                                 @error('dep_code')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
@@ -239,6 +242,8 @@
                                                         id="dep_code_up" name="dep_code_up"
                                                         placeholder="Enter Department Code" value="{{ $upd->dep_code }}"
                                                         required>
+                                                    <small class="form-label">Format: Faculty Code + Department Code.
+                                                        Example: FTMKSE</small>
                                                     @error('dep_code_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -427,44 +432,44 @@
 
         $(document).ready(function() {
 
-            $(function() {
-
-                // DATATABLE : DEPARTMENT
-                var table = $('.data-table').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    responsive: true,
-                    autoWidth: true,
-                    ajax: {
-                        url: "{{ route('department-setting') }}",
+            // DATATABLE : DEPARTMENT
+            var table = $('.data-table').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                autoWidth: true,
+                ajax: {
+                    url: "{{ route('department-setting') }}",
+                },
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        searchable: false,
+                        className: "text-start"
                     },
-                    columns: [{
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            searchable: false,
-                            className: "text-start"
-                        },
-                        {
-                            data: 'dep_name',
-                            name: 'dep_name'
-                        },
-                        {
-                            data: 'fac_code',
-                            name: 'fac_code'
-                        },
-                        {
-                            data: 'dep_status',
-                            name: 'dep_status'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false
-                        }
-                    ]
-
-                });
+                    {
+                        data: 'dep_code',
+                        name: 'dep_code'
+                    },
+                    {
+                        data: 'dep_name',
+                        name: 'dep_name'
+                    },
+                    {
+                        data: 'fac_code',
+                        name: 'fac_code'
+                    },
+                    {
+                        data: 'dep_status',
+                        name: 'dep_status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
 
             });
 
