@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Validator;
 
 class SupervisionController extends Controller
 {
-    /* Student Management */
+    /* Student Management [Checked : 28/3/2024] */
     public function studentManagement(Request $req)
     {
         try {
@@ -168,8 +168,8 @@ class SupervisionController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'student_name' => 'required|string',
-            'student_matricno' => 'required|string|unique:students,student_matricno,',
-            'student_email' => 'required|email|unique:students,student_email,',
+            'student_matricno' => 'required|string|unique:students,student_matricno',
+            'student_email' => 'required|email|unique:students,student_email',
             'student_password' => 'nullable|string|min:8|max:50',
             'student_address' => 'nullable|string',
             'student_phoneno' => 'nullable|string',
@@ -205,8 +205,9 @@ class SupervisionController extends Controller
             $validated = $validator->validated();
 
             /* GET CURRENT SEMESTER */
-            $curr_sem_id = Semester::where('sem_status', 1)->first()->id ?? 'N/A';
-            $curr_sem = Semester::where('sem_status', 1)->first()->sem_label ?? 'N/A';
+            $curr_sem = Semester::where('sem_status', 1)->first();
+            $curr_sem_id = $curr_sem ? $curr_sem->id : null;
+            $curr_sem_label = $curr_sem ? $curr_sem->sem_label : null;
 
             /* GET STUDENT NAME */
             $student_name = Str::upper($validated['student_name']);
@@ -215,7 +216,9 @@ class SupervisionController extends Controller
             $password = bcrypt("pg@" . Str::lower($validated['student_matricno']));
 
             /* MAKE STUDENT DIRECTORY PATH */
-            $validated['student_directory'] = "Student/" . str_replace('/', '', $curr_sem) . "/" . $validated['student_matricno'] . "_" . str_replace(' ', '_', $student_name);
+            $validated['student_directory'] = "Student/" . ($curr_sem_label ? str_replace('/', '', $curr_sem_label) : 'Unknown') .
+                "/" . $validated['student_matricno'] . "_" . str_replace(' ', '_', $student_name);
+
             Storage::makeDirectory("{$validated['student_directory']}");
 
             /* SAVE STUDENT PHOTO */
@@ -239,7 +242,7 @@ class SupervisionController extends Controller
             Student::create([
                 'student_name' => Str::headline($validated['student_name']),
                 'student_matricno' => Str::upper($validated['student_matricno']),
-                'student_email' => $validated['student_email'],
+                'student_email' => Str::lower($validated['student_email']),
                 'student_password' => $password,
                 'student_address' => $validated['student_address'] ?? null,
                 'student_phoneno' => $validated['student_phoneno'] ?? null,
@@ -296,16 +299,17 @@ class SupervisionController extends Controller
             $student = Student::where('id', $id)->first() ?? null;
 
             /* GET CURRENT SEMESTER */
-            $curr_sem_id = $student->semester_id;
-            $curr_sem = Semester::where('id', $curr_sem_id)->first()->sem_label ?? 'N/A';
+            $curr_sem = Semester::where('id', $student->semester_id)->first();
+            $curr_sem_label = $curr_sem ? $curr_sem->sem_label : null;
+
 
             /* GET STUDENT NAME */
             $student_name = Str::upper($validated['student_name_up']);
 
             /* MAKE STUDENT DIRECTORY PATH */
             $oldDirectory = $student->student_directory;
-            $validated['student_directory_up'] = "Student/" . str_replace('/', '', $curr_sem) . "/" . $validated['student_matricno_up'] . "_" . str_replace(' ', '_', $student_name);
-
+            $validated['student_directory_up'] = "Student/" . ($curr_sem_label ? str_replace('/', '', $curr_sem_label) : 'Unknown') .
+                "/" . $validated['student_matricno_up'] . "_" . str_replace(' ', '_', $student_name);
 
             if ($oldDirectory !== $validated['student_directory_up']) {
                 Storage::move($oldDirectory, $validated['student_directory_up']);
@@ -313,7 +317,7 @@ class SupervisionController extends Controller
                 Storage::makeDirectory($validated['student_directory_up']);
             }
 
-            /* SAVE/RESET STUDENT PHOTO */
+            /* SAVE OR RESET STUDENT PHOTO */
             if ($req->input('remove_photo') == "1") {
                 // 1 - REMOVE OLD PHOTO
                 if (!empty($student->student_photo)) {
@@ -324,6 +328,7 @@ class SupervisionController extends Controller
                 Student::where('id', $student->id)->update([
                     'student_photo' => null
                 ]);
+
             } elseif ($req->hasFile('student_photo_up')) {
                 // 1 - REMOVE OLD PHOTO
                 if ($student->student_photo && Storage::exists($student->student_directory . '/photo/' . $student->student_photo)) {
@@ -349,7 +354,7 @@ class SupervisionController extends Controller
             Student::where('id', $student->id)->update([
                 'student_name' => Str::headline($validated['student_name_up']),
                 'student_matricno' => Str::upper($validated['student_matricno_up']),
-                'student_email' => $validated['student_email_up'],
+                'student_email' => Str::lower($validated['student_email_up']),
                 'student_address' => $validated['student_address_up'] ?? null,
                 'student_phoneno' => $validated['student_phoneno_up'] ?? null,
                 'student_gender' => $validated['student_gender_up'],
@@ -360,7 +365,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Student updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating student.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating student.' .$e->getMessage());
         }
     }
 
@@ -413,7 +418,7 @@ class SupervisionController extends Controller
 
             return $response;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing student.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error importing student.');
         }
     }
 
@@ -423,7 +428,7 @@ class SupervisionController extends Controller
             $selectedIds = $req->query('ids');
             return Excel::download(new StudentExport($selectedIds), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error exporting students.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error exporting students.');
         }
     }
 

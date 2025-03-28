@@ -96,7 +96,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
+                                        <button type="button" class="btn btn-secondary btn-sm" id="clearFacFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -117,7 +117,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                        <button type="button" class="btn btn-secondary btn-sm"
                                             id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
@@ -138,7 +138,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                        <button type="button" class="btn btn-secondary btn-sm"
                                             id="clearSemFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
@@ -152,7 +152,7 @@
                                             <option value="1">Assigned</option>
                                             <option value="2">Unassigned</option>
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                        <button type="button" class="btn btn-secondary btn-sm"
                                             id="clearStatusFilter">
                                             <i class="ti ti-x"></i>
                                         </button>

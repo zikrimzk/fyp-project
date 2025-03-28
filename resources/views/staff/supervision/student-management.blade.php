@@ -496,7 +496,7 @@
                                                         </button>
                                                     </div>
                                                     <div class="fw-normal mt-2 text-muted">Click <a
-                                                            href="{{ asset('assets/excel-template/e-PGS_STAFF_REGISTRATION_TEMPLATE.xlsx') }}"
+                                                            href="{{ asset('assets/excel-template/e-PGS_STUDENT_REGISTRATION_TEMPLATE.xlsx') }}"
                                                             class="link-primary" target="_blank"
                                                             download="e-PGS_STUDENT_REGISTRATION_TEMPLATE.xlsx">here</a> to
                                                         download the template</div>
@@ -510,7 +510,7 @@
                                         <button type="reset" class="btn btn-link-danger btn-pc-default"
                                             data-bs-dismiss="modal">Cancel</button>
                                         <button type="submit" class="btn btn-primary" id="import-btn" disabled>Import
-                                            Staff</button>
+                                            Data</button>
                                     </div>
                                 </div>
                             </div>

@@ -85,36 +85,32 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
-                            <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addModal" id="addStaffBtn"><i
-                                        class="ti ti-plus f-18"></i>
-                                    Add Staff
-                                </button>
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#importModal" id="importStaffBtn"><i
-                                        class="ti ti-file-import f-18"></i>
-                                    Import Staff
-                                </button>
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    id="excelExportBtn">
-                                    <i class="ti ti-file-export f-18"></i> Export Staff
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="mb-3">
+                            <!-- [ Option Section ] start -->
+                            <div class="mb-3 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
-                                    class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2 d-none"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
                                     id="clearSelectionBtn">
-                                    0 selected <i class="ms-2 ti ti-x f-18"></i>
+                                    0 selected <i class="ti ti-x f-18"></i>
+                                </button>
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#addModal" title="Add Staff" id="addStaffBtn">
+                                    <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add Student</span>
+                                </button>
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#importModal" id="importBtn" title="Import Data">
+                                    <i class="ti ti-file-import f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">Import Data</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
+                                    id="excelExportBtn" title="Export Data">
+                                    <i class="ti ti-file-export f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Export Data
+                                    </span>
                                 </button>
                             </div>
+                            <!-- [ Option Section ] end -->
+
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -359,7 +355,7 @@
                         <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="mb-0">Import Staff</h5>
+                                    <h5 class="mb-0">Import Data</h5>
                                     <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
                                         data-bs-dismiss="modal">
                                         <i class="ti ti-x f-20"></i>
@@ -414,7 +410,7 @@
                                         <button type="reset" class="btn btn-link-danger btn-pc-default"
                                             data-bs-dismiss="modal">Cancel</button>
                                         <button type="submit" class="btn btn-primary" id="import-btn" disabled>Import
-                                            Staff</button>
+                                            Data</button>
                                     </div>
                                 </div>
                             </div>
@@ -861,7 +857,7 @@
 
             /* SELECT : MULTIPLE STAFF SELECT */
             const addBtn = $("#addStaffBtn");
-            const importBtn = $("#importStaffBtn");
+            const importBtn = $("#importBtn");
             const excelExportBtn = $("#excelExportBtn");
             const clearBtn = $("#clearSelectionBtn");
 
@@ -914,8 +910,8 @@
             function toggleSelectButton() {
                 let selectedCount = selectedIds.size;
 
-                addBtn.toggleClass("disabled", selectedIds.size !== 0);
-                importBtn.toggleClass("disabled", selectedIds.size !== 0);
+                addBtn.toggleClass("d-none", selectedIds.size !== 0);
+                importBtn.toggleClass("d-none", selectedIds.size !== 0);
 
                 if (selectedCount > 0) {
                     clearBtn.removeClass("d-none").html(

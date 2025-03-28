@@ -51,9 +51,6 @@ Route::prefix('staff')->group(function () {
     Route::get('/delete-supervision-{id}', [SupervisionController::class, 'deleteSupervision'])->name('delete-supervision-get');
     Route::get('/export-supervision-data', [SupervisionController::class, 'exportSupervision'])->name('export-supervision-get');
 
-
-
-
     // Standard Operation Procedure (SOP)
 
     /* Activity + Document Setting */
@@ -73,8 +70,6 @@ Route::prefix('staff')->group(function () {
     Route::post('/update-procedure-{actID}-{progID}', [SOPController::class, 'updateProcedure'])->name('update-procedure-post');
     Route::get('/delete-procedure-{actID}-{progID}', [SOPController::class, 'deleteProcedure'])->name('delete-procedure-get');
     Route::get('/view-material/{filename}', [SOPController::class, 'viewMaterialFile'])->where('filename', '.*')->name('view-material-get');
-
-
 
     // Setting 
 
