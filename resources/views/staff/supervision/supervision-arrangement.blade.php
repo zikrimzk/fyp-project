@@ -63,16 +63,19 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- [ Option Section ] start -->
-                            <div class="mb-3 text-center text-md-start">
+                            <div class="mb-3 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
-                                    class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2 d-none"
+                                    class="btn btn-outline-primary  d-flex align-items-center gap-2 d-none"
                                     id="clearSelectionBtn">
-                                    0 selected <i class="ms-2 ti ti-x f-18"></i>
+                                    0 selected <i class="ti ti-x f-18"></i>
                                 </button>
                                 <button type="button"
-                                    class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2"
-                                    id="excelExportBtn">
-                                    <i class="ti ti-file-export f-18"></i> Export Data
+                                    class="btn btn-outline-primary  d-flex align-items-center gap-2"
+                                    id="excelExportBtn" title="Export Data">
+                                    <i class="ti ti-file-export f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Export Data
+                                    </span>
                                 </button>
                             </div>
                             <!-- [ Option Section ] end -->
@@ -135,7 +138,8 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSemFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearSemFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -452,22 +456,11 @@
         </div>
     </div>
     <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            var modalToShow = "{{ session('modal') }}";
-            if (modalToShow) {
-                var modalElement = document.getElementById(modalToShow);
-                if (modalElement) {
-                    var modal = new bootstrap.Modal(modalElement);
-                    modal.show();
-                }
-            }
-        });
-
         $(document).ready(function() {
 
             // DATATABLE : SUPERVISION
             var table = $('.data-table').DataTable({
-                // processing: true,
+                processing: false,
                 serverSide: true,
                 responsive: true,
                 autoWidth: true,
@@ -515,6 +508,14 @@
 
             });
 
+            var modalToShow = "{{ session('modal') }}";
+            if (modalToShow) {
+                var modalElement = $("#" + modalToShow);
+                if (modalElement.length) {
+                    var modal = new bootstrap.Modal(modalElement[0]);
+                    modal.show();
+                }
+            }
 
             // Faculty Filter
             $('#fil_faculty_id').on('change', function() {
@@ -553,7 +554,7 @@
             });
 
 
-            /* SELECT : MULTIPLE STAFF SELECT */
+            /* SELECT : MULTIPLE STUDENT SELECT */
             const excelExportBtn = $("#excelExportBtn");
             const clearBtn = $("#clearSelectionBtn");
 

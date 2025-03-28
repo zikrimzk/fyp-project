@@ -52,6 +52,32 @@
                         <p class="mb-0">{{ session('error') }}</p>
                     </div>
                 @endif
+                @if (session()->has('skippedRows'))
+                    <div class="alert alert-warning alert-dismissible" role="alert">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-info-circle"></i>
+                                Error
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <ul>
+                            @foreach (session('skippedRows') as $row)
+                                <li>
+                                    <strong>Student Matric No:</strong> {{ $row['data']['matricno'] }} -
+                                    <strong>Student Name:</strong> {{ $row['data']['student_name'] }}
+                                    <br>
+                                    <strong>Errors:</strong>
+                                    <ul>
+                                        @foreach ($row['errors'] as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
             </div>
             <!-- [ Alert ] end -->
 
@@ -62,29 +88,116 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
-                            <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addModal"><i class="ti ti-plus f-18"></i>
-                                    Add Student
+                            <!-- [ Option Section ] start -->
+                            <div class="mb-3 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                <button type="button"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    id="clearSelectionBtn">
+                                    0 selected <i class="ti ti-x f-18"></i>
                                 </button>
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#importModal"><i
-                                        class="ti ti-file-import f-18"></i>
-                                    Import Student
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#addModal" title="Add Student"
+                                    id="addStudentBtn">
+                                    <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add Student</span>
+                                </button>
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#importModal" id="importBtn" title="Import Data">
+                                    <i class="ti ti-file-import f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">Import Data</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
+                                    id="excelExportBtn" title="Export Data">
+                                    <i class="ti ti-file-export f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Export Data
+                                    </span>
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                            <!-- [ Option Section ] end -->
 
-                <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
+                            <!-- [ Filter Section ] Start -->
+                            <div class="row g-3 align-items-end">
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_faculty_id" class="form-select">
+                                            <option value="">-- Select Faculty --</option>
+                                            @foreach ($facs as $fil)
+                                                @if ($fil->fac_status == 1)
+                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
+                                                @elseif($fil->fac_status == 2)
+                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }} [Inactive]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-secondary btn-sm" id="clearFacFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_programme_id" class="form-select">
+                                            <option value="">-- Select Programme --</option>
+                                            @foreach ($progs as $fil)
+                                                @if ($fil->prog_status == 1)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->prog_code }}
+                                                        ({{ $fil->prog_mode }})
+                                                    </option>
+                                                @elseif($fil->prog_status == 2)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->prog_code }}
+                                                        ({{ $fil->prog_mode }}) [Inactive]</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-secondary btn-sm" id="clearProgFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_semester_id" class="form-select">
+                                            <option value="">-- Select Semester --</option>
+                                            @foreach ($sems as $fil)
+                                                @if ($fil->sem_status == 1)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }} [Current]
+                                                    </option>
+                                                @elseif($fil->sem_status == 0)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-secondary btn-sm" id="clearSemFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_status" class="form-select">
+                                            <option value="">-- Select Status --</option>
+                                            <option value="1">Active</option>
+                                            <option value="2">Inactive</option>
+                                        </select>
+                                        <button type="button" class="btn btn-secondary btn-sm" id="clearStatusFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ Filter Section ] End -->
+
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
                                         <tr>
-                                            <th scope="col">#</th>
+                                            <th><input type="checkbox" id="select-all" class="form-check-input"></th>
                                             <th scope="col">Name</th>
                                             <th scope="col">Matric No</th>
                                             <th scope="col">Programme</th>
@@ -119,7 +232,8 @@
                                                 <div class="user-upload avatar-s w-100">
                                                     <img src="{{ asset('assets/images/user/default-profile-1.jpg') }}"
                                                         alt="Profile Photo" width="150" height="150"
-                                                        class="previewImage">
+                                                        class="previewImage"
+                                                        data-default="{{ asset('assets/images/user/default-profile-1.jpg') }}">
                                                     <label for="student_photo" class="img-avtar-upload">
                                                         <i class="ti ti-camera f-24 mb-1"></i>
                                                         <span>Upload</span>
@@ -130,11 +244,13 @@
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
-                                                <label for="student_photo"
-                                                    class=" link-dark fw-semibold w-100 text-center mt-3"
-                                                    style="cursor:pointer;">
+                                                <label for="student_photo" class="btn btn-sm btn-secondary mt-2 mb-2">
                                                     Change Photo
                                                 </label>
+                                                <button type="button" id="resetPhoto"
+                                                    class="btn btn-sm btn-light-danger">
+                                                    Reset Photo
+                                                </button>
                                             </div>
 
                                         </div>
@@ -222,7 +338,7 @@
                                         <!-- Address Input -->
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="mb-3">
-                                                <label for="student_matricno" class="form-label">
+                                                <label for="student_address" class="form-label">
                                                     Address
                                                 </label>
                                                 <textarea name="student_address" id="student_address" placeholder="Enter Address" cols="10" rows="5"
@@ -339,7 +455,7 @@
                         <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="mb-0">Import Student</h5>
+                                    <h5 class="mb-0">Import Data</h5>
                                     <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
                                         data-bs-dismiss="modal">
                                         <i class="ti ti-x f-20"></i>
@@ -349,7 +465,7 @@
                                     <div class="row">
                                         <!-- File Input Section -->
                                         <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="mb-3">
+                                            <div class="mb-1">
                                                 <!-- Alert Note -->
                                                 <div class="alert alert-warning d-flex align-items-center" role="alert">
                                                     <i class="ti ti-alert-circle me-2"></i>
@@ -369,16 +485,21 @@
 
                                                 <!-- Custom File Upload -->
                                                 <div class="mt-3">
-                                                    <label for="file" class="form-label fw-bold">Upload File</label>
                                                     <div class="input-group">
-                                                        <input class="form-control d-none" type="file" name="file"
-                                                            id="file" accept=".csv, .xlsx" required>
+                                                        <input class="form-control d-none" type="file"
+                                                            name="student_file" id="file" accept=".csv, .xlsx"
+                                                            required>
                                                         <input type="text" class="form-control" id="file-name"
                                                             placeholder="No file chosen" readonly>
                                                         <button class="btn btn-primary" type="button" id="browse-btn">
                                                             <i class="ti ti-upload"></i> Browse
                                                         </button>
                                                     </div>
+                                                    <div class="fw-normal mt-2 text-muted">Click <a
+                                                            href="{{ asset('assets/excel-template/e-PGS_STAFF_REGISTRATION_TEMPLATE.xlsx') }}"
+                                                            class="link-primary" target="_blank"
+                                                            download="e-PGS_STUDENT_REGISTRATION_TEMPLATE.xlsx">here</a> to
+                                                        download the template</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -389,7 +510,7 @@
                                         <button type="reset" class="btn btn-link-danger btn-pc-default"
                                             data-bs-dismiss="modal">Cancel</button>
                                         <button type="submit" class="btn btn-primary" id="import-btn" disabled>Import
-                                            Student</button>
+                                            Staff</button>
                                     </div>
                                 </div>
                             </div>
@@ -417,11 +538,13 @@
                                         <div class="row">
                                             <!-- Photo Input -->
                                             <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="d-grid justify-content-center align-items-center mb-3">
+                                                <div class="d-grid justify-content-center align-items-center mb-3 profile-container"
+                                                    data-id="{{ $upd->id }}">
                                                     <div class="user-upload avatar-s w-100">
                                                         <img src="{{ empty($upd->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->student_directory . '/photo/' . $upd->student_photo) }}"
                                                             alt="Profile Photo" width="150" height="150"
-                                                            class="previewImage">
+                                                            class="previewImage"
+                                                            data-default="{{ asset('assets/images/user/default-profile-1.jpg') }}">
                                                         <label for="student_photo_up_{{ $upd->id }}"
                                                             class="img-avtar-upload">
                                                             <i class="ti ti-camera f-24 mb-1"></i>
@@ -435,11 +558,16 @@
                                                         @enderror
                                                     </div>
                                                     <label for="student_photo_up_{{ $upd->id }}"
-                                                        class=" link-dark fw-semibold w-100 text-center mt-3"
-                                                        style="cursor:pointer;">
+                                                        class="btn btn-sm btn-secondary mt-2 mb-2">
                                                         Change Photo
                                                     </label>
+                                                    <button type="button" class="btn btn-sm btn-light-danger resetPhoto">
+                                                        Reset Photo
+                                                    </button>
+                                                    <input type="hidden" name="remove_photo" class="remove_photo"
+                                                        value="0">
                                                 </div>
+
 
                                             </div>
 
@@ -725,33 +853,32 @@
         </div>
     </div>
     <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            var modalToShow = "{{ session('modal') }}"; // Ambil modal yang perlu dibuka dari session
-            if (modalToShow) {
-                var modalElement = document.getElementById(modalToShow);
-                if (modalElement) {
-                    var modal = new bootstrap.Modal(modalElement);
-                    modal.show();
-                }
-            }
-        });
-
         $(document).ready(function() {
 
             // DATATABLE : STUDENT
             var table = $('.data-table').DataTable({
-                processing: true,
+                processing: false,
                 serverSide: true,
                 responsive: true,
                 autoWidth: true,
                 ajax: {
                     url: "{{ route('student-management') }}",
+                    data: function(d) {
+                        d.faculty = $('#fil_faculty_id')
+                            .val();
+                        d.programme = $('#fil_programme_id')
+                            .val();
+                        d.semester = $('#fil_semester_id')
+                            .val();
+                        d.status = $('#fil_status')
+                            .val();
+                    }
                 },
                 columns: [{
-                        data: 'DT_RowIndex',
-                        name: 'DT_RowIndex',
+                        data: 'checkbox',
+                        name: 'checkbox',
+                        orderable: false,
                         searchable: false,
-                        className: "text-start"
                     },
                     {
                         data: 'student_photo',
@@ -779,7 +906,55 @@
 
             });
 
-            $('#student_photo').on('change', function() {
+            var modalToShow = "{{ session('modal') }}";
+            if (modalToShow) {
+                var modalElement = $("#" + modalToShow);
+                if (modalElement.length) {
+                    var modal = new bootstrap.Modal(modalElement[0]);
+                    modal.show();
+                }
+            }
+
+            // Faculty Filter
+            $('#fil_faculty_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+            $('#clearFacFilter').click(function() {
+                $('#fil_faculty_id').val('').change();
+            });
+
+            // Programme Filter
+            $('#fil_programme_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+            $('#clearProgFilter').click(function() {
+                $('#fil_programme_id').val('').change();
+            });
+
+            // Semester Filter
+            $('#fil_semester_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+            $('#clearSemFilter').click(function() {
+                $('#fil_semester_id').val('').change();
+            });
+
+            // Status Filter
+            $('#fil_status').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+            $('#clearStatusFilter').click(function() {
+                $('#fil_status').val('').change();
+            });
+
+            // STUDENT PHOTO FUNCTIONS
+            var defaultImage = $(".previewImage").data("default");
+
+            $('#student_photo').on('change', function(event) {
                 const file = event.target.files[0];
                 if (file) {
                     const reader = new FileReader();
@@ -792,18 +967,43 @@
                 }
             });
 
-            $('.student_photo').on('change', function() {
-                const file = event.target.files[0];
+            $("#resetPhoto").on("click", function() {
+                $(".previewImage").attr("src", defaultImage);
+                $("#student_photo").val("");
+            });
+
+            $(document).on('change', '.student_photo', function(event) {
+                var file = event.target.files[0];
+                var reader = new FileReader();
+                var container = $(this).closest('.profile-container');
+                var userId = container.data('id');
+
                 if (file) {
-                    const reader = new FileReader();
-
                     reader.onload = function(e) {
-                        $('.previewImage').attr('src', e.target.result).show();
+                        $('.profile-container[data-id="' + userId + '"] .previewImage').attr('src', e
+                            .target
+                            .result);
                     };
-
                     reader.readAsDataURL(file);
                 }
             });
+
+            $(document).on("click", ".resetPhoto", function() {
+                var container = $(this).closest('.profile-container');
+                var defaultImage = container.find('.previewImage').data("default");
+
+                console.log("Reset button clicked for user:", container.data('id')); // Debugging
+
+                if (defaultImage) {
+                    container.find('.previewImage').attr('src', defaultImage);
+                } else {
+                    console.error("Default image not found for user " + container.data('id'));
+                }
+
+                container.find('.student_photo').val(null); // Reset input file
+                container.find('.remove_photo').val("1"); // Tandakan gambar perlu dipadam
+            });
+
 
             $('.phonenum-input').on('input', function() {
                 let input = $(this).val().replace(/\D/g, '');
@@ -839,6 +1039,93 @@
                 let fileName = $(this).val().split("\\").pop();
                 $('#file-name').val(fileName || "No file chosen");
                 $('#import-btn').prop('disabled', false);
+            });
+
+            /* SELECT : MULTIPLE STUDENT SELECT */
+            const addBtn = $("#addStudentBtn");
+            const importBtn = $("#importBtn");
+            const excelExportBtn = $("#excelExportBtn");
+            const clearBtn = $("#clearSelectionBtn");
+
+            let selectedIds = new Set();
+
+            // Handle "Select All" checkbox
+            $("#select-all").on("change", function() {
+                let isChecked = $(this).prop("checked");
+
+                $(".user-checkbox").each(function() {
+                    let id = $(this).val();
+                    this.checked = isChecked;
+
+                    if (isChecked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                });
+                toggleSelectButton();
+            });
+
+            // Handle individual checkbox selection
+            $(document).on("change", ".user-checkbox", function() {
+                let id = $(this).val();
+                if ($(this).prop("checked")) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+                toggleSelectButton();
+            });
+
+            // Restore checkbox states after DataTables refresh
+            $('.data-table').on("draw.dt", function() {
+                $(".user-checkbox").each(function() {
+                    let id = $(this).val();
+                    this.checked = selectedIds.has(id);
+                });
+
+                // If all checkboxes are selected, keep "Select All" checked
+                $("#select-all").prop(
+                    "checked",
+                    $(".user-checkbox").length === $(".user-checkbox:checked").length
+                );
+
+                toggleSelectButton();
+            });
+
+            function toggleSelectButton() {
+                let selectedCount = selectedIds.size;
+
+                addBtn.toggleClass("d-none", selectedIds.size !== 0);
+                importBtn.toggleClass("d-none", selectedIds.size !== 0);
+
+                if (selectedCount > 0) {
+                    clearBtn.removeClass("d-none").html(
+                        `${selectedCount} selected <i class="ms-2 ti ti-x f-18"></i>`);
+                } else {
+                    clearBtn.addClass("d-none");
+                }
+            }
+
+            clearBtn.on("click", function() {
+                $(".user-checkbox").prop("checked", false);
+                $("#select-all").prop("checked", false);
+                selectedIds.clear();
+                toggleSelectButton();
+            });
+
+            excelExportBtn.click(function(e) {
+                e.preventDefault();
+                let selectedIds = $(".user-checkbox:checked").map(function() {
+                    return $(this).val();
+                }).get();
+
+                let url = "{{ route('export-student-get') }}";
+
+                if (selectedIds.length > 0) {
+                    url += "?ids=" + selectedIds.join(",");
+                }
+                window.location.href = url;
             });
 
 

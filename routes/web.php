@@ -32,7 +32,6 @@ Route::prefix('staff')->group(function () {
     Route::post('/add-student', [SupervisionController::class, 'addStudent'])->name('add-student-post');
     Route::post('/update-student-{id}', [SupervisionController::class, 'updateStudent'])->name('update-student-post');
     Route::get('/delete-student-{id}-{opt}', [SupervisionController::class, 'deleteStudent'])->name('delete-student-get');
-    //Unfinished
     Route::post('/import-student-data', [SupervisionController::class, 'importStudent'])->name('import-student-post');
     Route::get('/export-student-data', [SupervisionController::class, 'exportStudent'])->name('export-student-get');
 

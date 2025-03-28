@@ -8,12 +8,12 @@ use App\Models\Faculty;
 use App\Models\Student;
 use App\Models\Semester;
 use App\Models\Programme;
-use App\Models\Department;
 use App\Models\Supervision;
 use Illuminate\Support\Str;
 use App\Exports\StaffExport;
 use App\Imports\StaffImport;
 use Illuminate\Http\Request;
+use App\Exports\StudentExport;
 use App\Imports\StudentImport;
 use App\Exports\SupervisionExport;
 use Illuminate\Support\Facades\DB;
@@ -35,32 +35,48 @@ class SupervisionController extends Controller
                     ->join('semesters as b', 'b.id', '=', 'a.semester_id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                     ->select('a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode')
-                    ->get();
+                    ->orderBy('a.student_name');
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('fac_id', $req->input('faculty'));
+                }
+
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('programme_id', $req->input('programme'));
+                }
+
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('semester_id', $req->input('semester'));
+                }
+
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    $data->where('student_status', $req->input('status'));
+                }
+
+                $data = $data->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
 
-                $table->addColumn('student_photo', function ($row) {
-                    $photo = '
-                            <div class="row align-items-center">
-                                <div class="col-auto pe-0">
-                                    <div class="avatar-sms">
-                                        <img src="' . (empty($row->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo)) . '" alt="user-image" />
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <h6 class="mb-0 text-truncate">' . $row->student_name . '</h6>
-                                            <small class="text-muted
-                                                text-truncate">' . $row->student_email . '</small>
-                                        </div>
-                                    </div>
-                                   
-                                </div>
-                            </div>
-                    ';
+                $table->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->id . '">';
+                });
 
-                    return $photo;
+                $table->addColumn('student_photo', function ($row) {
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                            </div>
+                        </div>
+                    ';
                 });
 
                 $table->addColumn('student_programme', function ($row) {
@@ -76,7 +92,7 @@ class SupervisionController extends Controller
                     <div class="row align-items-center">
                         <div class="col-auto">
                             <p class="mb-0 text-truncate">' . $row->prog_code . '</p>
-                            <small class="text-muted text-truncate">' . $mode . '</small>
+                            <p class="mb-0  text-truncate">' . $mode . '</p>
                         </div>
                     </div>              
                     ';
@@ -99,7 +115,7 @@ class SupervisionController extends Controller
 
                 $table->addColumn('action', function ($row) {
                     $isReferenced = false;
-                    // $isReferenced = DB::table('supervision')->where('student_id', $row->id)->exists();
+                    $isReferenced = DB::table('supervisions')->where('student_id', $row->id)->exists();
 
                     $buttonEdit =
                         '
@@ -121,7 +137,7 @@ class SupervisionController extends Controller
 
                         $buttonRemove =
                             '
-                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger ' . ($row->student_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
+                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-warning ' . ($row->student_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
                                     data-bs-target="#disableModal-' . $row->id . '">
                                     <i class="ti ti-trash f-20"></i>
                                 </a>
@@ -131,7 +147,7 @@ class SupervisionController extends Controller
                     return $buttonEdit . $buttonRemove;
                 });
 
-                $table->rawColumns(['student_photo', 'student_programme', 'student_status', 'action']);
+                $table->rawColumns(['checkbox', 'student_photo', 'student_programme', 'student_status', 'action']);
 
                 return $table->make(true);
             }
@@ -140,6 +156,8 @@ class SupervisionController extends Controller
                 'studs' => Student::all(),
                 'current_sem' => Semester::where('sem_status', 1)->first()->sem_label ?? 'N/A',
                 'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
             ]);
         } catch (Exception $e) {
             return abort(500);
@@ -295,9 +313,18 @@ class SupervisionController extends Controller
                 Storage::makeDirectory($validated['student_directory_up']);
             }
 
-            /* SAVE STUDENT PHOTO */
-            if ($req->hasFile('student_photo_up')) {
+            /* SAVE/RESET STUDENT PHOTO */
+            if ($req->input('remove_photo') == "1") {
+                // 1 - REMOVE OLD PHOTO
+                if (!empty($student->student_photo)) {
+                    Storage::delete($student->student_directory . '/photo/' . $student->student_photo);
+                }
 
+                // 2 - SET TO NULL
+                Student::where('id', $student->id)->update([
+                    'student_photo' => null
+                ]);
+            } elseif ($req->hasFile('student_photo_up')) {
                 // 1 - REMOVE OLD PHOTO
                 if ($student->student_photo && Storage::exists($student->student_directory . '/photo/' . $student->student_photo)) {
                     Storage::delete($student->student_directory . '/photo/' . $student->student_photo);
@@ -318,6 +345,7 @@ class SupervisionController extends Controller
                     'student_photo' => $fileName
                 ]);
             }
+
             Student::where('id', $student->id)->update([
                 'student_name' => Str::headline($validated['student_name_up']),
                 'student_matricno' => Str::upper($validated['student_matricno_up']),
@@ -367,17 +395,33 @@ class SupervisionController extends Controller
     public function importStudent(Request $req)
     {
         try {
-            Excel::import(new StudentImport, $req->file('file'));
-            return back()->with('success', 'Student imported successfully.');;
+            $req->validate([
+                'student_file' => 'required|mimes:xlsx,csv'
+            ]);
+
+            $import = new StudentImport();
+            Excel::import($import, $req->file('student_file'));
+
+            $response = back()->with(
+                'success',
+                "{$import->insertedCount} student successfully inserted. {$import->skippedCount} data were not inserted."
+            );
+
+            if (!empty($import->skippedRows)) {
+                $response->with('skippedRows', $import->skippedRows);
+            }
+
+            return $response;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing students.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error importing student.' . $e->getMessage());
         }
     }
 
-    public function exportStudent()
+    public function exportStudent(Request $req)
     {
         try {
-            return back()->with('success', 'Student exported successfully.');
+            $selectedIds = $req->query('ids');
+            return Excel::download(new StudentExport($selectedIds), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error exporting students.' . $e->getMessage());
         }
@@ -702,10 +746,16 @@ class SupervisionController extends Controller
             $import = new StaffImport();
             Excel::import($import, $request->file('staff_file'));
 
-            return back()->with(
+            $response = back()->with(
                 'success',
                 "{$import->insertedCount} staff successfully inserted. {$import->skippedCount} data were not inserted."
-            )->with('skippedRows', $import->skippedRows);
+            );
+
+            if (!empty($import->skippedRows)) {
+                $response->with('skippedRows', $import->skippedRows);
+            }
+
+            return $response;
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error importing staff.' . $e->getMessage());
         }
@@ -721,7 +771,7 @@ class SupervisionController extends Controller
         }
     }
 
-    /* Supervision Arrangement [Checked : 28/3/2024] */ 
+    /* Supervision Arrangement [Checked : 28/3/2024] */
     public function supervisionArrangement(Request $req)
     {
         try {

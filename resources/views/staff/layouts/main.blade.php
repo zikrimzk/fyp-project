@@ -123,6 +123,15 @@
     <script src="../assets/js/plugins/feather.min.js"></script>
 
     <script>
+        $(document).ready(function() {
+            $('[title]').tooltip({
+                placement: 'bottom',
+                trigger: 'hover'
+            });
+        });
+    </script>
+
+    <script>
         layout_change('light');
     </script>
 
