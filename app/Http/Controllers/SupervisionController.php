@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Exception;
 use App\Models\Staff;
+use App\Models\Faculty;
 use App\Models\Student;
 use App\Models\Semester;
 use App\Models\Programme;
@@ -14,6 +15,7 @@ use App\Exports\StaffExport;
 use App\Imports\StaffImport;
 use Illuminate\Http\Request;
 use App\Imports\StudentImport;
+use App\Exports\SupervisionExport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Crypt;
@@ -719,7 +721,7 @@ class SupervisionController extends Controller
         }
     }
 
-    /* Supervision Arrangement */
+    /* Supervision Arrangement [Checked : 28/3/2024] */ 
     public function supervisionArrangement(Request $req)
     {
         try {
@@ -728,13 +730,41 @@ class SupervisionController extends Controller
                 $data = DB::table('students as a')
                     ->leftJoin('supervisions as s', 's.student_id', '=', 'a.id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-                    ->select('a.*', 'c.prog_code', 'c.prog_mode', DB::raw('COUNT(s.staff_id) as supervision_count'))
+                    ->select('a.*', 'c.prog_code', 'c.prog_mode', 'c.fac_id', 'a.programme_id', 'a.semester_id', DB::raw('COUNT(s.staff_id) as supervision_count'))
                     ->where('a.student_status', 1)
-                    ->groupBy('a.id', 'c.prog_code', 'c.prog_mode')
-                    ->orderByRaw('supervision_count < 2 DESC')
-                    ->get();
+                    ->groupBy('a.id', 'c.prog_code', 'c.fac_id', 'a.programme_id', 'c.prog_mode')
+                    ->orderByRaw('supervision_count < 2 DESC');
 
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('fac_id', $req->input('faculty'));
+                }
+
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('programme_id', $req->input('programme'));
+                }
+
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('semester_id', $req->input('semester'));
+                }
+
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    if ($req->input('status') == 1) {
+                        $data->having('supervision_count', '>=', 2);
+                    } else {
+                        $data->having('supervision_count', '<=', 1);
+                    }
+                }
+
+                $data = $data->get();
                 $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('checkbox', function ($row) {
+                    if ($row->supervision_count == 2) {
+                        return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->id . '">';
+                    } else {
+                        return '<input type="checkbox" class="user-checkbox-d form-check-input"  disabled>';
+                    }
+                });
 
                 $table->addColumn('student_photo', function ($row) {
                     $mode = match ($row->prog_mode) {
@@ -865,7 +895,7 @@ class SupervisionController extends Controller
                     }
                 });
 
-                $table->rawColumns(['student_photo', 'student_title', 'supervisor', 'action']);
+                $table->rawColumns(['checkbox', 'student_photo', 'student_title', 'supervisor', 'action']);
 
                 return $table->make(true);
             }
@@ -874,7 +904,9 @@ class SupervisionController extends Controller
                 'studs' => Student::all(),
                 'staffs' => Staff::whereIn('staff_role', [1, 2])->orderBy('staff_name', 'asc')->get(),
                 'svs' => Supervision::all(),
-
+                'facs' => Faculty::all(),
+                'progs' => Programme::all(),
+                'sems' => Semester::all(),
             ]);
         } catch (Exception $e) {
             return abort(500);
@@ -1000,7 +1032,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Supervision updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating supervision.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating supervision.');
         }
     }
 
@@ -1019,6 +1051,16 @@ class SupervisionController extends Controller
             return back()->with('success', 'Supervision deleted successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error deleting supervision.' . $e->getMessage());
+        }
+    }
+
+    public function exportSupervision(Request $req)
+    {
+        try {
+            $selectedIds = $req->query('ids');
+            return Excel::download(new SupervisionExport($selectedIds), 'e-PGS_SUPERVISION_LIST_' . date('dMY') . '.xlsx');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error exporting supervisions data.');
         }
     }
 }

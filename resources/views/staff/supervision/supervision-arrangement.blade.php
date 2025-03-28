@@ -62,26 +62,107 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
-                            <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#importModal"><i
-                                        class="ti ti-file-import f-18"></i>
-                                    Import Supervision
+                            <!-- [ Option Section ] start -->
+                            <div class="mb-3 text-center text-md-start">
+                                <button type="button"
+                                    class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2 d-none"
+                                    id="clearSelectionBtn">
+                                    0 selected <i class="ms-2 ti ti-x f-18"></i>
+                                </button>
+                                <button type="button"
+                                    class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2"
+                                    id="excelExportBtn">
+                                    <i class="ti ti-file-export f-18"></i> Export Data
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                            <!-- [ Option Section ] end -->
 
-                <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
+                            <!-- [ Filter Section ] Start -->
+                            <div class="row g-3 align-items-end">
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_faculty_id" class="form-select">
+                                            <option value="">-- Select Faculty --</option>
+                                            @foreach ($facs as $fil)
+                                                @if ($fil->fac_status == 1)
+                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
+                                                @elseif($fil->fac_status == 2)
+                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }} [Inactive]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_programme_id" class="form-select">
+                                            <option value="">-- Select Programme --</option>
+                                            @foreach ($progs as $fil)
+                                                @if ($fil->prog_status == 1)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->prog_code }}
+                                                        ({{ $fil->prog_mode }})
+                                                    </option>
+                                                @elseif($fil->prog_status == 2)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->prog_code }}
+                                                        ({{ $fil->prog_mode }}) [Inactive]</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearProgFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_semester_id" class="form-select">
+                                            <option value="">-- Select Semester --</option>
+                                            @foreach ($sems as $fil)
+                                                @if ($fil->sem_status == 1)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }} [Current]
+                                                    </option>
+                                                @elseif($fil->sem_status == 0)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSemFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_status" class="form-select">
+                                            <option value="">-- Select Status --</option>
+                                            <option value="1">Assigned</option>
+                                            <option value="2">Unassigned</option>
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearStatusFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ Filter Section ] End -->
+
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
                                         <tr>
-                                            <th scope="col">#</th>
-                                            <th scope="col">Name</th>
+                                            <th><input type="checkbox" id="select-all" class="form-check-input"></th>
+                                            <th scope="col">Student</th>
                                             <th scope="col">Research Title</th>
                                             <th scope="col">Supervisor</th>
                                             <th scope="col">Action</th>
@@ -239,7 +320,7 @@
                                     </div>
                                     <div class="modal-body">
                                         <div class="row">
-                                          
+
                                             @foreach ($svs->where('student_id', $upd->id) as $sv)
                                                 @if ($sv->supervision_role == 1)
                                                     <!--[ Main Supervisor ] Staff Input-->
@@ -372,7 +453,7 @@
     </div>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            var modalToShow = "{{ session('modal') }}"; // Ambil modal yang perlu dibuka dari session
+            var modalToShow = "{{ session('modal') }}";
             if (modalToShow) {
                 var modalElement = document.getElementById(modalToShow);
                 if (modalElement) {
@@ -384,109 +465,174 @@
 
         $(document).ready(function() {
 
-            $(function() {
+            // DATATABLE : SUPERVISION
+            var table = $('.data-table').DataTable({
+                // processing: true,
+                serverSide: true,
+                responsive: true,
+                autoWidth: true,
+                ajax: {
+                    url: "{{ route('supervision-arrangement') }}",
+                    data: function(d) {
+                        d.faculty = $('#fil_faculty_id')
+                            .val();
+                        d.programme = $('#fil_programme_id')
+                            .val();
+                        d.semester = $('#fil_semester_id')
+                            .val();
+                        d.status = $('#fil_status')
+                            .val();
+                    }
+                },
+                columns: [{
+                        data: 'checkbox',
+                        name: 'checkbox',
+                        orderable: false,
+                        searchable: false,
 
-                // DATATABLE : SUPERVISION
-                var table = $('.data-table').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    responsive: true,
-                    autoWidth: true,
-                    ajax: {
-                        url: "{{ route('supervision-arrangement') }}",
                     },
-                    columns: [{
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            searchable: false,
-                            className: "text-start"
-                        },
-                        {
-                            data: 'student_photo',
-                            name: 'student_photo'
-                        },
-                        {
-                            data: 'student_title',
-                            name: 'student_title',
+                    {
+                        data: 'student_photo',
+                        name: 'student_photo'
+                    },
+                    {
+                        data: 'student_title',
+                        name: 'student_title',
 
-                        },
-                        {
-                            data: 'supervisor',
-                            name: 'supervisor'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false,
-                        }
+                    },
+                    {
+                        data: 'supervisor',
+                        name: 'supervisor'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false,
+                    }
 
-                    ]
+                ]
 
+            });
+
+
+            // Faculty Filter
+            $('#fil_faculty_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+            $('#clearFacFilter').click(function() {
+                $('#fil_faculty_id').val('').change();
+            });
+
+            // Programme Filter
+            $('#fil_programme_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+            $('#clearProgFilter').click(function() {
+                $('#fil_programme_id').val('').change();
+            });
+
+            // Semester Filter
+            $('#fil_semester_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+            $('#clearSemFilter').click(function() {
+                $('#fil_semester_id').val('').change();
+            });
+
+            // Status Filter
+            $('#fil_status').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+            $('#clearStatusFilter').click(function() {
+                $('#fil_status').val('').change();
+            });
+
+
+            /* SELECT : MULTIPLE STAFF SELECT */
+            const excelExportBtn = $("#excelExportBtn");
+            const clearBtn = $("#clearSelectionBtn");
+
+            let selectedIds = new Set();
+
+            // Handle "Select All" checkbox
+            $("#select-all").on("change", function() {
+                let isChecked = $(this).prop("checked");
+
+                $(".user-checkbox").each(function() {
+                    let id = $(this).val();
+                    this.checked = isChecked;
+
+                    if (isChecked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                });
+                toggleSelectButton();
+            });
+
+            // Handle individual checkbox selection
+            $(document).on("change", ".user-checkbox", function() {
+                let id = $(this).val();
+                if ($(this).prop("checked")) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+                toggleSelectButton();
+            });
+
+            // Restore checkbox states after DataTables refresh
+            $('.data-table').on("draw.dt", function() {
+                $(".user-checkbox").each(function() {
+                    let id = $(this).val();
+                    this.checked = selectedIds.has(id);
                 });
 
+                // If all checkboxes are selected, keep "Select All" checked
+                $("#select-all").prop(
+                    "checked",
+                    $(".user-checkbox").length === $(".user-checkbox:checked").length
+                );
+
+                toggleSelectButton();
             });
 
-            $('#student_photo').on('change', function() {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
+            function toggleSelectButton() {
+                let selectedCount = selectedIds.size;
 
-                    reader.onload = function(e) {
-                        $('.previewImage').attr('src', e.target.result).show();
-                    };
-
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            $('.student_photo').on('change', function() {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-
-                    reader.onload = function(e) {
-                        $('.previewImage').attr('src', e.target.result).show();
-                    };
-
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            $('.phonenum-input').on('input', function() {
-                let input = $(this).val().replace(/\D/g, '');
-                let errorMessage = $('#phone-error-message');
-
-                if (input.length <= 11) {
-                    if (input.length === 10) {
-                        // Format untuk 10 digit: ### ### ####
-                        $(this).val(input.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3'));
-                        errorMessage.hide();
-                    } else if (input.length === 11) {
-                        // Format untuk 11 digit: ### #### ####
-                        $(this).val(input.replace(/(\d{3})(\d{4})(\d{4})/, '$1 $2 $3'));
-                        errorMessage.hide();
-                    } else {
-                        $(this).val(input);
-                        errorMessage.hide();
-                    }
+                if (selectedCount > 0) {
+                    clearBtn.removeClass("d-none").html(
+                        `${selectedCount} selected <i class="ms-2 ti ti-x f-18"></i>`);
                 } else {
-                    errorMessage.show();
+                    clearBtn.addClass("d-none");
                 }
+            }
+
+            clearBtn.on("click", function() {
+                $(".user-checkbox").prop("checked", false);
+                $("#select-all").prop("checked", false);
+                selectedIds.clear();
+                toggleSelectButton();
             });
 
-            $('.matric-input').on('input', function() {
-                $(this).val($(this).val().toUpperCase());
-            });
+            excelExportBtn.click(function(e) {
+                e.preventDefault();
+                let selectedIds = $(".user-checkbox:checked").map(function() {
+                    return $(this).val();
+                }).get();
 
-            $('#browse-btn').on('click', function() {
-                $('#file').click();
-            });
+                let url = "{{ route('export-supervision-get') }}";
 
-            $('#file').on('change', function() {
-                let fileName = $(this).val().split("\\").pop();
-                $('#file-name').val(fileName || "No file chosen");
-                $('#import-btn').prop('disabled', false);
+                if (selectedIds.length > 0) {
+                    url += "?ids=" + selectedIds.join(",");
+                }
+                window.location.href = url;
             });
 
 
