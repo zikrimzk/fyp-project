@@ -1,14 +1,11 @@
 <nav class="pc-sidebar">
     <div class="navbar-wrapper">
-        <div class="m-header justify-content-center">
-            {{-- <a href="../dashboard/index.html" class="b-brand text-primary">
-                <img src="../assets/images/logo-dark.svg" class="img-fluid logo-lg" alt="logo" />
-                <span class="badge bg-light-success rounded-pill ms-2 theme-version">v9.4.1</span>
-            </a> --}}
-            <div class="text-muted text-center fw-semibold">e-PostGrad System (e-PGS)</div>
+        <div class="p-2 bg-light-secondary text-center">
+            <a href="../dashboard/index.html" class="b-brand text-primary">
+                <img src="../assets/images/logo-utem.PNG" alt="logo" width="80" />
+            </a>
         </div>
         <div class="navbar-content">
-
             <div class="card pc-user-card">
                 <div class="card-body">
                     <div class="d-flex flex-column align-items-center justify-content-center">
@@ -45,9 +42,7 @@
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
                         <span class="pc-micon">
-                            <svg class="pc-icon">
-                                <use xlink:href="#custom-document"></use>
-                            </svg>
+                            <i class="fas fa-users-cog pc-icon"></i>
                         </span>
                         <span class="pc-mtext">Supervision</span>
                         <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
@@ -68,7 +63,7 @@
                                 Staff Management
                             </a>
                         </li>
-                        
+
                     </ul>
                 </li>
 

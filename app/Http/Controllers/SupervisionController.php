@@ -172,7 +172,7 @@ class SupervisionController extends Controller
             'student_email' => 'required|email|unique:students,student_email',
             'student_password' => 'nullable|string|min:8|max:50',
             'student_address' => 'nullable|string',
-            'student_phoneno' => 'nullable|string',
+            'student_phoneno' => 'nullable|string|max:13',
             'student_gender' => 'required|string|in:male,female',
             'student_status' => 'required|integer|in:1,2',
             'student_photo' => 'nullable|image|mimes:jpg,jpeg,png',
@@ -256,7 +256,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Student added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding student.');
+            return back()->with('error', 'Oops! Error adding student: ' . $e->getMessage());
         }
     }
 
@@ -268,7 +268,7 @@ class SupervisionController extends Controller
             'student_matricno_up' => 'required|string|unique:students,student_matricno,' . $id,
             'student_email_up' => 'required|email|unique:students,student_email,' . $id,
             'student_address_up' => 'nullable|string',
-            'student_phoneno_up' => 'nullable|string',
+            'student_phoneno_up' => 'nullable|string|max:13',
             'student_gender_up' => 'required|string|in:male,female',
             'student_status_up' => 'required|integer|in:1,2',
             'student_photo_up' => 'nullable|image|mimes:jpg,jpeg,png',
@@ -364,7 +364,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Student updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating student.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating student: ' . $e->getMessage());
         }
     }
 
@@ -392,7 +392,7 @@ class SupervisionController extends Controller
                 return back()->with('success', 'Student set as inactive successfully.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting student.');
+            return back()->with('error', 'Oops! Error deleting student: ' . $e->getMessage());
         }
     }
 
@@ -417,7 +417,7 @@ class SupervisionController extends Controller
 
             return $response;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing student.');
+            return back()->with('error', 'Oops! Error importing student: ' . $e->getMessage());
         }
     }
 
@@ -427,11 +427,11 @@ class SupervisionController extends Controller
             $selectedIds = $req->query('ids');
             return Excel::download(new StudentExport($selectedIds), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error exporting students.');
+            return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
         }
     }
 
-    /* Staff Management */
+    /* Staff Management [Checked : 29/3/2024] */
     public function staffManagement(Request $req)
     {
         try {
@@ -580,7 +580,7 @@ class SupervisionController extends Controller
             'staff_id' => 'required|string|unique:staff,staff_id',
             'staff_email' => 'required|email|unique:staff,staff_email',
             'staff_password' => 'nullable|string|min:8|max:50',
-            'staff_phoneno' => 'nullable|string|max:20',
+            'staff_phoneno' => 'nullable|string|max:13',
             'staff_role' => 'required|integer|in:1,2,3,4',
             'staff_status' => 'required|integer|in:1,2',
             'staff_photo' => 'nullable|image|mimes:jpg,jpeg,png',
@@ -612,29 +612,21 @@ class SupervisionController extends Controller
 
             /* MAKE STAFF DIRECTORY PATH */
             $staffDir = "Staff-Photo";
-
-            /* SAVE STAFF PHOTO */
             $fileName = null;
             $filePath = null;
+
+            /* SAVE STAFF PHOTO */
             if ($req->hasFile('staff_photo')) {
-
-                // 1 - GET THE SPECIFIC DATA
-                $staff_id = Str::upper($validated['staff_id']);
-
-                // 2 - SET & DECLARE FILE ROUTE
-                $fileName = Str::upper($staff_id . '_' . time() . '_PHOTO') . '.' . $req->file('staff_photo')->getClientOriginalExtension();
-                $filePath = $staffDir;
-
-                // 3 - SAVE THE FILE
                 $file = $req->file('staff_photo');
-                $filePath = $file->storeAs($filePath, $fileName, 'public');
+                $fileName = Str::upper($validated['staff_id'] . '_' . time() . '_PHOTO') . '.' . $file->getClientOriginalExtension();
+                $filePath = $file->storeAs($staffDir, $fileName, 'public');
             }
 
             /* CREATE STAFF DATA */
             Staff::create([
                 'staff_name' => Str::headline($validated['staff_name']),
                 'staff_id' => Str::upper($validated['staff_id']),
-                'staff_email' => $validated['staff_email'],
+                'staff_email' => Str::lower($validated['staff_email']),
                 'staff_password' => $password,
                 'staff_phoneno' => $validated['staff_phoneno'] ?? null,
                 'staff_role' => $validated['staff_role'],
@@ -645,7 +637,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Staff added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding staff.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error adding staff: ' . $e->getMessage());
         }
     }
 
@@ -654,9 +646,9 @@ class SupervisionController extends Controller
         $id = Crypt::decrypt($id);
         $validator = Validator::make($req->all(), [
             'staff_name_up' => 'required|string|max:255',
-            'staff_id_up' => 'required|string|unique:staff,staff_id,' . $id,
-            'staff_email_up' => 'required|email|unique:staff,staff_email,' . $id,
-            'staff_phoneno_up' => 'nullable|string|max:20',
+            'staff_id_up' => "required|string|unique:staff,staff_id,{$id}",
+            'staff_email_up' => "required|email|unique:staff,staff_email,{$id}",
+            'staff_phoneno_up' => 'nullable|string|max:13',
             'staff_role_up' => 'required|integer|in:1,2,3,4',
             'staff_status_up' => 'required|integer|in:1,2',
             'staff_photo_up' => 'nullable|image|mimes:jpg,jpeg,png',
@@ -671,6 +663,7 @@ class SupervisionController extends Controller
             'staff_photo_up' => 'staff photo',
             'department_id_up' => 'department',
         ]);
+
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -696,9 +689,8 @@ class SupervisionController extends Controller
                 }
 
                 // 2 - SET TO NULL
-                Staff::where('id', $staff->id)->update([
-                    'staff_photo' => null
-                ]);
+                $staff->staff_photo = null;
+                $staff->save();
             } elseif ($req->hasFile('staff_photo_up')) {
 
                 // 1 - REMOVE OLD PHOTO
@@ -718,16 +710,15 @@ class SupervisionController extends Controller
                 $filePath = $file->storeAs($filePath, $fileName, 'public');
 
                 // 5 - UPDATE PHOTO PATH
-                Staff::where('id', $staff->id)->update([
-                    'staff_photo' => $filePath
-                ]);
+                $staff->staff_photo = $filePath;
+                $staff->save();
             }
 
             /* UPDATE STAFF DATA */
             Staff::where('id', $staff->id)->update([
                 'staff_name' => Str::headline($validated['staff_name_up']),
                 'staff_id' => Str::upper($validated['staff_id_up']),
-                'staff_email' => $validated['staff_email_up'],
+                'staff_email' => Str::lower($validated['staff_email_up']),
                 'staff_phoneno' => $validated['staff_phoneno_up'] ?? null,
                 'staff_role' => $validated['staff_role_up'],
                 'staff_status' => $validated['staff_status_up'],
@@ -736,7 +727,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Staff updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating staff.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating staff: ' . $e->getMessage());
         }
     }
 
@@ -765,7 +756,7 @@ class SupervisionController extends Controller
                 return back()->with('success', 'Staff set as inactive successfully.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting staff.');
+            return back()->with('error', 'Oops! Error deleting staff: ' . $e->getMessage());
         }
     }
 
@@ -790,7 +781,7 @@ class SupervisionController extends Controller
 
             return $response;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing staff.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error importing staff: ' . $e->getMessage());
         }
     }
 
@@ -800,7 +791,7 @@ class SupervisionController extends Controller
             $selectedIds = $req->query('ids');
             return Excel::download(new StaffExport($selectedIds), 'e-PGS_STAFF_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error exporting students.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
         }
     }
 
@@ -845,7 +836,7 @@ class SupervisionController extends Controller
                     if ($row->supervision_count == 2) {
                         return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->id . '">';
                     } else {
-                        return '<input type="checkbox" class="user-checkbox-d form-check-input"  disabled>';
+                        return '<input type="checkbox" class="user-checkbox-d form-check-input bg-secondary"  disabled>';
                     }
                 });
 
@@ -1023,7 +1014,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Title of research updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating title of research.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating title of research: ' . $e->getMessage());
         }
     }
 
@@ -1071,7 +1062,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Supervision added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding supervision.');
+            return back()->with('error', 'Oops! Error adding supervision: ' . $e->getMessage());
         }
     }
 
@@ -1115,7 +1106,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Supervision updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating supervision.');
+            return back()->with('error', 'Oops! Error updating supervision: ' . $e->getMessage());
         }
     }
 
@@ -1133,7 +1124,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Supervision deleted successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting supervision.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting supervision: ' . $e->getMessage());
         }
     }
 
@@ -1143,7 +1134,7 @@ class SupervisionController extends Controller
             $selectedIds = $req->query('ids');
             return Excel::download(new SupervisionExport($selectedIds), 'e-PGS_SUPERVISION_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error exporting supervisions data.');
+            return back()->with('error', 'Oops! Error exporting supervisions data: ' . $e->getMessage());
         }
     }
 }

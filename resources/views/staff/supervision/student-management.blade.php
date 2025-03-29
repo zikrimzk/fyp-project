@@ -89,7 +89,7 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- [ Option Section ] start -->
-                            <div class="mb-3 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
                                     class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
                                     id="clearSelectionBtn">
@@ -126,12 +126,13 @@
                                                 @if ($fil->fac_status == 1)
                                                     <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
                                                 @elseif($fil->fac_status == 2)
-                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }} [Inactive]
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        {{ $fil->fac_code }} [Inactive]
                                                     </option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-secondary btn-sm" id="clearFacFilter">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearFacFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -147,12 +148,13 @@
                                                         ({{ $fil->prog_mode }})
                                                     </option>
                                                 @elseif($fil->prog_status == 2)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->prog_code }}
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        {{ $fil->prog_code }}
                                                         ({{ $fil->prog_mode }}) [Inactive]</option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-secondary btn-sm" id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -164,7 +166,8 @@
                                             <option value="">-- Select Semester --</option>
                                             @foreach ($sems as $fil)
                                                 @if ($fil->sem_status == 1)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }} [Current]
+                                                    <option value="{{ $fil->id }}" class="bg-light-success">
+                                                        {{ $fil->sem_label }} [Current]
                                                     </option>
                                                 @elseif($fil->sem_status == 0)
                                                     <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
@@ -172,7 +175,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-secondary btn-sm" id="clearSemFilter">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearSemFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -185,7 +188,8 @@
                                             <option value="1">Active</option>
                                             <option value="2">Inactive</option>
                                         </select>
-                                        <button type="button" class="btn btn-secondary btn-sm" id="clearStatusFilter">
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                            id="clearStatusFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -323,14 +327,10 @@
                                                     <input type="text"
                                                         class="form-control @error('student_phoneno') is-invalid @enderror phonenum-input"
                                                         placeholder="Enter Phone Number" name="student_phoneno"
-                                                        value="{{ old('student_phoneno') }}" maxlength="13" />
+                                                        value="{{ old('student_phoneno') }}" maxlength="11" />
                                                     @error('student_phoneno')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
-                                                    <div id="phone-error-message" class="text-danger text-sm"
-                                                        style="display: none;">
-                                                        Phone number must be in a valid format (10 or 11 digits)!
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -636,14 +636,10 @@
                                                         <input type="text"
                                                             class="form-control @error('student_phoneno_up') is-invalid @enderror phonenum-input"
                                                             placeholder="Enter Phone Number" name="student_phoneno_up"
-                                                            value="{{ $upd->student_phoneno }}" maxlength="13" />
+                                                            value="{{ $upd->student_phoneno }}" maxlength="11" />
                                                         @error('student_phoneno_up')
                                                             <div class="invalid-feedback">{{ $message }}</div>
                                                         @enderror
-                                                        <div id="phone-error-message" class="text-danger text-sm"
-                                                            style="display: none;">
-                                                            Phone number must be in a valid format (10 or 11 digits)!
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -879,7 +875,7 @@
                     },
                     {
                         data: 'student_photo',
-                        name: 'student_photo'
+                        name: 'student_photo',
                     },
                     {
                         data: 'student_matricno',
@@ -899,7 +895,8 @@
                         orderable: false,
                         searchable: false
                     }
-                ]
+                ],
+
 
             });
 
@@ -1008,24 +1005,11 @@
 
             // FORMATTING
             $('.phonenum-input').on('input', function() {
-                let input = $(this).val().replace(/\D/g, '');
-                let errorMessage = $('#phone-error-message');
+                let input = $(this).val().replace(/\D/g, ''); // Remove non-numeric characters
+                let errorMessage = $('.phone-error-message');
 
-                if (input.length <= 11) {
-                    if (input.length === 10) {
-                        // Format untuk 10 digit: ### ### ####
-                        $(this).val(input.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3'));
-                        errorMessage.hide();
-                    } else if (input.length === 11) {
-                        // Format untuk 11 digit: ### #### ####
-                        $(this).val(input.replace(/(\d{3})(\d{4})(\d{4})/, '$1 $2 $3'));
-                        errorMessage.hide();
-                    } else {
-                        $(this).val(input);
-                        errorMessage.hide();
-                    }
-                } else {
-                    errorMessage.show();
+                if (input.length > 11) {
+                    input = input.substring(0, 11); // Limit to 11 digits
                 }
             });
 
@@ -1104,7 +1088,7 @@
 
                 if (selectedCount > 0) {
                     clearBtn.removeClass("d-none").html(
-                        `${selectedCount} selected <i class="ms-2 ti ti-x f-18"></i>`);
+                        `<i class="ti ti-x f-18"></i> ${selectedCount} selected`);
                 } else {
                     clearBtn.addClass("d-none");
                 }
