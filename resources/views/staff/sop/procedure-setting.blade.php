@@ -59,19 +59,14 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
-                            <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addModal"><i class="ti ti-plus f-18"></i>
-                                    Add Procedure
+                            <!-- [ Option Section ] start -->
+                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#addModal" title="Add Procedure" id="addStaffBtn">
+                                    <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add Procedure</span>
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
+                            <!-- [ Option Section ] end -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -114,7 +109,8 @@
                                                 <label for="activity_id" class="form-label">Activity <span
                                                         class="text-danger">*</span></label>
                                                 <select name="activity_id" id="activity_id"
-                                                    class="form-select @error('activity_id') is-invalid @enderror" required>
+                                                    class="form-select @error('activity_id') is-invalid @enderror"
+                                                    required>
                                                     <option value="">- Select Activity -</option>
                                                     @foreach ($acts as $act)
                                                         @if (old('activity_id') == $act->id)

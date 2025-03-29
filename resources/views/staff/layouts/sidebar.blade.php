@@ -70,9 +70,7 @@
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
                         <span class="pc-micon">
-                            <svg class="pc-icon">
-                                <use xlink:href="#custom-document"></use>
-                            </svg>
+                            <i class="fas fa-bezier-curve pc-icon"></i>
                         </span>
                         <span class="pc-mtext">SOP</span>
                         <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
