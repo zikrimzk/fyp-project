@@ -175,7 +175,7 @@ class SupervisionController extends Controller
             'student_phoneno' => 'nullable|string',
             'student_gender' => 'required|string|in:male,female',
             'student_status' => 'required|integer|in:1,2',
-            'student_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'student_photo' => 'nullable|image|mimes:jpg,jpeg,png',
             'student_directory' => 'nullable|string',
             'semester_id' => 'nullable',
             'programme_id' => 'required|integer',
@@ -271,7 +271,7 @@ class SupervisionController extends Controller
             'student_phoneno_up' => 'nullable|string',
             'student_gender_up' => 'required|string|in:male,female',
             'student_status_up' => 'required|integer|in:1,2',
-            'student_photo_up' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'student_photo_up' => 'nullable|image|mimes:jpg,jpeg,png',
             'student_directory_up' => 'nullable|string',
             'programme_id_up' => 'required|integer',
         ], [], [
@@ -328,7 +328,6 @@ class SupervisionController extends Controller
                 Student::where('id', $student->id)->update([
                     'student_photo' => null
                 ]);
-
             } elseif ($req->hasFile('student_photo_up')) {
                 // 1 - REMOVE OLD PHOTO
                 if ($student->student_photo && Storage::exists($student->student_directory . '/photo/' . $student->student_photo)) {
@@ -365,7 +364,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Student updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating student.' .$e->getMessage());
+            return back()->with('error', 'Oops! Error updating student.' . $e->getMessage());
         }
     }
 
@@ -440,9 +439,26 @@ class SupervisionController extends Controller
 
                 $data = DB::table('staff as a')
                     ->join('departments as b', 'b.id', '=', 'a.department_id')
-                    ->select('a.*', 'b.dep_name')
-                    ->orderBy('staff_name', 'asc')
-                    ->get();
+                    ->select('a.*', 'b.dep_name', 'b.fac_id')
+                    ->orderBy('staff_name', 'asc');
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('fac_id', $req->input('faculty'));
+                }
+
+                if ($req->has('department') && !empty($req->input('department'))) {
+                    $data->where('department_id', $req->input('department'));
+                }
+
+                if ($req->has('role') && !empty($req->input('role'))) {
+                    $data->where('staff_role', $req->input('role'));
+                }
+
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    $data->where('staff_status', $req->input('status'));
+                }
+
+                $data = $data->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
 
@@ -507,7 +523,7 @@ class SupervisionController extends Controller
 
                 $table->addColumn('action', function ($row) {
                     $isReferenced = false;
-                    // $isReferenced = DB::table('supervision')->where('staff_id', $row->id)->exists();
+                    $isReferenced = DB::table('supervisions')->where('staff_id', $row->id)->exists();
 
                     $buttonEdit =
                         '
@@ -529,7 +545,7 @@ class SupervisionController extends Controller
 
                         $buttonRemove =
                             '
-                                 <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger ' . ($row->staff_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
+                                 <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-warning ' . ($row->staff_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
                                      data-bs-target="#disableModal-' . $row->id . '">
                                      <i class="ti ti-trash f-20"></i>
                                  </a>
@@ -546,6 +562,7 @@ class SupervisionController extends Controller
             return view('staff.supervision.staff-management', [
                 'title' => 'Staff Management',
                 'staffs' => Staff::all(),
+                'facs' => Faculty::all(),
                 'deps' => DB::table('departments as a')
                     ->join('faculties as b', 'b.id', '=', 'a.fac_id')
                     ->select('a.*', 'b.fac_code')
@@ -670,8 +687,19 @@ class SupervisionController extends Controller
             /* MAKE STAFF DIRECTORY PATH */
             $staffDir = "Staff-Photo";
 
-            /* SAVE STAFF PHOTO */
-            if ($req->hasFile('staff_photo_up')) {
+            /* SAVE OR RESET STAFF PHOTO */
+            if ($req->input('remove_photo') == "1") {
+
+                // 1 - REMOVE OLD PHOTO
+                if ($staff->staff_photo && Storage::exists($staff->staff_photo)) {
+                    Storage::delete($staff->staff_photo);
+                }
+
+                // 2 - SET TO NULL
+                Staff::where('id', $staff->id)->update([
+                    'staff_photo' => null
+                ]);
+            } elseif ($req->hasFile('staff_photo_up')) {
 
                 // 1 - REMOVE OLD PHOTO
                 if ($staff->staff_photo && Storage::exists($staff->staff_photo)) {

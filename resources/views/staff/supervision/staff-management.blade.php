@@ -94,7 +94,7 @@
                                 </button>
                                 <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
                                     data-bs-toggle="modal" data-bs-target="#addModal" title="Add Staff" id="addStaffBtn">
-                                    <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add Student</span>
+                                    <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add Staff</span>
                                 </button>
                                 <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
                                     data-bs-toggle="modal" data-bs-target="#importModal" id="importBtn" title="Import Data">
@@ -110,6 +110,79 @@
                                 </button>
                             </div>
                             <!-- [ Option Section ] end -->
+
+                            <!-- [ Filter Section ] Start -->
+                            <div class="row g-3 align-items-end">
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_faculty_id" class="form-select">
+                                            <option value="">-- Select Faculty --</option>
+                                            @foreach ($facs as $fil)
+                                                @if ($fil->fac_status == 1)
+                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
+                                                @elseif($fil->fac_status == 2)
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">{{ $fil->fac_code }} [Inactive]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearFacFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_department_id" class="form-select">
+                                            <option value="">-- Select Department --</option>
+                                            @foreach ($deps as $fil)
+                                                @if ($fil->dep_status == 1)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->dep_name }}</option>
+                                                @elseif($fil->dep_status == 2)
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        {{ $fil->dep_name }} [Inactive]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearDepFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_role" class="form-select">
+                                            <option value="">-- Select Role --</option>
+                                            <option value="1">Committee</option>
+                                            <option value="2">Lecturer</option>
+                                            <option value="3">Timbalan Dekan Pendidikan</option>
+                                            <option value="4">Dekan</option>
+                                        </select>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearRoleFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_status" class="form-select">
+                                            <option value="">-- Select Status --</option>
+                                            <option value="1">Active</option>
+                                            <option value="2">Inactive</option>
+                                        </select>
+                                        <button type="button" class="btn  btn-outline-danger btn-sm" id="clearStatusFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <!-- [ Filter Section ] End -->
 
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
@@ -148,26 +221,31 @@
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="d-grid justify-content-center align-items-center mb-3">
                                                 <div class="user-upload avatar-s w-100">
+
                                                     <img src="{{ asset('assets/images/user/default-profile-1.jpg') }}"
                                                         alt="Profile Photo" width="150" height="150"
-                                                        class="previewImage">
+                                                        class="previewImageAdd"
+                                                        data-default="{{ asset('assets/images/user/default-profile-1.jpg') }}">
+
                                                     <label for="staff_photo" class="img-avtar-upload">
                                                         <i class="ti ti-camera f-24 mb-1"></i>
                                                         <span>Upload</span>
                                                     </label>
+
                                                     <input type="file" id="staff_photo" name="staff_photo"
                                                         class="d-none" accept="image/*" />
-                                                    @error('staff_photo')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
                                                 </div>
-                                                <label for="staff_photo"
-                                                    class=" link-dark fw-semibold w-100 text-center mt-3"
-                                                    style="cursor:pointer;">
+                                                <label for="staff_photo" class="btn btn-sm btn-secondary mt-2 mb-2">
                                                     Change Photo
                                                 </label>
+                                                <button type="button" id="resetPhoto"
+                                                    class="btn btn-sm btn-light-danger">
+                                                    Reset Photo
+                                                </button>
                                             </div>
-
+                                            @error('staff_photo')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
                                         </div>
 
                                         <h5 class="mb-2">A. Personal Information</h5>
@@ -438,11 +516,13 @@
                                         <div class="row">
                                             <!-- Photo Input -->
                                             <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="d-grid justify-content-center align-items-center mb-3">
+                                                <div class="d-grid justify-content-center align-items-center mb-3 profile-container"
+                                                    data-id="{{ $upd->id }}">
                                                     <div class="user-upload avatar-s w-100">
                                                         <img src="{{ empty($upd->staff_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->staff_photo) }}"
                                                             alt="Profile Photo" width="150" height="150"
-                                                            class="previewImage">
+                                                            class="previewImage"
+                                                            data-default="{{ asset('assets/images/user/default-profile-1.jpg') }}">
                                                         <label for="staff_photo_up_{{ $upd->id }}"
                                                             class="img-avtar-upload">
                                                             <i class="ti ti-camera f-24 mb-1"></i>
@@ -453,16 +533,20 @@
                                                             accept="image/*" />
                                                     </div>
                                                     <label for="staff_photo_up_{{ $upd->id }}"
-                                                        class=" link-dark fw-semibold w-100 text-center mt-3"
-                                                        style="cursor:pointer;">
+                                                        class="btn btn-sm btn-secondary mt-2 mb-2">
                                                         Change Photo
                                                     </label>
-
+                                                    <button type="button" class="btn btn-sm btn-light-danger resetPhoto">
+                                                        Reset Photo
+                                                    </button>
+                                                    <input type="hidden" name="remove_photo" class="remove_photo"
+                                                        value="0">
                                                 </div>
+                                                @error('staff_photo_up')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
-                                            @error('staff_photo_up')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+
 
                                             <h5 class="mb-2">A. Personal Information</h5>
 
@@ -750,6 +834,16 @@
                 autoWidth: true,
                 ajax: {
                     url: "{{ route('staff-management') }}",
+                    data: function(d) {
+                        d.faculty = $('#fil_faculty_id')
+                            .val();
+                        d.department = $('#fil_department_id')
+                            .val();
+                        d.role = $('#fil_role')
+                            .val();
+                        d.status = $('#fil_status')
+                            .val();
+                    }
                 },
                 columns: [{
                         data: 'checkbox',
@@ -793,32 +887,101 @@
                 }
             }
 
-            $('#staff_photo').on('change', function() {
+            // FILTER : FACULTY
+            $('#fil_faculty_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+
+            $('#clearFacFilter').click(function() {
+                $('#fil_faculty_id').val('').change();
+            });
+
+            // FILTER : DEPARTMENT
+            $('#fil_department_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+
+            $('#clearDepFilter').click(function() {
+                $('#fil_department_id').val('').change();
+            });
+
+            // FILTER : ROLE 
+            $('#fil_role').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+
+            $('#clearRoleFilter').click(function() {
+                $('#fil_role').val('').change();
+            });
+
+            // FILTER : STATUS
+            $('#fil_status').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+
+            $('#clearStatusFilter').click(function() {
+                $('#fil_status').val('').change();
+            });
+
+            // STAFF PHOTO FUNCTIONS
+            var defaultImageAdd = $(".previewImageAdd").data("default");
+            var defaultImage = $(".previewImage").data("default");
+
+            $('#staff_photo').on('change', function(event) {
                 const file = event.target.files[0];
                 if (file) {
                     const reader = new FileReader();
 
                     reader.onload = function(e) {
-                        $('.previewImage').attr('src', e.target.result).show();
+                        $('.previewImageAdd').attr('src', e.target.result).show();
                     };
 
                     reader.readAsDataURL(file);
                 }
             });
 
-            $('.staff_photo').on('change', function() {
-                const file = event.target.files[0];
+            $("#resetPhoto").on("click", function() {
+                $(".previewImageAdd").attr("src", defaultImageAdd);
+                $("#staff_photo").val("");
+            });
+
+            $(document).on('change', '.staff_photo', function(event) {
+                var file = event.target.files[0];
+                var reader = new FileReader();
+                var container = $(this).closest('.profile-container');
+                var userId = container.data('id');
+
                 if (file) {
-                    const reader = new FileReader();
-
                     reader.onload = function(e) {
-                        $('.previewImage').attr('src', e.target.result).show();
+                        $('.profile-container[data-id="' + userId + '"] .previewImage').attr('src', e
+                            .target
+                            .result);
                     };
-
                     reader.readAsDataURL(file);
                 }
             });
 
+            $(document).on("click", ".resetPhoto", function() {
+                var container = $(this).closest('.profile-container');
+                var defaultImage = container.find('.previewImage').data("default");
+
+                console.log("Reset button clicked for user:", container.data('id')); // Debugging
+
+                if (defaultImage) {
+                    container.find('.previewImage').attr('src', defaultImage);
+                } else {
+                    console.error("Default image not found for user " + container.data('id'));
+                }
+
+                container.find('.staff_photo').val(null); // Reset input file
+                container.find('.remove_photo').val("1"); // Tandakan gambar perlu dipadam
+            });
+
+            // FORMATTING
             $('.phonenum-input').on('input', function() {
                 let input = $(this).val().replace(/\D/g, '');
                 let errorMessage = $('#phone-error-message');
@@ -845,6 +1008,7 @@
                 $(this).val($(this).val().toUpperCase());
             });
 
+            // IMPORT : STAFF
             $('#browse-btn').on('click', function() {
                 $('#file').click();
             });

@@ -4,13 +4,13 @@ namespace App\Exports;
 
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class StaffExport implements FromCollection, WithHeadings, WithEvents
+class StaffExport implements FromCollection, WithEvents
 {
     /**
      * @return \Illuminate\Support\Collection
@@ -35,7 +35,7 @@ class StaffExport implements FromCollection, WithHeadings, WithEvents
         $data = $data->get();
 
         if ($data->count() > 0) {
-            // STATUS
+            // STAFF STATUS
             foreach ($data as $key => $value) {
                 if ($value->staff_status == 1) {
                     $value->staff_status = 'Active';
@@ -45,6 +45,8 @@ class StaffExport implements FromCollection, WithHeadings, WithEvents
                     $value->staff_status = 'N/A';
                 }
             }
+
+            // STAFF ROLE
             foreach ($data as $key => $value) {
                 if ($value->staff_role == 1) {
                     $value->staff_role = 'Committee';
@@ -56,22 +58,16 @@ class StaffExport implements FromCollection, WithHeadings, WithEvents
                     $value->staff_role = 'Dekan';
                 }
             }
+
+            // STAFF PHONE NUMBER
+            foreach ($data as $key => $value) {
+                if ($value->staff_phoneno == null) {
+                    $value->staff_phoneno = '-';
+                }
+            }
         }
 
         return $data;
-    }
-
-    public function headings(): array
-    {
-        return [
-            'Staff ID',
-            'Name',
-            'Email',
-            'Phone Number',
-            'Department',
-            'Role',
-            'Status'
-        ];
     }
 
     public function registerEvents(): array
@@ -79,59 +75,77 @@ class StaffExport implements FromCollection, WithHeadings, WithEvents
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
-                $cellRange = 'A1:G1';
 
-                // HEADER COLOUR
-                $sheet->getStyle($cellRange)->applyFromArray([
+                $sheet->insertNewRowBefore(1, 5);
+
+                // TITLE
+                $sheet->setCellValue('A2', 'E-POSTGRAD | UNIVERSITI TEKNIKAL MALAYSIA MELAKA (UTeM)');
+                $sheet->setCellValue('A3', 'STAFF LIST');
+
+                // STYLING HEADER AND CONTENT
+                $sheet->mergeCells('A1:F1');
+                $sheet->mergeCells('A2:F2');
+                $sheet->mergeCells('A3:F3');
+                $sheet->mergeCells('A4:F4');
+                $sheet->getRowDimension(1)->setRowHeight(20);
+                $sheet->getRowDimension(2)->setRowHeight(30);
+                $sheet->getRowDimension(3)->setRowHeight(20);
+                $sheet->getRowDimension(4)->setRowHeight(20);
+                $sheet->getStyle('A1:A3')->applyFromArray([
+                    'font' => ['bold' => true, 'size' => 11],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+
+                $highestRow = $sheet->getHighestRow();
+
+                $sheet->getStyle("A1:G$highestRow")->applyFromArray([
+                    'font' => [
+                        'name' => 'Arial',
+                        'size' => 11,
+                    ],
+                    'alignment' => [
+                        'vertical' => Alignment::VERTICAL_CENTER
+                    ],
+                ]);
+
+                for ($row = 6; $row <= $highestRow; $row++) {
+                    $sheet->getRowDimension($row)->setRowHeight(20);
+                }
+
+
+                // SET HEADER
+                $headers = ['Staff ID', 'Name', 'Email', 'Phone Number', 'Department', 'Role', 'Status'];
+                $column = 'A';
+                foreach ($headers as $header) {
+                    $sheet->setCellValue($column . '5', $header);
+                    $column++;
+                }
+
+                // HEADER STYLING
+                $sheet->getRowDimension(5)->setRowHeight(25);
+                $sheet->getStyle('A5:G5')->applyFromArray([
+                    'font' => ['bold' => true, 'size' => 11],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
                     'fill' => [
-                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'fillType' => Fill::FILL_SOLID,
                         'startColor' => ['rgb' => 'D3D3D3'],
                     ],
                 ]);
 
-                // MAKE TABLE BORDER
-                $highestRow = $sheet->getHighestRow();
-                $sheet->getStyle("A1:G$highestRow")->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK,
-                            'color' => ['rgb' => '000000'],
-                        ],
-                    ],
-                    'font' => [
-                        'size' => 12,
-                    ],
-                ]);
-
-                // SET ROW HEIGHT
-                $sheet->getRowDimension(1)->setRowHeight(25);
-                for ($row = 2; $row <= $highestRow; $row++) {
-                    $sheet->getRowDimension($row)->setRowHeight(20);
-                }
-
-                // SET FONT SIZE
-                $sheet->getStyle($cellRange)->applyFromArray([
-                    'font' => [
-                        'size' => 12,
-                        'bold' => true
-                    ],
-                ]);
-
                 // SET COLUMN WIDTH
-                foreach (range('A', 'F') as $col) {
+                foreach (range('A', 'G') as $col) {
                     $sheet->getColumnDimension($col)->setAutoSize(true);
                 }
 
-                // PHONE NUMBER COLUMN TO BE TEXT FORMAT
-                $highestRow = $sheet->getHighestRow();
-
-                for ($row = 2; $row <= $highestRow; $row++) {
-                    $cell = 'D' . $row;
-                    $sheet->getCell($cell)->setValueExplicit(
-                        $sheet->getCell($cell)->getValue(),
-                        DataType::TYPE_STRING
-                    );
-                }
+                // SET BORDERS
+                $sheet->getStyle("A5:G$highestRow")->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => ['rgb' => '000000'],
+                        ],
+                    ],
+                ]);
             },
         ];
     }

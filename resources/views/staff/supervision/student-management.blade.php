@@ -232,7 +232,7 @@
                                                 <div class="user-upload avatar-s w-100">
                                                     <img src="{{ asset('assets/images/user/default-profile-1.jpg') }}"
                                                         alt="Profile Photo" width="150" height="150"
-                                                        class="previewImage"
+                                                        class="previewImageAdd"
                                                         data-default="{{ asset('assets/images/user/default-profile-1.jpg') }}">
                                                     <label for="student_photo" class="img-avtar-upload">
                                                         <i class="ti ti-camera f-24 mb-1"></i>
@@ -240,9 +240,6 @@
                                                     </label>
                                                     <input type="file" id="student_photo" name="student_photo"
                                                         class="d-none" accept="image/*" />
-                                                    @error('student_photo')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
                                                 </div>
                                                 <label for="student_photo" class="btn btn-sm btn-secondary mt-2 mb-2">
                                                     Change Photo
@@ -252,7 +249,9 @@
                                                     Reset Photo
                                                 </button>
                                             </div>
-
+                                            @error('student_photo')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
                                         </div>
 
                                         <h5 class="mb-2">A. Personal Information</h5>
@@ -553,9 +552,6 @@
                                                         <input type="file" id="student_photo_up_{{ $upd->id }}"
                                                             name="student_photo_up" class="d-none student_photo"
                                                             accept="image/*" />
-                                                        @error('student_photo_up')
-                                                            <div class="invalid-feedback">{{ $message }}</div>
-                                                        @enderror
                                                     </div>
                                                     <label for="student_photo_up_{{ $upd->id }}"
                                                         class="btn btn-sm btn-secondary mt-2 mb-2">
@@ -567,8 +563,9 @@
                                                     <input type="hidden" name="remove_photo" class="remove_photo"
                                                         value="0">
                                                 </div>
-
-
+                                                @error('student_photo_up')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
 
                                             <h5 class="mb-2">A. Personal Information</h5>
@@ -915,43 +912,48 @@
                 }
             }
 
-            // Faculty Filter
+            // FILTER : FACULTY
             $('#fil_faculty_id').on('change', function() {
                 $('.data-table').DataTable().ajax
                     .reload();
             });
+
             $('#clearFacFilter').click(function() {
                 $('#fil_faculty_id').val('').change();
             });
 
-            // Programme Filter
+            // FILTER : PROGRAMME
             $('#fil_programme_id').on('change', function() {
                 $('.data-table').DataTable().ajax
                     .reload();
             });
+
             $('#clearProgFilter').click(function() {
                 $('#fil_programme_id').val('').change();
             });
 
-            // Semester Filter
+            // FILTER : SEMESTER
             $('#fil_semester_id').on('change', function() {
                 $('.data-table').DataTable().ajax
                     .reload();
             });
+
             $('#clearSemFilter').click(function() {
                 $('#fil_semester_id').val('').change();
             });
 
-            // Status Filter
+            // FILTER : STATUS
             $('#fil_status').on('change', function() {
                 $('.data-table').DataTable().ajax
                     .reload();
             });
+
             $('#clearStatusFilter').click(function() {
                 $('#fil_status').val('').change();
             });
 
             // STUDENT PHOTO FUNCTIONS
+            var defaultImageAdd = $(".previewImageAdd").data("default");
             var defaultImage = $(".previewImage").data("default");
 
             $('#student_photo').on('change', function(event) {
@@ -960,7 +962,7 @@
                     const reader = new FileReader();
 
                     reader.onload = function(e) {
-                        $('.previewImage').attr('src', e.target.result).show();
+                        $('.previewImageAdd').attr('src', e.target.result).show();
                     };
 
                     reader.readAsDataURL(file);
@@ -968,7 +970,7 @@
             });
 
             $("#resetPhoto").on("click", function() {
-                $(".previewImage").attr("src", defaultImage);
+                $(".previewImageAdd").attr("src", defaultImageAdd);
                 $("#student_photo").val("");
             });
 
@@ -1004,7 +1006,7 @@
                 container.find('.remove_photo').val("1"); // Tandakan gambar perlu dipadam
             });
 
-
+            // FORMATTING
             $('.phonenum-input').on('input', function() {
                 let input = $(this).val().replace(/\D/g, '');
                 let errorMessage = $('#phone-error-message');
@@ -1031,6 +1033,7 @@
                 $(this).val($(this).val().toUpperCase());
             });
 
+            // IMPORT : STUDENT
             $('#browse-btn').on('click', function() {
                 $('#file').click();
             });
