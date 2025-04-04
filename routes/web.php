@@ -17,11 +17,14 @@ use App\Http\Controllers\AuthenticateController;
 |
 */
 
-Route::get('/', function () {
+Route::get('/staff', function () {
     return view('staff.index', [
         'title' => 'Dashboard'
     ]);
 })->name('dashboard');
+
+Route::get('/', [AuthenticateController::class, 'mainLogin'])->name('main-login');
+
 
 
 Route::prefix('staff')->group(function () {
