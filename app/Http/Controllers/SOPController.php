@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Validator;
 class SOPController extends Controller
 {
 
-    /* Activity Setting (Activity + Document) */
+    /* Activity Setting (Activity + Document) [Checked : 04/04/2025] */
     public function activitySetting(Request $req)
     {
         try {
@@ -39,12 +39,10 @@ class SOPController extends Controller
             $data = Activity::withCount('documents')->get();
             return response()->json($data);
         } catch (Exception $e) {
-            return response()->json(
-                [
+            return response()->json([
                     'success' => false,
                     'message' => 'Error: ' . $e->getMessage(),
-                ],
-                500
+                ],500
             );
         }
     }
@@ -52,7 +50,7 @@ class SOPController extends Controller
     public function addActivity(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'act_name' => 'required|string|unique:activities,act_name,',
+            'act_name' => 'required|string|unique:activities,act_name',
         ], [], [
             'act_name' => 'activity name',
         ]);
@@ -78,7 +76,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Oops! Error adding activity: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -114,7 +112,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Oops! Error updating activity: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -131,7 +129,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error deleting activity.'
+                'message' => 'Oops! Error deleting activity: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -142,20 +140,16 @@ class SOPController extends Controller
             $data = DB::table('documents')
                 ->where('activity_id', $id)
                 ->get();
-            return response()->json(
-                [
+            return response()->json([
                     'success' => true,
                     'data' => $data,
-                ],
-                200
+                ],200
             );
         } catch (Exception $e) {
-            return response()->json(
-                [
+            return response()->json([
                     'success' => false,
-                    'message' => 'Error: ' . $e->getMessage(),
-                ],
-                500
+                    'message' => 'Oops! Error viewing documents: ' . $e->getMessage()
+                ],500
             );
         }
     }
@@ -188,9 +182,15 @@ class SOPController extends Controller
                 'doc_status' => $req->doc_status,
                 'activity_id' => $req->act_id,
             ]);
-            return response()->json(['success' => true, 'document' => $document, 'message' => 'Document added successfully.'], 200);
+            return response()->json([
+                'success' => true, 'document' => $document, 
+                'message' => 'Document added successfully.'
+            ], 200);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Oops! Error adding documents: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -220,16 +220,22 @@ class SOPController extends Controller
                 'isShowDoc' => $req->isShowDoc_up,
                 'doc_status' => $req->doc_status_up,
             ]);
-            return response()->json(['success' => true, 'document' => $document, 'message' => 'Document updated successfully.'], 200);
+            return response()->json([
+                'success' => true, 'document' => $document, 
+                'message' => 'Document updated successfully.'
+            ], 200);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Oops! Error updating documents: ' . $e->getMessage()
+
+            ], 500);
         }
     }
 
     public function deleteDocument($id)
     {
         try {
-
             Document::where('id', $id)->delete();
             return response()->json([
                 'success' => true,
@@ -238,12 +244,12 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error deleting document.'
+                'message' => 'Oops! Error deleting document: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    /* Procedure Setting  */
+    /* Procedure Setting [Checked : 04/04/2025] */
     public function procedureSetting(Request $req)
     {
         try {
@@ -375,6 +381,14 @@ class SOPController extends Controller
             $validated = $validator->validated();
             $fileName = "";
             $filePath = "";
+            $checkExists = Procedure::where('activity_id', $validated['activity_id'])
+                ->where('programme_id', $validated['programme_id'])
+                ->exists();
+
+            if ($checkExists) {
+                return back()->with('error', 'Procedure already exists for this activity and programme.');
+            }
+
             if ($req->hasFile('material')) {
                 // 1 - GET THE DATA
                 $activity = Activity::findOrFail($validated['activity_id']);
@@ -408,7 +422,7 @@ class SOPController extends Controller
 
             return back()->with('success', 'Procedure added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding procedure.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error adding procedure: ' . $e->getMessage());
         }
     }
 
@@ -482,7 +496,7 @@ class SOPController extends Controller
 
             return back()->with('success', 'Procedure updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating procedure.');
+            return back()->with('error', 'Oops! Error updating procedure: ' . $e->getMessage());
         }
     }
 
@@ -494,7 +508,7 @@ class SOPController extends Controller
             Procedure::where('activity_id', $actID)->where('programme_id', $progID)->delete();
             return back()->with('success', 'Procedure deleted successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting procedure.');
+            return back()->with('error', 'Oops! Error deleting procedure: ' . $e->getMessage());
         }
     }
 

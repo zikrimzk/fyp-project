@@ -62,8 +62,10 @@
                             <!-- [ Option Section ] start -->
                             <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addModal" title="Add Procedure" id="addStaffBtn">
-                                    <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add Procedure</span>
+                                    data-bs-toggle="modal" data-bs-target="#addModal" title="Add Procedure"
+                                    id="addStaffBtn">
+                                    <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add
+                                        Procedure</span>
                                 </button>
                             </div>
                             <!-- [ Option Section ] end -->
@@ -109,8 +111,7 @@
                                                 <label for="activity_id" class="form-label">Activity <span
                                                         class="text-danger">*</span></label>
                                                 <select name="activity_id" id="activity_id"
-                                                    class="form-select @error('activity_id') is-invalid @enderror"
-                                                    required>
+                                                    class="form-select @error('activity_id') is-invalid @enderror" required>
                                                     <option value="">- Select Activity -</option>
                                                     @foreach ($acts as $act)
                                                         @if (old('activity_id') == $act->id)
@@ -206,10 +207,10 @@
                                                     required>
                                                     <option value="">- Select Status -</option>
                                                     <option value="1"
-                                                        @if (old('init_status') == 1) selected @endif>Open Always
+                                                        @if (old('init_status') == 1) selected @endif>(O) Open Always
                                                     </option>
                                                     <option value="2"
-                                                        @if (old('init_status') == 2) selected @endif>Locked
+                                                        @if (old('init_status') == 2) selected @endif>(L) Locked
                                                     </option>
                                                 </select>
                                                 @error('init_status')
@@ -395,17 +396,12 @@
                                                     <select name="init_status_up" id="init_status_up"
                                                         class="form-select @error('init_status_up') is-invalid @enderror"
                                                         required>
-                                                        @if ($upd->init_status == 1)
-                                                            <option value="1" selected>Yes</option>
-                                                            <option value="2">No</option>
-                                                        @elseif($upd->init_status == 2)
-                                                            <option value="1">Yes</option>
-                                                            <option value="2"selected>No</option>
-                                                        @else
-                                                            <option value="" selected>- Select Option -</option>
-                                                            <option value="1">Yes</option>
-                                                            <option value="2">No</option>
-                                                        @endif
+                                                        <option value="1"
+                                                            @if ($upd->init_status == 1) selected @endif>(O) Open Always
+                                                        </option>
+                                                        <option value="2"
+                                                            @if ($upd->init_status == 2) selected @endif>(L) Locked
+                                                        </option>
                                                     </select>
                                                     @error('init_status_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>

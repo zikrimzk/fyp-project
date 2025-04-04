@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Validator;
 
 class SupervisionController extends Controller
 {
-    /* Student Management [Checked : 28/3/2024] */
+    /* Student Management [Checked : 28/3/2025] */
     public function studentManagement(Request $req)
     {
         try {
@@ -431,7 +431,7 @@ class SupervisionController extends Controller
         }
     }
 
-    /* Staff Management [Checked : 29/3/2024] */
+    /* Staff Management [Checked : 29/3/2025] */
     public function staffManagement(Request $req)
     {
         try {
@@ -795,7 +795,7 @@ class SupervisionController extends Controller
         }
     }
 
-    /* Supervision Arrangement [Checked : 28/3/2024] */
+    /* Supervision Arrangement [Checked : 28/3/2025] */
     public function supervisionArrangement(Request $req)
     {
         try {

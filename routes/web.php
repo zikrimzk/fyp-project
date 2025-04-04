@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SOPController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SupervisionController;
+use App\Http\Controllers\AuthenticateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,10 @@ Route::get('/', function () {
 
 
 Route::prefix('staff')->group(function () {
+
+    // Staff Profile
+
+    Route::get('/my-profile', [AuthenticateController::class, 'staffProfile'])->name('staff-profile');
 
     // Supervision
 

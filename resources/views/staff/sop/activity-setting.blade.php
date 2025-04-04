@@ -114,28 +114,25 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
-                            <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addActivityModal"><i
-                                        class="ti ti-plus f-18"></i>
-                                    Add Activity
+                            <!-- [ Option Section ] start -->
+                            <div class="mb-3 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#addActivityModal" title="Add Activity"
+                                    id="addActivity">
+                                    <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add
+                                        Activity</span>
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                            <!-- [ Option Section ] end -->
 
-                <div class="col-sm-12">
-                    <div class="alert alert-info d-flex align-items-center gap-2 p-3">
-                        <i class="ti ti-info-circle f-18"></i>
-                        <span><strong>Note : </strong>You can add a document for each activity by click the (+)
-                            button.</span>
-                    </div>
-                </div>
+                            <!-- [ Notes ] start -->
+                            <div class=" mb-3 alert alert-info d-flex align-items-center gap-2 p-3">
+                                <i class="ti ti-info-circle f-18"></i>
+                                <span><strong>Note : </strong>You can add a document for each activity by click the (+)
+                                    button.</span>
+                            </div>
+                            <!-- [ Notes ] end -->
 
-                <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
                             <!-- Dynamically load accordion -->
                             <div class="accordion accordion-flush" id="accordionFlushExample"></div>
                         </div>
@@ -539,7 +536,6 @@
                     success: function(response) {
                         if (response.success) {
                             showAlert("success", response.message);
-                            getActivityList();
                             getDocumentList(response.document['activity_id']);
                             form[0].reset();
                             $(modalId).modal("hide");
@@ -599,7 +595,7 @@
 
                         activities.forEach((act) => {
                             let activityHtml = `
-                                <div class="accordion-item">
+                                <div class="accordion-item border rounded-2 mb-2">
                                     <div class="d-flex align-items-center justify-content-between p-3">
                                         <!-- Accordion Header -->
                                         <h2 class="accordion-header flex-grow-1 me-0 me-md-2">
@@ -705,7 +701,7 @@
                             }
                         },
                         error: function() {
-                            showAlert("danger", "An error occurred. Please try again.");
+                            showAlert("danger", "An error occurred. Please check whether this activity has been set in procedure or not.");
                         },
                     });
                 }
