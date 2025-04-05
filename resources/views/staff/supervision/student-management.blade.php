@@ -1005,12 +1005,14 @@
 
             // FORMATTING
             $('.phonenum-input').on('input', function() {
-                let input = $(this).val().replace(/\D/g, ''); // Remove non-numeric characters
-                let errorMessage = $('.phone-error-message');
+                let original = $(this).val();
+                let numericOnly = original.replace(/\D/g, '');
 
-                if (input.length > 11) {
-                    input = input.substring(0, 11); // Limit to 11 digits
+                if (numericOnly.length > 11) {
+                    numericOnly = numericOnly.substring(0, 11);
                 }
+
+                $(this).val(numericOnly);
             });
 
             $('.matric-input').on('input', function() {

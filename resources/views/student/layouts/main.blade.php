@@ -84,6 +84,33 @@
             height: 100%;
             object-fit: cover;
         }
+
+        .avatar-sidebar {
+            width: 80px !important;
+            height: 80px !important;
+            overflow: hidden;
+            border-radius: 50%;
+        }
+
+        .avatar-sidebar img {
+            width: 80px !important;
+            height: 80px !important;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs.profile-tabs .nav-item {
+                flex: 1 1 auto;
+                text-align: center;
+            }
+
+            .nav-tabs.profile-tabs .nav-link {
+                display: block;
+                width: 100%;
+            }
+        }
     </style>
 
 </head>

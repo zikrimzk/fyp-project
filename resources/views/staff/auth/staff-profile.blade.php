@@ -10,7 +10,8 @@
                         <div class="col-md-12">
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item">My Profile</li>
-                                <li class="breadcrumb-item" aria-current="page"><a href="javascript: void(0)" class="text-capitalize">{{ auth()->user()->staff_name }}</a></li>
+                                <li class="breadcrumb-item" aria-current="page"><a href="javascript: void(0)"
+                                        class="text-capitalize">{{ auth()->user()->staff_name }}</a></li>
                             </ul>
                         </div>
                         <div class="col-md-12">
@@ -55,8 +56,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Dashboard ] start -->
-
+                <!-- [ Profile ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body py-0">
@@ -64,7 +64,7 @@
                                 <li class="nav-item">
                                     <a class="nav-link {{ session('active_tab', 'profile-1') == 'profile-1' ? 'active' : '' }}"
                                         id="profile-tab-1" data-bs-toggle="tab" href="#profile-1" role="tab">
-                                        <i class="ti ti-file-text me-2"></i>Personal Details
+                                        <i class="ti ti-user me-2"></i>Personal Details
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -76,11 +76,13 @@
                             </ul>
                         </div>
                     </div>
+
                     <div class="tab-content">
+
                         <!-- Personal Details Tab Start -->
                         <div class="tab-pane fade {{ session('active_tab', 'profile-1') == 'profile-1' ? 'show active' : '' }} "
                             id="profile-1" role="tabpanel" aria-labelledby="profile-tab-1">
-                            <form action="" method="POST" enctype="multipart/form-data">
+                            <form action="{{ route('update-staff-profile') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <div class="row">
                                     <div class="col-lg-12">
@@ -116,6 +118,8 @@
                                                                 class="btn btn-sm btn-light-danger">
                                                                 Reset Photo
                                                             </button>
+                                                            <input type="hidden" name="remove_photo" id="remove_photo"
+                                                                value="0">
                                                         </div>
                                                         @error('staff_photo')
                                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -128,7 +132,8 @@
                                                             <!-- Name Input -->
                                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                                 <div class="mb-3">
-                                                                    <label for="staff_name" class="form-label">Staff Name</label>
+                                                                    <label for="staff_name" class="form-label">Staff
+                                                                        Name</label>
                                                                     <input type="text"
                                                                         class="form-control @error('staff_name') is-invalid @enderror"
                                                                         id="staff_name" name="staff_name"
@@ -148,7 +153,8 @@
                                                                     <input type="email" class="form-control"
                                                                         id="staff_email" name="staff_email"
                                                                         placeholder="Enter Staff Email"
-                                                                        value="{{ auth()->user()->staff_email }}" readonly>
+                                                                        value="{{ auth()->user()->staff_email }}"
+                                                                        readonly>
                                                                 </div>
                                                             </div>
                                                             <!-- Phone No Input -->
@@ -172,7 +178,9 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
+
                                                             <hr>
+
                                                             <!-- Staff ID Input -->
                                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                                 <div class="mb-3">
@@ -193,7 +201,8 @@
                                                                     <input type="text" class="form-control"
                                                                         id="department_id" name="department_id"
                                                                         placeholder="Staff Department"
-                                                                        value="{{ old('department_id') }}" readonly>
+                                                                        value="({{ auth()->user()->departments->dep_code }}) - {{ auth()->user()->departments->dep_name }}"
+                                                                        readonly>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -216,7 +225,7 @@
                         <!-- Update Password Tab Start -->
                         <div class="tab-pane fade {{ session('active_tab') == 'profile-2' ? 'show active' : '' }}"
                             id="profile-2" role="tabpanel" aria-labelledby="profile-tab-2">
-                            <form action="" method="POST">
+                            <form action="{{ route('update-staff-password') }}" method="POST">
                                 @csrf
                                 <div class="card">
                                     <div class="card-header">
@@ -226,11 +235,13 @@
                                         <div class="row">
                                             <div class="col-sm-6">
                                                 <div class="mb-3">
-                                                    <label class="form-label">Old Password</label>
+                                                    <label class="form-label">Old Password
+                                                        <span class="text-danger">*</span>
+                                                    </label>
                                                     <div class="input-group mb-3">
                                                         <input type="password"
                                                             class="form-control @error('oldPass') is-invalid @enderror"
-                                                            name="oldPass" id="oldpassword" />
+                                                            name="oldPass" id="oldpassword" placeholder="Enter Old Password" required />
                                                         <button class="btn btn-light border border-1 border-secondary"
                                                             type="button" id="show-old-password">
                                                             <i id="toggle-icon-old-password" class="ti ti-eye"></i>
@@ -242,11 +253,13 @@
 
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label">New Password</label>
+                                                    <label class="form-label">New Password
+                                                        <span class="text-danger">*</span>
+                                                    </label>
                                                     <div class="input-group mb-3">
                                                         <input type="password"
                                                             class="form-control @error('newPass') is-invalid @enderror"
-                                                            id="passwords" name="newPass" />
+                                                            id="passwords" name="newPass" placeholder="Enter New Password" required />
                                                         <button class="btn btn-light border border-1 border-secondary"
                                                             type="button" id="show-password">
                                                             <i id="toggle-icon-password" class="ti ti-eye"></i>
@@ -259,11 +272,13 @@
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <label class="form-label">Confirm Password</label>
+                                                    <label class="form-label">Confirm Password
+                                                        <span class="text-danger">*</span>
+                                                    </label>
                                                     <div class="input-group mb-3">
                                                         <input type="password"
                                                             class="form-control @error('cpassword') is-invalid @enderror"
-                                                            name="renewPass" id="cpassword" />
+                                                            name="renewPass" id="cpassword" placeholder="Enter Confirm Password" required />
                                                         <button class="btn btn-light border border-1 border-secondary"
                                                             type="button" id="show-password-confirm">
                                                             <i id="toggle-icon-confirm-password" class="ti ti-eye"></i>
@@ -276,23 +291,38 @@
                                                 </div>
                                             </div>
                                             <div class="col-sm-6">
-                                                <h5>New password must contain:</h5>
+                                                <h5 class="mb-3">New password must contain:</h5>
                                                 <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item" id="min-char"><i></i> At least
-                                                        8
-                                                        characters</li>
-                                                    <li class="list-group-item" id="lower-char"><i></i> At least
-                                                        1
-                                                        lower letter (a-z)</li>
-                                                    <li class="list-group-item" id="upper-char"><i></i> At least
-                                                        1
-                                                        uppercase letter(A-Z)</li>
-                                                    <li class="list-group-item" id="number-char"><i></i> At least
-                                                        1
-                                                        number (0-9)</li>
-                                                    <li class="list-group-item" id="special-char"><i></i> At least
-                                                        1
-                                                        special characters</li>
+                                                    <li class="list-group-item d-flex align-items-center justify-content-between"
+                                                        id="min-char">
+                                                        <span><i class="me-2"></i> At least <strong>8
+                                                                characters</strong></span>
+                                                        <span class="badge bg-secondary">Required</span>
+                                                    </li>
+                                                    <li class="list-group-item d-flex align-items-center justify-content-between"
+                                                        id="lower-char">
+                                                        <span><i class="me-2"></i> At least <strong>1 lowercase
+                                                                letter</strong> (a-z)</span>
+                                                        <span class="badge bg-secondary">Required</span>
+                                                    </li>
+                                                    <li class="list-group-item d-flex align-items-center justify-content-between"
+                                                        id="upper-char">
+                                                        <span><i class="me-2"></i> At least <strong>1 uppercase
+                                                                letter</strong> (A-Z)</span>
+                                                        <span class="badge bg-secondary">Required</span>
+                                                    </li>
+                                                    <li class="list-group-item d-flex align-items-center justify-content-between"
+                                                        id="number-char">
+                                                        <span><i class="me-2"></i> At least <strong>1 number</strong>
+                                                            (0-9)</span>
+                                                        <span class="badge bg-secondary">Required</span>
+                                                    </li>
+                                                    <li class="list-group-item d-flex align-items-center justify-content-between"
+                                                        id="special-char">
+                                                        <span><i class="me-2"></i> At least <strong>1 special
+                                                                character</strong> (!@#$...)</span>
+                                                        <span class="badge bg-secondary">Required</span>
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -310,10 +340,148 @@
 
                     </div>
                 </div>
-
-                <!-- [ Dashboard ] end -->
+                <!-- [ Profile ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            var activeTab = "{{ session('active_tab', 'profile-1') }}";
+            $('.nav-link[href="#' + activeTab + '"]').tab('show');
+
+            // STAFF PHOTO FUNCTIONS
+            var defaultImageAdd = $(".previewImageAdd").data("default");
+
+
+            $('#staff_photo').on('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+                        $('.previewImageAdd').attr('src', e.target.result).show();
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            $("#resetPhoto").on("click", function() {
+                $(".previewImageAdd").attr("src", defaultImageAdd);
+                $("#staff_photo").val("");
+                $('#remove_photo').val("1");
+            });
+
+            // FORMATTING
+            $('.phonenum-input').on('input', function() {
+                let original = $(this).val();
+                let numericOnly = original.replace(/\D/g, '');
+
+                if (numericOnly.length > 11) {
+                    numericOnly = numericOnly.substring(0, 11);
+                }
+
+                $(this).val(numericOnly);
+            });
+
+            // UPDATE PASSWORD FUNCTIONS
+            $('#passwords').on('input', function() {
+                const password = $(this).val();
+                const confirmPasswordInput = $('#cpassword');
+                const submitBtn = $('#submit-btn');
+
+                // Requirements
+                const minChar = /.{8,}/;
+                const lowerChar = /[a-z]/;
+                const upperChar = /[A-Z]/;
+                const numberChar = /[0-9]/;
+                const specialChar = /[!@#$%^&*(),.?":{}|<>]/;
+
+                // Validate each requirement
+                function validateRequirement(regex, elementId) {
+                    const $el = $('#' + elementId);
+                    const $icon = $el.find('i');
+                    const $badge = $el.find('.badge');
+
+                    if (regex.test(password)) {
+                        $icon.removeClass().addClass('ti ti-circle-check text-success f-16');
+                        $badge.removeClass('bg-secondary').addClass('bg-success').text('Valid');
+                    } else {
+                        $icon.removeClass().addClass('ti ti-circle-x text-danger f-16');
+                        $badge.removeClass('bg-success').addClass('bg-secondary').text('Required');
+                    }
+                }
+
+                validateRequirement(minChar, 'min-char');
+                validateRequirement(lowerChar, 'lower-char');
+                validateRequirement(upperChar, 'upper-char');
+                validateRequirement(numberChar, 'number-char');
+                validateRequirement(specialChar, 'special-char');
+
+                // All requirements met
+                const allValid = minChar.test(password) &&
+                    lowerChar.test(password) &&
+                    upperChar.test(password) &&
+                    numberChar.test(password) &&
+                    specialChar.test(password);
+
+                if (allValid) {
+                    confirmPasswordInput.prop('disabled', false);
+                    checkPasswordsMatch();
+                } else {
+                    submitBtn.addClass('disabled');
+                    confirmPasswordInput.prop('disabled', true);
+                }
+
+                // Check passwords match
+                function checkPasswordsMatch() {
+                    const confirmPassword = confirmPasswordInput.val();
+                    if (password === confirmPassword) {
+                        submitBtn.removeClass('disabled');
+                    } else {
+                        submitBtn.addClass('disabled');
+                    }
+                }
+            });
+
+            // Confirm password input event
+            $('#cpassword').on('input', function() {
+                const password = $('#passwords').val();
+                const confirmPassword = $(this).val();
+                const submitBtn = $('#submit-btn');
+
+                if (password === confirmPassword) {
+                    submitBtn.removeClass('disabled');
+                } else {
+                    submitBtn.addClass('disabled');
+                }
+            });
+
+            // Toggle password visibility
+            function showPassword(buttonId, inputId, iconId) {
+                $('#' + buttonId).on('click', function() {
+                    const input = $('#' + inputId);
+                    const icon = $('#' + iconId);
+
+                    if (input.attr('type') === 'password') {
+                        input.attr('type', 'text');
+                        icon.removeClass('ti-eye').addClass('ti-eye-off');
+                    } else {
+                        input.attr('type', 'password');
+                        icon.removeClass('ti-eye-off').addClass('ti-eye');
+                    }
+                });
+            }
+
+            // Apply showPassword toggles
+            showPassword('show-old-password', 'oldpassword', 'toggle-icon-old-password');
+            showPassword('show-password', 'passwords', 'toggle-icon-password');
+            showPassword('show-password-confirm', 'cpassword', 'toggle-icon-confirm-password');
+
+
+        });
+    </script>
 @endsection

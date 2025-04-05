@@ -39,4 +39,9 @@ class Staff extends Authenticatable
     {
         return 'staff_email';
     }
+
+    public function departments()
+    {
+        return $this->belongsTo(Department::class,'department_id');
+    }
 }

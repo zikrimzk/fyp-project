@@ -48,4 +48,15 @@ class Student extends Authenticatable
         return 'student_email';
     }
 
+    public function semesters()
+    {
+        return $this->belongsTo(Semester::class,'semester_id');
+    }
+
+    public function programmes()
+    {
+        return $this->belongsTo(Programme::class,'programme_id');
+    }
+
+
 }

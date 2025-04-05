@@ -22,7 +22,7 @@ Route::get('/', [AuthenticateController::class, 'mainLogin'])
     ->name('main-login');
 
 Route::prefix('auth')->group(function () {
-    
+
     /* User Login */
     Route::post('/authenticate-user', [AuthenticateController::class, 'authenticateUser'])
         ->name('user-authenticate');
@@ -41,6 +41,8 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
 
     /* Student Profile */
     Route::get('/my-profile', [AuthenticateController::class, 'studentProfile'])->name('student-profile');
+    Route::post('/update-profile', [AuthenticateController::class, 'updateStudentProfile'])->name('update-student-profile');
+    Route::post('/update-password', [AuthenticateController::class, 'updateStudentPassword'])->name('update-student-password');
 });
 
 
@@ -54,6 +56,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Staff Profile */
     Route::get('/my-profile', [AuthenticateController::class, 'staffProfile'])->name('staff-profile');
+    Route::post('/update-profile', [AuthenticateController::class, 'updateStaffProfile'])->name('update-staff-profile');
+    Route::post('/update-password', [AuthenticateController::class, 'updateStaffPassword'])->name('update-staff-password');
+
 
     // Supervision
 
