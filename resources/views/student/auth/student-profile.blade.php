@@ -1,4 +1,4 @@
-@extends('staff.layouts.main')
+@extends('student.layouts.main')
 
 @section('content')
     <div class="pc-container">
@@ -9,8 +9,8 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item">My Profile</li>
-                                <li class="breadcrumb-item" aria-current="page"><a href="javascript: void(0)" class="text-capitalize">{{ auth()->user()->staff_name }}</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">[ Student Name ]</a></li>
+                                <li class="breadcrumb-item" aria-current="page">My Profile</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
@@ -95,7 +95,7 @@
                                                         <div class="d-grid justify-content-center align-items-center mb-3">
                                                             <div class="user-upload avatar-s w-100">
 
-                                                                <img src="{{ empty(auth()->user()->staff_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . auth()->user()->staff_photo) }}"
+                                                                <img src="{{ asset('assets/images/user/default-profile-1.jpg') }}"
                                                                     alt="Profile Photo" width="150" height="150"
                                                                     class="previewImageAdd"
                                                                     data-default="{{ asset('assets/images/user/default-profile-1.jpg') }}">
@@ -133,7 +133,7 @@
                                                                         class="form-control @error('staff_name') is-invalid @enderror"
                                                                         id="staff_name" name="staff_name"
                                                                         placeholder="Enter Staff Name"
-                                                                        value="{{ auth()->user()->staff_name }}" required>
+                                                                        value="{{ old('staff_name') }}" required>
                                                                     @error('staff_name')
                                                                         <div class="invalid-feedback">{{ $message }}
                                                                         </div>
@@ -148,7 +148,7 @@
                                                                     <input type="email" class="form-control"
                                                                         id="staff_email" name="staff_email"
                                                                         placeholder="Enter Staff Email"
-                                                                        value="{{ auth()->user()->staff_email }}" readonly>
+                                                                        value="{{ old('staff_email') }}" readonly>
                                                                 </div>
                                                             </div>
                                                             <!-- Phone No Input -->
@@ -163,7 +163,7 @@
                                                                             class="form-control @error('staff_phoneno') is-invalid @enderror phonenum-input"
                                                                             placeholder="Enter Phone Number"
                                                                             name="staff_phoneno"
-                                                                            value="{{ auth()->user()->staff_phoneno }}"
+                                                                            value="{{ old('staff_phoneno') }}"
                                                                             maxlength="11" />
                                                                         @error('staff_phoneno')
                                                                             <div class="invalid-feedback">{{ $message }}
@@ -181,7 +181,7 @@
                                                                     <input type="text" class="form-control"
                                                                         id="staff_id" name="staff_id"
                                                                         placeholder="Enter Staff ID"
-                                                                        value="{{ auth()->user()->staff_id }}" readonly>
+                                                                        value="{{ old('staff_id') }}" readonly>
                                                                 </div>
                                                             </div>
                                                             <!--Department Input-->

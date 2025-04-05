@@ -10,10 +10,11 @@
                 <div class="card-body">
                     <div class="d-flex flex-column align-items-center justify-content-center">
                         <div class="flex-shrink-0 mb-3">
-                            <i class="fas fa-user-circle f-50"></i>
+                            <img src="{{ empty(auth()->user()->staff_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . auth()->user()->staff_photo) }}"
+                            alt="Profile Photo" width="80" height="80" class="rounded-circle" />
                         </div>
                         <div class="flex-grow-1 text-center">
-                            <h5 class="mb-0">Dr. Zahriah</h5>
+                            <h5 class="mb-0">{{ auth()->user()->staff_name }}</h5>
                             <small>Committee</small>
                         </div>
                     </div>
@@ -25,7 +26,7 @@
                     <label>Main</label>
                 </li>
                 <li class="pc-item pc-hasmenu">
-                    <a href="{{ route('dashboard') }}" class="pc-link">
+                    <a href="{{ route('staff-dashboard') }}" class="pc-link">
                         <span class="pc-micon">
                             <svg class="pc-icon">
                                 <use xlink:href="#custom-status-up"></use>

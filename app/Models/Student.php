@@ -10,8 +10,9 @@ use Laravel\Sanctum\HasApiTokens;
 class Student extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+    protected $table = 'students';
+    protected $guard = 'student';
 
-    protected $guard = "student";
 
     protected $fillable = [
         'student_name',
@@ -41,4 +42,10 @@ class Student extends Authenticatable
     protected $casts = [
         'student_password' => 'hashed',
     ];
+
+    public function getAuthIdentifierName()
+    {
+        return 'student_email';
+    }
+
 }

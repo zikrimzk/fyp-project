@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class Staff extends Model
+class Staff extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
-    protected $guard = "staff";
+    protected $table = 'staff';
+    protected $guard = 'staff';
 
     protected $fillable = [
         'staff_id',
@@ -31,4 +34,9 @@ class Staff extends Model
     protected $casts = [
         'staff_password' => 'hashed',
     ];
+
+    public function getAuthIdentifierName()
+    {
+        return 'staff_email';
+    }
 }

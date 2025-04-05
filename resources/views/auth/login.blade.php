@@ -45,10 +45,10 @@
                 </div>
 
                 <div class="card my-5 shadow shadow-lg">
-                    <form action="{{ route('dashboard') }}" method="GET" autocomplete="off">
+                    <form action="{{ route('user-authenticate') }}" method="POST" autocomplete="off">
                         @csrf
                         <div class="card-body">
-                            <div class="text-center mt-3 mb-5 ">
+                            <div class="text-center mt-3 mb-4">
                                 <h3 class="text-center f-w-500 mb-1">Login</h3>
                                 <h5 class="text-center text-muted">e-PostGrad System</h5>
                             </div>
@@ -86,12 +86,12 @@
 
                             <div class="form-floating mb-3">
                                 <input type="email" class="form-control" id="email" placeholder="Email"
-                                    name="email" value="{{ old('email') }}" autocomplete="off"/>
-                                <label for="email">Staff / Student Email</label>
+                                    name="email" value="{{ old('email') }}" autocomplete="off" title="Student or Staff Email"/>
+                                <label for="email">User Email</label>
                             </div>
                             <div class="form-floating mb-3">
                                 <input type="password" class="form-control" id="password" placeholder="Password"
-                                    name="password" autocomplete="off" />
+                                    name="password" autocomplete="off" title="Password" />
                                 <label for="password">Password</label>
 
                                 <!-- Show/Hide Button -->
@@ -113,7 +113,7 @@
                                 </h6>
                             </div>
                             <div class="d-grid mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg">Login</button>
+                                <button type="submit" class="btn btn-primary btn-lg" title="Login">Login</button>
                             </div>
                         </div>
                     </form>

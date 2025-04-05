@@ -55,7 +55,7 @@
                         <i class="fas fa-user-circle"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
-                        <a href="{{ route('staff-profile') }}" class="dropdown-item">
+                        <a href="{{ route('student-profile') }}" class="dropdown-item">
                             <i class="ti ti-user"></i>
                             <span>My Profile</span>
                         </a>

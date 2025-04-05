@@ -546,7 +546,6 @@
                                                 @enderror
                                             </div>
 
-
                                             <h5 class="mb-2">A. Personal Information</h5>
 
                                             <!-- Name Input -->

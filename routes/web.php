@@ -17,20 +17,42 @@ use App\Http\Controllers\AuthenticateController;
 |
 */
 
-Route::get('/staff', function () {
-    return view('staff.index', [
-        'title' => 'Dashboard'
-    ]);
-})->name('dashboard');
+Route::get('/', [AuthenticateController::class, 'mainLogin'])
+    ->middleware('redirectIfAuthenticatedMulti')
+    ->name('main-login');
 
-Route::get('/', [AuthenticateController::class, 'mainLogin'])->name('main-login');
+Route::prefix('auth')->group(function () {
+    
+    /* User Login */
+    Route::post('/authenticate-user', [AuthenticateController::class, 'authenticateUser'])
+        ->name('user-authenticate');
+
+    /* User Logout */
+    Route::get('/logout-user', [AuthenticateController::class, 'logoutUser'])->name('user-logout');
+});
+
+
+Route::prefix('student')->middleware('auth:student')->group(function () {
+
+    //Authentication - Account Management
+
+    /* Student Home */
+    Route::get('/home', [AuthenticateController::class, 'studentHome'])->name('student-home');
+
+    /* Student Profile */
+    Route::get('/my-profile', [AuthenticateController::class, 'studentProfile'])->name('student-profile');
+});
 
 
 
-Route::prefix('staff')->group(function () {
+Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
-    // Staff Profile
+    //Authentication - Account Management
 
+    /* Staff Dashboard */
+    Route::get('/dashboard', [AuthenticateController::class, 'staffDashboard'])->name('staff-dashboard');
+
+    /* Staff Profile */
     Route::get('/my-profile', [AuthenticateController::class, 'staffProfile'])->name('staff-profile');
 
     // Supervision
