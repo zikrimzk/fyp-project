@@ -82,7 +82,8 @@
                         <!-- Personal Details Tab Start -->
                         <div class="tab-pane fade {{ session('active_tab', 'profile-1') == 'profile-1' ? 'show active' : '' }} "
                             id="profile-1" role="tabpanel" aria-labelledby="profile-tab-1">
-                            <form action="{{ route('update-student-profile') }}" method="POST" enctype="multipart/form-data">
+                            <form action="{{ route('update-student-profile') }}" method="POST"
+                                enctype="multipart/form-data">
                                 @csrf
                                 <div class="row">
                                     <div class="col-lg-12">
@@ -177,6 +178,20 @@
                                                                             </div>
                                                                         @enderror
                                                                     </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Address Input -->
+                                                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                                                <div class="mb-3">
+                                                                    <label for="student_address_up" class="form-label">
+                                                                        Address
+                                                                    </label>
+                                                                    <textarea name="student_address" id="student_address" placeholder="Enter Address" cols="10"
+                                                                        rows="5" class="form-control @error('student_address') is-invalid @enderror">{{ auth()->user()->student_address }}</textarea>
+                                                                    @error('student_address')
+                                                                        <div class="invalid-feedback">{{ $message }}
+                                                                        </div>
+                                                                    @enderror
                                                                 </div>
                                                             </div>
 

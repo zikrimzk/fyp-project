@@ -29,6 +29,16 @@ Route::prefix('auth')->group(function () {
 
     /* User Logout */
     Route::get('/logout-user', [AuthenticateController::class, 'logoutUser'])->name('user-logout');
+
+    /* User Forgot Password */
+    Route::get('/forgot-password', [AuthenticateController::class, 'forgotPassword'])->name('forgot-password');
+
+    //Unfinish
+    Route::post('/request/reset-password', [AuthenticateController::class, 'requestResetPassword'])->name('request-reset-password');
+    Route::get('/form-reset-password-{token}-{email}-{userType}', [AuthenticateController::class, 'resetPasswordForm'])->name('reset-password-form');
+    Route::post('/reset-password-{token}-{email}-{userType}', [AuthenticateController::class, 'resetPassword'])->name('reset-password');
+
+
 });
 
 

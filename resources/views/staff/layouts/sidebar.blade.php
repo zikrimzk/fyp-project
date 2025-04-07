@@ -3,9 +3,9 @@
 @endphp
 <nav class="pc-sidebar">
     <div class="navbar-wrapper">
-        <div class="p-2 text-center">
+        <div class="p-2 bg-light-secondary text-center">
             <a href="../dashboard/index.html" class="b-brand text-primary">
-                <img src="../assets/images/logo-utem.PNG" alt="logo" width="80" />
+                <img src="../assets/images/logo-utem.PNG" alt="logo" width="100" />
             </a>
             <hr>
             <h6>{{ Semester::where('sem_status', 1)->first()->sem_label }}</h6>

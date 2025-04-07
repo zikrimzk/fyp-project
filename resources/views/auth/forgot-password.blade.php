@@ -40,17 +40,19 @@
         <div class="auth-wrapper v1">
             <div class="auth-form">
                 <div class="text-center">
-                    <a href=""><img src="../assets/images/logo-utem.PNG" alt="img"
-                            class="img-fluid" width="120" height="60" /></a>
+                    <a href=""><img src="../assets/images/logo-utem.PNG" alt="img" class="img-fluid"
+                            width="120" height="60" /></a>
                 </div>
 
                 <div class="card my-5 shadow shadow-lg">
-                    <form action="{{ route('user-authenticate') }}" method="POST" autocomplete="off">
+                    <form action="{{ route('request-reset-password') }}" method="POST" autocomplete="off">
                         @csrf
                         <div class="card-body">
-                            <div class="text-center mt-3 mb-4">
-                                <h3 class="text-center f-w-500 mb-1">Login</h3>
-                                <h5 class="text-center text-muted">e-PostGrad System</h5>
+                            <div class="position-relative text-center mt-3 mb-5">
+                                <a href="{{ route('main-login') }}" class="position-absolute start-0 top-50 translate-middle-y btn btn-sm f-16">
+                                    <i class="ti ti-arrow-left text-primary fs-3"></i>
+                                </a>
+                                <h3 class="f-w-500 mb-1">Reset Password</h3>
                             </div>
 
                             <!-- Start Alert -->
@@ -84,37 +86,15 @@
                             </div>
                             <!-- End Alert -->
 
-                            <div class="form-floating mb-3">
+                            <div class="form-floating">
                                 <input type="email" class="form-control" id="email" placeholder="Email"
-                                    name="email" value="{{ old('email') }}" autocomplete="off" title="Staff or Student Email"
-                                    required />
+                                    name="email" value="{{ old('email') }}" autocomplete="off"
+                                    title="Staff or Student Email" />
                                 <label for="email">Staff / Student Email</label>
                             </div>
-                            <div class="form-floating mb-3">
-                                <input type="password" class="form-control" id="password" placeholder="Password"
-                                    name="password" autocomplete="off" title="Password" required />
-                                <label for="password">Password</label>
-
-                                <!-- Show/Hide Button -->
-                                <button type="button" class="btn position-absolute end-0 top-0 me-2"
-                                    style="background-color: transparent; margin-top:.60rem;" id="show-password">
-                                    <i id="toggle-icon-password" class="ti ti-eye"></i>
-                                </button>
-                            </div>
-                            <div class="d-flex mt-1 justify-content-between align-items-center">
-                                <div class="form-check">
-                                    <input class="form-check-input input-primary" type="checkbox" id="customCheckc1"
-                                        name="remember" />
-                                    <label class="form-check-label text-muted" for="customCheckc1">Remember
-                                        me?</label>
-                                </div>
-                                <h6 class="f-w-400 mb-0">
-                                    <a href="{{ route('forgot-password') }}" class="link-primary"> Forgot Password?
-                                    </a>
-                                </h6>
-                            </div>
                             <div class="d-grid mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg" title="Login">Login</button>
+                                <button type="submit" class="btn btn-primary btn-lg" title="Login">Request Reset
+                                    Password</button>
                             </div>
                         </div>
                     </form>

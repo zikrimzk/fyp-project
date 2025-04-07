@@ -3,13 +3,18 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use Carbon\Carbon;
 use App\Models\Staff;
 use App\Models\Student;
 use App\Models\Semester;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Mail\AuthenticateMail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -17,6 +22,35 @@ class AuthenticateController extends Controller
 {
 
     /* General Function */
+    private function sendAccountNotification($data, $emailType, $userType, $link)
+    {
+        //USER TYPE 
+        if ($userType == 1) {
+            $name = $data->student_name;
+            $email = $data->student_email;
+        } elseif ($userType == 2) {
+            $name = $data->staff_name;
+            $email = $data->staff_email;
+        } else {
+            $name = null;
+            $email = null;
+        }
+
+        //EMAIL TYPE
+        // 1 - ACCOUNT REGISTRATION
+        // 2 - ACCOUNT DEACTIVATION
+        // 3 - FORGOT PASSWORD
+        // 4 - PASSWORD RESET NOTIFICATION
+
+        Mail::to($email)->send(new AuthenticateMail([
+            'eType' => $emailType,
+            'uType' => $userType,
+            'name' => Str::headline($name),
+            'date' => Carbon::now()->format('d F Y g:i A'),
+            'link' => $link
+        ]));
+    }
+
     public function mainLogin()
     {
         try {
@@ -78,7 +112,138 @@ class AuthenticateController extends Controller
         }
     }
 
+    /* Forgot Password Function */
+    public function forgotPassword()
+    {
+        try {
+            return view('auth.forgot-password', [
+                'title' => 'Reset Password',
+            ]);
+        } catch (Exception $e) {
+            return abort(500);
+        }
+    }
 
+    public function requestResetPassword(Request $req)
+    {
+        try {
+            $req->validate([
+                'email' => 'required|email',
+            ]);
+
+            $user = null;
+            $userType = null;
+            $email = $req->input('email');
+
+            // Attempt to search in the Student table
+            $student = Student::where('student_email', $req->email)->first();
+            if ($student) {
+                $user = $student;
+                $userType = 1;
+            }
+
+            // Attempt to search in the Student table
+            $staff = Staff::where('staff_email', $req->email)->first();
+
+            if ($staff) {
+                $user = $staff;
+                $userType = 2;
+            }
+
+            if (!$user) {
+                return back()->with('error', 'Email address not found in our records.');
+            } else {
+                // Generate a secure token
+                $token = Str::random(64);
+
+                // Insert token into password_resets table
+                DB::table('password_reset_tokens')->updateOrInsert(
+                    ['email' => $email],
+                    [
+                        'token' => $token,
+                        'created_at' => Carbon::now()
+                    ]
+                );
+
+                $resetLink = route('reset-password-form', ['token' => $token, 'email' => Crypt::encrypt($email), 'userType' => $userType]);
+
+                $this->sendAccountNotification($user, 3, $userType, $resetLink);
+
+                return back()->with('success', 'Password reset link sent successfully. Please check your email.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error requesting reset password: ' . $e->getMessage());
+        }
+    }
+
+    public function resetPasswordForm($token, $email, $userType)
+    {
+        try {
+            $email = Crypt::decrypt($email);
+
+            return view('auth.reset-password-form', [
+                'title' => 'Change Your Password',
+                'token' => $token,
+                'email' => $email,
+                'userType' => $userType,
+            ]);
+        } catch (Exception $e) {
+            return abort(500);
+        }
+    }
+
+    public function resetPassword(Request $req, $token, $email, $userType)
+    {
+        try {
+            $email = Crypt::decrypt($email);
+
+            $tokenData = DB::table('password_reset_tokens')
+                ->where('token', $token)
+                ->where('email', $email)
+                ->first();
+
+            $main_link = route('main-login');
+
+            if ($userType == 1) {
+                if (!$tokenData) {
+                    return redirect($main_link)->with('error', 'Invalid or expired link.');
+                }
+
+                if (Carbon::parse($tokenData->created_at)->addHour()->isPast()) {
+                    return redirect($main_link)->with('message', 'The link has expired.');
+                }
+
+                DB::table('students')->where('student_email', $email)->update([
+                    'student_password' => bcrypt($req->input('renewPass'))
+                ]);
+
+                $user = Student::where('student_email', $email)->first();
+            } elseif ($userType == 2) {
+                if (!$tokenData) {
+                    return redirect($main_link)->with('error', 'Invalid or expired link.');
+                }
+
+                if (Carbon::parse($tokenData->created_at)->addHour()->isPast()) {
+                    return redirect($main_link)->with('message', 'The link has expired.');
+                }
+
+                DB::table('staff')->where('staff_email', $email)->update([
+                    'staff_password' => bcrypt($req->input('renewPass'))
+                ]);
+
+                $user = Staff::where('staff_email', $email)->first();
+            } else {
+                return redirect($main_link)->with('error', 'Invalid user type.');
+            }
+            DB::table('password_reset_tokens')->where('email', $email)->delete();
+
+            $this->sendAccountNotification($user, 4, $userType, $main_link);
+
+            return redirect($main_link)->with('success', 'Password has been reset successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error reseting password: ' . $e->getMessage());
+        }
+    }
 
     /* Staff Function */
     public function staffDashboard()
