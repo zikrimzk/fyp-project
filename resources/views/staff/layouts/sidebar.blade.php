@@ -3,15 +3,18 @@
 @endphp
 <nav class="pc-sidebar">
     <div class="navbar-wrapper">
-        <div class="p-2 bg-light-secondary text-center">
+        <div class="p-2 bg-light-secondary text-center d-flex justify-content-center align-items-center border border-bottom border-2">
             <a href="../dashboard/index.html" class="b-brand text-primary">
                 <img src="../assets/images/logo-utem.PNG" alt="logo" width="100" />
             </a>
-            <hr>
-            <h6>{{ Semester::where('sem_status', 1)->first()->sem_label }}</h6>
-            <hr>
+        </div>
+        <div class="navbar-content bg-light-secondary">
+            
+            <div class="text-center border-bottom border-2 mb-3">
+                <h6 class="p-2">{{ Semester::where('sem_status', 1)->first()->sem_label }}</h6>
+            </div>
 
-            <div class="d-flex flex-column align-items-center justify-content-center m-2">
+            <div class="d-flex flex-column align-items-center justify-content-center m-2 mb-3">
                 <div class="flex-shrink-0 mb-3 avatar-sidebar">
                     <img src="{{ empty(auth()->user()->staff_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . auth()->user()->staff_photo) }}"
                         alt="Profile Photo" />
@@ -36,8 +39,7 @@
                     @endif
                 </div>
             </div>
-        </div>
-        <div class="navbar-content">
+
             <ul class="pc-navbar">
                 <li class="pc-item pc-caption">
                     <label>Main</label>

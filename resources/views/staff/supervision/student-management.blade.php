@@ -112,6 +112,15 @@
                                         Export Data
                                     </span>
                                 </button>
+                                <button type="button"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    data-bs-toggle="modal" data-bs-target="#changestatusModal" id="changestatusBtn"
+                                    title="Change Status">
+                                    <i class="ti ti-user f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Change Status
+                                    </span>
+                                </button>
                             </div>
                             <!-- [ Option Section ] end -->
 
@@ -154,7 +163,8 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                            id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -415,16 +425,19 @@
                                                 <select class="form-select @error('student_status') is-invalid @enderror"
                                                     name="student_status" required>
                                                     <option value ="" selected>- Select Status -</option>
-                                                    @if (old('student_status') == 1)
-                                                        <option value ="1" selected>Active</option>
-                                                        <option value ="2">Inactive</option>
-                                                    @elseif(old('student_status') == 2)
-                                                        <option value ="1">Active</option>
-                                                        <option value ="2" selected>Inactive</option>
-                                                    @else
-                                                        <option value ="1">Active</option>
-                                                        <option value ="2">Inactive</option>
-                                                    @endif
+                                                    <option value ="1"
+                                                        @if (old('student_status') == 1) selected @endif>Active</option>
+                                                    <option value ="2"
+                                                        @if (old('student_status') == 2) selected @endif>Inactive
+                                                    </option>
+                                                    <option value ="3"
+                                                        @if (old('student_status') == 3) selected @endif>Extend</option>
+                                                    <option value ="4"
+                                                        @if (old('student_status') == 4) selected @endif>Terminate
+                                                    </option>
+                                                    <option value ="5"
+                                                        @if (old('student_status') == 5) selected @endif>Withdraw
+                                                    </option>
                                                 </select>
                                                 @error('student_status')
                                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -517,6 +530,68 @@
                     </div>
                 </form>
                 <!-- [ Import Modal ] end -->
+
+                <!-- [ Change Status Modal ] start -->
+                <div class="modal fade" id="changestatusModal" data-bs-keyboard="false" tabindex="-1"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="mb-0">Change Status</h5>
+                                <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
+                                    data-bs-dismiss="modal">
+                                    <i class="ti ti-x f-20"></i>
+                                </a>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <!-- Status Input Section -->
+                                    <div class="col-sm-12 col-md-12 col-lg-12">
+                                        <!-- Custom File Upload -->
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                Status <span class="text-danger">*</span>
+                                            </label>
+                                            <select
+                                                class="form-select @error('student_status_change') is-invalid @enderror"
+                                                name="student_status_change" id="student_status_change" required>
+                                                <option value ="" selected>- Select Status -</option>
+                                                <option value ="1" @if (old('student_status_change') == 1) selected @endif>
+                                                    Active
+                                                </option>
+                                                <option value ="2" @if (old('student_status_change') == 2) selected @endif>
+                                                    Inactive
+                                                </option>
+                                                <option value ="3" @if (old('student_status_change') == 3) selected @endif>
+                                                    Extend
+                                                </option>
+                                                <option value ="4" @if (old('student_status_change') == 4) selected @endif>
+                                                    Terminate
+                                                </option>
+                                                <option value ="5" @if (old('student_status_change') == 5) selected @endif>
+                                                    Withdraw
+                                                </option>
+                                            </select>
+                                            @error('student_status_change')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer justify-content-end">
+                                <div class="flex-grow-1 text-end">
+                                    <button type="reset" class="btn btn-link-danger btn-pc-default"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" id="updatestatusBtn" disabled>Update
+                                        Status</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Change Status Modal ] end -->
 
                 @foreach ($studs as $upd)
                     <!-- [ Update Modal ] start -->
@@ -726,16 +801,21 @@
                                                         class="form-select @error('student_status') is-invalid @enderror"
                                                         name="student_status_up" id="student_status_up" required>
                                                         <option value ="" selected>- Select Status -</option>
-                                                        @if ($upd->student_status == 1)
-                                                            <option value ="1" selected>Active</option>
-                                                            <option value ="2">Inactive</option>
-                                                        @elseif($upd->student_status == 2)
-                                                            <option value ="1">Active</option>
-                                                            <option value ="2" selected>Inactive</option>
-                                                        @else
-                                                            <option value ="1">Active</option>
-                                                            <option value ="2">Inactive</option>
-                                                        @endif
+                                                        <option value ="1"
+                                                            @if ($upd->student_status == 1) selected @endif>Active
+                                                        </option>
+                                                        <option value ="2"
+                                                            @if ($upd->student_status == 2) selected @endif>Inactive
+                                                        </option>
+                                                        <option value ="3"
+                                                            @if ($upd->student_status == 3) selected @endif>Extend
+                                                        </option>
+                                                        <option value ="4"
+                                                            @if ($upd->student_status == 4) selected @endif>Terminate
+                                                        </option>
+                                                        <option value ="5"
+                                                            @if ($upd->student_status == 5) selected @endif>Withdraw
+                                                        </option>
                                                     </select>
                                                     @error('student_status_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -1035,6 +1115,9 @@
             const importBtn = $("#importBtn");
             const excelExportBtn = $("#excelExportBtn");
             const clearBtn = $("#clearSelectionBtn");
+            const cstatusBtn = $("#changestatusBtn");
+            const updateStatusBtn = $("#updatestatusBtn");
+
 
             let selectedIds = new Set();
 
@@ -1087,6 +1170,7 @@
 
                 addBtn.toggleClass("d-none", selectedIds.size !== 0);
                 importBtn.toggleClass("d-none", selectedIds.size !== 0);
+                cstatusBtn.toggleClass("d-none", selectedIds.size === 0);
 
                 if (selectedCount > 0) {
                     clearBtn.removeClass("d-none").html(
@@ -1115,6 +1199,60 @@
                     url += "?ids=" + selectedIds.join(",");
                 }
                 window.location.href = url;
+            });
+
+            $('#student_status_change').on('change', function() {
+                let status = $(this).val();
+                if (status != '') {
+                    updateStatusBtn.prop('disabled', false);
+                } else {
+                    updateStatusBtn.prop('disabled', true);
+                }
+            })
+
+            updateStatusBtn.on('click', function() {
+                const $button = $(this);
+                const status = $('#student_status_change').val();
+
+                let selectedIds = $(".user-checkbox:checked").map(function() {
+                    return $(this).val();
+                }).get();
+
+
+                if (selectedIds.length > 0) {
+
+                    // Disable the button and show loading text
+                    // $button.prop('disabled', true).html(
+                    //     '<span class="spinner-border spinner-border-sm me-2"></span>Saving...'
+                    // );
+
+                    $.ajax({
+                        url: "{{ route('update-student-status-post') }}",
+                        type: "POST",
+                        data: {
+                            selectedIds: selectedIds,
+                            status: status,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+                            $('#changestatusModal').modal('hide');
+                            $('.data-table').DataTable().ajax
+                                .reload();
+                            $('#student_status_change').val("");
+                            updateStatusBtn.prop('disabled', true);
+
+
+                        },
+                        error: function(xhr) {
+                            console.error(xhr.responseText);
+                            alert("Error: " + xhr.responseText);
+                        }
+                    });
+                } else {
+                    alert(
+                        "No valid data selected for status change."
+                    );
+                }
             });
 
 

@@ -106,6 +106,12 @@ class SupervisionController extends Controller
                         $status = '<span class="badge bg-light-success">' . 'Active' . '</span>';
                     } elseif ($row->student_status == 2) {
                         $status = '<span class="badge bg-light-secondary">' . 'Inactive' . '</span>';
+                    } elseif ($row->student_status == 3) {
+                        $status = '<span class="badge bg-light-info">' . 'Extend' . '</span>';
+                    } elseif ($row->student_status == 4) {
+                        $status = '<span class="badge bg-danger">' . 'Terminate' . '</span>';
+                    } elseif ($row->student_status == 5) {
+                        $status = '<span class="badge bg-light-secondary">' . 'Withdraw' . '</span>';
                     } else {
                         $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
                     }
@@ -428,6 +434,24 @@ class SupervisionController extends Controller
             return Excel::download(new StudentExport($selectedIds), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
+        }
+    }
+
+    public function updateStudentStatus(Request $req)
+    {
+        try {
+            $studentIds = $req->input('selectedIds');
+            $updatedStatus = $req->input('status');
+
+            Student::whereIn('id', $studentIds)->update(['student_status' => $updatedStatus]);
+
+            return response()->json([
+                'message' => 'All selected student status has been updated successfully !',
+            ],200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Oops! Something went wrong. Please try again later.',
+            ],500);
         }
     }
 

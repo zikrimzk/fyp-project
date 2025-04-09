@@ -32,8 +32,6 @@ Route::prefix('auth')->group(function () {
 
     /* User Forgot Password */
     Route::get('/forgot-password', [AuthenticateController::class, 'forgotPassword'])->name('forgot-password');
-
-    //Unfinish
     Route::post('/request/reset-password', [AuthenticateController::class, 'requestResetPassword'])->name('request-reset-password');
     Route::get('/form-reset-password-{token}-{email}-{userType}', [AuthenticateController::class, 'resetPasswordForm'])->name('reset-password-form');
     Route::post('/reset-password-{token}-{email}-{userType}', [AuthenticateController::class, 'resetPassword'])->name('reset-password');
@@ -79,6 +77,8 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/delete-student-{id}-{opt}', [SupervisionController::class, 'deleteStudent'])->name('delete-student-get');
     Route::post('/import-student-data', [SupervisionController::class, 'importStudent'])->name('import-student-post');
     Route::get('/export-student-data', [SupervisionController::class, 'exportStudent'])->name('export-student-get');
+    Route::post('/update-multiple-student-status', [SupervisionController::class, 'updateStudentStatus'])->name('update-student-status-post');
+
 
     /* Staff Management */
     Route::get('/staff-management', [SupervisionController::class, 'staffManagement'])->name('staff-management');
