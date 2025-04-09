@@ -5,6 +5,7 @@ use App\Http\Controllers\SOPController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SupervisionController;
 use App\Http\Controllers\AuthenticateController;
+use App\Http\Controllers\SubmissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +52,13 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::get('/my-profile', [AuthenticateController::class, 'studentProfile'])->name('student-profile');
     Route::post('/update-profile', [AuthenticateController::class, 'updateStudentProfile'])->name('update-student-profile');
     Route::post('/update-password', [AuthenticateController::class, 'updateStudentPassword'])->name('update-student-password');
+
+    /* Programme Management */
+    Route::get('/programme-overview', [SubmissionController::class, 'studentProgrammeOverview'])->name('student-programme-overview');
+    Route::get('/view-document/{filename}', [SOPController::class, 'viewMaterialFile'])->where('filename', '.*')->name('student-view-material-get');
+    Route::get('/activity-submission-list-{id}', [SubmissionController::class, 'activitySubmissionList'])->name('student-activity-submission-list');
+
+
 });
 
 

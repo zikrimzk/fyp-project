@@ -3,7 +3,8 @@
 @endphp
 <nav class="pc-sidebar">
     <div class="navbar-wrapper">
-        <div class="p-2 bg-light-secondary text-center d-flex justify-content-center align-items-center border border-bottom border-2">
+        <div
+            class="p-2 bg-light-secondary text-center d-flex justify-content-center align-items-center border border-bottom border-2">
             <a href="../dashboard/index.html" class="b-brand text-primary">
                 <img src="../assets/images/logo-utem.PNG" alt="logo" width="100" />
             </a>
@@ -22,8 +23,14 @@
                 <div class="flex-grow-1 text-center">
                     <h6 class="mb-0">{{ auth()->user()->student_name }}</h6>
                     <small class="d-block">
-                        {{ auth()->user()->programmes->prog_code }}
-                        ({{ auth()->user()->programmes->prog_mode }})
+                        {{ auth()->user()->programmes->prog_name }}
+                    </small>
+                    <small class="d-block">
+                        @if (auth()->user()->programmes->prog_mode == 'FT')
+                            <div class="badge bg-info">Full Time</div>
+                        @else
+                            <div class="badge bg-warning">Part Time</div>
+                        @endif
                     </small>
                 </div>
             </div>
@@ -45,34 +52,16 @@
                 </li>
 
                 <li class="pc-item pc-hasmenu">
-                    <a href="javascript:void(0)" class="pc-link">
+                    <a href="{{ route('student-programme-overview') }}" class="pc-link">
                         <span class="pc-micon">
                             <i class="fas fa-book-open pc-icon"></i>
                         </span>
-                        <span class="pc-mtext">[ Course Registered ]</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        <span class="pc-mtext">
+                            {{ auth()->user()->programmes->prog_code }}
+                            ({{ auth()->user()->programmes->prog_mode }})
+                        </span>
                     </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item">
-                            <a class="pc-link" href="">
-                                Action 1
-                            </a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="">
-                                Action 2
-                            </a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="">
-                                Action 3
-                            </a>
-                        </li>
-
-
-                    </ul>
                 </li>
-
             </ul>
         </div>
     </div>

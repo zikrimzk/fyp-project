@@ -100,6 +100,22 @@
             object-fit: cover;
         }
 
+        @keyframes flash {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .badge-flash {
+            animation: flash 1s infinite;
+        }
+
         @media (max-width: 768px) {
             .nav-tabs.profile-tabs .nav-item {
                 flex: 1 1 auto;
