@@ -67,6 +67,7 @@ class SubmissionController extends Controller
                     'd.isRequired'
                 )
                 ->get();
+            // dd($document);
 
             $activity = DB::table('activities')
                 ->where('id', $id)
