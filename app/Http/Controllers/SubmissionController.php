@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Models\Faculty;
+use App\Models\Student;
+use App\Models\Semester;
+use App\Models\Programme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SubmissionController extends Controller
 {
-    /* Student Activity Index */
+    /* Programme Overview [Student] [UNFINISHED] */
     public function studentProgrammeOverview()
     {
         try {
@@ -57,7 +61,7 @@ class SubmissionController extends Controller
             $document = DB::table('procedures as a')
                 ->join('programmes as b', 'a.programme_id', '=', 'b.id')
                 ->join('activities as c', 'a.activity_id', '=', 'c.id')
-                ->join('documents as d', 'c.id', '=', 'd.activity_id') 
+                ->join('documents as d', 'c.id', '=', 'd.activity_id')
                 ->where('b.id', auth()->user()->programme_id)
                 ->where('c.id', $id)
                 ->select(
@@ -79,6 +83,24 @@ class SubmissionController extends Controller
                 'docs' => $document,
 
 
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500);
+        }
+    }
+
+    /* Submission Management [Staff] */
+    public function submissionManagement()
+    {
+        try {
+            return view('staff.submission.submission-management', [
+                'title' => 'Submission Management',
+                'studs' => Student::all(),
+                'current_sem' => Semester::where('sem_status', 1)->first()->sem_label ?? 'N/A',
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
             ]);
         } catch (Exception $e) {
             dd($e->getMessage());

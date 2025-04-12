@@ -36,8 +36,6 @@ Route::prefix('auth')->group(function () {
     Route::post('/request/reset-password', [AuthenticateController::class, 'requestResetPassword'])->name('request-reset-password');
     Route::get('/form-reset-password-{token}-{email}-{userType}', [AuthenticateController::class, 'resetPasswordForm'])->name('reset-password-form');
     Route::post('/reset-password-{token}-{email}-{userType}', [AuthenticateController::class, 'resetPassword'])->name('reset-password');
-
-
 });
 
 
@@ -57,8 +55,6 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::get('/programme-overview', [SubmissionController::class, 'studentProgrammeOverview'])->name('student-programme-overview');
     Route::get('/view-document/{filename}', [SOPController::class, 'viewMaterialFile'])->where('filename', '.*')->name('student-view-material-get');
     Route::get('/activity-submission-list-{id}', [SubmissionController::class, 'activitySubmissionList'])->name('student-activity-submission-list');
-
-
 });
 
 
@@ -103,6 +99,12 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-supervision-{id}', [SupervisionController::class, 'updateSupervision'])->name('update-supervision-post');
     Route::get('/delete-supervision-{id}', [SupervisionController::class, 'deleteSupervision'])->name('delete-supervision-get');
     Route::get('/export-supervision-data', [SupervisionController::class, 'exportSupervision'])->name('export-supervision-get');
+
+    // Submission
+
+    /* Submission Management */
+    Route::get('/submission-management', [SubmissionController::class, 'submissionManagement'])->name('submission-management');
+
 
     // Standard Operation Procedure (SOP)
 

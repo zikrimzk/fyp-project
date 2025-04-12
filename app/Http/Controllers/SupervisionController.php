@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use Carbon\Carbon;
 use App\Models\Staff;
 use App\Models\Faculty;
 use App\Models\Student;
 use App\Models\Semester;
 use App\Models\Programme;
+use App\Models\Submission;
 use App\Models\Supervision;
 use Illuminate\Support\Str;
 use App\Exports\StaffExport;
@@ -245,7 +247,7 @@ class SupervisionController extends Controller
             }
 
             /* CREATE STUDENT DATA */
-            Student::create([
+            $student = Student::create([
                 'student_name' => Str::headline($validated['student_name']),
                 'student_matricno' => Str::upper($validated['student_matricno']),
                 'student_email' => Str::lower($validated['student_email']),
@@ -260,9 +262,53 @@ class SupervisionController extends Controller
                 'programme_id' => $validated['programme_id'],
             ]);
 
+            /* ASSIGN SUBMISSION TO STUDENT [ASSUMING ALL PRE-REQUISITES DATA ARE SET] */
+            $this->assignSubmission(Str::upper($validated['student_matricno']));
+
+
             return back()->with('success', 'Student added successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error adding student: ' . $e->getMessage());
+        }
+    }
+
+    private function assignSubmission($matric_no)
+    {
+        try {
+            // GET DATA
+            $data = DB::table('procedures as a')
+                ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                ->join('documents as c', 'b.id', '=', 'c.activity_id')
+                ->join('programmes as d', 'a.programme_id', '=', 'd.id')
+                ->join('students as e', 'd.id', '=', 'e.programme_id')
+                ->where('e.student_matricno', '=', $matric_no)
+                ->where('e.student_status', '=', 1)
+                ->select('e.student_matricno', 'a.timeline_week', 'e.id as student_id', 'c.id as document_id')
+                ->get();
+
+            // GET CURRENT SEMESTER
+            $currSem = Semester::where('sem_status', 1)->first();
+
+            // ASSIGN SUBMISSION 
+            foreach ($data as $sub) {
+                $checkExists = Submission::where('student_id', $sub->student_id)
+                    ->where('document_id', $sub->document_id)
+                    ->exists();
+
+                if (!$checkExists) {
+                    $days = $sub->timeline_week * 7;
+                    $submissionDate = Carbon::parse($currSem->sem_startdate)->addDays($days);
+                    Submission::create([
+                        'submission_document' => '-',
+                        'submission_duedate' => $submissionDate,
+                        'submission_status' => 1,
+                        'student_id' => $sub->student_id,
+                        'document_id' => $sub->document_id,
+                    ]);
+                }
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error assigning student with submission: ' . $e->getMessage());
         }
     }
 
@@ -447,11 +493,11 @@ class SupervisionController extends Controller
 
             return response()->json([
                 'message' => 'All selected student status has been updated successfully !',
-            ],200);
+            ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'Oops! Something went wrong. Please try again later.',
-            ],500);
+            ], 500);
         }
     }
 

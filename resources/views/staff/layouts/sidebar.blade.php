@@ -90,6 +90,28 @@
                 <li class="pc-item pc-hasmenu">
                     <a href="javascript:void(0)" class="pc-link">
                         <span class="pc-micon">
+                            <i class="fas fa-upload pc-icon"></i>
+                        </span>
+                        <span class="pc-mtext">Submission</span>
+                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                    </a>
+                    <ul class="pc-submenu">
+                        <li class="pc-item">
+                            <a class="pc-link" href="{{ route('submission-management') }}">
+                                Submission Management
+                            </a>
+                        </li>
+                        <li class="pc-item">
+                            <a class="pc-link" href="javascript:void(0)">
+                                e-PG Suggestion System
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="pc-item pc-hasmenu">
+                    <a href="javascript:void(0)" class="pc-link">
+                        <span class="pc-micon">
                             <i class="fas fa-bezier-curve pc-icon"></i>
                         </span>
                         <span class="pc-mtext">SOP</span>
