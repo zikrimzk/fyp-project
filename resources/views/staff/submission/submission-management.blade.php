@@ -58,7 +58,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Student Management ] start -->
+                <!-- [ Submission Management ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
@@ -178,7 +178,10 @@
                                             <th><input type="checkbox" id="select-all" class="form-check-input"></th>
                                             <th scope="col">Student</th>
                                             <th scope="col">Document</th>
+                                            <th scope="col">Due Date</th>
+                                            <th scope="col">Submission Date</th>
                                             <th scope="col">Status</th>
+                                            <th scope="col">Activity</th>
                                             <th scope="col">Action</th>
                                         </tr>
                                     </thead>
@@ -484,235 +487,94 @@
                 </div>
                 <!-- [ Change Status Modal ] end -->
 
-                @foreach ($studs as $upd)
+                @foreach ($subs as $upd)
                     <!-- [ Update Modal ] start -->
-                    <form action="{{ route('update-student-post', Crypt::encrypt($upd->id)) }}"
-                        enctype="multipart/form-data" method="POST">
+                    <form action="" method="POST">
                         @csrf
-                        <div class="modal fade" id="updateModal-{{ $upd->id }}" tabindex="-1"
-                            aria-labelledby="updateModal" aria-hidden="true">
-                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal fade" id="settingModal-{{ $upd->submission_id }}" tabindex="-1"
+                            aria-labelledby="settingModal" aria-hidden="true">
+                            <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
 
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="updateModalLabel">Update Student</h5>
+                                        <h5 class="modal-title" id="settingModalLabel">Submission Setting</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
                                         <div class="row">
-                                            <!-- Photo Input -->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="d-grid justify-content-center align-items-center mb-3 profile-container"
-                                                    data-id="{{ $upd->id }}">
-                                                    <div class="user-upload avatar-s w-100">
-                                                        <img src="{{ empty($upd->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->student_directory . '/photo/' . $upd->student_photo) }}"
-                                                            alt="Profile Photo" width="150" height="150"
-                                                            class="previewImage"
-                                                            data-default="{{ asset('assets/images/user/default-profile-1.jpg') }}">
-                                                        <label for="student_photo_up_{{ $upd->id }}"
-                                                            class="img-avtar-upload">
-                                                            <i class="ti ti-camera f-24 mb-1"></i>
-                                                            <span>Upload</span>
-                                                        </label>
-                                                        <input type="file" id="student_photo_up_{{ $upd->id }}"
-                                                            name="student_photo_up" class="d-none student_photo"
-                                                            accept="image/*" />
-                                                    </div>
-                                                    <label for="student_photo_up_{{ $upd->id }}"
-                                                        class="btn btn-sm btn-secondary mt-2 mb-2">
-                                                        Change Photo
-                                                    </label>
-                                                    <button type="button" class="btn btn-sm btn-light-danger resetPhoto">
-                                                        Reset Photo
-                                                    </button>
-                                                    <input type="hidden" name="remove_photo" class="remove_photo"
-                                                        value="0">
-                                                </div>
-                                                @error('student_photo_up')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
 
-                                            <h5 class="mb-2">A. Personal Information</h5>
-
-                                            <!-- Name Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="student_name_up" class="form-label">Student Name <span
-                                                            class="text-danger">*</span></label>
-                                                    <input type="text"
-                                                        class="form-control @error('student_name_up') is-invalid @enderror"
-                                                        id="student_name_up" name="student_name_up"
-                                                        placeholder="Enter Student Name" value="{{ $upd->student_name }}"
-                                                        required>
-                                                    @error('student_name_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <!-- Gender Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="student_gender_up" class="form-label">Gender
-                                                        <span class="text-danger">*</span></label>
-                                                    <select name="student_gender_up" id="student_gender_up"
-                                                        class="form-select @error('student_gender_up') is-invalid @enderror"
-                                                        required>
-                                                        <option value="" selected>- Select Gender -</option>
-                                                        @if ($upd->student_gender == 'male')
-                                                            <option value="male" selected>Male</option>
-                                                            <option value="female">Female</option>
-                                                        @elseif($upd->student_gender == 'female')
-                                                            <option value="male">Male</option>
-                                                            <option value="female" selected>Female</option>
-                                                        @else
-                                                            <option value="male">Male</option>
-                                                            <option value="female">Female</option>
-                                                        @endif
-                                                    </select>
-                                                    @error('student_gender_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <!-- Email Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="student_email_up" class="form-label">Email
-                                                        <span class="text-danger">*</span></label>
-                                                    <input type="email"
-                                                        class="form-control @error('student_email_up') is-invalid @enderror"
-                                                        id="student_email_up" name="student_email_up"
-                                                        placeholder="Enter Student Email"
-                                                        value="{{ $upd->student_email }}" required>
-                                                    @error('student_email')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <!-- Phone No Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="student_phoneno_up" class="form-label">
-                                                        Phone Number
-                                                    </label>
-                                                    <div class="input-group">
-                                                        <span class="input-group-text">+60</span>
-                                                        <input type="text"
-                                                            class="form-control @error('student_phoneno_up') is-invalid @enderror phonenum-input"
-                                                            placeholder="Enter Phone Number" name="student_phoneno_up"
-                                                            value="{{ $upd->student_phoneno }}" maxlength="11" />
-                                                        @error('student_phoneno_up')
-                                                            <div class="invalid-feedback">{{ $message }}</div>
-                                                        @enderror
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- Address Input -->
+                                            <!-- Student Name -->
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
-                                                    <label for="student_address_up" class="form-label">
-                                                        Address
-                                                    </label>
-                                                    <textarea name="student_address_up" id="student_address_up" placeholder="Enter Address" cols="10"
-                                                        rows="5" class="form-control @error('student_address_up') is-invalid @enderror">{{ $upd->student_address }}</textarea>
-                                                    @error('student_address_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
+                                                    <label for="student_name_up" class="form-label">Student Name </label>
+                                                    <input type="text" class="form-control"
+                                                        value="{{ $upd->student_name }}" readonly>
+                                                </div>
+                                            </div>
+                                            <!-- Document Name -->
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                                <div class="mb-3">
+                                                    <label for="student_email_up" class="form-label">Document</label>
+                                                    <input type="text" class="form-control"
+                                                        value="{{ $upd->document_name }}" readonly>
                                                 </div>
                                             </div>
 
-                                            <h5 class="mb-2 mt-3">B. Academic Information</h5>
-
-                                            <!-- Matric No Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                            <!-- Due Date Input -->
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
-                                                    <label for="student_matricno" class="form-label">Matric Number
+                                                    <label for="submission_duedate_up" class="form-label">Due Date
                                                         <span class="text-danger">*</span>
                                                     </label>
-                                                    <input type="text"
-                                                        class="form-control @error('student_matricno_up') is-invalid @enderror matric-input"
-                                                        id="student_matricno_up" name="student_matricno_up"
+                                                    <input type="datetime-local"
+                                                        class="form-control @error('submission_duedate_up') is-invalid @enderror"
+                                                        id="submission_duedate_up" name="submission_duedate_up"
                                                         placeholder="Enter Matric Number"
-                                                        value="{{ $upd->student_matricno }}" required>
-                                                    @error('student_matricno_up')
+                                                        value="{{ $upd->submission_duedate }}" required>
+                                                    @error('submission_duedate_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <!-- Semester Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="semester_id_up" class="form-label">Semester
-                                                    </label>
-                                                    <input type="text"
-                                                        class="form-control @error('semester_id_up') is-invalid @enderror"
-                                                        id="semester_id_up" placeholder="Current Semester"
-                                                        value="{{ Semester::where('id', $upd->semester_id)->first()->sem_label ?? '-' }}"
-                                                        readonly>
-                                                    @error('semester_id_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <!--Programme Input-->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="programme_id_up" class="form-label">Programme <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="programme_id_up" id="programme_id_up"
-                                                        class="form-select @error('programme_id_up') is-invalid @enderror"
-                                                        required>
-                                                        <option value="">- Select Programme -</option>
-                                                        @foreach ($progs as $prog)
-                                                            @if ($upd->programme_id == $prog->id)
-                                                                <option value="{{ $prog->id }}" selected>
-                                                                    {{ $prog->prog_code }} ({{ $prog->prog_mode }})
-                                                                </option>
-                                                            @else
-                                                                <option value="{{ $prog->id }}">
-                                                                    {{ $prog->prog_code }} ({{ $prog->prog_mode }})
-                                                                </option>
-                                                            @endif
-                                                        @endforeach
-                                                    </select>
-                                                    @error('programme_id_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
+
                                             <!-- Status Input -->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
-                                                    <label for="student_status_up" class="form-label">
+                                                    <label for="submission_status_up" class="form-label">
                                                         Status <span class="text-danger">*</span>
                                                     </label>
                                                     <select
                                                         class="form-select @error('student_status') is-invalid @enderror"
-                                                        name="student_status_up" id="student_status_up" required>
+                                                        name="submission_status_up" id="submission_status_up" required>
                                                         <option value ="" selected>- Select Status -</option>
-                                                        <option value ="1"
-                                                            @if ($upd->student_status == 1) selected @endif>Active
-                                                        </option>
-                                                        <option value ="2"
-                                                            @if ($upd->student_status == 2) selected @endif>Inactive
-                                                        </option>
-                                                        <option value ="3"
-                                                            @if ($upd->student_status == 3) selected @endif>Extend
-                                                        </option>
-                                                        <option value ="4"
-                                                            @if ($upd->student_status == 4) selected @endif>Terminate
-                                                        </option>
-                                                        <option value ="5"
-                                                            @if ($upd->student_status == 5) selected @endif>Withdraw
-                                                        </option>
+                                                        @if ($upd->submission_status == 1 || $upd->submission_status == 2)
+                                                            <option value ="1"
+                                                                @if ($upd->submission_status == 1) selected @endif>Open
+                                                                Submission
+                                                            </option>
+                                                            <option value ="2"
+                                                                @if ($upd->submission_status == 2) selected @endif>Locked
+                                                            </option>
+                                                        @elseif($upd->submission_status == 3)
+                                                            <option value ="3" selected>
+                                                                Submitted
+                                                            </option>
+                                                        @elseif($upd->submission_status == 4)
+                                                            <option value ="2">
+                                                                Locked
+                                                            </option>
+                                                            <option value ="4"selected>
+                                                                Overdue
+                                                            </option>
+                                                        @endif
                                                     </select>
-                                                    @error('student_status_up')
+                                                    @error('submission_status_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
                                             </div>
+
 
                                         </div>
                                     </div>
@@ -731,7 +593,7 @@
                     <!-- [ Update Modal ] end -->
 
                     <!-- [ Delete Modal ] start -->
-                    <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-keyboard="false"
+                    <div class="modal fade" id="deleteModal-{{ $upd->submission_id }}" data-bs-keyboard="false"
                         tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
@@ -744,8 +606,8 @@
 
                                         </div>
                                         <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Are you sure ?</h2>
+                                            <div class="d-flex justify-content-center align-items-center text-center">
+                                                <h2>Are you sure to delete this submission ?</h2>
                                             </div>
                                         </div>
                                         <div class="col-sm-12 mb-3">
@@ -757,7 +619,7 @@
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-student-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
+                                                <a href="{{ route('delete-student-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 1]) }}"
                                                     class="btn btn-danger w-100">Delete Anyways</a>
                                             </div>
                                         </div>
@@ -767,51 +629,9 @@
                         </div>
                     </div>
                     <!-- [ Delete Modal ] end -->
-
-                    <!-- [ Disable Modal ] start -->
-                    <div class="modal fade" id="disableModal-{{ $upd->id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-alert-circle text-warning" style="font-size: 100px"></i>
-                                            </div>
-
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Account Inactivation</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">
-                                                    Oops! You can't delete this student.
-                                                    However, you can inactive it instead. Would you like to proceed with
-                                                    inactivating this student?
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-student-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
-                                                    class="btn btn-warning w-100">Inactive</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- [ Disable Modal ] end -->
                 @endforeach
 
-                <!-- [ Student Management ] end -->
+                <!-- [ Submission Management ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -849,8 +669,21 @@
                         name: 'document_name'
                     },
                     {
+                        data: 'submission_duedate',
+                        name: 'submission_duedate'
+                    },
+                    {
+                        data: 'submission_date',
+                        name: 'submission_date'
+                    },
+                    {
                         data: 'submission_status',
                         name: 'submission_status'
+                    },
+                    {
+                        data: 'activity_name',
+                        name: 'activity_name',
+                        visible: false
                     },
                     {
                         data: 'action',
@@ -859,27 +692,17 @@
                         searchable: false
                     },
                 ],
-                rowCallback: function(row, data, index) {
-                    if (data.is_group_header) {
-                        // Style group header row
-                        $(row).addClass('bg-light fw-semibold text-primary');
-
-                        // Merge all cells into one and show the group title
-                        $('td', row).eq(0).html(
-                            `<div class="ps-3 py-2 text-center">
-                                <span class="fw-semibold me-2">
-                                    ${data.activity_name}
-                                </span>
-                                <span class="badge bg-primary">
-                                    ${data.document_count}
-                                </span>
-                            </div>`
-                        );
-
-                        $('td:gt(0)', row).remove();
-                        $('td:eq(0)', row).attr('colspan', 5);
+                rowGroup: {
+                    dataSrc: 'activity_name',
+                    startRender: function(rows, group) {
+                        return $('<tr/>')
+                            .append(
+                                '<td colspan="7" class="bg-light text-center"> <span class="fw-semibold text-uppercase me-2">' +
+                                group + '</span> <span class="badge bg-primary">' + rows.count() +
+                                '</span></td>');
                     }
-                },
+                }
+
             });
 
 

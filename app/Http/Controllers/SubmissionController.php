@@ -97,28 +97,30 @@ class SubmissionController extends Controller
     public function submissionManagement(Request $req)
     {
         try {
-            if ($req->ajax()) {
+            $data = DB::table('students as a')
+                ->join('semesters as b', 'b.id', '=', 'a.semester_id')
+                ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+                ->join('submissions as d', 'd.student_id', '=', 'a.id')
+                ->join('documents as e', 'e.id', '=', 'd.document_id')
+                ->join('activities as f', 'f.id', '=', 'e.activity_id')
+                ->select(
+                    'a.*',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'd.id as submission_id',
+                    'd.submission_status',
+                    'd.submission_date',
+                    'd.submission_duedate',
+                    'd.submission_document',
+                    'e.id as document_id',
+                    'e.doc_name as document_name',
+                    'f.id as activity_id',
+                    'f.act_name as activity_name'
+                )
+                ->orderBy('f.act_name');
 
-                $data = DB::table('students as a')
-                    ->join('semesters as b', 'b.id', '=', 'a.semester_id')
-                    ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-                    ->join('submissions as d', 'd.student_id', '=', 'a.id')
-                    ->join('documents as e', 'e.id', '=', 'd.document_id')
-                    ->join('activities as f', 'f.id', '=', 'e.activity_id')
-                    ->select(
-                        'a.*',
-                        'b.sem_label',
-                        'c.prog_code',
-                        'c.prog_mode',
-                        'd.id as submission_id',
-                        'd.submission_status',
-                        'd.submission_date',
-                        'd.submission_duedate',
-                        'e.id as document_id',
-                        'e.doc_name as document_name',
-                        'f.id as activity_id',
-                        'f.act_name as activity_name'
-                    );
+            if ($req->ajax()) {
 
                 // Apply filters
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
@@ -136,31 +138,13 @@ class SubmissionController extends Controller
 
                 $data = $data->get();
 
-                $groupedData = collect($data)
-                    ->groupBy('activity_name')
-                    ->sortKeys()
-                    ->flatMap(function ($items, $activity) {
-                       
-                        $items = $items->sortBy(['activity_id', 'student_name']);
-
-                        $header = (object)[
-                            'is_group_header' => true,
-                            'activity_name' => $activity,
-                            'document_count' => count($items),
-                        ];
-
-                        return collect([$header])->concat($items);
-                    });
-
-                $table = DataTables::of($groupedData)->addIndexColumn();
+                $table = DataTables::of($data)->addIndexColumn();
 
                 $table->addColumn('checkbox', function ($row) {
-                    if (!empty($row->is_group_header)) return ''; 
                     return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->id . '">';
                 });
 
                 $table->addColumn('student_photo', function ($row) {
-                    if (!empty($row->is_group_header)) return '';
                     $mode = match ($row->prog_mode) {
                         "FT" => "Full-Time",
                         "PT" => "Part-Time",
@@ -186,22 +170,24 @@ class SubmissionController extends Controller
                     ';
                 });
 
-                $table->addColumn('document_name', function ($row) {
-                    if (!empty($row->is_group_header)) return '';
-                    return $row->document_name;
+                $table->addColumn('submission_duedate', function ($row) {
+                    return Carbon::parse($row->submission_duedate)->format('d M Y g:i A') ?? '-';
+                });
+
+                $table->addColumn('submission_date', function ($row) {
+                    return  $row->submission_date == null ? '-' : Carbon::parse($row->submission_date)->format('d M Y g:i A');
                 });
 
                 $table->addColumn('submission_status', function ($row) {
-                    if (!empty($row->is_group_header)) return '';
                     $status = '';
 
-                    if ($row->student_status == 1) {
+                    if ($row->submission_status == 1) {
                         $status = '<span class="badge bg-light-warning">' . 'No Attempt' . '</span>';
-                    } elseif ($row->student_status == 2) {
+                    } elseif ($row->submission_status == 2) {
                         $status = '<span class="badge bg-danger">' . 'Locked' . '</span>';
-                    } elseif ($row->student_status == 3) {
+                    } elseif ($row->submission_status == 3) {
                         $status = '<span class="badge bg-light-success">' . 'Submitted' . '</span>';
-                    } elseif ($row->student_status == 4) {
+                    } elseif ($row->submission_status == 4) {
                         $status = '<span class="badge bg-light-danger">' . 'Overdue' . '</span>';
                     } else {
                         $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
@@ -211,42 +197,50 @@ class SubmissionController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
-                    if (!empty($row->is_group_header)) return '';
-                    $isReferenced = false;
-                    $isReferenced = DB::table('supervisions')->where('student_id', $row->id)->exists();
-
-                    $buttonEdit =
+                    $htmlOne =
                         '
-                            <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
-                                data-bs-target="#updateModal-' . $row->id . '">
-                                <i class="ti ti-edit f-20"></i>
-                            </a>
+                            <div class="dropdown">
+                                <a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none"
+                                    href="javascript: void(0)" data-bs-toggle="dropdown" 
+                                    aria-haspopup="true" aria-expanded="false">
+                                    <i class="material-icons-two-tone f-18">more_vert</i>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end">
                         ';
-
-                    if (!$isReferenced) {
-                        $buttonRemove =
-                            '
-                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
-                                    data-bs-target="#deleteModal-' . $row->id . '">
-                                    <i class="ti ti-trash f-20"></i>
-                                </a>
-                            ';
+                    if ($row->submission_document != '-') {
+                        $htmlTwo =
+                            '          
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#settingModal-' . $row->submission_id . '">
+                                        Setting 
+                                    </a>
+                                    <a class="dropdown-item" href="#">Download</a>  
+                        ';
                     } else {
-
-                        $buttonRemove =
-                            '
-                                <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-warning ' . ($row->student_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
-                                    data-bs-target="#disableModal-' . $row->id . '">
-                                    <i class="ti ti-trash f-20"></i>
-                                </a>
-                            ';
+                        $htmlTwo =
+                            '           
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#settingModal-' . $row->submission_id . '">
+                                        Setting
+                                    </a>
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal-' . $row->submission_id . '">
+                                        Delete
+                                    </a>
+                        ';
                     }
 
-                    return $buttonEdit . $buttonRemove;
+                    $htmlThree =
+                        '
+                                </div>
+                            </div>
+                        ';
+
+                    return $htmlOne . $htmlTwo . $htmlThree;
                 });
 
 
-                $table->rawColumns(['checkbox', 'student_photo', 'document_name', 'submission_status', 'action']);
+                $table->rawColumns(['checkbox', 'student_photo', 'submission_duedate', 'submission_date', 'submission_status', 'action']);
 
                 return $table->make(true);
             }
@@ -257,6 +251,7 @@ class SubmissionController extends Controller
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
+                'subs' => $data->get()
             ]);
         } catch (Exception $e) {
             dd($e->getMessage());

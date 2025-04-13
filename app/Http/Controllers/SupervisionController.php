@@ -283,7 +283,7 @@ class SupervisionController extends Controller
                 ->join('students as e', 'd.id', '=', 'e.programme_id')
                 ->where('e.student_matricno', '=', $matric_no)
                 ->where('e.student_status', '=', 1)
-                ->select('e.student_matricno', 'a.timeline_week','a.init_status', 'e.id as student_id', 'c.id as document_id')
+                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'e.id as student_id', 'c.id as document_id')
                 ->get();
 
             // GET CURRENT SEMESTER
@@ -307,6 +307,8 @@ class SupervisionController extends Controller
                     ]);
                 }
             }
+
+            return back()->with('success', 'Submission has been assigned successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error assigning student with submission: ' . $e->getMessage());
         }

@@ -33,7 +33,9 @@
     <!-- [DataTables Scripts] -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="../assets/js/plugins/dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/rowgroup/1.3.1/js/dataTables.rowGroup.min.js"></script>
+    <script src="https://cdn.datatables.net/rowgroup/1.5.1/js/dataTables.rowGroup.js"></script>
+    <script src="https://cdn.datatables.net/rowgroup/1.5.1/js/rowGroup.dataTables.js"></script>
+
     <script src="../assets/js/plugins/dataTables.bootstrap5.min.js"></script>
     <script src="../assets/js/plugins/dataTables.responsive.min.js"></script>
     <script src="../assets/js/plugins/responsive.bootstrap5.min.js"></script>
