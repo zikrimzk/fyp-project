@@ -283,7 +283,7 @@ class SupervisionController extends Controller
                 ->join('students as e', 'd.id', '=', 'e.programme_id')
                 ->where('e.student_matricno', '=', $matric_no)
                 ->where('e.student_status', '=', 1)
-                ->select('e.student_matricno', 'a.timeline_week', 'e.id as student_id', 'c.id as document_id')
+                ->select('e.student_matricno', 'a.timeline_week','a.init_status', 'e.id as student_id', 'c.id as document_id')
                 ->get();
 
             // GET CURRENT SEMESTER
@@ -301,7 +301,7 @@ class SupervisionController extends Controller
                     Submission::create([
                         'submission_document' => '-',
                         'submission_duedate' => $submissionDate,
-                        'submission_status' => 1,
+                        'submission_status' => $sub->init_status,
                         'student_id' => $sub->student_id,
                         'document_id' => $sub->document_id,
                     ]);

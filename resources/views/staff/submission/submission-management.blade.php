@@ -69,7 +69,8 @@
                                     id="clearSelectionBtn">
                                     0 selected <i class="ti ti-x f-18"></i>
                                 </button>
-                                <a href="" class="btn btn-outline-primary d-flex align-items-center gap-2"
+                                <a href="{{ route('assign-student-submission') }}"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2"
                                     title="Re-assign Submission">
                                     <i class="ti ti-refresh f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
@@ -85,7 +86,6 @@
                                         Change Status
                                     </span>
                                 </button>
-
                             </div>
                             <!-- [ Option Section ] end -->
 
@@ -176,9 +176,8 @@
                                     <thead>
                                         <tr>
                                             <th><input type="checkbox" id="select-all" class="form-check-input"></th>
-                                            <th scope="col">Name</th>
-                                            <th scope="col">Matric No</th>
-                                            <th scope="col">Programme</th>
+                                            <th scope="col">Student</th>
+                                            <th scope="col">Document</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>
                                         </tr>
@@ -422,78 +421,6 @@
                     </div>
                 </form>
                 <!-- [ Add Modal ] end -->
-
-                <!-- [ Import Modal ] start -->
-                <form action="{{ route('import-student-post') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal fade" id="importModal" data-bs-keyboard="false" tabindex="-1"
-                        aria-hidden="true">
-                        <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="mb-0">Import Data</h5>
-                                    <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
-                                        data-bs-dismiss="modal">
-                                        <i class="ti ti-x f-20"></i>
-                                    </a>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <!-- File Input Section -->
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="mb-1">
-                                                <!-- Alert Note -->
-                                                <div class="alert alert-warning d-flex align-items-center" role="alert">
-                                                    <i class="ti ti-alert-circle me-2"></i>
-                                                    <div>
-                                                        <strong>Note:</strong> Please make sure to follow the template
-                                                        provided.
-                                                        <br> DO NOT CHANGE THE HEAD TITLE IN THE TEMPLATE.
-                                                    </div>
-                                                </div>
-                                                <div class="alert alert-info d-flex align-items-center" role="alert">
-                                                    <i class="ti ti-file-text me-2"></i>
-                                                    <div>
-                                                        The supported file formats are <strong>CSV (*.csv)</strong> or
-                                                        <strong>Excel (*.xlsx)</strong> only.
-                                                    </div>
-                                                </div>
-
-                                                <!-- Custom File Upload -->
-                                                <div class="mt-3">
-                                                    <div class="input-group">
-                                                        <input class="form-control d-none" type="file"
-                                                            name="student_file" id="file" accept=".csv, .xlsx"
-                                                            required>
-                                                        <input type="text" class="form-control" id="file-name"
-                                                            placeholder="No file chosen" readonly>
-                                                        <button class="btn btn-primary" type="button" id="browse-btn">
-                                                            <i class="ti ti-upload"></i> Browse
-                                                        </button>
-                                                    </div>
-                                                    <div class="fw-normal mt-2 text-muted">Click <a
-                                                            href="{{ asset('assets/excel-template/e-PGS_STUDENT_REGISTRATION_TEMPLATE.xlsx') }}"
-                                                            class="link-primary" target="_blank"
-                                                            download="e-PGS_STUDENT_REGISTRATION_TEMPLATE.xlsx">here</a> to
-                                                        download the template</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer justify-content-end">
-                                    <div class="flex-grow-1 text-end">
-                                        <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                            data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary" id="import-btn" disabled>Import
-                                            Data</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-                <!-- [ Import Modal ] end -->
 
                 <!-- [ Change Status Modal ] start -->
                 <div class="modal fade" id="changestatusModal" data-bs-keyboard="false" tabindex="-1"
@@ -892,57 +819,69 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            // DATATABLE : STUDENT
+            // DATATABLE : SUBMISSION
             var table = $('.data-table').DataTable({
                 processing: false,
                 serverSide: true,
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('student-management') }}",
+                    url: "{{ route('submission-management') }}",
                     data: function(d) {
-                        d.faculty = $('#fil_faculty_id')
-                            .val();
-                        d.programme = $('#fil_programme_id')
-                            .val();
-                        d.semester = $('#fil_semester_id')
-                            .val();
-                        d.status = $('#fil_status')
-                            .val();
+                        d.faculty = $('#fil_faculty_id').val();
+                        d.programme = $('#fil_programme_id').val();
+                        d.semester = $('#fil_semester_id').val();
+                        d.status = $('#fil_status').val();
                     }
                 },
                 columns: [{
                         data: 'checkbox',
                         name: 'checkbox',
                         orderable: false,
-                        searchable: false,
+                        searchable: false
                     },
                     {
                         data: 'student_photo',
-                        name: 'student_photo',
+                        name: 'student_photo'
                     },
                     {
-                        data: 'student_matricno',
-                        name: 'student_matricno'
+                        data: 'document_name',
+                        name: 'document_name'
                     },
                     {
-                        data: 'student_programme',
-                        name: 'student_programme'
-                    },
-                    {
-                        data: 'student_status',
-                        name: 'student_status'
+                        data: 'submission_status',
+                        name: 'submission_status'
                     },
                     {
                         data: 'action',
                         name: 'action',
                         orderable: false,
                         searchable: false
-                    }
+                    },
                 ],
+                rowCallback: function(row, data, index) {
+                    if (data.is_group_header) {
+                        // Style group header row
+                        $(row).addClass('bg-light fw-semibold text-primary');
 
+                        // Merge all cells into one and show the group title
+                        $('td', row).eq(0).html(
+                            `<div class="ps-3 py-2 text-center">
+                                <span class="fw-semibold me-2">
+                                    ${data.activity_name}
+                                </span>
+                                <span class="badge bg-primary">
+                                    ${data.document_count}
+                                </span>
+                            </div>`
+                        );
 
+                        $('td:gt(0)', row).remove();
+                        $('td:eq(0)', row).attr('colspan', 5);
+                    }
+                },
             });
+
 
             var modalToShow = "{{ session('modal') }}";
             if (modalToShow) {

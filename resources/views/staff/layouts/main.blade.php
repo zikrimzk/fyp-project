@@ -29,16 +29,20 @@
     <!-- [Template CSS Files] -->
     <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
     <link rel="stylesheet" href="../assets/css/style-preset.css" />
+
+    <!-- [DataTables Scripts] -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="../assets/js/plugins/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/rowgroup/1.3.1/js/dataTables.rowGroup.min.js"></script>
+    <script src="../assets/js/plugins/dataTables.bootstrap5.min.js"></script>
+    <script src="../assets/js/plugins/dataTables.responsive.min.js"></script>
+    <script src="../assets/js/plugins/responsive.bootstrap5.min.js"></script>
     <!-- [DataTables Style Links] -->
     <link rel="stylesheet" href="../assets/css/plugins/dataTables.bootstrap5.min.css" />
     <link rel="stylesheet" href="../assets/css/plugins/responsive.bootstrap5.min.css" />
     <link href="../assets/css/plugins/animate.min.css" rel="stylesheet" type="text/css" />
-    <!-- [DataTables Scripts] -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="../assets/js/plugins/dataTables.min.js"></script>
-    <script src="../assets/js/plugins/dataTables.bootstrap5.min.js"></script>
-    <script src="../assets/js/plugins/dataTables.responsive.min.js"></script>
-    <script src="../assets/js/plugins/responsive.bootstrap5.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.3.1/css/rowGroup.dataTables.min.css">
+
     <!-- [Flatpickr Style Links] -->
     <link rel="stylesheet" href="../assets/css/plugins/flatpickr.min.css" />
     <!-- [Flatpickr Scripts] -->
@@ -148,6 +152,7 @@
     <script src="../assets/js/fonts/custom-font.js"></script>
     <script src="../assets/js/pcoded.js"></script>
     <script src="../assets/js/plugins/feather.min.js"></script>
+
 
     <script>
         $(document).ready(function() {
