@@ -12,6 +12,7 @@ use App\Models\Submission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Validator;
 
 class SubmissionController extends Controller
 {
@@ -297,6 +298,50 @@ class SubmissionController extends Controller
             return back()->with('success', 'Submission has been assigned successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error assigning students with submission: ' . $e->getMessage());
+        }
+    }
+
+    public function updateSubmission(Request $req, $id)
+    {
+        $id = decrypt($id);
+
+        $validator = Validator::make($req->all(), [
+            'submission_status_up' => 'required|integer|in:1,2,3,4',
+            'submission_duedate_up' => 'required',
+        ], [], [
+            'submission_status_up' => 'submission status',
+            'submission_duedate_up' => 'submission due date',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('modal', 'settingModal-' . $id);
+        }
+
+        try {
+
+            Submission::where('id', $id)->update([
+                'submission_status' => $req->submission_status_up,
+                'submission_duedate' => $req->submission_duedate_up
+            ]);
+
+            return back()->with('success', 'Submission has been updated successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error updating submission: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteSubmission(Request $req, $id)
+    {
+        try {
+            $id = decrypt($id);
+            Submission::where('id', $id)->delete();
+
+            return back()->with('success', 'Submission has been deleted successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error deleting submission: ' . $e->getMessage());
         }
     }
 }

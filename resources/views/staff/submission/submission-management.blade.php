@@ -489,7 +489,7 @@
 
                 @foreach ($subs as $upd)
                     <!-- [ Update Modal ] start -->
-                    <form action="" method="POST">
+                    <form action="{{ route('update-submission-post', Crypt::encrypt($upd->submission_id)) }}" method="POST">
                         @csrf
                         <div class="modal fade" id="settingModal-{{ $upd->submission_id }}" tabindex="-1"
                             aria-labelledby="settingModal" aria-hidden="true">
@@ -619,7 +619,7 @@
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-student-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 1]) }}"
+                                                <a href="{{ route('delete-submission-get', ['id' => Crypt::encrypt($upd->submission_id)]) }}"
                                                     class="btn btn-danger w-100">Delete Anyways</a>
                                             </div>
                                         </div>

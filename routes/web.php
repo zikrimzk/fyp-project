@@ -105,7 +105,8 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     /* Submission Management */
     Route::get('/submission-management', [SubmissionController::class, 'submissionManagement'])->name('submission-management');
     Route::get('/assign-student-submission', [SubmissionController::class, 'assignSubmission'])->name('assign-student-submission');
-
+    Route::post('/update-submission-{id}', [SubmissionController::class, 'updateSubmission'])->name('update-submission-post');
+    Route::get('/delete-submission-{id}', [SubmissionController::class, 'deleteSubmission'])->name('delete-submission-get');
 
 
     // Standard Operation Procedure (SOP)
