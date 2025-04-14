@@ -133,8 +133,12 @@ class SubmissionController extends Controller
                 if ($req->has('semester') && !empty($req->input('semester'))) {
                     $data->where('semester_id', $req->input('semester'));
                 }
-                if ($req->has('status') && !empty($req->input('status'))) {
-                    $data->where('student_status', $req->input('status'));
+                if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
+                    // If a status is selected (even status 5), show it
+                    $data->where('submission_status', $req->input('status'));
+                } else {
+                    // Default: exclude status 5
+                    $data->where('submission_status', '!=', 5);
                 }
 
                 $data = $data->get();
@@ -142,7 +146,7 @@ class SubmissionController extends Controller
                 $table = DataTables::of($data)->addIndexColumn();
 
                 $table->addColumn('checkbox', function ($row) {
-                    return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->id . '">';
+                    return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->submission_id . '">';
                 });
 
                 $table->addColumn('student_photo', function ($row) {
@@ -190,6 +194,8 @@ class SubmissionController extends Controller
                         $status = '<span class="badge bg-light-success">' . 'Submitted' . '</span>';
                     } elseif ($row->submission_status == 4) {
                         $status = '<span class="badge bg-light-danger">' . 'Overdue' . '</span>';
+                    } elseif ($row->submission_status == 5) {
+                        $status = '<span class="badge bg-secondary">' . 'Archive' . '</span>';
                     } else {
                         $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
                     }
@@ -226,7 +232,7 @@ class SubmissionController extends Controller
                                     </a>
                                     <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
                                         data-bs-target="#deleteModal-' . $row->submission_id . '">
-                                        Delete
+                                        Archive
                                     </a>
                         ';
                     }
@@ -306,7 +312,7 @@ class SubmissionController extends Controller
         $id = decrypt($id);
 
         $validator = Validator::make($req->all(), [
-            'submission_status_up' => 'required|integer|in:1,2,3,4',
+            'submission_status_up' => 'required|integer|in:1,2,3,4,5',
             'submission_duedate_up' => 'required',
         ], [], [
             'submission_status_up' => 'submission status',
@@ -333,15 +339,83 @@ class SubmissionController extends Controller
         }
     }
 
-    public function deleteSubmission(Request $req, $id)
+    public function deleteSubmission($id)
     {
         try {
             $id = decrypt($id);
-            Submission::where('id', $id)->delete();
+            // Submission::where('id', $id)->delete();
+            Submission::where('id', $id)->update(['submission_status'=> 5]);
 
             return back()->with('success', 'Submission has been deleted successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error deleting submission: ' . $e->getMessage());
+        }
+    }
+
+    public function updateMultipleSubmission(Request $req)
+    {
+        $submissionIds = $req->input('selectedIds');
+    
+        $rules = [];
+        $attributes = [];
+    
+        if ($req->has('submission_status_ups') && !empty($req->input('submission_status_ups'))) {
+            $rules['submission_status_ups'] = 'integer|in:1,2,3,4,5';
+            $attributes['submission_status_ups'] = 'submission status';
+        }
+    
+        if ($req->has('submission_duedate_ups') && !empty($req->input('submission_duedate_ups'))) {
+            $rules['submission_duedate_ups'] = 'nullable';
+            $attributes['submission_duedate_ups'] = 'submission due date';
+        }
+    
+        if (!empty($rules)) {
+            $validator = Validator::make($req->all(), $rules, [], $attributes);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors(),
+                    'message' => 'Validation failed.',
+                ], 422);
+            }
+        }
+    
+        try {
+            $updateData = [];
+    
+            if ($req->has('submission_status_ups') && !empty($req->input('submission_status_ups'))) {
+                $updateData['submission_status'] = $req->input('submission_status_ups');
+            }
+    
+            if ($req->has('submission_duedate_ups') && !empty($req->input('submission_duedate_ups'))) {
+                $updateData['submission_duedate'] = $req->input('submission_duedate_ups');
+            }
+    
+            if (!empty($updateData)) {
+                Submission::whereIn('id', $submissionIds)->update($updateData);
+            }
+    
+            return response()->json([
+                'message' => 'All selected submissions have been updated successfully!',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Oops! Error updating submissions: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    
+
+    public function deleteMultipleSubmission(Request $req)
+    {
+        try {
+            $submissionIds = $req->input('selectedIds');
+            // Submission::whereIn('id', $submissionIds)->delete();
+            Submission::whereIn('id', $submissionIds)->update(['submission_status'=> 5]);
+
+            return back()->with('success', 'Selected submission has been deleted successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error deleting submissions: ' . $e->getMessage());
         }
     }
 }

@@ -71,7 +71,7 @@
                                 </button>
                                 <a href="{{ route('assign-student-submission') }}"
                                     class="btn btn-outline-primary d-flex align-items-center gap-2"
-                                    title="Re-assign Submission">
+                                    title="Re-assign Submission" id="reassignBtn">
                                     <i class="ti ti-refresh f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
                                         Re-assign Submission
@@ -79,11 +79,20 @@
                                 </a>
                                 <button type="button"
                                     class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                    data-bs-toggle="modal" data-bs-target="#changestatusModal" id="changestatusBtn"
-                                    title="Change Status">
-                                    <i class="ti ti-user f-18"></i>
+                                    data-bs-toggle="modal" data-bs-target="#multipleSettingModal"
+                                    id="updatemultipleModalBtn" title="Update Submission">
+                                    <i class="ti ti-edit-circle f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
-                                        Change Status
+                                        Update Submission
+                                    </span>
+                                </button>
+                                <button type="button"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    data-bs-toggle="modal" data-bs-target="#deleteMultipleModal" id="deletemultipleModalBtn"
+                                    title="Delete Submission">
+                                    <i class="ti ti-archive f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Archive Submission
                                     </span>
                                 </button>
                             </div>
@@ -159,8 +168,11 @@
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
-                                            <option value="1">Active</option>
-                                            <option value="2">Inactive</option>
+                                            <option value="1">No Attempt</option>
+                                            <option value="2">Locked</option>
+                                            <option value="3">Submitted</option>
+                                            <option value="4">Overdue</option>
+                                            <option value="5">Archive</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-danger btn-sm"
                                             id="clearStatusFilter">
@@ -191,305 +203,114 @@
                     </div>
                 </div>
 
-                <!-- [ Add Modal ] start -->
-                <form action="{{ route('add-student-post') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal fade" id="addModal" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="mb-0">Add Student</h5>
-                                    <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
-                                        data-bs-dismiss="modal">
-                                        <i class="ti ti-x f-20"></i>
-                                    </a>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <!-- Photo Input -->
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="d-grid justify-content-center align-items-center mb-3">
-                                                <div class="user-upload avatar-s w-100">
-                                                    <img src="{{ asset('assets/images/user/default-profile-1.jpg') }}"
-                                                        alt="Profile Photo" width="150" height="150"
-                                                        class="previewImageAdd"
-                                                        data-default="{{ asset('assets/images/user/default-profile-1.jpg') }}">
-                                                    <label for="student_photo" class="img-avtar-upload">
-                                                        <i class="ti ti-camera f-24 mb-1"></i>
-                                                        <span>Upload</span>
-                                                    </label>
-                                                    <input type="file" id="student_photo" name="student_photo"
-                                                        class="d-none" accept="image/*" />
-                                                </div>
-                                                <label for="student_photo" class="btn btn-sm btn-secondary mt-2 mb-2">
-                                                    Change Photo
-                                                </label>
-                                                <button type="button" id="resetPhoto"
-                                                    class="btn btn-sm btn-light-danger">
-                                                    Reset Photo
-                                                </button>
-                                            </div>
-                                            @error('student_photo')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
-                                        <h5 class="mb-2">A. Personal Information</h5>
-
-                                        <!-- Name Input -->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="student_name" class="form-label">Student Name <span
-                                                        class="text-danger">*</span></label>
-                                                <input type="text"
-                                                    class="form-control @error('student_name') is-invalid @enderror"
-                                                    id="student_name" name="student_name"
-                                                    placeholder="Enter Student Name" value="{{ old('student_name') }}"
-                                                    required>
-                                                @error('student_name')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!-- Gender Input -->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="student_gender" class="form-label">Gender
-                                                    <span class="text-danger">*</span></label>
-                                                <select name="student_gender" id="student_gender"
-                                                    class="form-select @error('student_gender') is-invalid @enderror"
-                                                    required>
-                                                    <option value="" selected>- Select Gender -</option>
-                                                    @if (old('student_gender') == 'male')
-                                                        <option value="male" selected>Male</option>
-                                                        <option value="female">Female</option>
-                                                    @elseif(old('student_gender') == 'female')
-                                                        <option value="">- Select Gender -</option>
-                                                        <option value="male">Male</option>
-                                                        <option value="female" selected>Female</option>
-                                                    @else
-                                                        <option value="male">Male</option>
-                                                        <option value="female">Female</option>
-                                                    @endif
-                                                </select>
-                                                @error('student_gender')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!-- Email Input -->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="student_email" class="form-label">Email
-                                                    <span class="text-danger">*</span></label>
-                                                <input type="email"
-                                                    class="form-control @error('student_email') is-invalid @enderror"
-                                                    id="student_email" name="student_email"
-                                                    placeholder="Enter Student Email" value="{{ old('student_email') }}"
-                                                    required>
-                                                @error('student_email')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!-- Phone No Input -->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="student_phoneno" class="form-label">
-                                                    Phone Number
-                                                </label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">+60</span>
-                                                    <input type="text"
-                                                        class="form-control @error('student_phoneno') is-invalid @enderror phonenum-input"
-                                                        placeholder="Enter Phone Number" name="student_phoneno"
-                                                        value="{{ old('student_phoneno') }}" maxlength="11" />
-                                                    @error('student_phoneno')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- Address Input -->
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="mb-3">
-                                                <label for="student_address" class="form-label">
-                                                    Address
-                                                </label>
-                                                <textarea name="student_address" id="student_address" placeholder="Enter Address" cols="10" rows="5"
-                                                    class="form-control @error('student_address') is-invalid @enderror">{{ old('student_address') }}</textarea>
-                                                @error('student_address')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-
-                                        <h5 class="mb-2 mt-3">B. Academic Information</h5>
-
-                                        <!-- Matric No Input -->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="student_matricno" class="form-label">Matric Number
-                                                    <span class="text-danger">*</span>
-                                                </label>
-                                                <input type="text"
-                                                    class="form-control @error('student_matricno') is-invalid @enderror matric-input"
-                                                    id="student_matricno" name="student_matricno"
-                                                    placeholder="Enter Matric Number"
-                                                    value="{{ old('student_matricno') }}" required>
-                                                @error('student_matricno')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!-- Semester Input -->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="semester_id" class="form-label">Semester
-                                                </label>
-                                                <input type="text"
-                                                    class="form-control @error('semester_id') is-invalid @enderror"
-                                                    id="semester_id" name="semester_id" placeholder="Current Semester"
-                                                    value="{{ $current_sem }}" readonly>
-                                                @error('semester_id')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!--Programme Input-->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="programme_id" class="form-label">Programme <span
-                                                        class="text-danger">*</span></label>
-                                                <select name="programme_id" id="programme_id"
-                                                    class="form-select @error('programme_id') is-invalid @enderror"
-                                                    required>
-                                                    <option value="">- Select Programme -</option>
-                                                    @foreach ($progs as $prog)
-                                                        @if (old('programme_id') == $prog->id)
-                                                            <option value="{{ $prog->id }}" selected>
-                                                                {{ $prog->prog_code }} ({{ $prog->prog_mode }})
-                                                            </option>
-                                                        @else
-                                                            <option value="{{ $prog->id }}">
-                                                                {{ $prog->prog_code }} ({{ $prog->prog_mode }})
-                                                            </option>
-                                                        @endif
-                                                    @endforeach
-                                                </select>
-                                                @error('programme_id')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!-- Status Input -->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">
-                                                    Status <span class="text-danger">*</span>
-                                                </label>
-                                                <select class="form-select @error('student_status') is-invalid @enderror"
-                                                    name="student_status" required>
-                                                    <option value ="" selected>- Select Status -</option>
-                                                    <option value ="1"
-                                                        @if (old('student_status') == 1) selected @endif>Active</option>
-                                                    <option value ="2"
-                                                        @if (old('student_status') == 2) selected @endif>Inactive
-                                                    </option>
-                                                    <option value ="3"
-                                                        @if (old('student_status') == 3) selected @endif>Extend</option>
-                                                    <option value ="4"
-                                                        @if (old('student_status') == 4) selected @endif>Terminate
-                                                    </option>
-                                                    <option value ="5"
-                                                        @if (old('student_status') == 5) selected @endif>Withdraw
-                                                    </option>
-                                                </select>
-                                                @error('student_status')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer justify-content-end">
-                                    <div class="flex-grow-1 text-end">
-                                        <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                            data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Add Student</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-                <!-- [ Add Modal ] end -->
-
-                <!-- [ Change Status Modal ] start -->
-                <div class="modal fade" id="changestatusModal" data-bs-keyboard="false" tabindex="-1"
+                <!-- [ Multiple Submission Update Modal ] start -->
+                <div class="modal fade" id="multipleSettingModal" tabindex="-1" aria-labelledby="multipleSettingModal"
                     aria-hidden="true">
                     <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                         <div class="modal-content">
+
                             <div class="modal-header">
-                                <h5 class="mb-0">Change Status</h5>
-                                <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
-                                    data-bs-dismiss="modal">
-                                    <i class="ti ti-x f-20"></i>
-                                </a>
+                                <h5 class="modal-title" id="multipleSettingModalLabel">Submission Setting</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <div class="row">
-                                    <!-- Status Input Section -->
+                                    <!-- Due Date Input -->
                                     <div class="col-sm-12 col-md-12 col-lg-12">
-                                        <!-- Custom File Upload -->
                                         <div class="mb-3">
-                                            <label class="form-label">
-                                                Status <span class="text-danger">*</span>
+                                            <label for="submission_duedate_ups" class="form-label">
+                                                Due Date
                                             </label>
-                                            <select
-                                                class="form-select @error('student_status_change') is-invalid @enderror"
-                                                name="student_status_change" id="student_status_change" required>
-                                                <option value ="" selected>- Select Status -</option>
-                                                <option value ="1" @if (old('student_status_change') == 1) selected @endif>
-                                                    Active
-                                                </option>
-                                                <option value ="2" @if (old('student_status_change') == 2) selected @endif>
-                                                    Inactive
-                                                </option>
-                                                <option value ="3" @if (old('student_status_change') == 3) selected @endif>
-                                                    Extend
-                                                </option>
-                                                <option value ="4" @if (old('student_status_change') == 4) selected @endif>
-                                                    Terminate
-                                                </option>
-                                                <option value ="5" @if (old('student_status_change') == 5) selected @endif>
-                                                    Withdraw
-                                                </option>
-                                            </select>
-                                            @error('student_status_change')
+                                            <input type="datetime-local"
+                                                class="form-control @error('submission_duedate_ups') is-invalid @enderror"
+                                                id="submission_duedate_ups" name="submission_duedate_ups">
+                                            @error('submission_duedate_ups')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
-
                                     </div>
+
+                                    <!-- Status Input -->
+                                    <div class="col-sm-12 col-md-12 col-lg-12">
+                                        <div class="mb-3">
+                                            <label for="submission_status_ups" class="form-label">
+                                                Status
+                                            </label>
+                                            <select
+                                                class="form-select @error('submission_status_ups') is-invalid @enderror"
+                                                name="submission_status_ups" id="submission_status_ups">
+                                                <option value ="" selected>- Select Status -</option>
+                                                <option value ="1">Open Submission</option>
+                                                <option value ="2">Locked</option>
+                                                <option value ="5">Archive</option>
+                                            </select>
+                                            @error('submission_status_ups')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                             <div class="modal-footer justify-content-end">
                                 <div class="flex-grow-1 text-end">
                                     <button type="reset" class="btn btn-link-danger btn-pc-default"
                                         data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary" id="updatestatusBtn" disabled>Update
-                                        Status</button>
+                                    <button type="submit" class="btn btn-primary" id="multipleSubmissionUpdateBtn">Save
+                                        Changes</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Multiple Submission Update Modal ] end -->
+
+                <!-- [ Archive Multiple Submission Modal ] start -->
+                <div class="modal fade" id="deleteMultipleModal" data-bs-keyboard="false" tabindex="-1"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-sm-12 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center mb-3">
+                                            <i class="ti ti-archive text-secondary" style="font-size: 100px"></i>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="d-flex justify-content-center align-items-center text-center">
+                                            <h2>Are you sure to archive this submission ?</h2>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12 mb-3">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <p class="fw-normal f-18 text-center">You can revert this action.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="d-flex justify-content-between gap-3 align-items-center">
+                                            <button type="reset" class="btn btn-light btn-pc-default w-50"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-secondary w-100"
+                                                id="multipleSubmissionDeleteBtn">
+                                                Archive
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- [ Change Status Modal ] end -->
+                <!-- [ Archive Multiple Submission Modal ] end -->
 
                 @foreach ($subs as $upd)
                     <!-- [ Update Modal ] start -->
-                    <form action="{{ route('update-submission-post', Crypt::encrypt($upd->submission_id)) }}" method="POST">
+                    <form action="{{ route('update-submission-post', Crypt::encrypt($upd->submission_id)) }}"
+                        method="POST">
                         @csrf
                         <div class="modal fade" id="settingModal-{{ $upd->submission_id }}" tabindex="-1"
                             aria-labelledby="settingModal" aria-hidden="true">
@@ -545,7 +366,7 @@
                                                         Status <span class="text-danger">*</span>
                                                     </label>
                                                     <select
-                                                        class="form-select @error('student_status') is-invalid @enderror"
+                                                        class="form-select @error('submission_status_up') is-invalid @enderror"
                                                         name="submission_status_up" id="submission_status_up" required>
                                                         <option value ="" selected>- Select Status -</option>
                                                         @if ($upd->submission_status == 1 || $upd->submission_status == 2)
@@ -568,6 +389,9 @@
                                                                 Overdue
                                                             </option>
                                                         @endif
+                                                        <option value ="5">
+                                                            Archive
+                                                        </option>
                                                     </select>
                                                     @error('submission_status_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -592,7 +416,7 @@
                     </form>
                     <!-- [ Update Modal ] end -->
 
-                    <!-- [ Delete Modal ] start -->
+                    <!-- [ Archive Modal ] start -->
                     <div class="modal fade" id="deleteModal-{{ $upd->submission_id }}" data-bs-keyboard="false"
                         tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
@@ -601,18 +425,18 @@
                                     <div class="row">
                                         <div class="col-sm-12 mb-4">
                                             <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-trash text-danger" style="font-size: 100px"></i>
+                                                <i class="ti ti-archive text-secondary" style="font-size: 100px"></i>
                                             </div>
 
                                         </div>
                                         <div class="col-sm-12">
                                             <div class="d-flex justify-content-center align-items-center text-center">
-                                                <h2>Are you sure to delete this submission ?</h2>
+                                                <h2>Are you sure to archive this submission ?</h2>
                                             </div>
                                         </div>
                                         <div class="col-sm-12 mb-3">
                                             <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">This action cannot be undone.</p>
+                                                <p class="fw-normal f-18 text-center">You can revert this action.</p>
                                             </div>
                                         </div>
                                         <div class="col-sm-12">
@@ -620,7 +444,7 @@
                                                 <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                     data-bs-dismiss="modal">Cancel</button>
                                                 <a href="{{ route('delete-submission-get', ['id' => Crypt::encrypt($upd->submission_id)]) }}"
-                                                    class="btn btn-danger w-100">Delete Anyways</a>
+                                                    class="btn btn-secondary w-100">Archive</a>
                                             </div>
                                         </div>
                                     </div>
@@ -628,7 +452,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- [ Delete Modal ] end -->
+                    <!-- [ Archive Modal ] end -->
                 @endforeach
 
                 <!-- [ Submission Management ] end -->
@@ -705,7 +529,6 @@
 
             });
 
-
             var modalToShow = "{{ session('modal') }}";
             if (modalToShow) {
                 var modalElement = $("#" + modalToShow);
@@ -755,99 +578,16 @@
                 $('#fil_status').val('').change();
             });
 
-            // STUDENT PHOTO FUNCTIONS
-            var defaultImageAdd = $(".previewImageAdd").data("default");
-            var defaultImage = $(".previewImage").data("default");
-
-            $('#student_photo').on('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-
-                    reader.onload = function(e) {
-                        $('.previewImageAdd').attr('src', e.target.result).show();
-                    };
-
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            $("#resetPhoto").on("click", function() {
-                $(".previewImageAdd").attr("src", defaultImageAdd);
-                $("#student_photo").val("");
-            });
-
-            $(document).on('change', '.student_photo', function(event) {
-                var file = event.target.files[0];
-                var reader = new FileReader();
-                var container = $(this).closest('.profile-container');
-                var userId = container.data('id');
-
-                if (file) {
-                    reader.onload = function(e) {
-                        $('.profile-container[data-id="' + userId + '"] .previewImage').attr('src', e
-                            .target
-                            .result);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            $(document).on("click", ".resetPhoto", function() {
-                var container = $(this).closest('.profile-container');
-                var defaultImage = container.find('.previewImage').data("default");
-
-                console.log("Reset button clicked for user:", container.data('id')); // Debugging
-
-                if (defaultImage) {
-                    container.find('.previewImage').attr('src', defaultImage);
-                } else {
-                    console.error("Default image not found for user " + container.data('id'));
-                }
-
-                container.find('.student_photo').val(null); // Reset input file
-                container.find('.remove_photo').val("1"); // Tandakan gambar perlu dipadam
-            });
-
-            // FORMATTING
-            $('.phonenum-input').on('input', function() {
-                let original = $(this).val();
-                let numericOnly = original.replace(/\D/g, '');
-
-                if (numericOnly.length > 11) {
-                    numericOnly = numericOnly.substring(0, 11);
-                }
-
-                $(this).val(numericOnly);
-            });
-
-            $('.matric-input').on('input', function() {
-                $(this).val($(this).val().toUpperCase());
-            });
-
-            // IMPORT : STUDENT
-            $('#browse-btn').on('click', function() {
-                $('#file').click();
-            });
-
-            $('#file').on('change', function() {
-                let fileName = $(this).val().split("\\").pop();
-                $('#file-name').val(fileName || "No file chosen");
-                $('#import-btn').prop('disabled', false);
-            });
-
             /* SELECT : MULTIPLE STUDENT SELECT */
-            const addBtn = $("#addStudentBtn");
-            const importBtn = $("#importBtn");
-            const excelExportBtn = $("#excelExportBtn");
+            const reassignBtn = $("#reassignBtn");
             const clearBtn = $("#clearSelectionBtn");
-            const cstatusBtn = $("#changestatusBtn");
-            const updateStatusBtn = $("#updatestatusBtn");
-
+            const updatemultipleModalBtn = $("#updatemultipleModalBtn");
+            const deletemultipleModalBtn = $('#deletemultipleModalBtn');
+            const multipleSubmissionUpdateBtn = $("#multipleSubmissionUpdateBtn");
+            const multipleSubmissionDeleteBtn = $("#multipleSubmissionDeleteBtn");
 
             let selectedIds = new Set();
 
-            // Handle "Select All" checkbox
             $("#select-all").on("change", function() {
                 let isChecked = $(this).prop("checked");
 
@@ -864,7 +604,6 @@
                 toggleSelectButton();
             });
 
-            // Handle individual checkbox selection
             $(document).on("change", ".user-checkbox", function() {
                 let id = $(this).val();
                 if ($(this).prop("checked")) {
@@ -875,7 +614,6 @@
                 toggleSelectButton();
             });
 
-            // Restore checkbox states after DataTables refresh
             $('.data-table').on("draw.dt", function() {
                 $(".user-checkbox").each(function() {
                     let id = $(this).val();
@@ -894,9 +632,9 @@
             function toggleSelectButton() {
                 let selectedCount = selectedIds.size;
 
-                addBtn.toggleClass("d-none", selectedIds.size !== 0);
-                importBtn.toggleClass("d-none", selectedIds.size !== 0);
-                cstatusBtn.toggleClass("d-none", selectedIds.size === 0);
+                reassignBtn.toggleClass("d-none", selectedIds.size !== 0);
+                updatemultipleModalBtn.toggleClass("d-none", selectedIds.size === 0);
+                deletemultipleModalBtn.toggleClass("d-none", selectedIds.size === 0);
 
                 if (selectedCount > 0) {
                     clearBtn.removeClass("d-none").html(
@@ -913,71 +651,85 @@
                 toggleSelectButton();
             });
 
-            excelExportBtn.click(function(e) {
-                e.preventDefault();
-                let selectedIds = $(".user-checkbox:checked").map(function() {
-                    return $(this).val();
-                }).get();
-
-                let url = "{{ route('export-student-get') }}";
-
-                if (selectedIds.length > 0) {
-                    url += "?ids=" + selectedIds.join(",");
-                }
-                window.location.href = url;
-            });
-
-            $('#student_status_change').on('change', function() {
-                let status = $(this).val();
-                if (status != '') {
-                    updateStatusBtn.prop('disabled', false);
-                } else {
-                    updateStatusBtn.prop('disabled', true);
-                }
-            })
-
-            updateStatusBtn.on('click', function() {
+            multipleSubmissionUpdateBtn.on('click', function() {
                 const $button = $(this);
-                const status = $('#student_status_change').val();
+                const duedate = $('#submission_duedate_ups').val();
+                const status = $('#submission_status_ups').val();
 
                 let selectedIds = $(".user-checkbox:checked").map(function() {
                     return $(this).val();
                 }).get();
 
-
                 if (selectedIds.length > 0) {
-
-                    // Disable the button and show loading text
-                    // $button.prop('disabled', true).html(
-                    //     '<span class="spinner-border spinner-border-sm me-2"></span>Saving...'
-                    // );
+                    $button.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-2"></span>Saving...'
+                    );
 
                     $.ajax({
-                        url: "{{ route('update-student-status-post') }}",
+                        url: "{{ route('update-multiple-submission-post') }}",
                         type: "POST",
                         data: {
                             selectedIds: selectedIds,
-                            status: status,
+                            submission_status_ups: status,
+                            submission_duedate_ups: duedate,
                             _token: "{{ csrf_token() }}"
                         },
                         success: function(response) {
-                            $('#changestatusModal').modal('hide');
+                            $('#submission_duedate_ups').val('');
+                            $('#submission_status_ups').val('');
+                            $('#multipleSettingModal').modal('hide');
+                            clearBtn.trigger('click');
                             $('.data-table').DataTable().ajax
                                 .reload();
-                            $('#student_status_change').val("");
-                            updateStatusBtn.prop('disabled', true);
-
 
                         },
                         error: function(xhr) {
                             console.error(xhr.responseText);
-                            alert("Error: " + xhr.responseText);
+                            alert("Error: " + (xhr.responseJSON?.message || xhr.responseText));
+                        },
+                        complete: function() {
+                            $button.prop('disabled', false).html('Save Changes');
                         }
                     });
                 } else {
-                    alert(
-                        "No valid data selected for status change."
+                    alert("No valid data selected for submission update.");
+                }
+            });
+
+            multipleSubmissionDeleteBtn.on('click', function() {
+                const $button = $(this);
+
+                let selectedIds = $(".user-checkbox:checked").map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (selectedIds.length > 0) {
+                    $button.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-2"></span>Deleting...'
                     );
+
+                    $.ajax({
+                        url: "{{ route('delete-multiple-submission-post') }}",
+                        type: "POST",
+                        data: {
+                            selectedIds: selectedIds,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+                            $('#deleteMultipleModal').modal('hide');
+                            clearBtn.trigger('click');
+                            $('.data-table').DataTable().ajax.reload();
+                        },
+                        error: function(xhr) {
+                            console.error(xhr.responseText);
+                            alert("Error: " + (xhr.responseJSON?.message || xhr.responseText));
+                        },
+                        complete: function() {
+                            $button.prop('disabled', false).html('Delete Anyways');
+                        }
+                    });
+                } else {
+                    alert("No valid data selected for submission update.");
                 }
             });
 
