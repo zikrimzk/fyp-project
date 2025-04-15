@@ -369,7 +369,7 @@
                                                         class="form-select @error('submission_status_up') is-invalid @enderror"
                                                         name="submission_status_up" id="submission_status_up" required>
                                                         <option value ="" selected>- Select Status -</option>
-                                                        @if ($upd->submission_status == 1 || $upd->submission_status == 2)
+                                                        @if ($upd->submission_status == 1 || $upd->submission_status == 2 || $upd->submission_status == 5)
                                                             <option value ="1"
                                                                 @if ($upd->submission_status == 1) selected @endif>Open
                                                                 Submission
@@ -389,7 +389,7 @@
                                                                 Overdue
                                                             </option>
                                                         @endif
-                                                        <option value ="5">
+                                                        <option value ="5" @if ($upd->submission_status == 5) selected @endif>
                                                             Archive
                                                         </option>
                                                     </select>

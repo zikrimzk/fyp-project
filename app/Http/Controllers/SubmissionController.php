@@ -223,6 +223,14 @@ class SubmissionController extends Controller
                                     </a>
                                     <a class="dropdown-item" href="#">Download</a>  
                         ';
+                    } elseif ($row->submission_status == 5) {
+                        $htmlTwo =
+                            '           
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#settingModal-' . $row->submission_id . '">
+                                        Setting
+                                    </a>
+                        ';
                     } else {
                         $htmlTwo =
                             '           
@@ -344,7 +352,7 @@ class SubmissionController extends Controller
         try {
             $id = decrypt($id);
             // Submission::where('id', $id)->delete();
-            Submission::where('id', $id)->update(['submission_status'=> 5]);
+            Submission::where('id', $id)->update(['submission_status' => 5]);
 
             return back()->with('success', 'Submission has been deleted successfully.');
         } catch (Exception $e) {
@@ -355,23 +363,23 @@ class SubmissionController extends Controller
     public function updateMultipleSubmission(Request $req)
     {
         $submissionIds = $req->input('selectedIds');
-    
+
         $rules = [];
         $attributes = [];
-    
+
         if ($req->has('submission_status_ups') && !empty($req->input('submission_status_ups'))) {
             $rules['submission_status_ups'] = 'integer|in:1,2,3,4,5';
             $attributes['submission_status_ups'] = 'submission status';
         }
-    
+
         if ($req->has('submission_duedate_ups') && !empty($req->input('submission_duedate_ups'))) {
             $rules['submission_duedate_ups'] = 'nullable';
             $attributes['submission_duedate_ups'] = 'submission due date';
         }
-    
+
         if (!empty($rules)) {
             $validator = Validator::make($req->all(), $rules, [], $attributes);
-    
+
             if ($validator->fails()) {
                 return response()->json([
                     'errors' => $validator->errors(),
@@ -379,22 +387,22 @@ class SubmissionController extends Controller
                 ], 422);
             }
         }
-    
+
         try {
             $updateData = [];
-    
+
             if ($req->has('submission_status_ups') && !empty($req->input('submission_status_ups'))) {
                 $updateData['submission_status'] = $req->input('submission_status_ups');
             }
-    
+
             if ($req->has('submission_duedate_ups') && !empty($req->input('submission_duedate_ups'))) {
                 $updateData['submission_duedate'] = $req->input('submission_duedate_ups');
             }
-    
+
             if (!empty($updateData)) {
                 Submission::whereIn('id', $submissionIds)->update($updateData);
             }
-    
+
             return response()->json([
                 'message' => 'All selected submissions have been updated successfully!',
             ], 200);
@@ -404,14 +412,14 @@ class SubmissionController extends Controller
             ], 500);
         }
     }
-    
+
 
     public function deleteMultipleSubmission(Request $req)
     {
         try {
             $submissionIds = $req->input('selectedIds');
             // Submission::whereIn('id', $submissionIds)->delete();
-            Submission::whereIn('id', $submissionIds)->update(['submission_status'=> 5]);
+            Submission::whereIn('id', $submissionIds)->update(['submission_status' => 5]);
 
             return back()->with('success', 'Selected submission has been deleted successfully.');
         } catch (Exception $e) {
