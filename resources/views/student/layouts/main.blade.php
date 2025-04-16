@@ -43,6 +43,10 @@
     <link rel="stylesheet" href="../assets/css/plugins/flatpickr.min.css" />
     <!-- [Flatpickr Scripts] -->
     <script src="../assets/js/plugins/flatpickr.min.js"></script>
+    <!-- Uppy CSS -->
+    <link href="https://releases.transloadit.com/uppy/v3.3.1/uppy.min.css" rel="stylesheet">
+    <!-- Uppy JS (non-module version) -->
+    <script src="https://releases.transloadit.com/uppy/v3.3.1/uppy.min.js"></script>
 
     <style>
         .data-table td {
@@ -164,6 +168,9 @@
     <script src="../assets/js/fonts/custom-font.js"></script>
     <script src="../assets/js/pcoded.js"></script>
     <script src="../assets/js/plugins/feather.min.js"></script>
+
+    <!-- [Uppy Scripts] -->
+    <script src="../assets/js/plugins/uppy.min.js"></script>
 
     <script>
         $(document).ready(function() {

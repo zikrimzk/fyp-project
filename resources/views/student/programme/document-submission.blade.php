@@ -78,8 +78,24 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body p-4">
+
                             <div id="submission_status">
-                                
+                                <!-- [ Option Section ] start -->
+                                <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                    <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                        id="addSubmissionBtn" title="Add Submission">
+                                        <i class="ti ti-plus f-18"></i>
+                                        <span class="d-none d-sm-inline me-2">
+                                            Add Submission
+                                        </span>
+                                    </button>
+                                </div>
+                                <!-- [ Option Section ] end -->
+
+                                <h4 class="mb-4">Submission Status</h4>
+
+                                <hr>
+
                                 <div class="table-responsive">
                                     <table
                                         class="table text-nowrap table-striped table-hover table-bordered border-primary">
@@ -125,6 +141,33 @@
                                 </div>
                             </div>
 
+                            <div id="submission_area">
+
+                                <h4 class="mb-4">Add Submission</h4>
+
+                                <hr>
+
+                                <div class="pc-uppy" id="uploadSubmissionArea"> </div>
+
+                                <!-- [ Option Section ] start -->
+                                <div class="mb-5 d-flex justify-content-start align-items-center gap-2">
+                                    <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                        id="saveChangesBtn" title="Save Changes">
+                                        <span>
+                                            Save Changes
+                                        </span>
+                                    </button>
+                                    <button type="button" class="btn btn-light-danger d-flex align-items-center gap-2"
+                                        id="cancelSubmissionAreaBtn" title="Save Changes">
+                                        <span>
+                                            Cancel
+                                        </span>
+                                    </button>
+                                </div>
+                                <!-- [ Option Section ] end -->
+
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -134,4 +177,20 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            $('#addSubmissionBtn').on('click', function() {
+                $("#submission_area").removeClass('d-none');
+                $('#submission_status').addClass("d-none");
+            });
+
+            $('#cancelSubmissionAreaBtn').on('click', function() {
+                $("#submission_area").addClass('d-none');
+                $('#submission_status').removeClass("d-none");
+            });
+
+        });
+    </script>
 @endsection
