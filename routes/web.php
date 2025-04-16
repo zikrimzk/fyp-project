@@ -54,7 +54,9 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     /* Programme Management */
     Route::get('/programme-overview', [SubmissionController::class, 'studentProgrammeOverview'])->name('student-programme-overview');
     Route::get('/view-document/{filename}', [SOPController::class, 'viewMaterialFile'])->where('filename', '.*')->name('student-view-material-get');
-    Route::get('/activity-submission-list-{id}', [SubmissionController::class, 'activitySubmissionList'])->name('student-activity-submission-list');
+
+    /* Submission Management */
+    Route::get('/document-submission-{id}', [SubmissionController::class, 'documentSubmission'])->name('student-document-submission');
 });
 
 

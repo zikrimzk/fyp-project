@@ -25,39 +25,62 @@ class SubmissionController extends Controller
                 ->join('programmes as b', 'a.programme_id', '=', 'b.id')
                 ->join('activities as c', 'a.activity_id', '=', 'c.id')
                 ->where('b.id', auth()->user()->programme_id)
+                ->orderBy('act_seq')
                 ->get();
 
-            // dd($programmeActivity);
             $document = DB::table('procedures as a')
                 ->join('programmes as b', 'a.programme_id', '=', 'b.id')
                 ->join('activities as c', 'a.activity_id', '=', 'c.id')
-                ->leftJoin('documents as d', 'c.id', '=', 'd.activity_id')
+                ->join('documents as d', 'c.id', '=', 'd.activity_id')
+                ->join('submissions as e', 'd.id', '=', 'e.document_id')
                 ->where('b.id', auth()->user()->programme_id)
+                ->where('e.student_id', auth()->user()->id)
                 ->select(
                     'c.id as activity_id',
                     'c.act_name as activity_name',
                     'd.doc_name as document_name',
-                    'd.isRequired'
+                    'd.isRequired',
+                    'e.id as submission_id',
+                    'e.submission_status',
+                    'e.submission_duedate',
+                    'e.submission_document',
+                    'e.submission_date',
                 )
                 ->get()
                 ->groupBy('activity_id');
-            // dd($document);
 
+            foreach ($programmeActivity as $activity) {
+                $activitySubmissions = $document->get($activity->activity_id);
+                $lockedSubmission = $activitySubmissions->firstWhere('submission_status', 2);
 
+                if ($lockedSubmission) {
+                    $activity->init_status = 2; // Locked
+                } else {
+                    $activity->init_status = 1; // Open
+                }
+            }
+
+            // Filter out submissions with 'submission_status' of 2 or 5
+            $filtered_documents = $document->map(function ($activityGroup) {
+                return $activityGroup->filter(function ($submission) {
+                    return !in_array($submission->submission_status, [2, 5]);
+                });
+            });
 
             return view('student.programme.programme-index', [
                 'title' => 'Programme Overview',
                 'acts' => $programmeActivity,
-                'docs' => $document,
+                'docs' => $filtered_documents,
 
             ]);
+
         } catch (Exception $e) {
             dd($e->getMessage());
             return abort(500);
         }
     }
 
-    public function activitySubmissionList($id)
+    public function documentSubmission($id)
     {
         try {
 
@@ -66,25 +89,31 @@ class SubmissionController extends Controller
                 ->join('programmes as b', 'a.programme_id', '=', 'b.id')
                 ->join('activities as c', 'a.activity_id', '=', 'c.id')
                 ->join('documents as d', 'c.id', '=', 'd.activity_id')
+                ->join('submissions as e', 'd.id', '=', 'e.document_id')
                 ->where('b.id', auth()->user()->programme_id)
-                ->where('c.id', $id)
+                ->where('e.id', $id)
                 ->select(
                     'c.id as activity_id',
                     'c.act_name as activity_name',
                     'd.doc_name as document_name',
-                    'd.isRequired'
+                    'd.isRequired',
+                    'e.id as submission_id',
+                    'e.submission_status',
+                    'e.submission_duedate',
+                    'e.submission_document',
+                    'e.submission_date',
                 )
-                ->get();
+                ->first();
             // dd($document);
 
             $activity = DB::table('activities')
                 ->where('id', $id)
                 ->first();
 
-            return view('student.programme.activity-submission-list', [
+            return view('student.programme.document-submission', [
                 'title' => 'Submission Document List',
                 'act' => $activity,
-                'docs' => $document,
+                'doc' => $document,
 
 
             ]);
