@@ -57,6 +57,9 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
 
     /* Submission Management */
     Route::get('/document-submission-{id}', [SubmissionController::class, 'documentSubmission'])->name('student-document-submission');
+    Route::post('/submit-document', [SubmissionController::class, 'submitDocument'])->name('student-submit-document-post');
+    Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->name('student-remove-document-get');
+
 });
 
 

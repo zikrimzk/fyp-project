@@ -17638,6 +17638,27 @@ textarea.is-invalid.dataTable-input {
   color: #4680ff;
 }
 
+td.bg-light-secondary {
+  background: #eff0f2;
+  color: #5b6b79;
+}
+td.bg-light-success {
+  background: #eaf6f2;
+  color: #2ca87f;
+}
+td.bg-light-info {
+  background: #ecfafb;
+  color: #3ec9d6;
+}
+td.bg-light-warning {
+  background: #fcf3e6;
+  color: #e58a00;
+}
+td.bg-light-danger {
+  background: #fce9e9;
+  color: #dc2626;
+}
+
 .icon-svg-primary {
   fill: #edf2ff;
   stroke: #4680ff;

@@ -6,11 +6,15 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\Faculty;
 use App\Models\Student;
+use App\Models\Activity;
+use App\Models\Document;
 use App\Models\Semester;
 use App\Models\Programme;
 use App\Models\Submission;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 
@@ -73,7 +77,6 @@ class SubmissionController extends Controller
                 'docs' => $filtered_documents,
 
             ]);
-
         } catch (Exception $e) {
             dd($e->getMessage());
             return abort(500);
@@ -95,6 +98,7 @@ class SubmissionController extends Controller
                 ->select(
                     'c.id as activity_id',
                     'c.act_name as activity_name',
+                    'd.id as document_id',
                     'd.doc_name as document_name',
                     'd.isRequired',
                     'e.id as submission_id',
@@ -104,22 +108,114 @@ class SubmissionController extends Controller
                     'e.submission_date',
                 )
                 ->first();
-            // dd($document);
 
-            $activity = DB::table('activities')
-                ->where('id', $id)
-                ->first();
+            // STUDENT SUBMISSION DIRECTORY
+            $submission_dir = auth()->user()->student_directory . '/' . auth()->user()->programmes->prog_code . '/' . $document->activity_name;
 
             return view('student.programme.document-submission', [
-                'title' => 'Submission Document List',
-                'act' => $activity,
+                'title' => $document->document_name . ' Submission',
                 'doc' => $document,
-
-
+                'submission_dir' => $submission_dir
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
-            return abort(500);
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    public function submitDocument(Request $req)
+    {
+        try {
+            $validator = Validator::make($req->all(), [
+                'file' => 'required|file|mimes:pdf,docx|max:102400',
+                'activity_id' => 'required|integer|exists:activities,id',
+                'document_id' => 'required|integer|exists:documents,id',
+                'submission_id' => 'required|integer|exists:submissions,id',
+            ], [], [
+                'file' => 'submission document',
+                'activity_id' => 'activity',
+                'document_id' => 'document',
+                'submission_id' => 'submission',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // INITIALIZE VARIABLES
+            $validated = $validator->validated();
+            $student = auth()->user();
+            $originalFile = $req->file('file');
+
+            $programme_name = Str::upper($student->programmes->prog_code);
+            $activity = Activity::where('id', $validated['activity_id'])->first();
+            $document = Document::where('id', $validated['document_id'])->first();
+
+            $activity_name = $activity->act_name ?? 'UNKNOWN';
+            $document_name = $document->doc_name ?? 'UNKNOWN';
+
+            // 1 - CUSTOMIZE FILENAME
+            $activity_clean = preg_replace('/[\/\s]+/', '', $activity_name);
+            $document_clean = preg_replace('/[\/\s]+/', '', $document_name);
+
+            $filename = "{$student->student_matricno}_{$document_clean}_{$activity_clean}." . $originalFile->getClientOriginalExtension();
+
+            // 2 - SAVE SUBMISSION FILE INTO DIRECTORY
+            $safe_path = "{$student->student_directory}/{$programme_name}/{$activity_name}";
+            $originalFile->storeAs($safe_path, $filename);
+
+            // 3 - SAVE SUBMISSION DATA INTO DATABASE
+            Submission::where('id', $validated['submission_id'])->update([
+                'submission_document' => $filename,
+                'submission_date' => now()->toDateTimeString(),
+                'submission_status' => 3,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Submission document successfully uploaded!',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Error uploading submission document: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function removeDocument($id, $filename)
+    {
+        try {
+            $id = decrypt($id);
+            $filename = decrypt($filename);
+            
+            $submission = Submission::where('id', $id)->first();
+
+            // DETERMINE SUBMISSION STATUS
+            $sub_status = 1;
+            if (Carbon::parse($submission->submission_duedate)->lessThan(now())) {
+                $sub_status = 4;
+            } elseif (Carbon::parse($submission->submission_duedate)->greaterThan(now())) {
+                $sub_status = 1;
+            }
+
+            //DELETE THE SUBMISSIOM DOCUMENT
+            if (Storage::exists($filename)) {
+                Storage::delete($filename);
+            }
+
+            Submission::where('id', $id)->update([
+                'submission_document' => '-',
+                'submission_date' => null,
+                'submission_status' => $sub_status,
+            ]);
+
+            return back()->with('success', 'Submission has been removed successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error removing submission: ' . $e->getMessage());
         }
     }
 

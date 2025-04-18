@@ -162,7 +162,7 @@
                                                                 @elseif($item->submission_status == 3)
                                                                     <a href="{{ route('student-document-submission', Crypt::encrypt($item->submission_id)) }}"
                                                                         class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
-                                                                        <i class="ti ti-upload"></i> View
+                                                                        <i class="ti ti-upload"></i> View Submission
                                                                     </a>
                                                                 @else
                                                                     <a href="javascript:void(0)"

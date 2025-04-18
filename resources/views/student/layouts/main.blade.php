@@ -8,6 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="-" />
     <meta name="keywords" content="-" />
     <meta name="author" content="ZikriMzk" />
@@ -44,9 +45,9 @@
     <!-- [Flatpickr Scripts] -->
     <script src="../assets/js/plugins/flatpickr.min.js"></script>
     <!-- Uppy CSS -->
-    <link href="https://releases.transloadit.com/uppy/v3.3.1/uppy.min.css" rel="stylesheet">
-    <!-- Uppy JS (non-module version) -->
-    <script src="https://releases.transloadit.com/uppy/v3.3.1/uppy.min.js"></script>
+    <link rel="stylesheet" href="../assets/css/plugins/uppy.min.css" />
+    <!-- Uppy JS -->
+    <script src="../assets/js/plugins/uppy.min.js"></script>
 
     <style>
         .data-table td {
@@ -120,6 +121,20 @@
             animation: flash 1s infinite;
         }
 
+        .uppy-container-wrapper {
+            width: 100%;
+            max-width: 100%;
+            padding: 0 1rem;
+            box-sizing: border-box;
+        }
+
+        #pc-uppy-1 .uppy-Dashboard-inner {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
+        }
+
+
         @media (max-width: 768px) {
             .nav-tabs.profile-tabs .nav-item {
                 flex: 1 1 auto;
@@ -129,6 +144,23 @@
             .nav-tabs.profile-tabs .nav-link {
                 display: block;
                 width: 100%;
+            }
+
+            .uppy-container-wrapper {
+                padding: 0.5rem;
+            }
+
+            #pc-uppy-1 .uppy-Dashboard-inner {
+                padding: 0.5rem !important;
+            }
+
+            .uppy-Dashboard-AddFiles {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            .uppy-Dashboard-FileCard {
+                width: 100% !important;
             }
         }
     </style>
@@ -168,10 +200,6 @@
     <script src="../assets/js/fonts/custom-font.js"></script>
     <script src="../assets/js/pcoded.js"></script>
     <script src="../assets/js/plugins/feather.min.js"></script>
-
-    <!-- [Uppy Scripts] -->
-    <script src="../assets/js/plugins/uppy.min.js"></script>
-
     <script>
         $(document).ready(function() {
             $('[title]').tooltip({
@@ -180,6 +208,9 @@
             });
         });
     </script>
+    <!-- [Uppy Scripts] -->
+    <script src="../assets/js/plugins/uppy.min.js"></script>
+
 
     <script>
         layout_change('light');
