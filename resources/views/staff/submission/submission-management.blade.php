@@ -88,11 +88,28 @@
                                 </button>
                                 <button type="button"
                                     class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                    data-bs-toggle="modal" data-bs-target="#deleteMultipleModal" id="deletemultipleModalBtn"
-                                    title="Delete Submission">
+                                    data-bs-toggle="modal" data-bs-target="#archiveMultipleModal"
+                                    id="archivemultipleModalBtn" title="Archive">
                                     <i class="ti ti-archive f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
-                                        Archive Submission
+                                        Archive
+                                    </span>
+                                </button>
+                                <button type="button"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    data-bs-toggle="modal" data-bs-target="#unarchiveMultipleModal"
+                                    id="unarchivemultipleModalBtn" title="Unarchive">
+                                    <i class="ti ti-history f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Unarchive
+                                    </span>
+                                </button>
+                                <button type="button"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    id="downloadmultipleModalBtn" title="Download (.zip)">
+                                    <i class="ti ti-arrow-bar-to-down f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Download (.zip)
                                     </span>
                                 </button>
                             </div>
@@ -101,7 +118,7 @@
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-end">
 
-                                <div class="col-sm-12 col-md-3 mb-3">
+                                <div class="col-sm-12 col-md-4 mb-3">
                                     <div class="input-group">
                                         <select id="fil_faculty_id" class="form-select">
                                             <option value="">-- Select Faculty --</option>
@@ -121,7 +138,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
+                                <div class="col-sm-12 col-md-4 mb-3">
                                     <div class="input-group">
                                         <select id="fil_programme_id" class="form-select">
                                             <option value="">-- Select Programme --</option>
@@ -137,13 +154,14 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                            id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
+                                <div class="col-sm-12 col-md-4 mb-3">
                                     <div class="input-group">
                                         <select id="fil_semester_id" class="form-select">
                                             <option value="">-- Select Semester --</option>
@@ -164,7 +182,43 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
+                                <div class="col-sm-12 col-md-4 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_activity_id" class="form-select">
+                                            <option value="">-- Select Activity --</option>
+                                            @foreach ($acts as $fil)
+                                                <option value="{{ $fil->id }}">{{ $fil->act_name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                            id="clearActivityFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-4 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_document_id" class="form-select">
+                                            <option value="">-- Select Document --</option>
+                                            @foreach ($docs as $fil)
+                                                @if ($fil->doc_status == 1)
+                                                    <option value="{{ $fil->id }}">{{ $fil->doc_name }}</option>
+                                                @elseif($fil->doc_status == 2)
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        {{ $fil->doc_name }} [Inactive]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                            id="clearDocumentFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-4 mb-3">
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
@@ -243,7 +297,6 @@
                                                 <option value ="" selected>- Select Status -</option>
                                                 <option value ="1">Open Submission</option>
                                                 <option value ="2">Locked</option>
-                                                <option value ="5">Archive</option>
                                             </select>
                                             @error('submission_status_ups')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -268,7 +321,7 @@
                 <!-- [ Multiple Submission Update Modal ] end -->
 
                 <!-- [ Archive Multiple Submission Modal ] start -->
-                <div class="modal fade" id="deleteMultipleModal" data-bs-keyboard="false" tabindex="-1"
+                <div class="modal fade" id="archiveMultipleModal" data-bs-keyboard="false" tabindex="-1"
                     aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
@@ -282,7 +335,7 @@
                                     </div>
                                     <div class="col-sm-12">
                                         <div class="d-flex justify-content-center align-items-center text-center">
-                                            <h2>Are you sure to archive this submission ?</h2>
+                                            <h2>Are you sure to archive the selected submission ?</h2>
                                         </div>
                                     </div>
                                     <div class="col-sm-12 mb-3">
@@ -295,7 +348,7 @@
                                             <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                 data-bs-dismiss="modal">Cancel</button>
                                             <button type="submit" class="btn btn-secondary w-100"
-                                                id="multipleSubmissionDeleteBtn">
+                                                id="multipleSubmissionArchiveBtn">
                                                 Archive
                                             </button>
                                         </div>
@@ -306,6 +359,46 @@
                     </div>
                 </div>
                 <!-- [ Archive Multiple Submission Modal ] end -->
+
+                <!-- [ Unarchive Multiple Submission Modal ] start -->
+                <div class="modal fade" id="unarchiveMultipleModal" data-bs-keyboard="false" tabindex="-1"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-sm-12 mb-4">
+                                        <div class="d-flex justify-content-center align-items-center mb-3">
+                                            <i class="ti ti-history text-primary" style="font-size: 100px"></i>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="d-flex justify-content-center align-items-center text-center">
+                                            <h2>Are you sure to unarchive the selected submission ?</h2>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12 mb-3">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <p class="fw-normal f-18 text-center">You can archive back if needed.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="d-flex justify-content-between gap-3 align-items-center">
+                                            <button type="reset" class="btn btn-light btn-pc-default w-50"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary w-100"
+                                                id="multipleSubmissionUnarchiveBtn">
+                                                Unarchive
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Unarchive Multiple Submission Modal ] end -->
 
                 @foreach ($subs as $upd)
                     <!-- [ Update Modal ] start -->
@@ -333,6 +426,7 @@
                                                         value="{{ $upd->student_name }}" readonly>
                                                 </div>
                                             </div>
+
                                             <!-- Document Name -->
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
@@ -389,16 +483,12 @@
                                                                 Overdue
                                                             </option>
                                                         @endif
-                                                        <option value ="5" @if ($upd->submission_status == 5) selected @endif>
-                                                            Archive
-                                                        </option>
                                                     </select>
                                                     @error('submission_status_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
                                             </div>
-
 
                                         </div>
                                     </div>
@@ -443,7 +533,7 @@
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-submission-get', ['id' => Crypt::encrypt($upd->submission_id)]) }}"
+                                                <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 1]) }}"
                                                     class="btn btn-secondary w-100">Archive</a>
                                             </div>
                                         </div>
@@ -453,6 +543,43 @@
                         </div>
                     </div>
                     <!-- [ Archive Modal ] end -->
+
+                    <!-- [ Unarchive Modal ] start -->
+                    <div class="modal fade" id="unarchiveModal-{{ $upd->submission_id }}" data-bs-keyboard="false"
+                        tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-12 mb-4">
+                                            <div class="d-flex justify-content-center align-items-center mb-3">
+                                                <i class="ti ti-history text-primary" style="font-size: 100px"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <div class="d-flex justify-content-center align-items-center text-center">
+                                                <h2>Are you sure to unarchive this submission ?</h2>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 mb-3">
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <p class="fw-normal f-18 text-center">You can archive back if needed.</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <div class="d-flex justify-content-between gap-3 align-items-center">
+                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 2]) }}"
+                                                    class="btn btn-primary w-100">Unarchive</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ Unarchive Modal ] end -->
                 @endforeach
 
                 <!-- [ Submission Management ] end -->
@@ -475,6 +602,8 @@
                         d.faculty = $('#fil_faculty_id').val();
                         d.programme = $('#fil_programme_id').val();
                         d.semester = $('#fil_semester_id').val();
+                        d.activity = $('#fil_activity_id').val();
+                        d.document = $('#fil_document_id').val();
                         d.status = $('#fil_status').val();
                     }
                 },
@@ -568,10 +697,33 @@
                 $('#fil_semester_id').val('').change();
             });
 
+            // FILTER : ACTIVITY
+            $('#fil_activity_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+
+            $('#clearActivityFilter').click(function() {
+                $('#fil_activity_id').val('').change();
+            });
+
+            // FILTER : DOCUMENT
+            $('#fil_document_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+
+            $('#clearDocumentFilter').click(function() {
+                $('#fil_document_id').val('').change();
+            });
+
+
             // FILTER : STATUS
             $('#fil_status').on('change', function() {
                 $('.data-table').DataTable().ajax
                     .reload();
+                clearBtn.trigger('click');
+
             });
 
             $('#clearStatusFilter').click(function() {
@@ -582,9 +734,12 @@
             const reassignBtn = $("#reassignBtn");
             const clearBtn = $("#clearSelectionBtn");
             const updatemultipleModalBtn = $("#updatemultipleModalBtn");
-            const deletemultipleModalBtn = $('#deletemultipleModalBtn');
+            const archivemultipleModalBtn = $('#archivemultipleModalBtn');
+            const unarchivemultipleModalBtn = $('#unarchivemultipleModalBtn');
+            const downloadmultipleModalBtn = $('#downloadmultipleModalBtn');
             const multipleSubmissionUpdateBtn = $("#multipleSubmissionUpdateBtn");
-            const multipleSubmissionDeleteBtn = $("#multipleSubmissionDeleteBtn");
+            const multipleSubmissionArchiveBtn = $("#multipleSubmissionArchiveBtn");
+            const multipleSubmissionUnarchiveBtn = $("#multipleSubmissionUnarchiveBtn");
 
             let selectedIds = new Set();
 
@@ -631,10 +786,46 @@
 
             function toggleSelectButton() {
                 let selectedCount = selectedIds.size;
+                let hasSubmitted = false;
+                let hasArchived = false;
 
-                reassignBtn.toggleClass("d-none", selectedIds.size !== 0);
-                updatemultipleModalBtn.toggleClass("d-none", selectedIds.size === 0);
-                deletemultipleModalBtn.toggleClass("d-none", selectedIds.size === 0);
+                $(".user-checkbox:checked").each(function() {
+                    const row = $(this).closest("tr");
+                    const table = $('.data-table').DataTable();
+                    const rowIndex = table.row(row).index();
+
+                    const submitted = table.cell(rowIndex, 5).data();
+                    const archive = table.cell(rowIndex, 5).data();
+                    const subDate = table.cell(rowIndex, 4).data();
+
+                    if (submitted.trim().toLowerCase() !=
+                        '<span class="badge bg-light-success">submitted</span>' && subDate.trim() == '-') {
+                        hasSubmitted = false;
+                    } else {
+                        hasSubmitted = true;
+                    }
+
+                    if (archive.trim().toLowerCase() !=
+                        '<span class="badge bg-secondary">archive</span>') {
+                        hasArchived = false;
+                    } else {
+                        hasArchived = true;
+                    }
+                });
+
+                reassignBtn.toggleClass("d-none", selectedCount !== 0);
+
+                updatemultipleModalBtn.prop("disabled", hasArchived);
+                updatemultipleModalBtn.toggleClass("d-none", selectedCount === 0 || hasArchived);
+
+                archivemultipleModalBtn.prop("disabled", hasArchived);
+                archivemultipleModalBtn.toggleClass("d-none", selectedCount === 0 || hasArchived);
+
+                unarchivemultipleModalBtn.prop("disabled", !hasArchived);
+                unarchivemultipleModalBtn.toggleClass("d-none", selectedCount === 0 || !hasArchived);
+
+                downloadmultipleModalBtn.prop("disabled", !hasSubmitted);
+                downloadmultipleModalBtn.toggleClass("d-none", selectedCount === 0);
 
                 if (selectedCount > 0) {
                     clearBtn.removeClass("d-none").html(
@@ -696,7 +887,7 @@
                 }
             });
 
-            multipleSubmissionDeleteBtn.on('click', function() {
+            multipleSubmissionArchiveBtn.on('click', function() {
                 const $button = $(this);
 
                 let selectedIds = $(".user-checkbox:checked").map(function() {
@@ -705,18 +896,19 @@
 
                 if (selectedIds.length > 0) {
                     $button.prop('disabled', true).html(
-                        '<span class="spinner-border spinner-border-sm me-2"></span>Deleting...'
+                        '<span class="spinner-border spinner-border-sm me-2"></span>Archiving...'
                     );
 
                     $.ajax({
-                        url: "{{ route('delete-multiple-submission-post') }}",
+                        url: "{{ route('archive-multiple-submission-post') }}",
                         type: "POST",
                         data: {
                             selectedIds: selectedIds,
+                            option: 1,
                             _token: "{{ csrf_token() }}"
                         },
                         success: function(response) {
-                            $('#deleteMultipleModal').modal('hide');
+                            $('#archiveMultipleModal').modal('hide');
                             clearBtn.trigger('click');
                             $('.data-table').DataTable().ajax.reload();
                         },
@@ -725,15 +917,68 @@
                             alert("Error: " + (xhr.responseJSON?.message || xhr.responseText));
                         },
                         complete: function() {
-                            $button.prop('disabled', false).html('Delete Anyways');
+                            $button.prop('disabled', false).html('Archive');
                         }
                     });
                 } else {
-                    alert("No valid data selected for submission update.");
+                    alert("No valid data selected for submission archive.");
                 }
             });
 
+            multipleSubmissionUnarchiveBtn.on('click', function() {
+                const $button = $(this);
 
+                let selectedIds = $(".user-checkbox:checked").map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (selectedIds.length > 0) {
+                    $button.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-2"></span>Unarchiving...'
+                    );
+
+                    $.ajax({
+                        url: "{{ route('archive-multiple-submission-post') }}",
+                        type: "POST",
+                        data: {
+                            selectedIds: selectedIds,
+                            option: 2,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+                            $('#unarchiveMultipleModal').modal('hide');
+                            clearBtn.trigger('click');
+                            $('.data-table').DataTable().ajax.reload();
+                        },
+                        error: function(xhr) {
+                            console.error(xhr.responseText);
+                            alert("Error: " + (xhr.responseJSON?.message || xhr.responseText));
+                        },
+                        complete: function() {
+                            $button.prop('disabled', false).html('Unarchive');
+                        }
+                    });
+                } else {
+                    alert("No valid data selected for submission unarchive.");
+                }
+            });
+
+            downloadmultipleModalBtn.on('click', function() {
+                let selectedIds = $(".user-checkbox:checked").map(function() {
+                    return $(this).val();
+                }).get();
+
+                if (selectedIds.length > 0) {
+
+                    let idsParam = encodeURIComponent(JSON.stringify(selectedIds));
+                    window.location.href = "{{ route('download-multiple-submission-get') }}?ids=" +
+                        idsParam;
+                    clearBtn.trigger('click');
+                    $('.data-table').DataTable().ajax.reload();
+                } else {
+                    alert("No valid data selected for submission download.");
+                }
+            });
         });
     </script>
 @endsection

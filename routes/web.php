@@ -111,9 +111,11 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/submission-management', [SubmissionController::class, 'submissionManagement'])->name('submission-management');
     Route::get('/assign-student-submission', [SubmissionController::class, 'assignSubmission'])->name('assign-student-submission');
     Route::post('/update-submission-{id}', [SubmissionController::class, 'updateSubmission'])->name('update-submission-post');
-    Route::get('/delete-submission-{id}', [SubmissionController::class, 'deleteSubmission'])->name('delete-submission-get');
+    Route::get('/archive-submission-{id}-{opt}', [SubmissionController::class, 'archiveSubmission'])->name('archive-submission-get');
     Route::post('/update-multiple-submission', [SubmissionController::class, 'updateMultipleSubmission'])->name('update-multiple-submission-post');
-    Route::post('/delete-multiple-submission', [SubmissionController::class, 'deleteMultipleSubmission'])->name('delete-multiple-submission-post');
+    Route::post('/archive-multiple-submission', [SubmissionController::class, 'archiveMultipleSubmission'])->name('archive-multiple-submission-post');
+    Route::get('/download-multiple-submission', [SubmissionController::class, 'downloadMultipleSubmission'])->name('download-multiple-submission-get');
+
 
 
 

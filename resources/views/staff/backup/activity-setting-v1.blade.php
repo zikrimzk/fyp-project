@@ -326,6 +326,22 @@
 
             });
 
+             // function toggleSelectButton() {
+            //     let selectedCount = selectedIds.size;
+
+            //     reassignBtn.toggleClass("d-none", selectedIds.size !== 0);
+            //     updatemultipleModalBtn.toggleClass("d-none", selectedIds.size === 0);
+            //     deletemultipleModalBtn.toggleClass("d-none", selectedIds.size === 0);
+            //     downloadmultipleModalBtn.toggleClass("d-none", selectedIds.size === 0);
+
+            //     if (selectedCount > 0) {
+            //         clearBtn.removeClass("d-none").html(
+            //             `<i class="ti ti-x f-18"></i> ${selectedCount} selected`);
+            //     } else {
+            //         clearBtn.addClass("d-none");
+            //     }
+            // }
+
         });
     </script>
 @endsection

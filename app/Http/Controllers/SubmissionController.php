@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use ZipArchive;
 use Carbon\Carbon;
 use App\Models\Faculty;
 use App\Models\Student;
@@ -14,9 +15,12 @@ use App\Models\Submission;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+
 
 class SubmissionController extends Controller
 {
@@ -191,7 +195,7 @@ class SubmissionController extends Controller
         try {
             $id = decrypt($id);
             $filename = decrypt($filename);
-            
+
             $submission = Submission::where('id', $id)->first();
 
             // DETERMINE SUBMISSION STATUS
@@ -257,6 +261,12 @@ class SubmissionController extends Controller
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
                     $data->where('semester_id', $req->input('semester'));
+                }
+                if ($req->has('activity') && !empty($req->input('activity'))) {
+                    $data->where('activity_id', $req->input('activity'));
+                }
+                if ($req->has('document') && !empty($req->input('document'))) {
+                    $data->where('document_id', $req->input('document'));
                 }
                 if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
                     // If a status is selected (even status 5), show it
@@ -329,6 +339,8 @@ class SubmissionController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
+                    // STUDENT SUBMISSION DIRECTORY
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name;
                     $htmlOne =
                         '
                             <div class="dropdown">
@@ -339,21 +351,32 @@ class SubmissionController extends Controller
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end">
                         ';
-                    if ($row->submission_document != '-') {
+                    if ($row->submission_document != '-' && $row->submission_status != 5) {
                         $htmlTwo =
                             '          
                                     <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
                                         data-bs-target="#settingModal-' . $row->submission_id . '">
                                         Setting 
                                     </a>
-                                    <a class="dropdown-item" href="#">Download</a>  
-                        ';
-                    } elseif ($row->submission_status == 5) {
-                        $htmlTwo =
-                            '           
+                                    <a class="dropdown-item" href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->submission_document)]) . '" download="' . $row->submission_document . '">Download</a> 
                                     <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
-                                        data-bs-target="#settingModal-' . $row->submission_id . '">
-                                        Setting
+                                        data-bs-target="#deleteModal-' . $row->submission_id . '">
+                                        Archive
+                                    </a> 
+                            ';
+                    } elseif ($row->submission_status == 5 && $row->submission_document != '-') {
+                        $htmlTwo = '
+                                    <a class="dropdown-item" href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->submission_document)]) . '" download="' . $row->submission_document . '">Download</a>  
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#unarchiveModal-' . $row->submission_id . '">
+                                        Unarchive 
+                                    </a>
+                        ';
+                    } elseif ($row->submission_status == 5 && $row->submission_document == '-') {
+                        $htmlTwo = '
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#unarchiveModal-' . $row->submission_id . '">
+                                        Unarchive 
                                     </a>
                         ';
                     } else {
@@ -361,13 +384,13 @@ class SubmissionController extends Controller
                             '           
                                     <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
                                         data-bs-target="#settingModal-' . $row->submission_id . '">
-                                        Setting
+                                        Setting 
                                     </a>
                                     <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
                                         data-bs-target="#deleteModal-' . $row->submission_id . '">
                                         Archive
                                     </a>
-                        ';
+                            ';
                     }
 
                     $htmlThree =
@@ -391,6 +414,8 @@ class SubmissionController extends Controller
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
+                'acts' => Activity::all(),
+                'docs' => Document::all(),
                 'subs' => $data->get()
             ]);
         } catch (Exception $e) {
@@ -472,16 +497,32 @@ class SubmissionController extends Controller
         }
     }
 
-    public function deleteSubmission($id)
+    public function archiveSubmission($id, $opt)
     {
         try {
             $id = decrypt($id);
-            // Submission::where('id', $id)->delete();
-            Submission::where('id', $id)->update(['submission_status' => 5]);
+            $submission = Submission::where('id', $id)->first();
 
-            return back()->with('success', 'Submission has been deleted successfully.');
+            if ($opt == 1) // Archive Submission
+            {
+                $submission->update(['submission_status' => 5]);
+
+                $message = "Submission has been archived successfully.";
+            } elseif ($opt == 2) // Unarchive Submission
+            {
+                if ($submission->submission_date == null) {
+                    $submission->update(['submission_status' => 2]);
+                } else {
+                    $submission->update(['submission_status' => 3]);
+                }
+
+                $message = "Submission has been unarchived successfully.";
+            }
+
+
+            return back()->with('success', $message);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error: ' . $e->getMessage());
         }
     }
 
@@ -538,17 +579,113 @@ class SubmissionController extends Controller
         }
     }
 
-
-    public function deleteMultipleSubmission(Request $req)
+    public function archiveMultipleSubmission(Request $req)
     {
         try {
             $submissionIds = $req->input('selectedIds');
-            // Submission::whereIn('id', $submissionIds)->delete();
-            Submission::whereIn('id', $submissionIds)->update(['submission_status' => 5]);
+            $opt = $req->input('option');
+            $submissions = Submission::whereIn('id', $submissionIds)->get();
 
-            return back()->with('success', 'Selected submission has been deleted successfully.');
+            foreach ($submissions as $submission) {
+                if ($opt == 1) // Archive Submission
+                {
+                    $submission->update(['submission_status' => 5]);
+
+                    $message = "Submission has been archived successfully.";
+                } elseif ($opt == 2) // Unarchive Submission
+                {
+                    if ($submission->submission_date == null) {
+                        $submission->update(['submission_status' => 2]);
+                    } else {
+                        $submission->update(['submission_status' => 3]);
+                    }
+
+                    $message = "Submission has been unarchived successfully.";
+                }
+            }
+
+            return back()->with('success', $message);
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error deleting submissions: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadMultipleSubmission(Request $req)
+    {
+        try {
+            $submissionIds = json_decode($req->query('ids'), true);
+            if (!$submissionIds || count($submissionIds) === 0) {
+                return back()->with('error', 'No submissions selected.');
+            }
+
+            // Create ZIP file
+            $zipFile = storage_path('app/public/ePGS_SELECTED_SUBMISSION.zip');
+
+            if (File::exists($zipFile)) {
+                File::delete($zipFile);
+            }
+
+            $zip = new ZipArchive;
+            if ($zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+                return back()->with('error', 'Failed to create ZIP file.');
+            }
+
+            // Add each implant directory to the ZIP
+            foreach ($submissionIds as $id) {
+                $submission = DB::table('students as a')
+                    ->join('semesters as b', 'b.id', '=', 'a.semester_id')
+                    ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+                    ->join('submissions as d', 'd.student_id', '=', 'a.id')
+                    ->join('documents as e', 'e.id', '=', 'd.document_id')
+                    ->join('activities as f', 'f.id', '=', 'e.activity_id')
+                    ->select(
+                        'a.*',
+                        'b.sem_label',
+                        'c.prog_code',
+                        'c.prog_mode',
+                        'd.id as submission_id',
+                        'd.submission_status',
+                        'd.submission_date',
+                        'd.submission_duedate',
+                        'd.submission_document',
+                        'e.id as document_id',
+                        'e.doc_name as document_name',
+                        'f.id as activity_id',
+                        'f.act_name as activity_name'
+                    )
+                    ->where('d.id', $id)
+                    ->first();
+
+                // STUDENT SUBMISSION DIRECTORY
+                $submission_dir = $submission->student_directory . '/' . $submission->prog_code . '/' . $submission->activity_name;
+
+
+                if (!$submission || empty($submission->submission_document)) {
+                    continue;
+                }
+
+                $folderPath = public_path("storage/" . $submission_dir);
+
+                if (!File::exists($folderPath)) {
+                    continue;
+                }
+
+                $files = File::allFiles($folderPath);
+
+                foreach ($files as $file) {
+                    if ($submission->submission_document == $file->getFilename()) {
+                        $path = Str::upper($submission->activity_name . '/' . $submission->student_matricno . '_' . str_replace(' ', '_', $submission->student_name));
+                        $relativePath = $path . '/' . $file->getFilename();
+                        $zip->addFile($file->getPathname(), $relativePath);
+                    }
+                }
+            }
+
+            $zip->close();
+
+            return response()->download($zipFile)->deleteFileAfterSend(true);
+        } catch (Exception $e) {
+            return back()->with('error', 'Error generating ZIP: ' . $e->getMessage());
         }
     }
 }
