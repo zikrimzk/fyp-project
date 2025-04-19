@@ -124,6 +124,9 @@
                         <li class="pc-item">
                             <a class="pc-link" href="{{ route('activity-setting') }}">Activity Setting</a>
                         </li>
+                        <li class="pc-item">
+                            <a class="pc-link" href="{{ route('form-generator') }}">Form Generator</a>
+                        </li>
                     </ul>
                 </li>
 

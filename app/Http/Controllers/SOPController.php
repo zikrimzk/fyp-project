@@ -20,7 +20,7 @@ class SOPController extends Controller
 {
 
     /* Activity Setting (Activity + Document) [Checked : 04/04/2025] */
-    public function activitySetting(Request $req)
+    public function activitySetting()
     {
         try {
             return view('staff.sop.activity-setting', [
@@ -522,5 +522,18 @@ class SOPController extends Controller
         }
 
         return response()->file($path);
+    }
+
+    /* Form Generator */
+    public function formGenerator(Request $req)
+    {
+        try {
+            return view('staff.sop.form-generator', [
+                'title' => 'Form Generator',
+                'acts' => Activity::all()
+            ]);
+        } catch (Exception $e) {
+            return abort(500 , $e->getMessage());
+        }
     }
 }

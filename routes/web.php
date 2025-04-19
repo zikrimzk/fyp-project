@@ -139,6 +139,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/delete-procedure-{actID}-{progID}', [SOPController::class, 'deleteProcedure'])->name('delete-procedure-get');
     Route::get('/view-material/{filename}', [SOPController::class, 'viewMaterialFile'])->where('filename', '.*')->name('view-material-get');
 
+    /* Form Generator */
+    Route::get('/form-generator', [SOPController::class, 'formGenerator'])->name('form-generator');
+
     // Setting 
 
     /* Faculty Setting */
