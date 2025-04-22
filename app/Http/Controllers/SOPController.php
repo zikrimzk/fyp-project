@@ -536,4 +536,16 @@ class SOPController extends Controller
             return abort(500 , $e->getMessage());
         }
     }
+
+    public function viewActivityTemplate()
+    {
+        try{
+            return view('staff.sop.template.activity-template', [
+                'title' => 'Activity Template'
+            ]);
+        }
+        catch(Exception $e){
+            return abort(500 , $e->getMessage());
+        }
+    }
 }
