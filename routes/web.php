@@ -141,7 +141,11 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Form Generator */
     Route::get('/form-generator', [SOPController::class, 'formGenerator'])->name('form-generator');
-    Route::get('/activity-document-template', [SOPController::class, 'viewActivityTemplate'])->name('view-activity-template');
+    Route::get('/ssssssssactivity-document-template', [SOPController::class, 'viewActivityTemplate'])->name('view-activity-template');
+    Route::get('/activity-document-preview', [SOPController::class, 'previewActivityDocument'])->name('activity-document-preview-get');
+    Route::post('/add-activity-form', [SOPController::class, 'addActivityForm'])->name('add-activity-form-post');
+
+
 
 
     // Setting 

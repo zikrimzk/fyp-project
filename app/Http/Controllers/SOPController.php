@@ -8,7 +8,9 @@ use App\Models\Document;
 use App\Models\Procedure;
 use App\Models\Programme;
 use Illuminate\Support\Str;
+use App\Models\ActivityForm;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
@@ -39,10 +41,12 @@ class SOPController extends Controller
             $data = Activity::withCount('documents')->get();
             return response()->json($data);
         } catch (Exception $e) {
-            return response()->json([
+            return response()->json(
+                [
                     'success' => false,
                     'message' => 'Error: ' . $e->getMessage(),
-                ],500
+                ],
+                500
             );
         }
     }
@@ -140,16 +144,20 @@ class SOPController extends Controller
             $data = DB::table('documents')
                 ->where('activity_id', $id)
                 ->get();
-            return response()->json([
+            return response()->json(
+                [
                     'success' => true,
                     'data' => $data,
-                ],200
+                ],
+                200
             );
         } catch (Exception $e) {
-            return response()->json([
+            return response()->json(
+                [
                     'success' => false,
                     'message' => 'Oops! Error viewing documents: ' . $e->getMessage()
-                ],500
+                ],
+                500
             );
         }
     }
@@ -183,12 +191,13 @@ class SOPController extends Controller
                 'activity_id' => $req->act_id,
             ]);
             return response()->json([
-                'success' => true, 'document' => $document, 
+                'success' => true,
+                'document' => $document,
                 'message' => 'Document added successfully.'
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Oops! Error adding documents: ' . $e->getMessage()
             ], 500);
         }
@@ -221,12 +230,13 @@ class SOPController extends Controller
                 'doc_status' => $req->doc_status_up,
             ]);
             return response()->json([
-                'success' => true, 'document' => $document, 
+                'success' => true,
+                'document' => $document,
                 'message' => 'Document updated successfully.'
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Oops! Error updating documents: ' . $e->getMessage()
 
             ], 500);
@@ -533,19 +543,80 @@ class SOPController extends Controller
                 'acts' => Activity::all()
             ]);
         } catch (Exception $e) {
-            return abort(500 , $e->getMessage());
+            return abort(500, $e->getMessage());
         }
     }
 
     public function viewActivityTemplate()
     {
-        try{
+        try {
             return view('staff.sop.template.activity-template', [
                 'title' => 'Activity Template'
             ]);
+        } catch (Exception $e) {
+            return abort(500, $e->getMessage());
         }
-        catch(Exception $e){
-            return abort(500 , $e->getMessage());
+    }
+
+    public function previewActivityDocument(Request $req)
+    {
+        try {
+            $act = Activity::where('id', $req->actid)->first();
+            $actform = ActivityForm::where('activity_id', $req->actid)->first();
+            $pdf = Pdf::loadView('staff.sop.template.activity-template', [
+                'title' => $act->act_name . " Document",
+                'act' => $act,
+                'form_title' => $req->title,
+                '$actform' => $actform,
+            ]);
+
+            return $pdf->stream('preview.pdf');
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function addActivityForm(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'actid' => 'required|integer|exists:activities,id',
+            'formTitle'  => 'required',
+            'formTarget' => 'required',
+            'formStatus' => 'required',
+        ], [], [
+            'actid' => 'Activity',
+            'formTitle'  => 'Form Title',
+            'formTarget' => 'Form Target',
+            'formStatus' => 'Form Status',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+
+            $validated = $validator->validated();
+
+            ActivityForm::create([
+                'af_title' => $validated['formTitle'],
+                'af_target' => $validated['formTarget'],
+                'af_status' => $validated['formStatus'],
+                'activity_id' => $validated['actid'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Form added successfully.',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 200);
         }
     }
 }

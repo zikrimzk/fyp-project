@@ -1,6 +1,102 @@
 @extends('staff.layouts.main')
 
 @section('content')
+    <style>
+        #form-wrapper {
+            width: 794px;
+            height: 1123px;
+            margin: 40px auto;
+            padding: 40px;
+            font-family: 'Arial', sans-serif;
+            font-size: 12pt;
+            background: white;
+            color: #000;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header img {
+            width: 140px;
+            margin-bottom: 10px;
+        }
+
+        .header h2,
+        .header h3 {
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .line-title {
+            border-top: 1px solid #000;
+            margin-top: 5px;
+        }
+
+        .form-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 12px;
+            text-transform: uppercase;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0 20px;
+        }
+
+        .info-table td {
+            padding: 10px 4px;
+            vertical-align: top;
+        }
+
+        .label {
+            width: 35%;
+            font-weight: bold;
+        }
+
+        .colon {
+            width: 2%;
+        }
+
+        .value {
+            width: 63%;
+            border-bottom: 1px solid #000;
+            text-transform: uppercase;
+        }
+
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+        }
+
+        .signature-table td {
+            vertical-align: center;
+            padding: 0 10px;
+        }
+
+        .signature-user {
+            height: 50px;
+        }
+
+        .signature-label {
+            font-weight: bold;
+            font-size: 11pt;
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
+            border-bottom: 1px solid #000;
+        }
+
+        .date-label {
+            font-size: 10.5pt;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+    </style>
     <div class="pc-container">
         <div class="pc-content">
             <!-- [ breadcrumb ] start -->
@@ -25,33 +121,12 @@
 
 
             <!-- [ Alert ] start -->
-            <div id="alert-container">
-                @if (session()->has('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="alert-heading">
-                                <i class="fas fa-check-circle"></i>
-                                Success
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                        <p class="mb-0">{{ session('success') }}</p>
-                    </div>
-                @endif
-                @if (session()->has('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="alert-heading">
-                                <i class="fas fa-info-circle"></i>
-                                Error
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                        <p class="mb-0">{{ session('error') }}</p>
-                    </div>
-                @endif
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                <div id="toastContainer"></div>
             </div>
             <!-- [ Alert ] end -->
+
+
 
             <!-- [ Main Content ] start -->
             <div class="row">
@@ -80,11 +155,12 @@
                                             </div>
 
                                             <div class="d-grid mt-4 mb-4">
-                                                {{-- <button type="button" class="btn btn-primary" id="generateForm">Generate
-                                                    Form</button> --}}
-                                                <a href="{{ route('view-activity-template') }}" class="btn btn-primary"
-                                                    id="generateForm">Generate
-                                                    Form</a>
+                                                <button type="button" class="btn btn-primary" id="generateForm">Generate
+                                                    Form</button>
+                                                {{-- <a href="{{ route('view-activity-template') }}"
+                                                    class="mt-3 btn btn-primary">
+                                                    View Form
+                                                </a> --}}
                                             </div>
                                         </div>
                                         <div class="col-sm-12" id="formSetting">
@@ -118,25 +194,28 @@
 
                                             <div class="mb-3">
                                                 <label for="txt_label" class="form-label">Form Target</label>
-                                                <select name="select_form_target" class="form-select" id="select_form_target">
+                                                <select name="select_form_target" class="form-select"
+                                                    id="select_form_target">
                                                     <option value="" selected>-- Select Target --</option>
                                                     <option value="1">Submission</option>
-                                                    <option value="2" selected>Evaluation</option>
-                                                    <option value="3" selected>Nomination</option>
+                                                    <option value="2">Evaluation</option>
+                                                    <option value="3">Nomination</option>
                                                 </select>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label for="txt_label" class="form-label">Form Status</label>
-                                                <select name="select_form_status" class="form-select" id="select_form_status">
+                                                <select name="select_form_status" class="form-select"
+                                                    id="select_form_status">
                                                     <option value="" selected>-- Select Status --</option>
                                                     <option value="1">Active</option>
-                                                    <option value="2" selected>Inactive</option>
+                                                    <option value="2">Inactive</option>
                                                 </select>
                                             </div>
 
                                             <div class="d-grid mt-4 mb-4">
-                                                <button type="button" class="btn btn-primary" id="generateForm">Save Changes</button>
+                                                <button type="button" class="btn btn-primary" id="saveFormSetting">Save
+                                                    Changes</button>
                                             </div>
                                         </div>
 
@@ -160,7 +239,8 @@
                                 <!-- [ Form Preview ] start -->
                                 <div class="col-sm-8 border">
                                     <h5 class="mb-3 mt-3 text-center">Preview</h5>
-
+                                    <iframe id="documentContainer" style="width:100%; height:1000px;"
+                                        frameborder="0"></iframe>
                                 </div>
                                 <!-- [ Form Preview ] end -->
 
@@ -262,6 +342,123 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
+            function showToast(type, message) {
+                const toastId = 'toast-' + Date.now();
+                const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle';
+                const bgClass = type === 'success' ? 'bg-light-success' : 'bg-light-danger';
+                const txtClass = type === 'success' ? 'text-success' : 'text-danger';
+                const colorClass = type === 'success' ? 'success' : 'danger';
+                const title = type === 'success' ? 'Success' : 'Error';
+
+                const toastHtml = `
+                    <div id="${toastId}" class="toast border-0 shadow-sm mb-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                        <div class="toast-body text-white ${bgClass} rounded d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0 ${txtClass}">
+                                    <i class="${iconClass} me-2"></i> ${title}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                            <p class="mb-0 ${txtClass}">${message}</p>
+                        </div>
+                    </div>
+                `;
+
+                $('#toastContainer').append(toastHtml);
+                const toastEl = new bootstrap.Toast(document.getElementById(toastId));
+                toastEl.show();
+            }
+
+            $('#generateForm').click(function() {
+                var selectedOpt = $('#selectActivity').val();
+
+                $.ajax({
+                    url: "{{ route('activity-document-preview-get') }}",
+                    type: "GET",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        actid: selectedOpt
+                    },
+                    success: function(response) {
+                        $('#documentContainer').attr('src',
+                            '{{ route('activity-document-preview-get') }}?actid=' +
+                            selectedOpt);
+                    },
+                    error: function() {
+                        alert("Something went wrong!");
+                    }
+                });
+            });
+
+            let debounceTimer;
+
+            $('#txt_form_title').on('input', function() {
+                clearTimeout(debounceTimer);
+
+                debounceTimer = setTimeout(() => {
+                    const txtvalue = $(this).val();
+                    const selectedOpt = $('#selectActivity').val();
+
+                    if (selectedOpt) {
+                        $('#documentContainer').attr('src',
+                            '{{ route('activity-document-preview-get') }}' +
+                            '?actid=' + encodeURIComponent(selectedOpt) +
+                            '&title=' + encodeURIComponent(txtvalue)
+                        );
+                    }
+                }, 300);
+            });
+
+            $('#saveFormSetting').click(function() {
+                var selectedOpt = $('#selectActivity').val();
+                var formTarget = $('#select_form_target').val();
+                var formStatus = $('#select_form_status').val();
+                var formTitle = $('#txt_form_title').val();
+
+                $.ajax({
+                    url: "{{ route('add-activity-form-post') }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        actid: selectedOpt,
+                        formTitle: formTitle,
+                        formTarget: formTarget,
+                        formStatus: formStatus,
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('success', response.message);
+
+                            $('#documentContainer').attr('src',
+                                '{{ route('activity-document-preview-get') }}' +
+                                '?actid=' + encodeURIComponent(selectedOpt) +
+                                '&title=' + encodeURIComponent(formTitle)
+                            );
+                        } else {
+                            showToast('error', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            // Laravel validation error
+                            const errors = xhr.responseJSON?.message;
+                            if (errors) {
+                                let msg = '';
+                                Object.values(errors).forEach(function(error) {
+                                    msg += `• ${error[0]}<br>`;
+                                });
+                                showToast('error', msg);
+                            } else {
+                                showToast('error',
+                                    'Validation failed, but no message returned.');
+                            }
+                        } else {
+                            // Other server errors
+                            showToast('error', 'Something went wrong. Please try again.');
+                        }
+                    }
+                });
+            });
 
         });
     </script>
