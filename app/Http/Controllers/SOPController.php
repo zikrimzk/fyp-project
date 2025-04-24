@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Exception;
 use App\Models\Activity;
 use App\Models\Document;
+use App\Models\FormField;
 use App\Models\Procedure;
 use App\Models\Programme;
 use Illuminate\Support\Str;
@@ -547,32 +548,47 @@ class SOPController extends Controller
         }
     }
 
-    public function viewActivityTemplate()
-    {
-        try {
-            return view('staff.sop.template.activity-template', [
-                'title' => 'Activity Template'
-            ]);
-        } catch (Exception $e) {
-            return abort(500, $e->getMessage());
-        }
-    }
-
     public function previewActivityDocument(Request $req)
     {
         try {
             $act = Activity::where('id', $req->actid)->first();
             $actform = ActivityForm::where('activity_id', $req->actid)->first();
-            $pdf = Pdf::loadView('staff.sop.template.activity-template', [
+            $pdf = Pdf::loadView('staff.sop.template.activity-document', [
                 'title' => $act->act_name . " Document",
                 'act' => $act,
                 'form_title' => $req->title,
-                '$actform' => $actform,
+                'actform' => $actform,
             ]);
 
             return $pdf->stream('preview.pdf');
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function getActivityFormData(Request $req)
+    {
+        try {
+            $actform = ActivityForm::where('activity_id', $req->actid)->first();
+
+            if (!$actform) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No form found for this activity.',
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'formTitle' => $actform->af_title,
+                'formTarget' => $actform->af_target,
+                'formStatus' => $actform->af_status,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -601,16 +617,83 @@ class SOPController extends Controller
 
             $validated = $validator->validated();
 
-            ActivityForm::create([
-                'af_title' => $validated['formTitle'],
-                'af_target' => $validated['formTarget'],
-                'af_status' => $validated['formStatus'],
-                'activity_id' => $validated['actid'],
+            $checkExists = ActivityForm::where('activity_id', $validated['actid'])->exists();
+            $message = '';
+
+            if ($checkExists) {
+                ActivityForm::where('activity_id', $validated['actid'])->update([
+                    'af_title' => $validated['formTitle'],
+                    'af_target' => $validated['formTarget'],
+                    'af_status' => $validated['formStatus'],
+                    'activity_id' => $validated['actid'],
+                ]);
+
+                $message = 'Form updated successfully.';
+            } else {
+                ActivityForm::create([
+                    'af_title' => $validated['formTitle'],
+                    'af_target' => $validated['formTarget'],
+                    'af_status' => $validated['formStatus'],
+                    'activity_id' => $validated['actid'],
+                ]);
+                $message = 'Form added successfully.';
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 200);
+        }
+    }
+
+    public function addAttribute(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'actid' => 'required|integer|exists:activities,id',
+            'ff_label'  => 'required',
+            'ff_datakey' => 'required',
+            'ff_order' => 'nullable|integer',
+            'ff_isbold' => 'required',
+            'ff_isheader' => 'required',
+        ], [], [
+            'actid' => 'activity',
+            'ff_label'  => 'label',
+            'ff_datakey' => 'attribute',
+            'ff_order' => 'order',
+            'ff_isbold' => 'bold',
+            'ff_isheader' => 'header',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors() 
+            ], 422);
+        }
+
+        try {
+
+            $validated = $validator->validated();
+
+            $af_id = ActivityForm::where('activity_id', $validated['actid'])->first()->id;
+
+            FormField::create([
+                'ff_label'  => $validated['ff_label'],
+                'ff_datakey' => $validated['ff_datakey'],
+                'ff_order' => $validated['ff_order'],
+                'ff_isbold' => $validated['ff_isbold'],
+                'ff_isheader' => $validated['ff_isheader'],
+                'af_id' =>  $af_id,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Form added successfully.',
+                'message' => 'Attribute added successfully.',
             ], 200);
         } catch (Exception $e) {
             return response()->json([

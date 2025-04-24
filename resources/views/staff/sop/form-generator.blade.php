@@ -157,10 +157,6 @@
                                             <div class="d-grid mt-4 mb-4">
                                                 <button type="button" class="btn btn-primary" id="generateForm">Generate
                                                     Form</button>
-                                                {{-- <a href="{{ route('view-activity-template') }}"
-                                                    class="mt-3 btn btn-primary">
-                                                    View Form
-                                                </a> --}}
                                             </div>
                                         </div>
                                         <div class="col-sm-12" id="formSetting">
@@ -173,17 +169,17 @@
                                                 <button type="button"
                                                     class="btn btn-light-primary btn-sm d-flex align-items-center gap-2"
                                                     data-bs-toggle="modal" data-bs-target="#addAttributeModal"
-                                                    title="Add Attribute" id="addActivity">
+                                                    title="Add Attribute" id="addAttributeBtn" disabled>
                                                     <i class="ti ti-plus f-18"></i> <span
                                                         class="d-none d-sm-inline me-2">Add Attribute</span>
                                                 </button>
-                                                <button type="button"
+                                                {{-- <button type="button"
                                                     class="btn btn-light-danger btn-sm d-flex align-items-center gap-2"
                                                     data-bs-toggle="modal" data-bs-target="#addActivityModal"
                                                     title="Add Attribute" id="addActivity">
                                                     <i class="ti ti-trash f-18"></i> <span
                                                         class="d-none d-sm-inline me-2">Reset Attribute</span>
-                                                </button>
+                                                </button> --}}
                                             </div>
 
                                             <div class="mb-3">
@@ -219,19 +215,6 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-sm-12" id="formOption">
-                                            <div class="mb-3">
-                                                <h5 class="mb-0">Options</h5>
-                                                <small>Select either to preview or download the form.</small>
-                                            </div>
-
-                                            <div class="d-grid mt-4 gap-3">
-                                                <button type="button" class="btn btn-info" id="generateForm">View Form
-                                                    (.pdf)</button>
-                                                <button type="button" class="btn btn-danger" id="generateForm">Download
-                                                    Form (.pdf)</button>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                                 <!-- [ Form Setting ] end -->
@@ -239,6 +222,11 @@
                                 <!-- [ Form Preview ] start -->
                                 <div class="col-sm-8 border">
                                     <h5 class="mb-3 mt-3 text-center">Preview</h5>
+                                    <div id="loadingSpinner" class="text-center my-3" style="display: none;">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
                                     <iframe id="documentContainer" style="width:100%; height:1000px;"
                                         frameborder="0"></iframe>
                                 </div>
@@ -252,88 +240,86 @@
                 <!-- [ Form Generator ] end -->
 
                 <!-- [ Add Attribute Modal ] start -->
-                <form id="addActivityForm">
-                    @csrf
-                    <div class="modal fade" id="addAttributeModal" tabindex="-1" aria-labelledby="addAttributeModal"
-                        aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="addModalLabel">Add Attribute</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="mb-3">
-                                                <label for="txt_label" class="form-label">Label</label>
-                                                <input type="text" name="row_label" id="txt_label"
-                                                    class="form-control" placeholder="Enter Attribute Label">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="txt_label" class="form-label">Attribute</label>
-                                                <select name="row_datakey" class="form-select" id="select_datakey">
-                                                    <option value="" selected>-- Select Attribute --</option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="txt_label" class="form-label">Order</label>
-                                                <input type="number" name="row_order" id="txt_order"
-                                                    class="form-control" value="0" min="0" max="100">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Font Style</label>
-                                                <div>
-                                                    <div class="form-check form-check-inline">
-                                                        <input class="form-check-input" type="radio" name="fontStyle"
-                                                            id="fontNormal" value="normal" checked>
-                                                        <label class="form-check-label" for="fontNormal">Normal</label>
-                                                    </div>
-                                                    <div class="form-check form-check-inline">
-                                                        <input class="form-check-input" type="radio" name="fontStyle"
-                                                            id="fontBold" value="bold">
-                                                        <label class="form-check-label" for="fontBold">Bold</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="form-label">Header Label</label>
-                                                <div>
-                                                    <div class="form-check form-check-inline">
-                                                        <input class="form-check-input" type="radio" name="isHeader"
-                                                            id="headerTrue" value="true">
-                                                        <label class="form-check-label" for="headerTrue">True</label>
-                                                    </div>
-                                                    <div class="form-check form-check-inline">
-                                                        <input class="form-check-input" type="radio" name="isHeader"
-                                                            id="headerFalse" value="false" checked>
-                                                        <label class="form-check-label" for="headerFalse">False</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-
+                <div class="modal fade" id="addAttributeModal" tabindex="-1" aria-labelledby="addAttributeModal"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="addModalLabel">Add Attribute</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-sm-12 col-md-12 col-lg-12">
+                                        <div class="mb-3">
+                                            <label for="txt_label" class="form-label">Label</label>
+                                            <input type="text" name="row_label" id="txt_label" class="form-control"
+                                                placeholder="Enter Attribute Label">
                                         </div>
+                                        <div class="mb-3">
+                                            <label for="select_datakey" class="form-label">Attribute</label>
+                                            <select name="row_datakey" class="form-select" id="select_datakey">
+                                                <option value="" selected>-- Select Attribute --</option>
+                                            </select>
+                                        </div>
+                                        {{-- <div class="mb-3">
+                                            <label for="txt_order" class="form-label">Order</label>
+                                            <input type="number" name="row_order" id="txt_order" class="form-control"
+                                                value="0" min="0" max="100">
+                                        </div> --}}
+                                        <div class="mb-3">
+                                            <label class="form-label">Font Style</label>
+                                            <div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="fontStyle"
+                                                        id="fontNormal" value="normal" checked>
+                                                    <label class="form-check-label" for="fontNormal">Normal</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="fontStyle"
+                                                        id="fontBold" value="bold">
+                                                    <label class="form-check-label" for="fontBold">Bold</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Header Label</label>
+                                            <div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="isHeader"
+                                                        id="headerTrue" value="true">
+                                                    <label class="form-check-label" for="headerTrue">True</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="isHeader"
+                                                        id="headerFalse" value="false" checked>
+                                                    <label class="form-check-label" for="headerFalse">False</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
-                                <div class="modal-footer justify-content-end">
-                                    <div class="flex-grow-1 text-end">
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="button" class="btn btn-light btn-pc-default w-100"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-primary w-100">
-                                                    Add Attribute
-                                                </button>
-                                            </div>
+                            </div>
+                            <div class="modal-footer justify-content-end">
+                                <div class="flex-grow-1 text-end">
+                                    <div class="col-sm-12">
+                                        <div class="d-flex justify-content-between gap-3 align-items-center">
+                                            <button type="button" class="btn btn-light btn-pc-default w-100"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                            <button type="button" id="addAttributeBtn-submit"
+                                                class="btn btn-primary w-100">
+                                                Add Attribute
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </form>
+                </div>
                 <!-- [ Add Attribute Modal ] end -->
             </div>
             <!-- [ Main Content ] end -->
@@ -369,25 +355,49 @@
                 toastEl.show();
             }
 
-            $('#generateForm').click(function() {
+            function getFormData() {
                 var selectedOpt = $('#selectActivity').val();
+                const addAttrBtn = $('#addAttributeBtn');
 
                 $.ajax({
-                    url: "{{ route('activity-document-preview-get') }}",
-                    type: "GET",
+                    url: "{{ route('get-activity-form-data-post') }}",
+                    type: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",
                         actid: selectedOpt
                     },
                     success: function(response) {
-                        $('#documentContainer').attr('src',
-                            '{{ route('activity-document-preview-get') }}?actid=' +
-                            selectedOpt);
+                        if (response.success) {
+                            $('#txt_form_title').val(response.formTitle);
+                            $('#select_form_target').val(response.formTarget);
+                            $('#select_form_status').val(response.formStatus);
+                            $('#documentContainer').attr('src',
+                                '{{ route('activity-document-preview-get') }}' +
+                                '?actid=' + encodeURIComponent(selectedOpt) +
+                                '&title=' + response.formTitle
+                            );
+                            addAttrBtn.prop('disabled', false);
+                        } else {
+                            $('#txt_form_title').val("");
+                            $('#select_form_target').val("");
+                            $('#select_form_status').val("");
+                            $('#documentContainer').attr('src',
+                                '{{ route('activity-document-preview-get') }}' +
+                                '?actid=' + encodeURIComponent(selectedOpt) +
+                                '&title='
+                            );
+                            addAttrBtn.prop('disabled', true);
+
+                        }
                     },
                     error: function() {
-                        alert("Something went wrong!");
+                        showToast('error', 'Oops! Something went wrong. Please try again.');
                     }
                 });
+            }
+
+            $('#generateForm').click(function() {
+                getFormData();
             });
 
             let debounceTimer;
@@ -428,12 +438,7 @@
                     success: function(response) {
                         if (response.success) {
                             showToast('success', response.message);
-
-                            $('#documentContainer').attr('src',
-                                '{{ route('activity-document-preview-get') }}' +
-                                '?actid=' + encodeURIComponent(selectedOpt) +
-                                '&title=' + encodeURIComponent(formTitle)
-                            );
+                            getFormData();
                         } else {
                             showToast('error', response.message);
                         }
@@ -459,6 +464,57 @@
                     }
                 });
             });
+
+            $('#addAttributeBtn-submit').click(function() {
+                var selectedOpt = $('#selectActivity').val(); 
+                var rowLabel = $('#txt_label').val();
+                var rowDataKey = $('#select_datakey').val();
+                // var rowOrder = $('#txt_order').val();
+                var fontStyle = $('input[name="fontStyle"]:checked').val();
+                var isHeader = $('input[name="isHeader"]:checked').val();
+
+                $.ajax({
+                    url: "{{ route('add-attribute-post') }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        actid: selectedOpt, 
+                        ff_label: rowLabel,
+                        ff_datakey: rowDataKey,
+                        // ff_order: rowOrder,
+                        ff_isbold: fontStyle,
+                        ff_isheader: isHeader,
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('success', response.message);
+                            $('#addAttributeModal').modal('hide');
+                            getFormData(); 
+                        } else {
+                            showToast('error', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON?.errors;
+                            if (errors) {
+                                let msg = '';
+                                Object.values(errors).forEach(function(error) {
+                                    msg += `• ${error[0]}<br>`;
+                                });
+                                showToast('error', msg);
+                            } else {
+                                showToast('error',
+                                    'Validation failed, but no message returned.');
+                            }
+                        } else {
+                            showToast('error', 'Something went wrong. Please try again.');
+                        }
+                    }
+                });
+            });
+
+
 
         });
     </script>

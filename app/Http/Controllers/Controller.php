@@ -140,4 +140,17 @@ class Controller extends BaseController
     //         return  back()->with('error', 'Oops! Error deleting activity.');
     //     }
     // }
+
+
+    // public function viewActivityTemplate()
+    // {
+    //     try {
+    //         return view('staff.sop.template.activity-template', [
+    //             'title' => 'Activity Template'
+    //         ]);
+    //     } catch (Exception $e) {
+    //         return abort(500, $e->getMessage());
+    //     }
+    // }
+
 }
