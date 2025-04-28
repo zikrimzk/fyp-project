@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('fac_name');
             $table->string('fac_code')->unique();
+            $table->string('fac_logo')->nullable();
             $table->integer('fac_status')->default(1);
             $table->timestamps();
         });

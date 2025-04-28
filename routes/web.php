@@ -155,6 +155,8 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/add-faculty', [SettingController::class, 'addFaculty'])->name('add-faculty-post');
     Route::post('/update-faculty/{id}', [SettingController::class, 'updateFaculty'])->name('update-faculty-post');
     Route::get('/delete-faculty-{id}-{opt}', [SettingController::class, 'deleteFaculty'])->name('delete-faculty-get');
+    Route::post('/set-default-faculty', [SettingController::class, 'setDefaultFaculty'])->name('set-default-faculty-post');
+
 
     /* Department Setting */
     Route::get('/department-setting', [SettingController::class, 'departmentSetting'])->name('department-setting');

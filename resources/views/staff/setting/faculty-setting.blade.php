@@ -1,6 +1,16 @@
 @extends('staff.layouts.main')
 
 @section('content')
+    <style>
+        .imagePreview img {
+            border: 2px dashed #dee2e6;
+            padding: 10px;
+            border-radius: 10px;
+            max-height: 300px;
+            max-width: 100%;
+            background: #f8f9fa;
+        }
+    </style>
     <div class="pc-container">
         <div class="pc-content">
             <!-- [ breadcrumb ] start -->
@@ -59,19 +69,26 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
-                            <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addModal"><i class="ti ti-plus f-18"></i>
-                                    Add Faculty
+                            <!-- [ Option Section ] start -->
+                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    title="Add Faculty" id="addModalBtn" data-bs-toggle="modal" data-bs-target="#addModal">
+                                    <i class="ti ti-plus f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Add Faculty
+                                    </span>
+                                </button>
+
+                                <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
+                                    title="Set Default Faculty" id="setdefaultModalBtn" data-bs-toggle="modal"
+                                    data-bs-target="#setdefaultModal">
+                                    <i class="ti ti-plus f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Set Default Faculty
+                                    </span>
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
+                            <!-- [ Option Section ] end -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -90,7 +107,7 @@
                 </div>
 
                 <!-- [ Add Modal ] start -->
-                <form action="{{ route('add-faculty-post') }}" method="POST">
+                <form action="{{ route('add-faculty-post') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModal" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -104,6 +121,7 @@
 
                                 <div class="modal-body">
                                     <div class="row">
+
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="mb-3">
                                                 <label for="fac_name" class="form-label">Faculty Name <span
@@ -117,6 +135,7 @@
                                                 @enderror
                                             </div>
                                         </div>
+
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="mb-3">
                                                 <label for="fac_code" class="form-label">Faculty Code <span
@@ -130,6 +149,26 @@
                                                 @enderror
                                             </div>
                                         </div>
+
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="fac_logo" class="form-label">Faculty Logo </label>
+                                                <input type="file"
+                                                    class="form-control @error('fac_logo') is-invalid @enderror"
+                                                    id="fac_logo" name="fac_logo"
+                                                    accept="image/png, image/jpeg, image/jpg"
+                                                    onchange="previewImageAdd(event)">
+                                                @error('fac_logo')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div id="imagePreviewAdd" class="mt-4 mb-4 text-center">
+                                                <small class="text-muted d-block mb-2">Image preview will appear
+                                                    here</small>
+                                            </div>
+                                        </div>
+
 
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="mb-3">
@@ -149,6 +188,7 @@
                                                 @enderror
                                             </div>
                                         </div>
+
                                     </div>
                                 </div>
                                 <div class="modal-footer justify-content-end">
@@ -171,9 +211,76 @@
                 </form>
                 <!-- [ Add Modal ] end -->
 
+                <!-- [ Set Default Faculty ] start -->
+                <form action="{{ route('set-default-faculty-post') }}" method="POST">
+                    @csrf
+                    <div class="modal fade" id="setdefaultModal" tabindex="-1" aria-labelledby="setdefaultModal"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="addModalLabel">Set Default Faculty</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="row">
+
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="fac_name" class="form-label">Current Default Faculty</label>
+                                                <input type="text" class="form-control" placeholder="Default Faculty"
+                                                    value="{{ $facs->where('fac_status', 3)->first() ? '[' . $facs->where('fac_status', 3)->first()->fac_code . '] - ' . $facs->where('fac_status', 3)->first()->fac_name : '-' }}"
+                                                    readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="faculty_id" class="form-label">Default Faculty <span
+                                                        class="text-danger">*</span></label>
+                                                <select name="faculty_id" id="faculty_id"
+                                                    class="form-select  @error('faculty_id') is-invalid @enderror">
+                                                    <option value="">- Select Faculty -</option>
+                                                    @foreach ($facs->where('fac_status', 1) as $faculty)
+                                                        <option value="{{ $faculty->id }}">
+                                                            [{{ $faculty->fac_code }}] - {{ $faculty->fac_name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('faculty_id')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer justify-content-end">
+                                    <div class="flex-grow-1 text-end">
+                                        <div class="col-sm-12">
+                                            <div class="d-flex justify-content-between gap-3 align-items-center">
+                                                <button type="button" class="btn btn-light btn-pc-default w-100"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary w-100"
+                                                    id="addApplicationBtn">
+                                                    Save Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!-- [ Set Default Faculty ] end -->
+
                 @foreach ($facs as $upd)
                     <!-- [ Update Modal ] start -->
-                    <form action="{{ route('update-faculty-post', Crypt::encrypt($upd->id)) }}" method="POST">
+                    <form action="{{ route('update-faculty-post', Crypt::encrypt($upd->id)) }}" method="POST"
+                        enctype="multipart/form-data">
                         @csrf
                         <div class="modal fade" id="updateModal-{{ $upd->id }}" tabindex="-1"
                             aria-labelledby="updateModal" aria-hidden="true">
@@ -220,6 +327,28 @@
 
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
+                                                    <label for="fac_logo_up" class="form-label">Faculty Logo</label>
+                                                    <input type="file"
+                                                        class="form-control @error('fac_logo_up') is-invalid @enderror"
+                                                        id="fac_logo_up_{{ $upd->id }}" name="fac_logo_up"
+                                                        accept="image/png, image/jpeg, image/jpg"
+                                                        onchange="previewImageUpdate(event, {{ $upd->id }})">
+                                                </div>
+                                                <div id="imagePreviewUpdate_{{ $upd->id }}"
+                                                    class="mt-4 mb-4 text-center">
+                                                    @if ($upd->fac_logo)
+                                                        <img src="{{ asset('storage/' . $upd->fac_logo) }}"
+                                                            alt="Current Faculty Logo" class="img-fluid"
+                                                            style="max-height: 300px; border: 2px dashed #dee2e6; padding: 10px; border-radius: 10px; background: #f8f9fa;">
+                                                    @else
+                                                        <small class="text-muted d-block mb-2">Image preview will
+                                                            appear here</small>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                                <div class="mb-3">
                                                     <label for="fac_status_up" class="form-label">Status <span
                                                             class="text-danger">*</span></label>
                                                     <select name="fac_status_up" id="fac_status"
@@ -234,6 +363,11 @@
                                                         <option value="2"
                                                             @if ($upd->fac_status == 2) selected @endif>Inactive
                                                         </option>
+                                                        @if ($upd->fac_status == 3)
+                                                            <option value="3"
+                                                                @if ($upd->fac_status == 3) selected @endif>Default
+                                                            </option>
+                                                        @endif
                                                     </select>
                                                     @error('fac_status_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -362,46 +496,80 @@
             }
         });
 
+        function previewImageAdd(event) {
+            const preview = $('#imagePreviewAdd');
+            preview.empty();
+
+            const file = event.target.files[0];
+            if (file) {
+                const img = $('<img>', {
+                    src: URL.createObjectURL(file),
+                    class: 'img-fluid',
+                    css: {
+                        maxHeight: '300px'
+                    }
+                });
+                preview.append(img.hide().fadeIn(500));
+            }
+        }
+
+        function previewImageUpdate(event, id) {
+            const preview = $('#imagePreviewUpdate_' + id);
+            preview.empty();
+
+            const file = event.target.files[0];
+            if (file) {
+                const img = $('<img>', {
+                    src: URL.createObjectURL(file),
+                    class: 'img-fluid',
+                    css: {
+                        maxHeight: '300px',
+                        border: '2px dashed #dee2e6',
+                        padding: '10px',
+                        borderRadius: '10px',
+                        background: '#f8f9fa'
+                    }
+                });
+                preview.append(img.hide().fadeIn(500));
+            }
+        }
+
         $(document).ready(function() {
 
-            $(function() {
-
-                // DATATABLE : FACULTY
-                var table = $('.data-table').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    responsive: true,
-                    autoWidth: true,
-                    ajax: {
-                        url: "{{ route('faculty-setting') }}",
+            // DATATABLE : FACULTY
+            var table = $('.data-table').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                autoWidth: true,
+                ajax: {
+                    url: "{{ route('faculty-setting') }}",
+                },
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        searchable: false,
+                        className: "text-start"
                     },
-                    columns: [{
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            searchable: false,
-                            className: "text-start"
-                        },
-                        {
-                            data: 'fac_code',
-                            name: 'fac_code'
-                        },
-                        {
-                            data: 'fac_name',
-                            name: 'fac_name'
-                        },
-                        {
-                            data: 'fac_status',
-                            name: 'fac_status'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false
-                        }
-                    ]
-
-                });
+                    {
+                        data: 'fac_code',
+                        name: 'fac_code'
+                    },
+                    {
+                        data: 'fac_name',
+                        name: 'fac_name'
+                    },
+                    {
+                        data: 'fac_status',
+                        name: 'fac_status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ]
 
             });
 

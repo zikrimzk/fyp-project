@@ -11,6 +11,7 @@ use App\Models\Department;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 
@@ -34,6 +35,8 @@ class SettingController extends Controller
                         $status = '<span class="badge bg-light-success">' . 'Active' . '</span>';
                     } elseif ($row->fac_status == 2) {
                         $status = '<span class="badge bg-light-secondary">' . 'Inactive' . '</span>';
+                    } elseif ($row->fac_status == 3) {
+                        $status = '<span class="badge bg-success">' . 'Default' . '</span>';
                     } else {
                         $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
                     }
@@ -80,12 +83,13 @@ class SettingController extends Controller
 
                 return $table->make(true);
             }
+
             return view('staff.setting.faculty-setting', [
                 'title' => 'Faculty Setting',
                 'facs' => Faculty::all()
             ]);
         } catch (Exception $e) {
-            return abort(500);
+            return abort(500, $e->getMessage());
         }
     }
 
@@ -94,10 +98,12 @@ class SettingController extends Controller
         $validator = Validator::make($req->all(), [
             'fac_name' => 'required|string',
             'fac_code' => 'required|string|unique:faculties,fac_code,',
+            'fac_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'fac_status' => 'required|integer',
         ], [], [
             'fac_name' => 'faculty name',
             'fac_code' => 'faculty code',
+            'fac_logo' => 'faculty logo',
             'fac_status' => 'faculty status',
         ]);
 
@@ -109,9 +115,28 @@ class SettingController extends Controller
         }
         try {
             $validated = $validator->validated();
+
+            /* SAVE FACULTY LOGO */
+            $fileName = null;
+            $filePath = null;
+            if ($req->hasFile('fac_logo')) {
+
+                // 1 - GET THE SPECIFIC DATA
+                $fac_code = Str::upper($validated['fac_code']);
+
+                // 2 - SET & DECLARE FILE ROUTE
+                $fileName = Str::upper($fac_code . '_LOGO') . '.' . $req->file('fac_logo')->getClientOriginalExtension();
+                $filePath = "faculty-logo";
+
+                // 3 - SAVE THE FILE
+                $file = $req->file('fac_logo');
+                $filePath = $file->storeAs($filePath, $fileName, 'public');
+            }
+
             Faculty::create([
                 'fac_name' => $validated['fac_name'],
                 'fac_code' => $validated['fac_code'],
+                'fac_logo' => $filePath,
                 'fac_status' => $validated['fac_status']
             ]);
 
@@ -128,10 +153,12 @@ class SettingController extends Controller
         $validator = Validator::make($req->all(), [
             'fac_name_up' => 'required|string',
             'fac_code_up' => 'required|string|unique:faculties,fac_code,' . $id,
+            'fac_logo_up' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'fac_status_up' => 'required|integer',
         ], [], [
             'fac_name_up' => 'faculty name',
             'fac_code_up' => 'faculty code',
+            'fac_logo_up' => 'faculty logo',
             'fac_status_up' => 'faculty status',
         ]);
 
@@ -143,6 +170,28 @@ class SettingController extends Controller
         }
         try {
             $validated = $validator->validated();
+
+            /* UPDATE FACULTY LOGO */
+            $fileName = null;
+            $filePath = null;
+            if ($req->hasFile('fac_logo_up')) {
+
+                // 1 - GET THE SPECIFIC DATA
+                $fac_code = Str::upper($validated['fac_code_up']);
+
+                // 2 - SET & DECLARE FILE ROUTE
+                $fileName = Str::upper($fac_code . '_LOGO') . '.' . $req->file('fac_logo_up')->getClientOriginalExtension();
+                $filePath = "faculty-logo";
+
+                // 3 - SAVE THE FILE
+                $file = $req->file('fac_logo_up');
+                $filePath = $file->storeAs($filePath, $fileName, 'public');
+
+                // 4 - UPDATE the correct column!
+                Faculty::find($id)->update([
+                    'fac_logo' => $filePath
+                ]);
+            }
             Faculty::find($id)->update([
                 'fac_name' => $validated['fac_name_up'],
                 'fac_code' => $validated['fac_code_up'],
@@ -159,15 +208,63 @@ class SettingController extends Controller
     {
         try {
             $id = decrypt($id);
+            $faculty = Faculty::whereId($id)->first();
+
+            if (!$faculty) {
+                return back()->with('error', 'Faculty not found.');
+            }
+
             if ($opt == 1) {
-                Faculty::where('id', $id)->delete();
-                return  back()->with('success', 'Faculty deleted successfully.');
+                // Delete logo file if it exists
+                if ($faculty->fac_logo && Storage::disk('public')->exists($faculty->fac_logo)) {
+                    Storage::disk('public')->delete($faculty->fac_logo);
+                }
+
+                // Then delete the faculty record
+                $faculty->delete();
+
+                return back()->with('success', 'Faculty deleted successfully.');
             } elseif ($opt == 2) {
-                Faculty::where('id', $id)->update(['fac_status' => 0]);
-                return  back()->with('success', 'Faculty disabled successfully.');
+
+                $faculty->update(['fac_status' => 0]);
+
+                return back()->with('success', 'Faculty disabled successfully.');
+            } else {
+                return back()->with('error', 'Invalid option.');
             }
         } catch (Exception $e) {
-            return  back()->with('error', 'Oops! Error deleting faculty.');
+            return back()->with('error', 'Oops! Error deleting faculty.');
+        }
+    }
+
+    public function setDefaultFaculty(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'faculty_id' => 'required|exists:faculties,id',
+        ], [], [
+            'faculty_id' => 'faculty',
+
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('modal', 'setdefaultModal');
+        }
+        try {
+            $validated = $validator->validated();
+            Faculty::where('fac_status', 3)->update([
+                'fac_status' => 1
+            ]);
+
+            Faculty::where('id', $validated['faculty_id'])->update([
+                'fac_status' => 3
+            ]);
+
+            return back()->with('success', 'Dafault Faculty updated successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error updating default faculty.');
         }
     }
 
