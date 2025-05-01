@@ -115,36 +115,13 @@
 
     <!-- Student Info [ Dynamic Field Here ] -->
     <table class="info-table">
-        <tr>
-            <td class="label">Student Name</td>
-            <td class="colon">:</td>
-            <td class="value">Muhammad Zikri Bin Kashim</td>
-        </tr>
-        <tr>
-            <td class="label">Matric No.</td>
-            <td>:</td>
-            <td class="value">B032320063</td>
-        </tr>
-        <tr>
-            <td class="label">Programme of Study</td>
-            <td>:</td>
-            <td class="value">PITA (Full-Time | Part-Time)</td>
-        </tr>
-        <tr>
-            <td class="label">Main Supervisor</td>
-            <td>:</td>
-            <td class="value">Prof. Dr. Zainal Abidin</td>
-        </tr>
-        <tr>
-            <td class="label">Co-Supervisor</td>
-            <td>:</td>
-            <td class="value">Dr. Zahriah Othman</td>
-        </tr>
-        <tr>
-            <td class="label">Journal / Conference Name</td>
-            <td>:</td>
-            <td class="value">&nbsp;</td>
-        </tr>
+        @foreach ($formfields as $ff)
+            <tr>
+                <td class="label">{{ $ff->ff_label }}</td>
+                <td class="colon">:</td>
+                <td class="value">{{ $ff->ff_datakey }}</td>
+            </tr>
+        @endforeach
     </table>
 
     <!-- Signature Section -->

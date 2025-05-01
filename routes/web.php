@@ -139,12 +139,20 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/delete-procedure-{actID}-{progID}', [SOPController::class, 'deleteProcedure'])->name('delete-procedure-get');
     Route::get('/view-material/{filename}', [SOPController::class, 'viewMaterialFile'])->where('filename', '.*')->name('view-material-get');
 
-    /* Form Generator */
-    Route::get('/form-generator', [SOPController::class, 'formGenerator'])->name('form-generator');
+    /* Form Setting */
+    Route::get('/form-setting', [SOPController::class, 'formSetting'])->name('form-setting');
+    Route::get('/form-generator-{formID}', [SOPController::class, 'formGenerator'])->name('form-generator');
     Route::get('/activity-document-preview', [SOPController::class, 'previewActivityDocument'])->name('activity-document-preview-get');
     Route::post('/add-activity-form', [SOPController::class, 'addActivityForm'])->name('add-activity-form-post');
     Route::post('/get-activity-form-data', [SOPController::class, 'getActivityFormData'])->name('get-activity-form-data-post');
     Route::post('/add-attribute', [SOPController::class, 'addAttribute'])->name('add-attribute-post');
+    // [Unfinished]
+    Route::post('/update-attribute', [SOPController::class, 'updateAttribute'])->name('update-attribute-post');
+     
+    Route::post('/update-order-attribute', [SOPController::class, 'updateAttributeOrder'])->name('update-order-attribute-post');
+    Route::post('/delete-attribute', [SOPController::class, 'deleteAttribute'])->name('delete-attribute-post');
+    Route::get('/get-form-field-data', [SOPController::class, 'getFormFieldData'])->name('get-form-field-data-get');
+
 
 
 
@@ -157,7 +165,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/delete-faculty-{id}-{opt}', [SettingController::class, 'deleteFaculty'])->name('delete-faculty-get');
     Route::post('/set-default-faculty', [SettingController::class, 'setDefaultFaculty'])->name('set-default-faculty-post');
 
-
+ 
     /* Department Setting */
     Route::get('/department-setting', [SettingController::class, 'departmentSetting'])->name('department-setting');
     Route::post('/add-department', [SettingController::class, 'addDepartment'])->name('add-department-post');

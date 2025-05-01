@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 
+use function Laravel\Prompts\form;
+
 class SOPController extends Controller
 {
 
@@ -535,15 +537,176 @@ class SOPController extends Controller
         return response()->file($path);
     }
 
-    /* Form Generator */
-    public function formGenerator(Request $req)
+    /* Form Setting */
+    public function formSetting(Request $req)
     {
+        $data = DB::table('activities as a')
+            ->leftJoin('activity_forms as b', 'a.id', '=', 'b.activity_id')
+            ->select(
+                'a.act_name',
+                'b.id as af_id',
+                'b.af_title as form_title',
+                'b.af_target as form_target',
+                'b.af_status as form_status',
+                'a.id as activity_id',
+                DB::raw('COUNT(b.id) as form_count')
+            )
+            ->groupBy('a.act_name', 'b.id', 'b.af_title', 'b.af_target', 'b.af_status', 'a.id')
+            ->orderByRaw('form_count IS NULL ASC, form_count DESC, a.act_name ASC');
+
+        if ($req->ajax()) {
+
+            $data = $data->get();
+
+            $table = DataTables::of($data);
+
+            $table->addColumn('form_target', function ($row) {
+                if (is_null($row->form_target)) {
+                    return null;
+                }
+                $target = '';
+
+                if ($row->form_target == 1) {
+                    $target = '<span class="badge bg-yellow-900">' . 'Submission' . '</span>';
+                } elseif ($row->form_target == 2) {
+                    $target = '<span class="badge bg-yellow-600">' . 'Evaluation' . '</span>';
+                } elseif ($row->form_target == 3) {
+                    $target = '<span class="badge bg-yellow-300">' . 'Nomination' . '</span>';
+                } else {
+                    $target = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                }
+
+                return $target;
+            });
+
+
+            $table->addColumn('form_status', function ($row) {
+                if (is_null($row->form_status)) {
+                    return null;
+                }
+                $status = '';
+
+                if ($row->form_status == 1) {
+                    $status = '<span class="badge bg-success">' . 'Active' . '</span>';
+                } elseif ($row->form_status == 2) {
+                    $status = '<span class="badge bg-secondary">' . 'Inactive' . '</span>';
+                } else {
+                    $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                }
+
+                return $status;
+            });
+
+            $table->addColumn('action', function ($row) {
+                if (is_null($row->af_id)) {
+                    return null;
+                }
+                $html =
+                    '
+                    <div class="d-flex justify-content-end align-items-center gap-2">
+                        <a href="' . route('form-generator', $row->af_id) . '" class="avtar avtar-xs btn-light-primary">
+                            <i class="ti ti-edit f-20"></i>
+                        </a>
+                        <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
+                            data-bs-target="#deleteModal-' . $row->af_id . '">
+                            <i class="ti ti-trash f-20"></i>
+                        </a>
+                    </div>
+                    ';
+                return $html;
+            });
+
+
+            $table->rawColumns(['form_target', 'form_status', 'action']);
+
+            return $table->make(true);
+        }
         try {
-            return view('staff.sop.form-generator', [
-                'title' => 'Form Generator',
-                'acts' => Activity::all()
+            return view('staff.sop.form-setting', [
+                'title' => 'Form Setting',
+                'acts' => Activity::all(),
             ]);
         } catch (Exception $e) {
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    public function addActivityForm(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'actid' => 'required|integer|exists:activities,id',
+            'formTitle'  => 'required',
+            'formTarget' => 'required',
+            'formStatus' => 'required',
+        ], [], [
+            'actid' => 'activity',
+            'formTitle'  => 'form title',
+            'formTarget' => 'form target',
+            'formStatus' => 'form status',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+
+            $validated = $validator->validated();
+
+            $checkExists = ActivityForm::where('activity_id', $validated['actid'])->where('af_target', $validated['formTarget'])->exists();
+            $message = '';
+
+            if ($checkExists) {
+                ActivityForm::where('activity_id', $validated['actid'])->update([
+                    'af_title' => $validated['formTitle'],
+                    'af_target' => $validated['formTarget'],
+                    'af_status' => $validated['formStatus'],
+                    'activity_id' => $validated['actid'],
+                ]);
+
+                $message = 'Form updated successfully.';
+            } else {
+                ActivityForm::create([
+                    'af_title' => $validated['formTitle'],
+                    'af_target' => $validated['formTarget'],
+                    'af_status' => $validated['formStatus'],
+                    'activity_id' => $validated['actid'],
+                ]);
+                $message = 'Form added successfully.';
+            }
+
+            $activityForm = ActivityForm::where('activity_id', $validated['actid'])->where('af_target', $validated['formTarget'])->first();
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'activityForm' => $activityForm,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 200);
+        }
+    }
+
+    public function formGenerator($formID)
+    {
+        try {
+            $formdata = ActivityForm::where('id', $formID)->first();
+            if (!$formdata) {
+                return abort(404, 'Form not found.');
+            }
+
+            return view('staff.sop.form-generator', [
+                'title' => 'Form Generator',
+                'formdata' => $formdata,
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
@@ -553,11 +716,14 @@ class SOPController extends Controller
         try {
             $act = Activity::where('id', $req->actid)->first();
             $actform = ActivityForm::where('activity_id', $req->actid)->first();
+            $formfield = FormField::where('af_id',  $actform->id)->orderby('ff_order')->get();
             $pdf = Pdf::loadView('staff.sop.template.activity-document', [
                 'title' => $act->act_name . " Document",
                 'act' => $act,
                 'form_title' => $req->title,
                 'actform' => $actform,
+                'formfields' => $formfield,
+
             ]);
 
             return $pdf->stream('preview.pdf');
@@ -580,6 +746,7 @@ class SOPController extends Controller
 
             return response()->json([
                 'success' => true,
+                'formID' => $actform->id,
                 'formTitle' => $actform->af_title,
                 'formTarget' => $actform->af_target,
                 'formStatus' => $actform->af_status,
@@ -592,24 +759,22 @@ class SOPController extends Controller
         }
     }
 
-    public function addActivityForm(Request $req)
+    public function addAttribute(Request $req)
     {
         $validator = Validator::make($req->all(), [
             'actid' => 'required|integer|exists:activities,id',
-            'formTitle'  => 'required',
-            'formTarget' => 'required',
-            'formStatus' => 'required',
+            'ff_label'  => 'required',
+            'ff_datakey' => 'required',
         ], [], [
-            'actid' => 'Activity',
-            'formTitle'  => 'Form Title',
-            'formTarget' => 'Form Target',
-            'formStatus' => 'Form Status',
+            'actid' => 'activity',
+            'ff_label'  => 'label',
+            'ff_datakey' => 'attribute',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => $validator->errors()
+                'errors' => $validator->errors()
             ], 422);
         }
 
@@ -617,31 +782,54 @@ class SOPController extends Controller
 
             $validated = $validator->validated();
 
-            $checkExists = ActivityForm::where('activity_id', $validated['actid'])->exists();
-            $message = '';
+            $af_id = ActivityForm::where('activity_id', $validated['actid'])->first()->id;
+            $checkExists = FormField::where('ff_label', $validated['ff_label'])->where('af_id', $af_id)->exists();
 
             if ($checkExists) {
-                ActivityForm::where('activity_id', $validated['actid'])->update([
-                    'af_title' => $validated['formTitle'],
-                    'af_target' => $validated['formTarget'],
-                    'af_status' => $validated['formStatus'],
-                    'activity_id' => $validated['actid'],
-                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attribute already exists.',
+                ], 200);
+            }
 
-                $message = 'Form updated successfully.';
-            } else {
-                ActivityForm::create([
-                    'af_title' => $validated['formTitle'],
-                    'af_target' => $validated['formTarget'],
-                    'af_status' => $validated['formStatus'],
-                    'activity_id' => $validated['actid'],
+            $af_count = FormField::where('af_id', $af_id)->count();
+
+            FormField::create([
+                'ff_label'  => $validated['ff_label'],
+                'ff_datakey' => $validated['ff_datakey'],
+                'ff_order' => $af_count + 1,
+                'af_id' =>  $af_id,
+            ]);
+
+            $formfield = FormField::where('ff_label', $validated['ff_label'])->where('af_id', $af_id)->first();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Attribute added successfully.',
+                'formfield' => $formfield,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 200);
+        }
+    }
+    // [Unfinished]
+    public function updateAttribute(Request $req)
+    {
+        try {
+            $fields = $req->input('fields', []);
+
+            foreach ($fields as $field) {
+                FormField::where('id', $field['id'])->update([
+                    'ff_order' => $field['order']
                 ]);
-                $message = 'Form added successfully.';
             }
 
             return response()->json([
                 'success' => true,
-                'message' => $message,
+                'message' => 'Attribute order updated successfully.',
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -651,55 +839,70 @@ class SOPController extends Controller
         }
     }
 
-    public function addAttribute(Request $req)
+    public function updateAttributeOrder(Request $req)
     {
-        $validator = Validator::make($req->all(), [
-            'actid' => 'required|integer|exists:activities,id',
-            'ff_label'  => 'required',
-            'ff_datakey' => 'required',
-            'ff_order' => 'nullable|integer',
-            'ff_isbold' => 'required',
-            'ff_isheader' => 'required',
-        ], [], [
-            'actid' => 'activity',
-            'ff_label'  => 'label',
-            'ff_datakey' => 'attribute',
-            'ff_order' => 'order',
-            'ff_isbold' => 'bold',
-            'ff_isheader' => 'header',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors() 
-            ], 422);
-        }
-
         try {
+            $fields = $req->input('fields', []);
 
-            $validated = $validator->validated();
-
-            $af_id = ActivityForm::where('activity_id', $validated['actid'])->first()->id;
-
-            FormField::create([
-                'ff_label'  => $validated['ff_label'],
-                'ff_datakey' => $validated['ff_datakey'],
-                'ff_order' => $validated['ff_order'],
-                'ff_isbold' => $validated['ff_isbold'],
-                'ff_isheader' => $validated['ff_isheader'],
-                'af_id' =>  $af_id,
-            ]);
+            foreach ($fields as $field) {
+                FormField::where('id', $field['id'])->update([
+                    'ff_order' => $field['order']
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Attribute added successfully.',
+                'message' => 'Attribute order updated successfully.',
             ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 200);
+        }
+    }
+
+    public function deleteAttribute(Request $req)
+    {
+        try {
+            $checkExists = FormField::where('id', $req->ff_id)->exists();
+
+            if (!$checkExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attribute not found.',
+                ], 200);
+            }
+            FormField::where('id', $req->ff_id)->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Attribute deleted successfully.',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 200);
+        }
+    }
+
+    public function getFormFieldData(Request $req)
+    {
+        try {
+            $fields = FormField::where('af_id', $req->af_id)
+                ->orderBy('ff_order')
+                ->get(['id', 'ff_label', 'ff_datakey', 'ff_order']);
+
+            return response()->json([
+                'success' => true,
+                'fields' => $fields
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

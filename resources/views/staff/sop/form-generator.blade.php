@@ -2,99 +2,24 @@
 
 @section('content')
     <style>
-        #form-wrapper {
-            width: 794px;
-            height: 1123px;
-            margin: 40px auto;
-            padding: 40px;
-            font-family: 'Arial', sans-serif;
-            font-size: 12pt;
-            background: white;
-            color: #000;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        .draggable-item {
+            cursor: move;
+            transition: background-color 0.2s ease;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
+        .draggable-item:hover {
+            background-color: #f8f9fa;
         }
 
-        .header img {
-            width: 140px;
-            margin-bottom: 10px;
+        .drag-handle {
+            cursor: grab;
         }
 
-        .header h2,
-        .header h3 {
-            margin: 0;
-            font-weight: bold;
-        }
-
-        .line-title {
-            border-top: 1px solid #000;
-            margin-top: 5px;
-        }
-
-        .form-title {
-            font-size: 14pt;
-            font-weight: bold;
-            margin-top: 12px;
-            text-transform: uppercase;
-        }
-
-        .info-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 30px 0 20px;
-        }
-
-        .info-table td {
-            padding: 10px 4px;
-            vertical-align: top;
-        }
-
-        .label {
-            width: 35%;
-            font-weight: bold;
-        }
-
-        .colon {
-            width: 2%;
-        }
-
-        .value {
-            width: 63%;
-            border-bottom: 1px solid #000;
-            text-transform: uppercase;
-        }
-
-        .signature-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 40px;
-        }
-
-        .signature-table td {
-            vertical-align: center;
-            padding: 0 10px;
-        }
-
-        .signature-user {
-            height: 50px;
-        }
-
-        .signature-label {
-            font-weight: bold;
-            font-size: 11pt;
-            border-left: 1px solid #000;
-            border-right: 1px solid #000;
-            border-bottom: 1px solid #000;
-        }
-
-        .date-label {
-            font-size: 10.5pt;
-            margin-top: 5px;
-            margin-bottom: 5px;
+        .ui-state-highlight {
+            background-color: #e9ecef !important;
+            border: 2px dashed #adb5bd;
+            height: 3rem;
+            margin-bottom: 0.5rem;
         }
     </style>
     <div class="pc-container">
@@ -137,98 +62,101 @@
                             <div class="row">
                                 <!-- [ Form Setting ] start -->
                                 <div class="col-sm-4">
-                                    <div class="row">
-                                        <div class="col-sm-12" id="formGeneration">
-                                            <div class="mb-3">
-                                                <h5 class="mb-0">Generate Form</h5>
-                                                <small>Select the activity first before generating the form</small>
-                                            </div>
+                                    <h5 class="mb-3 mt-3 text-center">Form Configuration</h5>
 
-                                            <div class="mb-3">
-                                                <select name="activity_id" class="form-select" id="selectActivity">
-                                                    <option value="" selected>-- Select Activity --</option>
-                                                    @foreach ($acts as $activity)
-                                                        <option value="{{ $activity->id }}">{{ $activity->act_name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-
-                                            <div class="d-grid mt-4 mb-4">
-                                                <button type="button" class="btn btn-primary" id="generateForm">Generate
-                                                    Form</button>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12" id="formSetting">
-                                            <div class="mb-3">
-                                                <h5 class="mb-0">Form Settings</h5>
-                                                <small>Customize your form settings here</small>
-                                            </div>
-                                            <div
-                                                class="mb-3 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
-                                                <button type="button"
-                                                    class="btn btn-light-primary btn-sm d-flex align-items-center gap-2"
-                                                    data-bs-toggle="modal" data-bs-target="#addAttributeModal"
-                                                    title="Add Attribute" id="addAttributeBtn" disabled>
-                                                    <i class="ti ti-plus f-18"></i> <span
-                                                        class="d-none d-sm-inline me-2">Add Attribute</span>
+                                    <div class="accordion card" id="formConfigAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingTwo">
+                                                <button class="accordion-button " type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#collapseTwo" aria-expanded="true"
+                                                    aria-controls="collapseTwo">
+                                                    <div class="mb-2 mt-2">
+                                                        <h5 class="mb-0">Form Field</h5>
+                                                        <small>Customize your form fields here</small>
+                                                    </div>
                                                 </button>
-                                                {{-- <button type="button"
-                                                    class="btn btn-light-danger btn-sm d-flex align-items-center gap-2"
-                                                    data-bs-toggle="modal" data-bs-target="#addActivityModal"
-                                                    title="Add Attribute" id="addActivity">
-                                                    <i class="ti ti-trash f-18"></i> <span
-                                                        class="d-none d-sm-inline me-2">Reset Attribute</span>
-                                                </button> --}}
-                                            </div>
+                                            </h2>
+                                            <div id="collapseTwo" class="accordion-collapse collapse show"
+                                                aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                                                <div class="accordion-body">
+                                                    <div
+                                                        class="mb-3 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                                        <button type="button"
+                                                            class="btn btn-light-primary btn-sm d-flex align-items-center gap-2"
+                                                            data-bs-toggle="modal" data-bs-target="#addAttributeModal"
+                                                            title="Add Attribute" id="addAttributeBtn" disabled>
+                                                            <i class="ti ti-plus f-18"></i> <span
+                                                                class="d-none d-sm-inline me-2">Add Attribute</span>
+                                                        </button>
+                                                    </div>
 
-                                            <div class="mb-3">
-                                                <label for="txt_label" class="form-label">Form Title</label>
-                                                <input type="text" name="form_title" id="txt_form_title"
-                                                    class="form-control" placeholder="Enter Form Title">
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label for="txt_label" class="form-label">Form Target</label>
-                                                <select name="select_form_target" class="form-select"
-                                                    id="select_form_target">
-                                                    <option value="" selected>-- Select Target --</option>
-                                                    <option value="1">Submission</option>
-                                                    <option value="2">Evaluation</option>
-                                                    <option value="3">Nomination</option>
-                                                </select>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label for="txt_label" class="form-label">Form Status</label>
-                                                <select name="select_form_status" class="form-select"
-                                                    id="select_form_status">
-                                                    <option value="" selected>-- Select Status --</option>
-                                                    <option value="1">Active</option>
-                                                    <option value="2">Inactive</option>
-                                                </select>
-                                            </div>
-
-                                            <div class="d-grid mt-4 mb-4">
-                                                <button type="button" class="btn btn-primary" id="saveFormSetting">Save
-                                                    Changes</button>
+                                                    <ul id="fieldList" class="list-group">
+                                                        <!-- Form fields will be injected here -->
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
 
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingOne">
+                                                <button class="accordion-button collapsed" type="button"
+                                                    data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                                                    aria-expanded="false" aria-controls="collapseOne">
+                                                    <div class="mb-2 mt-2">
+                                                        <h5 class="mb-0">Form Settings</h5>
+                                                        <small>Customize your form settings here</small>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="collapseOne" class="accordion-collapse collapse"
+                                                aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                                <div class="accordion-body">
+
+                                                    <div class="mb-3">
+                                                        <label for="txt_label" class="form-label">Form Title</label>
+                                                        <input type="text" name="form_title" id="txt_form_title"
+                                                            class="form-control" placeholder="Enter Form Title">
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="txt_label" class="form-label">Form Target</label>
+                                                        <select name="select_form_target" class="form-select"
+                                                            id="select_form_target" disabled>
+                                                            <option value="1">Submission</option>
+                                                            <option value="2">Evaluation</option>
+                                                            <option value="3">Nomination</option>
+                                                        </select>
+                                                        <input type="hidden" id="select_form_target_hidden"
+                                                            name="formTarget">
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="txt_label" class="form-label">Form Status</label>
+                                                        <select name="select_form_status" class="form-select"
+                                                            id="select_form_status">
+                                                            <option value="" selected>-- Select Status --</option>
+                                                            <option value="1">Active</option>
+                                                            <option value="2">Inactive</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="d-grid mt-4 mb-4">
+                                                        <button type="button" class="btn btn-primary"
+                                                            id="saveFormSetting">Save
+                                                            Changes</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- [ Form Setting ] end -->
 
                                 <!-- [ Form Preview ] start -->
-                                <div class="col-sm-8 border">
+                                <div class="col-sm-8">
                                     <h5 class="mb-3 mt-3 text-center">Preview</h5>
-                                    <div id="loadingSpinner" class="text-center my-3" style="display: none;">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                    </div>
                                     <iframe id="documentContainer" style="width:100%; height:1000px;"
-                                        frameborder="0"></iframe>
+                                        frameborder="1"></iframe>
                                 </div>
                                 <!-- [ Form Preview ] end -->
 
@@ -261,6 +189,9 @@
                                             <label for="select_datakey" class="form-label">Attribute</label>
                                             <select name="row_datakey" class="form-select" id="select_datakey">
                                                 <option value="" selected>-- Select Attribute --</option>
+                                                <option value="student_name">Student Name</option>
+                                                <option value="student_matricno">Student Matric No</option>
+
                                             </select>
                                         </div>
                                         {{-- <div class="mb-3">
@@ -268,38 +199,6 @@
                                             <input type="number" name="row_order" id="txt_order" class="form-control"
                                                 value="0" min="0" max="100">
                                         </div> --}}
-                                        <div class="mb-3">
-                                            <label class="form-label">Font Style</label>
-                                            <div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="fontStyle"
-                                                        id="fontNormal" value="normal" checked>
-                                                    <label class="form-check-label" for="fontNormal">Normal</label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="fontStyle"
-                                                        id="fontBold" value="bold">
-                                                    <label class="form-check-label" for="fontBold">Bold</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label class="form-label">Header Label</label>
-                                            <div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="isHeader"
-                                                        id="headerTrue" value="true">
-                                                    <label class="form-check-label" for="headerTrue">True</label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" name="isHeader"
-                                                        id="headerFalse" value="false" checked>
-                                                    <label class="form-check-label" for="headerFalse">False</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                     </div>
                                 </div>
                             </div>
@@ -355,10 +254,16 @@
                 toastEl.show();
             }
 
-            function getFormData() {
-                var selectedOpt = $('#selectActivity').val();
-                const addAttrBtn = $('#addAttributeBtn');
+            var selectedOpt = "{{ $formdata->activity_id }}";
+            let debounceTimer;
+            let fieldIdCounter = 0;
 
+            window.onload = function() {
+                getFormData();
+            };
+
+            function getFormData() {
+                const addAttrBtn = $('#addAttributeBtn');
                 $.ajax({
                     url: "{{ route('get-activity-form-data-post') }}",
                     type: "POST",
@@ -370,6 +275,7 @@
                         if (response.success) {
                             $('#txt_form_title').val(response.formTitle);
                             $('#select_form_target').val(response.formTarget);
+                            $('#select_form_target_hidden').val(response.formTarget);
                             $('#select_form_status').val(response.formStatus);
                             $('#documentContainer').attr('src',
                                 '{{ route('activity-document-preview-get') }}' +
@@ -377,9 +283,11 @@
                                 '&title=' + response.formTitle
                             );
                             addAttrBtn.prop('disabled', false);
+                            getFormFieldsData(response.formID);
                         } else {
                             $('#txt_form_title').val("");
                             $('#select_form_target').val("");
+                            $('#select_form_target_hidden').val("");
                             $('#select_form_status').val("");
                             $('#documentContainer').attr('src',
                                 '{{ route('activity-document-preview-get') }}' +
@@ -396,18 +304,74 @@
                 });
             }
 
-            $('#generateForm').click(function() {
-                getFormData();
-            });
+            function getFormFieldsData(af_id) {
+                $.ajax({
+                    url: "{{ route('get-form-field-data-get') }}", // You create this route
+                    method: "GET",
+                    data: {
+                        af_id: af_id
+                    },
+                    success: function(response) {
+                        console.log('AJAX response:', response); // Tambah ini
 
-            let debounceTimer;
+                        if (response.success && Array.isArray(response.fields)) {
+                            $('#fieldList').empty(); // Kosongkan list
 
+                            const sortedFields = response.fields.sort((a, b) => a.ff_order - b
+                                .ff_order);
+
+                            sortedFields.forEach(field => {
+                                appendFormField(field.ff_label, field.ff_datakey, field
+                                    .ff_order, field.id);
+                            });
+                        } else {
+                            console.warn("Data not valid:", response);
+                        }
+                    },
+                    error: function() {
+                        showToast('error', 'Failed to load form fields.');
+                    }
+                });
+            }
+
+            function appendFormField(label, datakey, order, ff_id = null) {
+                const id = ff_id ?? `temp_${fieldIdCounter++}`;
+                console.log(`Appending field: ${label} (${datakey}), ID: ${id}`);
+
+                const item = `
+                    <li class="list-group-item draggable-item" data-id="${id}">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="drag-handle text-secondary" title="Drag to reorder">
+                                <i class="ti ti-drag-drop fs-5"></i>
+                            </span>
+                            <div>
+                                <strong>${label}</strong>
+                                <div class="text-muted small">[${datakey}]</div>
+                            </div>
+                        </div>
+                        <div class="row g-1">
+                            <div class="col-6">
+                                <button class="btn btn-sm btn-outline-primary w-100 update-field-btn" data-id="${id}" data-label="${label}" data-key="${datakey}">
+                                    <i class="bi bi-pencil"></i> Update
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-sm btn-outline-danger w-100 delete-field-btn" data-id="${id}">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </li>
+                `;
+                $('#fieldList').append(item);
+            }
+
+            // Update Form Title in Preview
             $('#txt_form_title').on('input', function() {
                 clearTimeout(debounceTimer);
 
                 debounceTimer = setTimeout(() => {
                     const txtvalue = $(this).val();
-                    const selectedOpt = $('#selectActivity').val();
 
                     if (selectedOpt) {
                         $('#documentContainer').attr('src',
@@ -419,9 +383,9 @@
                 }, 300);
             });
 
+            // Update Form Setting
             $('#saveFormSetting').click(function() {
-                var selectedOpt = $('#selectActivity').val();
-                var formTarget = $('#select_form_target').val();
+                var formTarget = $('#select_form_target_hidden').val();
                 var formStatus = $('#select_form_status').val();
                 var formTitle = $('#txt_form_title').val();
 
@@ -465,31 +429,26 @@
                 });
             });
 
+            // Add Attribute Function
             $('#addAttributeBtn-submit').click(function() {
-                var selectedOpt = $('#selectActivity').val(); 
                 var rowLabel = $('#txt_label').val();
                 var rowDataKey = $('#select_datakey').val();
-                // var rowOrder = $('#txt_order').val();
-                var fontStyle = $('input[name="fontStyle"]:checked').val();
-                var isHeader = $('input[name="isHeader"]:checked').val();
 
                 $.ajax({
                     url: "{{ route('add-attribute-post') }}",
                     type: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",
-                        actid: selectedOpt, 
+                        actid: selectedOpt,
                         ff_label: rowLabel,
                         ff_datakey: rowDataKey,
-                        // ff_order: rowOrder,
-                        ff_isbold: fontStyle,
-                        ff_isheader: isHeader,
                     },
                     success: function(response) {
                         if (response.success) {
                             showToast('success', response.message);
+                            appendFormField(rowLabel, rowDataKey, 0, response.formfield.id);
                             $('#addAttributeModal').modal('hide');
-                            getFormData(); 
+                            getFormData();
                         } else {
                             showToast('error', response.message);
                         }
@@ -514,7 +473,76 @@
                 });
             });
 
+            // Enable drag and drop sorting Function
+            $('#fieldList').sortable({
+                placeholder: "ui-state-highlight",
+                update: function(event, ui) {
+                    console.log("New order:", $('#fieldList').sortable('toArray', {
+                        attribute: 'data-id'
+                    }));
 
+                    const newOrder = [];
+                    $('#fieldList li').each(function(index) {
+                        newOrder.push({
+                            id: $(this).data('id'),
+                            order: index + 1
+                        });
+                    });
+
+                    $.ajax({
+                        url: "{{ route('update-order-attribute-post') }}",
+                        method: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            fields: newOrder
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                showToast('success', response.message);
+                                getFormData();
+                            } else {
+                                showToast('error', response.message);
+                            }
+                        },
+                        error: function() {
+                            showToast('error', 'Failed to update field order.');
+                        }
+                    });
+                }
+            }).disableSelection();
+
+            // Update field button [Unfinished]
+            $(document).on('click', '.update-field-btn', function() {
+                const id = $(this).data('id');
+                const label = $(this).data('label');
+                const key = $(this).data('key');
+                // show modal or inline editing
+                alert(`Update feature triggered for: ${label} [${key}]`);
+                // You can implement modal re-use here
+            });
+
+            // Delete Attribute Function
+            $(document).on('click', '.delete-field-btn', function() {
+                $.ajax({
+                    url: "{{ route('delete-attribute-post') }}",
+                    method: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        ff_id: $(this).data('id'),
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('success', response.message);
+                            getFormData();
+                        } else {
+                            showToast('error', response.message);
+                        }
+                    },
+                    error: function() {
+                        showToast('error', 'Failed to delete attribute.');
+                    }
+                });
+            });
 
         });
     </script>
