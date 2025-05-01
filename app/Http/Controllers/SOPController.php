@@ -604,7 +604,7 @@ class SOPController extends Controller
                 $html =
                     '
                     <div class="d-flex justify-content-end align-items-center gap-2">
-                        <a href="' . route('form-generator', $row->af_id) . '" class="avtar avtar-xs btn-light-primary">
+                        <a href="' . route('form-generator', ['formID' => $row->af_id , 'afTarget' => $row->form_target]) . '" class="avtar avtar-xs btn-light-primary">
                             <i class="ti ti-edit f-20"></i>
                         </a>
                         <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
@@ -625,6 +625,7 @@ class SOPController extends Controller
             return view('staff.sop.form-setting', [
                 'title' => 'Form Setting',
                 'acts' => Activity::all(),
+                'actForms'=> ActivityForm::all(),
             ]);
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
@@ -660,7 +661,7 @@ class SOPController extends Controller
             $message = '';
 
             if ($checkExists) {
-                ActivityForm::where('activity_id', $validated['actid'])->update([
+                ActivityForm::where('id',$req->af_id)->update([
                     'af_title' => $validated['formTitle'],
                     'af_target' => $validated['formTarget'],
                     'af_status' => $validated['formStatus'],
@@ -693,10 +694,22 @@ class SOPController extends Controller
         }
     }
 
-    public function formGenerator($formID)
+    public function deleteActivityForm($afID)
     {
         try {
-            $formdata = ActivityForm::where('id', $formID)->first();
+            $afID = decrypt($afID);
+            FormField::where('af_id', $afID)->delete();
+            ActivityForm::where('id', $afID)->delete();
+            return back()->with('success', 'Form deleted successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error deleting forms: ' . $e->getMessage());
+        }
+    }
+
+    public function formGenerator($formID, $afTarget)
+    {
+        try {
+            $formdata = ActivityForm::where('id', $formID)->where('af_target', $afTarget)->first();
             if (!$formdata) {
                 return abort(404, 'Form not found.');
             }
@@ -715,8 +728,8 @@ class SOPController extends Controller
     {
         try {
             $act = Activity::where('id', $req->actid)->first();
-            $actform = ActivityForm::where('activity_id', $req->actid)->first();
-            $formfield = FormField::where('af_id',  $actform->id)->orderby('ff_order')->get();
+            $actform = ActivityForm::where('id',  $req->af_id)->first();
+            $formfield = FormField::where('af_id',  $req->af_id)->orderby('ff_order')->get();
             $pdf = Pdf::loadView('staff.sop.template.activity-document', [
                 'title' => $act->act_name . " Document",
                 'act' => $act,
@@ -735,7 +748,7 @@ class SOPController extends Controller
     public function getActivityFormData(Request $req)
     {
         try {
-            $actform = ActivityForm::where('activity_id', $req->actid)->first();
+            $actform = ActivityForm::where('id', $req->af_id)->where('activity_id', $req->actid)->first();
 
             if (!$actform) {
                 return response()->json([
@@ -782,7 +795,7 @@ class SOPController extends Controller
 
             $validated = $validator->validated();
 
-            $af_id = ActivityForm::where('activity_id', $validated['actid'])->first()->id;
+            $af_id = ActivityForm::where('id', $req->af_id)->first()->id;
             $checkExists = FormField::where('ff_label', $validated['ff_label'])->where('af_id', $af_id)->exists();
 
             if ($checkExists) {

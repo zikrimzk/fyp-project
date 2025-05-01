@@ -103,31 +103,34 @@
                                         <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="mb-3">
                                                 <label for="txt_label" class="form-label">Activity</label>
-                                                <select name="activity_id" class="form-select" id="selectActivity">
+                                                <select name="activity_id" class="form-select"
+                                                    id="selectActivity-{{ $act->id }}">
                                                     <option value="{{ $act->id }}">{{ $act->act_name }}</option>
                                                 </select>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="txt_label" class="form-label">Form Title</label>
-                                                <input type="text" name="form_title" id="txt_form_title"
-                                                    class="form-control" placeholder="Enter Form Title">
+                                                <input type="text" name="form_title"
+                                                    id="txt_form_title-{{ $act->id }}" class="form-control"
+                                                    placeholder="Enter Form Title">
                                             </div>
 
                                             <div class="mb-3">
                                                 <label for="txt_label" class="form-label">Form Target</label>
                                                 <select name="select_form_target" class="form-select"
-                                                    id="select_form_target">
+                                                    id="select_form_target-{{ $act->id }}">
                                                     <option value="" selected>-- Select Target --</option>
                                                     <option value="1">Submission</option>
                                                     <option value="2">Evaluation</option>
                                                     <option value="3">Nomination</option>
                                                 </select>
+
                                             </div>
 
                                             <div class="mb-3">
                                                 <label for="txt_label" class="form-label">Form Status</label>
                                                 <select name="select_form_status" class="form-select"
-                                                    id="select_form_status">
+                                                    id="select_form_status-{{ $act->id }}">
                                                     <option value="" selected>-- Select Status --</option>
                                                     <option value="1">Active</option>
                                                     <option value="2">Inactive</option>
@@ -143,8 +146,9 @@
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="button" class="btn btn-light btn-pc-default w-100"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <button type="button" id="addForm-submit"
-                                                    class="btn btn-primary w-100">
+                                                <button type="button" id="addForm-submit-{{ $act->id }}"
+                                                    class="btn btn-primary w-100 addForm-submit-btn"
+                                                    data-activity="{{ $act->id }}">
                                                     Add Form
                                                 </button>
                                             </div>
@@ -155,6 +159,46 @@
                         </div>
                     </div>
                     <!-- [ Add Form Modal ] end -->
+                @endforeach
+
+                @foreach ($actForms as $af)
+                    <!-- [ Delete Modal ] start -->
+                    <div class="modal fade" id="deleteModal-{{ $af->id }}"
+                        data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-12 mb-4">
+                                            <div class="d-flex justify-content-center align-items-center mb-3">
+                                                <i class="ti ti-trash text-danger" style="font-size: 100px"></i>
+                                            </div>
+
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <h2>Are you sure ?</h2>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 mb-3">
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <p class="fw-normal f-18 text-center">This action will remove all the form data and cannot be undone.</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12">
+                                            <div class="d-flex justify-content-between gap-3 align-items-center">
+                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <a href="{{ route('delete-form-activity-get', ['afID' => Crypt::encrypt($af->id)]) }}"
+                                                    class="btn btn-danger w-100">Delete Anyways</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ Delete Modal ] end -->
                 @endforeach
                 <!-- [ Form Setting ] end -->
             </div>
@@ -286,11 +330,13 @@
                 toastEl.show();
             }
 
-            $('#addForm-submit').click(function() {
-                var selectedOpt = $('#selectActivity').val();
-                var formTarget = $('#select_form_target').val();
-                var formStatus = $('#select_form_status').val();
-                var formTitle = $('#txt_form_title').val();
+            $('.addForm-submit-btn').click(function() {
+                const activityId = $(this).data('activity');
+
+                const selectedOpt = $('#selectActivity-' + activityId).val();
+                const formTarget = $('#select_form_target-' + activityId).val();
+                const formStatus = $('#select_form_status-' + activityId).val();
+                const formTitle = $('#txt_form_title-' + activityId).val();
 
                 $.ajax({
                     url: "{{ route('add-activity-form-post') }}",
@@ -305,22 +351,22 @@
                     success: function(response) {
                         if (response.success) {
                             showToast('success', response.message);
-                            $('.data-table').DataTable().ajax
-                            .reload();
+                            $('.data-table').DataTable().ajax.reload();
                             $('#addFormModal-' + selectedOpt).modal('hide');
-                            $('#select_form_target').val('');
-                            $('#select_form_status').val('');
-                            $('#txt_form_title').val('');
-                            // alert(response.activityForm.id);
-                            window.location.href = "form-generator-" + response.activityForm.id;
 
+                            // Reset the fields
+                            $('#select_form_target-' + selectedOpt).val('');
+                            $('#select_form_status-' + selectedOpt).val('');
+                            $('#txt_form_title-' + selectedOpt).val('');
+
+                            window.location.href = "form-generator-" + response.activityForm
+                                .id + "-" + response.activityForm.af_target;
                         } else {
                             showToast('error', response.message);
                         }
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            // Laravel validation error
                             const errors = xhr.responseJSON?.message;
                             if (errors) {
                                 let msg = '';
@@ -333,7 +379,6 @@
                                     'Validation failed, but no message returned.');
                             }
                         } else {
-                            // Other server errors
                             showToast('error', 'Something went wrong. Please try again.');
                         }
                     }

@@ -5,6 +5,8 @@
         .draggable-item {
             cursor: move;
             transition: background-color 0.2s ease;
+            border: 2px dashed #000000;
+
         }
 
         .draggable-item:hover {
@@ -51,6 +53,14 @@
             </div>
             <!-- [ Alert ] end -->
 
+            <div class="d-flex justify-content-start align-items-center mb-3">
+                <a href="{{ route('form-setting') }}"
+                    class="btn btn-sm btn-light-primary d-flex align-items-center justify-content-center me-2">
+                    <i class="ti ti-arrow-left me-2"></i>
+                    <span class="me-2">Back</span>
+                </a>
+            </div>
+
 
 
             <!-- [ Main Content ] start -->
@@ -65,18 +75,19 @@
                                     <h5 class="mb-3 mt-3 text-center">Form Configuration</h5>
 
                                     <div class="accordion card" id="formConfigAccordion">
+                                        <!-- [ Form Fields ] start -->
                                         <div class="accordion-item">
                                             <h2 class="accordion-header" id="headingTwo">
-                                                <button class="accordion-button " type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#collapseTwo" aria-expanded="true"
-                                                    aria-controls="collapseTwo">
+                                                <button class="accordion-button collapsed" type="button"
+                                                    data-bs-toggle="collapse" data-bs-target="#collapseTwo"
+                                                    aria-expanded="true" aria-controls="collapseTwo">
                                                     <div class="mb-2 mt-2">
-                                                        <h5 class="mb-0">Form Field</h5>
-                                                        <small>Customize your form fields here</small>
+                                                        <h5 class="mb-0">Form Fields</h5>
+                                                        <small>Customize form fields</small>
                                                     </div>
                                                 </button>
                                             </h2>
-                                            <div id="collapseTwo" class="accordion-collapse collapse show"
+                                            <div id="collapseTwo" class="accordion-collapse collapse"
                                                 aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
                                                 <div class="accordion-body">
                                                     <div
@@ -96,7 +107,9 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <!-- [ Form Fields ] end -->
 
+                                        <!-- [ Form Settings ] start -->
                                         <div class="accordion-item">
                                             <h2 class="accordion-header" id="headingOne">
                                                 <button class="accordion-button collapsed" type="button"
@@ -104,7 +117,7 @@
                                                     aria-expanded="false" aria-controls="collapseOne">
                                                     <div class="mb-2 mt-2">
                                                         <h5 class="mb-0">Form Settings</h5>
-                                                        <small>Customize your form settings here</small>
+                                                        <small>Customize title, target, and status</small>
                                                     </div>
                                                 </button>
                                             </h2>
@@ -148,6 +161,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <!-- [ Form Settings ] end -->
                                     </div>
                                 </div>
                                 <!-- [ Form Setting ] end -->
@@ -220,6 +234,7 @@
                     </div>
                 </div>
                 <!-- [ Add Attribute Modal ] end -->
+
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -255,6 +270,7 @@
             }
 
             var selectedOpt = "{{ $formdata->activity_id }}";
+            var af_id = "{{ $formdata->id }}";
             let debounceTimer;
             let fieldIdCounter = 0;
 
@@ -269,6 +285,7 @@
                     type: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",
+                        af_id: af_id,
                         actid: selectedOpt
                     },
                     success: function(response) {
@@ -280,6 +297,7 @@
                             $('#documentContainer').attr('src',
                                 '{{ route('activity-document-preview-get') }}' +
                                 '?actid=' + encodeURIComponent(selectedOpt) +
+                                '&af_id=' + encodeURIComponent(af_id) +
                                 '&title=' + response.formTitle
                             );
                             addAttrBtn.prop('disabled', false);
@@ -292,6 +310,7 @@
                             $('#documentContainer').attr('src',
                                 '{{ route('activity-document-preview-get') }}' +
                                 '?actid=' + encodeURIComponent(selectedOpt) +
+                                '&af_id=' + encodeURIComponent(af_id) +
                                 '&title='
                             );
                             addAttrBtn.prop('disabled', true);
@@ -306,26 +325,37 @@
 
             function getFormFieldsData(af_id) {
                 $.ajax({
-                    url: "{{ route('get-form-field-data-get') }}", // You create this route
+                    url: "{{ route('get-form-field-data-get') }}",
                     method: "GET",
                     data: {
                         af_id: af_id
                     },
                     success: function(response) {
-                        console.log('AJAX response:', response); // Tambah ini
+                        const $fieldList = $('#fieldList');
+                        $fieldList.empty();
 
                         if (response.success && Array.isArray(response.fields)) {
-                            $('#fieldList').empty(); // Kosongkan list
+                            if (response.fields.length === 0) {
+                                $fieldList.append(`
+                                    <li class="list-group-item text-center text-muted" id="noFieldMsg">
+                                        This form doesn’t have any fields. Add one to get started!
+                                    </li>
+                                `);
+                            } else {
+                                const sortedFields = response.fields.sort((a, b) => a.ff_order - b
+                                    .ff_order);
 
-                            const sortedFields = response.fields.sort((a, b) => a.ff_order - b
-                                .ff_order);
-
-                            sortedFields.forEach(field => {
-                                appendFormField(field.ff_label, field.ff_datakey, field
-                                    .ff_order, field.id);
-                            });
+                                sortedFields.forEach(field => {
+                                    appendFormField(field.ff_label, field.ff_datakey, field
+                                        .ff_order, field.id);
+                                });
+                            }
                         } else {
-                            console.warn("Data not valid:", response);
+                            $fieldList.append(`
+                                <li class="list-group-item text-center text-muted" id="noFieldMsg">
+                                    This form doesn’t have any fields. Add one to get started!
+                                </li>
+                            `);
                         }
                     },
                     error: function() {
@@ -377,6 +407,7 @@
                         $('#documentContainer').attr('src',
                             '{{ route('activity-document-preview-get') }}' +
                             '?actid=' + encodeURIComponent(selectedOpt) +
+                            '&af_id=' + encodeURIComponent(af_id) +
                             '&title=' + encodeURIComponent(txtvalue)
                         );
                     }
@@ -395,6 +426,7 @@
                     data: {
                         _token: "{{ csrf_token() }}",
                         actid: selectedOpt,
+                        af_id: af_id,
                         formTitle: formTitle,
                         formTarget: formTarget,
                         formStatus: formStatus,
@@ -440,6 +472,7 @@
                     data: {
                         _token: "{{ csrf_token() }}",
                         actid: selectedOpt,
+                        af_id: af_id,
                         ff_label: rowLabel,
                         ff_datakey: rowDataKey,
                     },
@@ -448,6 +481,8 @@
                             showToast('success', response.message);
                             appendFormField(rowLabel, rowDataKey, 0, response.formfield.id);
                             $('#addAttributeModal').modal('hide');
+                            $('#txt_label').val('');
+                            $('#select_datakey').val('');
                             getFormData();
                         } else {
                             showToast('error', response.message);

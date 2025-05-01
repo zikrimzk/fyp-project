@@ -141,10 +141,11 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Form Setting */
     Route::get('/form-setting', [SOPController::class, 'formSetting'])->name('form-setting');
-    Route::get('/form-generator-{formID}', [SOPController::class, 'formGenerator'])->name('form-generator');
-    Route::get('/activity-document-preview', [SOPController::class, 'previewActivityDocument'])->name('activity-document-preview-get');
     Route::post('/add-activity-form', [SOPController::class, 'addActivityForm'])->name('add-activity-form-post');
+    Route::get('/delete-form-activity-{afID}', [SOPController::class, 'deleteActivityForm'])->name('delete-form-activity-get');
+    Route::get('/form-generator-{formID}-{afTarget}', [SOPController::class, 'formGenerator'])->name('form-generator');
     Route::post('/get-activity-form-data', [SOPController::class, 'getActivityFormData'])->name('get-activity-form-data-post');
+    Route::get('/activity-document-preview', [SOPController::class, 'previewActivityDocument'])->name('activity-document-preview-get');
     Route::post('/add-attribute', [SOPController::class, 'addAttribute'])->name('add-attribute-post');
     // [Unfinished]
     Route::post('/update-attribute', [SOPController::class, 'updateAttribute'])->name('update-attribute-post');
