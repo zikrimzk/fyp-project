@@ -121,8 +121,7 @@
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
                                                 <button type="button" class="btn btn-light btn-pc-default w-100"
                                                     data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-primary w-100"
-                                                    id="addApplicationBtn">
+                                                <button type="submit" class="btn btn-primary w-100" id="addApplicationBtn">
                                                     Add Activity
                                                 </button>
                                             </div>
@@ -191,8 +190,8 @@
                     <!-- [ Update Modal ] end -->
 
                     <!-- [ Delete Modal ] start -->
-                    <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-keyboard="false" tabindex="-1"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-body">
@@ -278,6 +277,137 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
+    <!-- Table Fields -->
+    {{-- <div class="border-top pt-3 mt-3">
+                                    <h6>Table Settings</h6>
+
+                                    <!-- Is Table Checkbox -->
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="ff_is_table"
+                                            name="ff_is_table" value="1">
+                                        <label class="form-check-label" for="ff_is_table">This field is a dynamic
+                                            table</label>
+                                    </div>
+
+                                    <!-- Table Structure -->
+                                    <div class="mb-3 table-settings-group" style="display: none;">
+                                        <label for="ff_table_structure" class="form-label">Table Structure
+                                            (JSON)</label>
+                                        <textarea class="form-control" id="ff_table_structure" name="ff_table_structure" rows="3"
+                                            placeholder='e.g. [{"header": "Column 1", "type": "text"}, {"header": "Column 2", "type": "select", "options": ["A", "B"]}]'></textarea>
+                                        <small class="form-text text-muted">Define columns: header, type
+                                            (text/select/date/etc), and options (if applicable).</small>
+                                    </div>
+
+                                    <!-- Table Default Data -->
+                                    <div class="mb-3 table-settings-group" style="display: none;">
+                                        <label for="ff_table_data" class="form-label">Default Table Data
+                                            (optional)</label>
+                                        <textarea class="form-control" id="ff_table_data" name="ff_table_data" rows="3"
+                                            placeholder='e.g. [["Row 1 Col 1", "Row 1 Col 2"], ["Row 2 Col 1", "Row 2 Col 2"]]'></textarea>
+                                        <small class="form-text text-muted">Optional: Enter default row data to
+                                            pre-fill the table.</small>
+                                    </div>
+                                </div> --}}
+
+    {{-- <div class="row">
+                                    <div class="col-sm-12 col-md-12 col-lg-12">
+                                        <div class="mb-3">
+                                            <label for="txt_label" class="form-label">Field Label</label>
+                                            <input type="text" name="row_label" id="txt_label" class="form-control"
+                                                placeholder="Enter Field Label">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="select_category" class="form-label">Field Category</label>
+                                            <select name="row_category" class="form-select" id="select_category">
+                                                <option value="" selected>-- Select Field Category --</option>
+                                                <option value="1">Input</option>
+                                                <option value="2">Output</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- [ Input Setting ] start -->
+                                        <div id="inputSetting" class="d-none">
+                                            <div class="mb-3">
+                                                <label for="select_type" class="form-label">Field Type</label>
+                                                <select name="row_type" class="form-select" id="select_type">
+                                                    <option value="" selected>-- Select Field Type --</option>
+                                                    <option value="1">Text</option>
+                                                    <option value="2">Textarea</option>
+                                                    <option value="6">Date</option>
+                                                    <option value="7">Time</option>
+                                                    <option value="8">Datetime</option>
+                                                    <option value="9">Upload</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="txt_placeholder" class="form-label">Field Placeholder</label>
+                                                <input type="text" name="row_placeholder" id="txt_placeholder"
+                                                    class="form-control" placeholder="Enter Field Placeholder">
+                                            </div>
+                                        </div>
+                                        <!-- [ Input Setting ] end -->
+
+                                        <!-- [ Output Setting ] start -->
+                                        <div id="outputSetting" class="d-none">
+                                            <div class="mb-3">
+                                                <label for="select_table" class="form-label">Field Table</label>
+                                                <select name="row_table" class="form-select" id="select_table">
+                                                    <option value="" selected>-- Select Field Table --</option>
+                                                    <option value="students">Student</option>
+                                                    <option value="staffs">Staff</option>
+                                                    <option value="activities">Activity</option>
+                                                    <option value="submissions">Submission</option>
+                                                    <option value="semesters">Semester</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="select_datakey" class="form-label">Field Attribute</label>
+                                                <select name="row_datakey" class="form-select" id="select_datakey">
+                                                    <option value="" selected>-- Select Field Attribute --</option>
+
+                                                    <option value="" disabled>-- Student --</option>
+                                                    <option value="student_name" data-table="students">Name</option>
+                                                    <option value="student_matricno" data-table="students">Matric No
+                                                    </option>
+                                                    <option value="student_gender" data-table="students">Gender</option>
+                                                    <option value="student_phoneno" data-table="students">Phone No
+                                                    </option>
+                                                    <option value="student_email" data-table="students">Email</option>
+                                                    <option value="student_titleOfResearch" data-table="students">Title of
+                                                        Research</option>
+                                                    <option value="programme_code" data-table="students">Programme
+                                                    </option>
+
+                                                    <option value="" disabled>-- Staff --</option>
+                                                    <option value="staff_name" data-table="staffs">Name</option>
+                                                    <option value="staff_id" data-table="staffs">Staff ID</option>
+                                                    <option value="staff_email" data-table="staffs">Email</option>
+                                                    <option value="staff_phoneno" data-table="staffs">Phone No</option>
+
+                                                    <option value="" disabled>-- Activity --</option>
+                                                    <option value="doc_name" data-table="activities">Document Name
+                                                    </option>
+
+                                                    <option value="" disabled>-- Submission --</option>
+                                                    <option value="submission_duedate" data-table="submissions">Submission
+                                                        Due
+                                                        Date</option>
+                                                    <option value="submission_date" data-table="submissions">Submission
+                                                        Date
+                                                    </option>
+
+                                                    <option value="" disabled>-- Semester --</option>
+                                                    <option value="sem_label" data-table="semesters">Current Semester
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <!-- [ Output Setting ] end -->
+
+                                    </div>
+                                </div> --}}
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
             var modalToShow = "{{ session('modal') }}"; // Ambil modal yang perlu dibuka dari session
@@ -303,8 +433,7 @@
                     ajax: {
                         url: "{{ route('activity-setting') }}",
                     },
-                    columns: [
-                        {
+                    columns: [{
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
                             searchable: false,
@@ -326,7 +455,7 @@
 
             });
 
-             // function toggleSelectButton() {
+            // function toggleSelectButton() {
             //     let selectedCount = selectedIds.size;
 
             //     reassignBtn.toggleClass("d-none", selectedIds.size !== 0);

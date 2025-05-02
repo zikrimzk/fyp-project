@@ -167,10 +167,11 @@
                                 <!-- [ Form Setting ] end -->
 
                                 <!-- [ Form Preview ] start -->
-                                <div class="col-sm-8">
+                                <div class="col-sm-8 text-center">
                                     <h5 class="mb-3 mt-3 text-center">Preview</h5>
+                                    <a href="{{ route('preview-activity-document-get') }}?actid={{ $formdata->activity_id }}&af_id={{ $formdata->id }}" class="link-primary">View Preview (.html)</a>
                                     <iframe id="documentContainer" style="width:100%; height:1000px;"
-                                        frameborder="1"></iframe>
+                                        frameborder="1" class="mt-3"></iframe>
                                 </div>
                                 <!-- [ Form Preview ] end -->
 
@@ -187,33 +188,140 @@
                     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="addModalLabel">Add Attribute</h5>
+                                <h5 class="modal-title" id="addModalLabel">Add Field</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-sm-12 col-md-12 col-lg-12">
-                                        <div class="mb-3">
-                                            <label for="txt_label" class="form-label">Label</label>
-                                            <input type="text" name="row_label" id="txt_label" class="form-control"
-                                                placeholder="Enter Attribute Label">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="select_datakey" class="form-label">Attribute</label>
-                                            <select name="row_datakey" class="form-select" id="select_datakey">
-                                                <option value="" selected>-- Select Attribute --</option>
-                                                <option value="student_name">Student Name</option>
-                                                <option value="student_matricno">Student Matric No</option>
+                                <!-- Field Category -->
+                                <div class="mb-3">
+                                    <label for="ff_category" class="form-label">Field Category</label>
+                                    <select class="form-select" id="ff_category" name="ff_category" required>
+                                        <option value="" selected>- Select Category -</option>
+                                        <option value="1">Input</option>
+                                        <option value="2">Output</option>
+                                        <option value="3">Section</option>
+                                        <option value="4">Text</option>
+                                        <option value="5">Ordered List</option>
+                                        <option value="6">Unordered List</option>
+                                    </select>
+                                </div>
 
-                                            </select>
-                                        </div>
-                                        {{-- <div class="mb-3">
-                                            <label for="txt_order" class="form-label">Order</label>
-                                            <input type="number" name="row_order" id="txt_order" class="form-control"
-                                                value="0" min="0" max="100">
-                                        </div> --}}
-                                    </div>
+                                <!-- Label/Title -->
+                                <div class="mb-3">
+                                    <label for="ff_label" class="form-label">Label / Title / Description</label>
+                                    <textarea class="form-control" id="ff_label" name="ff_label" rows="2"></textarea>
+                                </div>
+
+                                <!-- Component Type -->
+                                <div class="mb-3 input-field-group">
+                                    <label for="ff_component_type" class="form-label">Component Type</label>
+                                    <select class="form-select" id="ff_component_type" name="ff_component_type">
+                                        <option value="">-- Select Component --</option>
+                                        <option value="text">Text</option>
+                                        <option value="textarea">Textarea</option>
+                                        <option value="select">Select</option>
+                                        <option value="checkbox">Checkbox</option>
+                                        <option value="radio">Radio</option>
+                                        <option value="date">Date</option>
+                                        <option value="datetime-local">DateTime</option>
+                                    </select>
+                                </div>
+
+                                <!-- Placeholder -->
+                                <div class="mb-3 input-field-group">
+                                    <label for="ff_placeholder" class="form-label">Placeholder</label>
+                                    <input type="text" class="form-control" id="ff_placeholder"
+                                        name="ff_placeholder">
+                                </div>
+
+                                <!-- Required -->
+                                <div class="mb-3 input-field-group">
+                                    <label for="ff_component_required" class="form-label">Is this field
+                                        required?</label>
+                                    <select class="form-select" id="ff_component_required" name="ff_component_required">
+                                        <option value="1">Required</option>
+                                        <option value="2">Optional</option>
+                                    </select>
+                                </div>
+
+                                <!-- Value Options -->
+                                <div class="mb-3 input-field-group">
+                                    <label for="ff_value_options" class="form-label">Value Options (for select,
+                                        checkbox, radio)</label>
+                                    <textarea class="form-control" id="ff_value_options" name="ff_value_options" rows="2"
+                                        placeholder='e.g. ["Option 1", "Option 2"]'></textarea>
+                                </div>
+
+                                <!-- Repeatable -->
+                                <div class="mb-3 input-field-group">
+                                    <label for="ff_repeatable" class="form-label">Repeatable Field?</label>
+                                    <select class="form-select" id="ff_repeatable" name="ff_repeatable">
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
+                                </div>
+
+                                <!-- Append Text -->
+                                <div class="mb-3 input-field-group">
+                                    <label for="ff_append_text" class="form-label">Append Text (after label)</label>
+                                    <textarea class="form-control" id="ff_append_text" name="ff_append_text" rows="2"></textarea>
+                                </div>
+
+                                <!-- Field Table -->
+                                <div class="mb-3 output-field-group">
+                                    <label for="ff_table" class="form-label">Field Table</label>
+                                    <select name="ff_table" class="form-select" id="ff_table">
+                                        <option value="" selected>-- Select Field Table --</option>
+                                        <option value="students">Student</option>
+                                        <option value="staffs">Staff</option>
+                                        <option value="activities">Activity</option>
+                                        <option value="submissions">Submission</option>
+                                        <option value="semesters">Semester</option>
+                                    </select>
+                                </div>
+
+                                <!-- Field Attribute -->
+                                <div class="mb-3 output-field-group">
+                                    <label for="ff_datakey" class="form-label">Field Attribute</label>
+                                    <select name="ff_datakey" class="form-select" id="ff_datakey">
+                                        <option value="" selected>-- Select Field Attribute --</option>
+
+                                        <option value="" disabled>-- Student --</option>
+                                        <option value="student_name" data-table="students">Name</option>
+                                        <option value="student_matricno" data-table="students">Matric No
+                                        </option>
+                                        <option value="student_gender" data-table="students">Gender</option>
+                                        <option value="student_phoneno" data-table="students">Phone No
+                                        </option>
+                                        <option value="student_email" data-table="students">Email</option>
+                                        <option value="student_titleOfResearch" data-table="students">Title of
+                                            Research</option>
+                                        <option value="programme_code" data-table="students">Programme
+                                        </option>
+
+                                        <option value="" disabled>-- Staff --</option>
+                                        <option value="staff_name" data-table="staffs">Name</option>
+                                        <option value="staff_id" data-table="staffs">Staff ID</option>
+                                        <option value="staff_email" data-table="staffs">Email</option>
+                                        <option value="staff_phoneno" data-table="staffs">Phone No</option>
+
+                                        <option value="" disabled>-- Activity --</option>
+                                        <option value="doc_name" data-table="activities">Document Name
+                                        </option>
+
+                                        <option value="" disabled>-- Submission --</option>
+                                        <option value="submission_duedate" data-table="submissions">Submission
+                                            Due
+                                            Date</option>
+                                        <option value="submission_date" data-table="submissions">Submission
+                                            Date
+                                        </option>
+
+                                        <option value="" disabled>-- Semester --</option>
+                                        <option value="sem_label" data-table="semesters">Current Semester
+                                        </option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="modal-footer justify-content-end">
@@ -276,6 +384,8 @@
 
             window.onload = function() {
                 getFormData();
+                initializeFormVisibility();
+                resetFormSections();
             };
 
             function getFormData() {
@@ -346,7 +456,7 @@
                                     .ff_order);
 
                                 sortedFields.forEach(field => {
-                                    appendFormField(field.ff_label, field.ff_datakey, field
+                                    appendFormField(field.ff_label, field.ff_component_type, field
                                         .ff_order, field.id);
                                 });
                             }
@@ -376,7 +486,7 @@
                             </span>
                             <div>
                                 <strong>${label}</strong>
-                                <div class="text-muted small">[${datakey}]</div>
+                                <div class="text-muted small">[${datakey ?? 'Others'}]</div>
                             </div>
                         </div>
                         <div class="row g-1">
@@ -461,28 +571,151 @@
                 });
             });
 
+            $('#ff_category').on('change', function() {
+                var category = $(this).val();
+
+                resetFormSections();
+
+                if (category == 1) {
+                    $('.input-field-group').show(); // Show input-related fields
+                }
+                if (category == 2) {
+                    $('.output-field-group').show(); // Show output-related fields
+                }
+                if (category == 1 || category == 2 || category == 3 || category == 4 || category == 5 ||
+                    category == 6) {
+                    // Show ordered/unordered list
+                    $('#ff_label').parent().show();
+                }
+            });
+
+
+            $('#ff_is_table').on('change', function() {
+                if ($(this).prop('checked')) {
+                    $('.table-settings-group').show();
+                } else {
+                    $('.table-settings-group').hide();
+                }
+            });
+
+            function initializeFormVisibility() {
+                var selectedCategory = $('#ff_category').val();
+                var isTableChecked = $('#ff_is_table').prop('checked');
+
+                if (selectedCategory == 1) {
+                    $('#ff_label').parent().show();
+
+                    $('.input-field-group').show();
+                }
+                if (selectedCategory == 2) {
+                    $('#ff_label').parent().show();
+
+                    $('.output-field-group').show();
+                }
+                if (selectedCategory == 1 || selectedCategory == 2 || selectedCategory == 3 || selectedCategory ==
+                    4 || selectedCategory == 5 || selectedCategory == 6) {
+                    $('#ff_label').parent().show();
+                }
+                // Handle table-related settings visibility
+                if (isTableChecked) {
+                    $('.table-settings-group').show();
+                } else {
+                    $('.table-settings-group').hide();
+                }
+            }
+
+            // Reset the form fields visibility
+            function resetFormSections() {
+                $('#ff_datakey').prop('disabled', true);
+                $('.input-field-group').hide();
+                $('.output-field-group').hide();
+                $('#ff_label').parent().hide();
+                $('.table-settings-group').hide();
+            }
+
+            // Filter output attributes based on selected table
+            $('#ff_table').on('change', function() {
+                var selectedTable = $(this).val();
+
+                if (selectedTable != '') {
+                    $('#ff_datakey').prop('disabled', false);
+                } else {
+                    $('#ff_datakey').prop('disabled', true);
+                }
+
+                $('#ff_datakey option').each(function() {
+                    var table = $(this).data('table');
+
+                    // Keep disabled headers and empty values visible
+                    if ($(this).is(':disabled') || !table) {
+                        $(this).hide();
+                    } else if (table === selectedTable) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                $('#ff_datakey').val('');
+            });
+
+
             // Add Attribute Function
             $('#addAttributeBtn-submit').click(function() {
-                var rowLabel = $('#txt_label').val();
-                var rowDataKey = $('#select_datakey').val();
+                // Gather values for general attributes
+                var rowLabel = $('#ff_label').val();
+                var rowCategory = $('#ff_category').val();
 
+                // Gather values for input attributes
+                var rowType = $('#ff_component_type').val();
+                var rowPlaceholder = $('#ff_placeholder').val();
+                var rowRequired = $('#ff_component_required').val();
+                var rowValueOptions = $('#ff_value_options').val();
+                var rowRepeatable = $('#ff_repeatable').val();
+                var rowAppendText = $('#ff_append_text').val();
+
+                // Gather values for output attributes
+                var rowTable = $('#ff_table').val();
+                var rowDataKey = $('#ff_datakey').val();
+
+
+                // Create a data object to send in the request
+                var requestData = {
+                    _token: "{{ csrf_token() }}",
+                    actid: selectedOpt,
+                    af_id: af_id,
+                    ff_label: rowLabel,
+                    ff_category: rowCategory,
+                    ff_component_type: rowType,
+                    ff_placeholder: rowPlaceholder,
+                    ff_component_required: rowRequired,
+                    ff_value_options: rowValueOptions,
+                    ff_repeatable: rowRepeatable,
+                    ff_append_text: rowAppendText,
+                    ff_table: rowTable,
+                    ff_datakey: rowDataKey
+                };
+
+                // Send the AJAX request
                 $.ajax({
                     url: "{{ route('add-attribute-post') }}",
                     type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        actid: selectedOpt,
-                        af_id: af_id,
-                        ff_label: rowLabel,
-                        ff_datakey: rowDataKey,
-                    },
+                    data: requestData,
                     success: function(response) {
                         if (response.success) {
                             showToast('success', response.message);
                             appendFormField(rowLabel, rowDataKey, 0, response.formfield.id);
                             $('#addAttributeModal').modal('hide');
-                            $('#txt_label').val('');
-                            $('#select_datakey').val('');
+                            $('#ff_label').val('');
+                            $('#ff_category').val('');
+                            $('#ff_component_type').val('');
+                            $('#ff_placeholder').val('');
+                            $('#ff_component_required').val('1');
+                            $('#ff_value_options').val('');
+                            $('#ff_repeatable').val('0');
+                            $('#ff_append_text').val('');
+                            $('#ff_table').val('');
+                            $('#ff_datakey').val('');
                             getFormData();
                         } else {
                             showToast('error', response.message);

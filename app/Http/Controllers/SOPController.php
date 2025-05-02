@@ -604,7 +604,7 @@ class SOPController extends Controller
                 $html =
                     '
                     <div class="d-flex justify-content-end align-items-center gap-2">
-                        <a href="' . route('form-generator', ['formID' => $row->af_id , 'afTarget' => $row->form_target]) . '" class="avtar avtar-xs btn-light-primary">
+                        <a href="' . route('form-generator', ['formID' => $row->af_id, 'afTarget' => $row->form_target]) . '" class="avtar avtar-xs btn-light-primary">
                             <i class="ti ti-edit f-20"></i>
                         </a>
                         <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
@@ -625,7 +625,7 @@ class SOPController extends Controller
             return view('staff.sop.form-setting', [
                 'title' => 'Form Setting',
                 'acts' => Activity::all(),
-                'actForms'=> ActivityForm::all(),
+                'actForms' => ActivityForm::all(),
             ]);
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
@@ -661,7 +661,7 @@ class SOPController extends Controller
             $message = '';
 
             if ($checkExists) {
-                ActivityForm::where('id',$req->af_id)->update([
+                ActivityForm::where('id', $req->af_id)->update([
                     'af_title' => $validated['formTitle'],
                     'af_target' => $validated['formTarget'],
                     'af_status' => $validated['formStatus'],
@@ -745,6 +745,26 @@ class SOPController extends Controller
         }
     }
 
+    // [Debug Function]
+    public function testActivityDocument(Request $req)
+    {
+        try {
+            $act = Activity::where('id', $req->actid)->first();
+            $actform = ActivityForm::where('id',  $req->af_id)->first();
+            $formfield = FormField::where('af_id',  $req->af_id)->orderby('ff_order')->get();
+            return view('staff.sop.template.activity-document', [
+                'title' => $act->act_name . " Document",
+                'act' => $act,
+                'form_title' => $req->title,
+                'actform' => $actform,
+                'formfields' => $formfield,
+
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()]);
+        }
+    }
+
     public function getActivityFormData(Request $req)
     {
         try {
@@ -775,27 +795,45 @@ class SOPController extends Controller
     public function addAttribute(Request $req)
     {
         $validator = Validator::make($req->all(), [
+            'ff_label' => 'required|string',
+            'ff_category' => 'required|string',
+            'ff_component_type' => 'nullable|string',
+            'ff_placeholder' => 'nullable|string',
+            'ff_component_required' => 'nullable|in:1,2',
+            'ff_value_options' => 'nullable|string',
+            'ff_repeatable' => 'nullable|in:0,1',
+            'ff_append_text' => 'nullable|string',
+            'ff_table' => 'nullable|string',
+            'ff_datakey' => 'nullable|string',
             'actid' => 'required|integer|exists:activities,id',
-            'ff_label'  => 'required',
-            'ff_datakey' => 'required',
+            'af_id' => 'required|integer|exists:activity_forms,id',
         ], [], [
-            'actid' => 'activity',
-            'ff_label'  => 'label',
-            'ff_datakey' => 'attribute',
+            'ff_label' => 'label',
+            'ff_category' => 'category',
+            'ff_component_type' => 'component type',
+            'ff_placeholder' => 'placeholder',
+            'ff_component_required' => 'required status',
+            'ff_value_options' => 'value options',
+            'ff_repeatable' => 'repeatable',
+            'ff_append_text' => 'append text',
+            'ff_table' => 'source table',
+            'ff_datakey' => 'data key',
+            'actid' => 'Activity',
+            'af_id' => 'Activity Form',
         ]);
+
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         try {
-
             $validated = $validator->validated();
 
-            $af_id = ActivityForm::where('id', $req->af_id)->first()->id;
+            $af_id = $validated['af_id'];
             $checkExists = FormField::where('ff_label', $validated['ff_label'])->where('af_id', $af_id)->exists();
 
             if ($checkExists) {
@@ -805,16 +843,24 @@ class SOPController extends Controller
                 ], 200);
             }
 
+            // Get the next order number
             $af_count = FormField::where('af_id', $af_id)->count();
+            $nextOrder = $af_count + 1;
 
-            FormField::create([
-                'ff_label'  => $validated['ff_label'],
+            $formfield = FormField::create([
+                'ff_label' => $validated['ff_label'],
+                'ff_order' => $nextOrder,
+                'ff_category' => $validated['ff_category'],
+                'ff_component_type' => $validated['ff_component_type'],
+                'ff_placeholder' => $validated['ff_placeholder'] ?? '-',
+                'ff_component_required' => $validated['ff_component_required'] ?? '2',
+                'ff_value_options' => $validated['ff_value_options'] ?? null,
+                'ff_repeatable' => $validated['ff_repeatable'] ?? '0',
+                'ff_append_text' => $validated['ff_append_text'] ?? null,
+                'ff_table' => $validated['ff_table'] ?? '-',
                 'ff_datakey' => $validated['ff_datakey'],
-                'ff_order' => $af_count + 1,
-                'af_id' =>  $af_id,
+                'af_id' => $af_id,
             ]);
-
-            $formfield = FormField::where('ff_label', $validated['ff_label'])->where('af_id', $af_id)->first();
 
             return response()->json([
                 'success' => true,
@@ -828,6 +874,7 @@ class SOPController extends Controller
             ], 200);
         }
     }
+
     // [Unfinished]
     public function updateAttribute(Request $req)
     {
@@ -905,7 +952,7 @@ class SOPController extends Controller
         try {
             $fields = FormField::where('af_id', $req->af_id)
                 ->orderBy('ff_order')
-                ->get(['id', 'ff_label', 'ff_datakey', 'ff_order']);
+                ->get(['id', 'ff_label', 'ff_component_type', 'ff_order']);
 
             return response()->json([
                 'success' => true,
