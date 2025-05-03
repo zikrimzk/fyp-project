@@ -183,6 +183,9 @@
                                 </div>
 
                             </div>
+                            <div class="card-footer d-flex justify-content-end align-items-center">
+                                <a href="{{ route('student-confirm-submission-get', Crypt::encrypt($act->activity_id)) }}" class="btn btn-sm btn-light-danger">Confirm Submission (Beta)</a>
+                            </div>
                         </div>
                     @empty
                         <div class="alert alert-info">

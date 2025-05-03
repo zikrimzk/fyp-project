@@ -169,9 +169,10 @@
                                 <!-- [ Form Preview ] start -->
                                 <div class="col-sm-8 text-center">
                                     <h5 class="mb-3 mt-3 text-center">Preview</h5>
-                                    <a href="{{ route('preview-activity-document-get') }}?actid={{ $formdata->activity_id }}&af_id={{ $formdata->id }}" class="link-primary">View Preview (.html)</a>
-                                    <iframe id="documentContainer" style="width:100%; height:1000px;"
-                                        frameborder="1" class="mt-3"></iframe>
+                                    <a href="{{ route('preview-activity-document-get') }}?actid={{ $formdata->activity_id }}&af_id={{ $formdata->id }}"
+                                        class="link-primary">View Preview (.html)</a>
+                                    <iframe id="documentContainer" style="width:100%; height:1000px;" frameborder="1"
+                                        class="mt-3"></iframe>
                                 </div>
                                 <!-- [ Form Preview ] end -->
 
@@ -289,17 +290,13 @@
 
                                         <option value="" disabled>-- Student --</option>
                                         <option value="student_name" data-table="students">Name</option>
-                                        <option value="student_matricno" data-table="students">Matric No
-                                        </option>
+                                        <option value="student_matricno" data-table="students">Matric No</option>
                                         <option value="student_gender" data-table="students">Gender</option>
-                                        <option value="student_phoneno" data-table="students">Phone No
-                                        </option>
+                                        <option value="student_phoneno" data-table="students">Phone No</option>
                                         <option value="student_email" data-table="students">Email</option>
-                                        <option value="student_titleOfResearch" data-table="students">Title of
-                                            Research</option>
-                                        <option value="programme_code" data-table="students">Programme
-                                        </option>
-
+                                        <option value="student_titleOfResearch" data-table="students">Title of Research</option>
+                                        <option value="prog_code [prog_mode]" data-table="students">Programme Code [Mode]</option>
+                                   
                                         <option value="" disabled>-- Staff --</option>
                                         <option value="staff_name" data-table="staffs">Name</option>
                                         <option value="staff_id" data-table="staffs">Staff ID</option>
@@ -307,20 +304,14 @@
                                         <option value="staff_phoneno" data-table="staffs">Phone No</option>
 
                                         <option value="" disabled>-- Activity --</option>
-                                        <option value="doc_name" data-table="activities">Document Name
-                                        </option>
+                                        <option value="doc_name" data-table="activities">Document Name</option>
 
                                         <option value="" disabled>-- Submission --</option>
-                                        <option value="submission_duedate" data-table="submissions">Submission
-                                            Due
-                                            Date</option>
-                                        <option value="submission_date" data-table="submissions">Submission
-                                            Date
-                                        </option>
+                                        <option value="submission_duedate" data-table="submissions">Submission Due Date</option>
+                                        <option value="submission_date" data-table="submissions">Submission Date</option>
 
                                         <option value="" disabled>-- Semester --</option>
-                                        <option value="sem_label" data-table="semesters">Current Semester
-                                        </option>
+                                        <option value="sem_label" data-table="semesters">Current Semester</option>
                                     </select>
                                 </div>
                             </div>
@@ -456,7 +447,8 @@
                                     .ff_order);
 
                                 sortedFields.forEach(field => {
-                                    appendFormField(field.ff_label, field.ff_component_type, field
+                                    appendFormField(field.ff_label, field.ff_component_type,
+                                        field
                                         .ff_order, field.id);
                                 });
                             }
@@ -703,8 +695,6 @@
                     data: requestData,
                     success: function(response) {
                         if (response.success) {
-                            showToast('success', response.message);
-                            appendFormField(rowLabel, rowDataKey, 0, response.formfield.id);
                             $('#addAttributeModal').modal('hide');
                             $('#ff_label').val('');
                             $('#ff_category').val('');
@@ -717,6 +707,10 @@
                             $('#ff_table').val('');
                             $('#ff_datakey').val('');
                             getFormData();
+                            initializeFormVisibility();
+                            resetFormSections();
+                            showToast('success', response.message);
+
                         } else {
                             showToast('error', response.message);
                         }

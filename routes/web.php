@@ -51,7 +51,7 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::post('/update-profile', [AuthenticateController::class, 'updateStudentProfile'])->name('update-student-profile');
     Route::post('/update-password', [AuthenticateController::class, 'updateStudentPassword'])->name('update-student-password');
 
-    /* Programme Management */
+    /* Programme & Activity Management */
     Route::get('/programme-overview', [SubmissionController::class, 'studentProgrammeOverview'])->name('student-programme-overview');
     Route::get('/view-document/{filename}', [SOPController::class, 'viewMaterialFile'])->where('filename', '.*')->name('student-view-material-get');
 
@@ -59,6 +59,7 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::get('/document-submission-{id}', [SubmissionController::class, 'documentSubmission'])->name('student-document-submission');
     Route::post('/submit-document', [SubmissionController::class, 'submitDocument'])->name('student-submit-document-post');
     Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->name('student-remove-document-get');
+    Route::get('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-get');
 
 });
 

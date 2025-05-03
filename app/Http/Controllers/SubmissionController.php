@@ -7,19 +7,25 @@ use ZipArchive;
 use Carbon\Carbon;
 use App\Models\Faculty;
 use App\Models\Student;
+use setasign\Fpdi\Fpdi;
 use App\Models\Activity;
 use App\Models\Document;
 use App\Models\Semester;
+use App\Models\FormField;
 use App\Models\Programme;
 use App\Models\Submission;
 use Illuminate\Support\Str;
+use App\Models\ActivityForm;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use setasign\Fpdi\PdfParser\StreamReader;
 
 
 class SubmissionController extends Controller
@@ -223,6 +229,202 @@ class SubmissionController extends Controller
         }
     }
 
+    public function confirmStudentSubmission($actID)
+    {
+        try {
+            $actID = decrypt($actID);
+            $student = auth()->user();
+
+            if (!$student) {
+                return back()->with('error', 'Student record not found.');
+            }
+
+
+            //---------------------------------------------------------------------------//
+            //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
+            //---------------------------------------------------------------------------//
+
+            // RETRIEVE ACTIVITY PATH
+            $progcode = strtoupper($student->programmes->prog_code);
+            $activity = Activity::where('id', $actID)->first()->act_name;
+            $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
+
+            if (!File::exists($basePath)) {
+                return back()->with('error', 'Activity folder not found.');
+            }
+
+            // CREATE A NEW FOLDER (FINAL DOCUMENT)
+            $finalDocPath = $basePath . '/Final Document';
+
+            if (!File::exists($finalDocPath)) {
+                File::makeDirectory($finalDocPath, 0755, true);
+            }
+
+            $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
+
+            $this->generateActivityForm($actID, $student, $relativePath);
+
+            //---------------------------------------------------------------------------//
+            //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
+            //---------------------------------------------------------------------------//
+
+            // RETRIEVE PDF FILES
+            $pdfFiles = File::files($basePath);
+
+            $pdfFiles = array_filter($pdfFiles, function ($file) {
+                return strtolower($file->getExtension()) === 'pdf';
+            });
+
+            if (empty($pdfFiles)) {
+                return back()->with('error', 'No PDF documents found in the activity folder.' .  $basePath);
+            }
+
+            $pdf = new Fpdi();
+
+            foreach ($pdfFiles as $file) {
+                $pageCount = $pdf->setSourceFile(StreamReader::createByFile($file->getPathname()));
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $template = $pdf->importPage($pageNo);
+                    $size = $pdf->getTemplateSize($template);
+
+                    $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $pdf->useTemplate($template);
+                }
+            }
+
+            // SAVE THE MERGED PDF
+            $mergedPath =  $finalDocPath . '/' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+            $pdf->Output($mergedPath, 'F');
+
+            return back()->with('success', 'All documents merged successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
+        }
+    }
+
+    public function generateActivityForm($actID, $student, $finalDocRelativePath)
+    {
+        try {
+
+            $act = Activity::where('id', $actID)->first();
+
+            if (!$act) {
+                return back()->with('error', 'Activity not found.');
+            }
+
+            $form = ActivityForm::where([
+                ['activity_id', $actID],
+                ['af_status', 1],
+                ['af_target', 1],
+            ])->first();
+
+            if (!$form) {
+                return back()->with('error', 'Activity form not found.');
+            }
+
+            $formfields = FormField::where('af_id', $form->id)
+                ->orderBy('ff_order')
+                ->get();
+
+            $userData = [];
+
+            $joinMap = [
+                'students' => [
+                    'programmes' => [
+                        'alias' => 'b',
+                        'table' => 'programmes',
+                        'on' => ['a.programme_id', '=', 'b.id'],
+                    ],
+                    'semesters' => [
+                        'alias' => 'c',
+                        'table' => 'semesters',
+                        'on' => ['a.semester_id', '=', 'c.id'],
+                    ],
+                ],
+            ];
+
+            foreach ($formfields as $field) {
+                $baseTable = $field->ff_table;
+                $key = $field->ff_datakey;
+
+                if (empty($baseTable) || empty($key)) {
+                    $userData[str_replace(' ', '_', strtolower($field->ff_label))] = '-';
+                    continue;
+                }
+
+                $extraKey = $field->ff_extra_datakey;
+                $extraCondition = $field->ff_extra_condition;
+
+                $query = DB::table($baseTable . ' as a');
+
+                preg_match_all('/\w+/', $key, $matches);
+                $keys = $matches[0];
+                $fullKeys = [];
+                $joinedAliases = [];
+
+                foreach ($keys as $column) {
+                    $fullCol = 'a.' . $column;
+
+                    if (isset($joinMap[$baseTable])) {
+                        foreach ($joinMap[$baseTable] as $joinName => $joinData) {
+                            $columns = Schema::getColumnListing($joinData['table']);
+                            if (in_array($column, $columns)) {
+                                if (!in_array($joinData['alias'], $joinedAliases)) {
+                                    $query->join($joinData['table'] . ' as ' . $joinData['alias'], ...$joinData['on']);
+                                    $joinedAliases[] = $joinData['alias'];
+                                }
+                                $fullCol = $joinData['alias'] . '.' . $column;
+                                break;
+                            }
+                        }
+                    }
+
+                    $fullKeys[$column] = $fullCol;
+                }
+
+                if ($baseTable === 'students') {
+                    $query->where('a.id', $student->id);
+                }
+
+                if (!empty($extraKey) && !empty($extraCondition)) {
+                    $query->where($extraKey, $extraCondition);
+                }
+
+                $values = $query->first(array_values($fullKeys));
+
+                $finalValue = '-';
+                if ($values) {
+                    $tempParts = [];
+                    foreach ($fullKeys as $col => $_alias) {
+                        $val = $values->$col ?? '';
+                        $tempParts[] = $val;
+                    }
+                    $finalValue = implode(' ', $tempParts);
+                }
+
+                $userData[str_replace(' ', '_', strtolower($field->ff_label))] = $finalValue ?: '-';
+            }
+
+            // dd($userData);
+
+            $pdf = Pdf::loadView('student.programme.form-template.activity-document', [
+                'title' => $act->act_name . " Document",
+                'act' => $act,
+                'form_title' => $form->af_title,
+                'formfields' => $formfields,
+                'userData' => $userData,
+            ]);
+
+            $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';
+            $relativePath = $finalDocRelativePath . '/' . $fileName;
+
+            Storage::disk('public')->put($relativePath, $pdf->output());
+
+            return $pdf->stream($fileName . '.pdf');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error generating activity form: ' . $e->getMessage());
+        }
+    }
     /* Submission Management [Staff] */
     public function submissionManagement(Request $req)
     {
