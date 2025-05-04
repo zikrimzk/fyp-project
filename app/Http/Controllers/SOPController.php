@@ -792,7 +792,7 @@ class SOPController extends Controller
         }
     }
 
-    public function addAttribute(Request $req)
+    public function addFormField(Request $req)
     {
         $validator = Validator::make($req->all(), [
             'ff_label' => 'required|string',
@@ -801,10 +801,11 @@ class SOPController extends Controller
             'ff_placeholder' => 'nullable|string',
             'ff_component_required' => 'nullable|in:1,2',
             'ff_value_options' => 'nullable|string',
-            'ff_repeatable' => 'nullable|in:0,1',
             'ff_append_text' => 'nullable|string',
             'ff_table' => 'nullable|string',
             'ff_datakey' => 'nullable|string',
+            'ff_extra_datakey' => 'nullable|string',
+            'ff_extra_condition' => 'nullable|string',
             'actid' => 'required|integer|exists:activities,id',
             'af_id' => 'required|integer|exists:activity_forms,id',
         ], [], [
@@ -814,10 +815,11 @@ class SOPController extends Controller
             'ff_placeholder' => 'placeholder',
             'ff_component_required' => 'required status',
             'ff_value_options' => 'value options',
-            'ff_repeatable' => 'repeatable',
             'ff_append_text' => 'append text',
             'ff_table' => 'source table',
             'ff_datakey' => 'data key',
+            'ff_extra_datakey' => 'extra data key',
+            'ff_extra_condition' => 'extra condition',
             'actid' => 'Activity',
             'af_id' => 'Activity Form',
         ]);
@@ -855,16 +857,17 @@ class SOPController extends Controller
                 'ff_placeholder' => $validated['ff_placeholder'] ?? null,
                 'ff_component_required' => $validated['ff_component_required'] ?? '2',
                 'ff_value_options' => $validated['ff_value_options'] ?? null,
-                'ff_repeatable' => $validated['ff_repeatable'] ?? '0',
                 'ff_append_text' => $validated['ff_append_text'] ?? null,
                 'ff_table' => $validated['ff_table'] ?? null,
                 'ff_datakey' => $validated['ff_datakey'],
+                'ff_extra_datakey' => $validated['ff_extra_datakey'] ?? null,
+                'ff_extra_condition' => $validated['ff_extra_condition'] ?? null,
                 'af_id' => $af_id,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Attribute added successfully.',
+                'message' => 'Field added successfully.',
                 'formfield' => $formfield,
             ], 200);
         } catch (Exception $e) {
@@ -876,7 +879,7 @@ class SOPController extends Controller
     }
 
     // [Unfinished]
-    public function updateAttribute(Request $req)
+    public function updateFormField(Request $req)
     {
         try {
             $fields = $req->input('fields', []);
@@ -899,7 +902,7 @@ class SOPController extends Controller
         }
     }
 
-    public function updateAttributeOrder(Request $req)
+    public function updateFormFieldOrder(Request $req)
     {
         try {
             $fields = $req->input('fields', []);
@@ -912,7 +915,7 @@ class SOPController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Attribute order updated successfully.',
+                'message' => 'Field order updated successfully.',
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -922,7 +925,7 @@ class SOPController extends Controller
         }
     }
 
-    public function deleteAttribute(Request $req)
+    public function deleteFormField(Request $req)
     {
         try {
             $checkExists = FormField::where('id', $req->ff_id)->exists();
@@ -937,7 +940,7 @@ class SOPController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Attribute deleted successfully.',
+                'message' => 'Field deleted successfully.',
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -952,11 +955,29 @@ class SOPController extends Controller
         try {
             $fields = FormField::where('af_id', $req->af_id)
                 ->orderBy('ff_order')
-                ->get(['id', 'ff_label', 'ff_component_type', 'ff_order']);
+                ->get(['id', 'ff_label', 'ff_category', 'ff_order']);
+
+            $categoryMap = [
+                1 => 'Input',
+                2 => 'Output',
+                3 => 'Section',
+                4 => 'Text'
+            ];
+
+            $fields = $fields->map(function ($field) use ($categoryMap) {
+                $categoryLabel = isset($categoryMap[$field->ff_category]) ? $categoryMap[$field->ff_category] : 'Unknown';
+
+                return [
+                    'id' => $field->id,
+                    'ff_label' => $field->ff_label,
+                    'ff_category' => $categoryLabel,
+                    'ff_order' => $field->ff_order
+                ];
+            });
 
             return response()->json([
                 'success' => true,
-                'fields' => $fields
+                'fields' => $fields 
             ]);
         } catch (Exception $e) {
             return response()->json([

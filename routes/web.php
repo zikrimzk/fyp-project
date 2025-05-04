@@ -150,12 +150,12 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     // [Debug Function]
     Route::get('/preview-activity-document', [SOPController::class, 'testActivityDocument'])->name('preview-activity-document-get');
 
-    Route::post('/add-attribute', [SOPController::class, 'addAttribute'])->name('add-attribute-post');
+    Route::post('/add-attribute', [SOPController::class, 'addFormField'])->name('add-attribute-post');
     // [Unfinished]
-    Route::post('/update-attribute', [SOPController::class, 'updateAttribute'])->name('update-attribute-post');
+    Route::post('/update-attribute', [SOPController::class, 'updateFormField'])->name('update-attribute-post');
      
-    Route::post('/update-order-attribute', [SOPController::class, 'updateAttributeOrder'])->name('update-order-attribute-post');
-    Route::post('/delete-attribute', [SOPController::class, 'deleteAttribute'])->name('delete-attribute-post');
+    Route::post('/update-order-attribute', [SOPController::class, 'updateFormFieldOrder'])->name('update-order-attribute-post');
+    Route::post('/delete-attribute', [SOPController::class, 'deleteFormField'])->name('delete-attribute-post');
     Route::get('/get-form-field-data', [SOPController::class, 'getFormFieldData'])->name('get-form-field-data-get');
 
 

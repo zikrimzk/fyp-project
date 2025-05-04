@@ -56,7 +56,7 @@
 
         .label {
             width: 35% !important;
-            font-size: 11pt;
+            font-size: 12pt;
             font-weight: bold;
             text-transform: capitalize;
         }
@@ -74,7 +74,6 @@
         .value {
             width: 63% !important;
             border-bottom: 1px solid #000;
-            text-transform: capitalize;
             word-wrap: break-word;
             white-space: pre-line;
         }
@@ -147,6 +146,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 40px;
+            display: none;
         }
 
         .signature-table td {
@@ -308,6 +308,13 @@
                 <tr>
                     <td colspan ="3">
                         <div class="section-header">{{ $ff->ff_label }}</div>
+                    </td>
+                </tr>
+            @elseif($ff->ff_category == 4)
+                <!-- CATEGORY : TEXT -->
+                <tr>
+                    <td colspan ="3">
+                        {!! $ff->ff_label !!}
                     </td>
                 </tr>
             @endif

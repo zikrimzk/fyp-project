@@ -362,6 +362,13 @@ class SubmissionController extends Controller
                         'on' => ['a.id', '=', 'b.document_id'],
                     ],
                 ],
+                'staff' => [
+                    'supervisions' => [
+                        'alias' => 'b',
+                        'table' => 'supervisions',
+                        'on' => ['a.id', '=', 'b.staff_id'],
+                    ],
+                ],
             ];
 
             foreach ($formfields as $field) {
@@ -434,6 +441,14 @@ class SubmissionController extends Controller
                         ->where('a.isShowDoc', 1);
                 }
 
+                if ($baseTable === 'staff') {
+                    if (!in_array('b', $joinedAliases)) {
+                        $joinData = $joinMap['staff']['supervisions'];
+                        $query->join($joinData['table'] . ' as ' . $joinData['alias'], ...$joinData['on']);
+                        $joinedAliases[] = 'b';
+                    }
+                    $query->where('b.student_id', $student->id);
+                }
 
                 if (!empty($extraKey) && !empty($extraCondition)) {
                     $query->where($extraKey, $extraCondition);

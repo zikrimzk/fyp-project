@@ -23,7 +23,6 @@ return new class extends Migration
             $table->string('ff_placeholder')->nullable()->comment('Placeholder text for input fields');
             $table->integer('ff_component_required')->default(2)->comment('1 - required, 2 - optional');
             $table->json('ff_value_options')->nullable()->comment('For select, checkbox, and radio (JSON array)');
-            $table->boolean('ff_repeatable')->default(false)->comment('Whether this field can be repeated');
 
             // OUTPUT ATTRIBUTES
             $table->string('ff_table')->nullable()->comment('Related table for data output');

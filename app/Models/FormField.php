@@ -20,7 +20,6 @@ class FormField extends Model
         'ff_placeholder',
         'ff_component_required',
         'ff_value_options',
-        'ff_repeatable',
 
         // OUTPUT ATTRIBUTES
         'ff_table',

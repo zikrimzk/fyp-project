@@ -23,6 +23,11 @@
             height: 3rem;
             margin-bottom: 0.5rem;
         }
+
+        .ck-editor__editable_inline {
+            min-height: 200px;
+            max-height: 500px;
+        }
     </style>
     <div class="pc-container">
         <div class="pc-content">
@@ -94,10 +99,10 @@
                                                         class="mb-3 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                                         <button type="button"
                                                             class="btn btn-light-primary btn-sm d-flex align-items-center gap-2"
-                                                            data-bs-toggle="modal" data-bs-target="#addAttributeModal"
-                                                            title="Add Attribute" id="addAttributeBtn" disabled>
+                                                            data-bs-toggle="modal" data-bs-target="#addFormFieldModal"
+                                                            title="Add Field" id="addFormFieldBtn" disabled>
                                                             <i class="ti ti-plus f-18"></i> <span
-                                                                class="d-none d-sm-inline me-2">Add Attribute</span>
+                                                                class="d-none d-sm-inline me-2">Add Field</span>
                                                         </button>
                                                     </div>
 
@@ -183,8 +188,8 @@
                 </div>
                 <!-- [ Form Generator ] end -->
 
-                <!-- [ Add Attribute Modal ] start -->
-                <div class="modal fade" id="addAttributeModal" tabindex="-1" aria-labelledby="addAttributeModal"
+                <!-- [ Add Form Field Modal ] start -->
+                <div class="modal fade" id="addFormFieldModal" tabindex="-1" aria-labelledby="addFormFieldModal"
                     aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                         <div class="modal-content">
@@ -203,15 +208,19 @@
                                         <option value="2">Output</option>
                                         <option value="3">Section</option>
                                         <option value="4">Text</option>
-                                        <option value="5">Ordered List</option>
-                                        <option value="6">Unordered List</option>
                                     </select>
                                 </div>
 
                                 <!-- Label/Title -->
                                 <div class="mb-3">
-                                    <label for="ff_label" class="form-label">Label / Title / Description</label>
+                                    <label for="ff_label" class="form-label">Label / Title</label>
                                     <textarea class="form-control" id="ff_label" name="ff_label" rows="2"></textarea>
+                                </div>
+
+                                <!-- Label/Title [CKEDITOR] -->
+                                <div class="mb-3">
+                                    <label for="ff_label" class="form-label">Text Editor</label>
+                                    <textarea id="ff_label-ckeditor" rows="30" cols="30"></textarea>
                                 </div>
 
                                 <!-- Component Type -->
@@ -254,15 +263,6 @@
                                         placeholder='e.g. ["Option 1", "Option 2"]'></textarea>
                                 </div>
 
-                                <!-- Repeatable -->
-                                <div class="mb-3 input-field-group">
-                                    <label for="ff_repeatable" class="form-label">Repeatable Field?</label>
-                                    <select class="form-select" id="ff_repeatable" name="ff_repeatable">
-                                        <option value="0">No</option>
-                                        <option value="1">Yes</option>
-                                    </select>
-                                </div>
-
                                 <!-- Append Text -->
                                 <div class="mb-3 input-field-group">
                                     <label for="ff_append_text" class="form-label">Append Text (after label)</label>
@@ -275,7 +275,7 @@
                                     <select name="ff_table" class="form-select" id="ff_table">
                                         <option value="" selected>-- Select Field Table --</option>
                                         <option value="students">Student</option>
-                                        <option value="staffs">Staff</option>
+                                        <option value="staff">Staff</option>
                                         <option value="documents">Document</option>
                                         <option value="submissions">Submission</option>
                                         <option value="semesters">Semester</option>
@@ -294,43 +294,49 @@
                                         <option value="student_gender" data-table="students">Gender</option>
                                         <option value="student_phoneno" data-table="students">Phone No</option>
                                         <option value="student_email" data-table="students">Email</option>
-                                        <option value="student_titleOfResearch" data-table="students">Title of Research</option>
-                                        <option value="prog_code [prog_mode]" data-table="students">Programme Code [Mode]</option>
-                                   
+                                        <option value="student_titleOfResearch" data-table="students">Title of Research
+                                        </option>
+                                        <option value="prog_code [prog_mode]" data-table="students">Programme Code [Mode]
+                                        </option>
+
                                         <option value="" disabled>-- Staff --</option>
-                                        <option value="staff_name" data-table="staffs">Name</option>
-                                        <option value="staff_id" data-table="staffs">Staff ID</option>
-                                        <option value="staff_email" data-table="staffs">Email</option>
-                                        <option value="staff_phoneno" data-table="staffs">Phone No</option>
+                                        <option value="staff_name" data-table="staff">Name</option>
+                                        <option value="staff_email" data-table="staff">Email</option>
+                                        <option value="staff_phoneno" data-table="staff">Phone No</option>
 
-                                        <option value="submission_document" data-table="documents">Journal/Conference Name</option>
-
+                                        <option value="" disabled>-- Document --</option>
+                                        <option value="submission_document" data-table="documents">Journal/Conference Name
+                                        </option>
 
                                         <option value="" disabled>-- Submission --</option>
-                                        <option value="doc_name : [submission_duedate]" data-table="submissions">Submission Due Date</option>
-                                        <option value="doc_name : [submission_date]" data-table="submissions">Submission Date</option>
+                                        <option value="doc_name : [submission_duedate]" data-table="submissions">
+                                            Submission Due Date</option>
+                                        <option value="doc_name : [submission_date]" data-table="submissions">Submission
+                                            Date</option>
 
                                         <option value="" disabled>-- Semester --</option>
                                         <option value="sem_label" data-table="semesters">Current Semester</option>
                                     </select>
                                 </div>
 
-                                {{-- UNFINISHED --}}
                                 <!-- Field Extra Datakey -->
                                 <div class="mb-3 output-field-group">
                                     <label for="ff_extra_datakey" class="form-label">Extra Field Attribute</label>
                                     <select name="ff_extra_datakey" class="form-select" id="ff_extra_datakey">
+                                        <option value="" selected>-- Select Extra Attribute --</option>
                                         <option value="supervision_role" data-table="staff">Supervision Role</option>
                                     </select>
                                 </div>
 
-                                 <!-- Field Extra condition -->
-                                 <div class="mb-3 output-field-group">
+                                <!-- Field Extra condition -->
+                                <div class="mb-3 output-field-group">
                                     <label for="ff_extra_condition" class="form-label">Extra Condition</label>
                                     <select name="ff_extra_condition" class="form-select" id="ff_extra_condition">
                                         <option value="" selected>-- Select Extra Condition --</option>
-                                        <option value="supervision_role" data-table="supervision_role">Main Supervisor</option>
-                                        <option value="supervision_role" data-table="supervision_role">Co-Supervisor</option>
+                                        <option value="1" data-table="supervision_role">Main Supervisor
+                                        </option>
+                                        <option value="2" data-table="supervision_role">Co-Supervisor
+                                        </option>
 
                                     </select>
                                 </div>
@@ -341,9 +347,9 @@
                                         <div class="d-flex justify-content-between gap-3 align-items-center">
                                             <button type="button" class="btn btn-light btn-pc-default w-100"
                                                 data-bs-dismiss="modal">Cancel</button>
-                                            <button type="button" id="addAttributeBtn-submit"
+                                            <button type="button" id="addFormFieldBtn-submit"
                                                 class="btn btn-primary w-100">
-                                                Add Attribute
+                                                Add Field
                                             </button>
                                         </div>
                                     </div>
@@ -352,14 +358,66 @@
                         </div>
                     </div>
                 </div>
-                <!-- [ Add Attribute Modal ] end -->
+                <!-- [ Add Form Field Modal ] end -->
+
+                <!-- [ Update Form Field Modal ][UNFINISH] start -->
+                <div class="modal fade" id="updateFormFieldModal" tabindex="-1" aria-labelledby="updateFormFieldModal"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="updateFormFieldModalLabel">Update Field</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                {{-- TO BE IMPLEMENTED --}}
+                            </div>
+                            <div class="modal-footer justify-content-end">
+                                <div class="flex-grow-1 text-end">
+                                    <div class="col-sm-12">
+                                        <div class="d-flex justify-content-between gap-3 align-items-center">
+                                            <button type="button" class="btn btn-light btn-pc-default w-100"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                            <button type="button" id="updateFormFieldBtn-submit"
+                                                class="btn btn-primary w-100">
+                                                Save Changes
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Update Form Field Modal ] end -->
 
             </div>
             <!-- [ Main Content ] end -->
         </div>
     </div>
+    <!-- Ckeditor js -->
+    <script src="../assets/js/plugins/ckeditor/classic/ckeditor.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
+
+            let ckLabelEditor;
+
+            ClassicEditor.create(document.querySelector('#ff_label-ckeditor'), {
+                    toolbar: [
+                        'heading', '|',
+                        'bold', 'italic', '|',
+                        'bulletedList', 'numberedList', '|',
+                        'link', 'undo', 'redo'
+                    ]
+                })
+                .then(editor => {
+                    ckLabelEditor = editor;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+
 
             function showToast(type, message) {
                 const toastId = 'toast-' + Date.now();
@@ -397,10 +455,11 @@
                 getFormData();
                 initializeFormVisibility();
                 resetFormSections();
+                resetExtraFields();
             };
 
             function getFormData() {
-                const addAttrBtn = $('#addAttributeBtn');
+                const addFFBtn = $('#addFormFieldBtn');
                 $.ajax({
                     url: "{{ route('get-activity-form-data-post') }}",
                     type: "POST",
@@ -421,7 +480,7 @@
                                 '&af_id=' + encodeURIComponent(af_id) +
                                 '&title=' + response.formTitle
                             );
-                            addAttrBtn.prop('disabled', false);
+                            addFFBtn.prop('disabled', false);
                             getFormFieldsData(response.formID);
                         } else {
                             $('#txt_form_title').val("");
@@ -434,7 +493,7 @@
                                 '&af_id=' + encodeURIComponent(af_id) +
                                 '&title='
                             );
-                            addAttrBtn.prop('disabled', true);
+                            addFFBtn.prop('disabled', true);
 
                         }
                     },
@@ -467,7 +526,7 @@
                                     .ff_order);
 
                                 sortedFields.forEach(field => {
-                                    appendFormField(field.ff_label, field.ff_component_type,
+                                    appendFormField(field.ff_label, field.ff_category,
                                         field
                                         .ff_order, field.id);
                                 });
@@ -486,10 +545,19 @@
                 });
             }
 
+            function stripHTML(html) {
+                const div = document.createElement("div");
+                div.innerHTML = html;
+                return div.textContent || div.innerText || "";
+            }
+
+            function truncateText(text, maxLength = 50) {
+                return text.length > maxLength ? text.substring(0, maxLength).trim() + "..." : text;
+            }
+
             function appendFormField(label, datakey, order, ff_id = null) {
                 const id = ff_id ?? `temp_${fieldIdCounter++}`;
-                console.log(`Appending field: ${label} (${datakey}), ID: ${id}`);
-
+                const shortLabel = truncateText(stripHTML(label), 10);
                 const item = `
                     <li class="list-group-item draggable-item" data-id="${id}">
                         <div class="d-flex align-items-center gap-2 mb-2">
@@ -497,7 +565,7 @@
                                 <i class="ti ti-drag-drop fs-5"></i>
                             </span>
                             <div>
-                                <strong>${label}</strong>
+                                <strong>${shortLabel}</strong>
                                 <div class="text-muted small">[${datakey ?? 'Others'}]</div>
                             </div>
                         </div>
@@ -589,18 +657,24 @@
                 resetFormSections();
 
                 if (category == 1) {
-                    $('.input-field-group').show(); // Show input-related fields
+                    $('.input-field-group').show();
+                    $('#ff_label').parent().show();
+                    $('#ff_label-ckeditor').parent().hide();
                 }
                 if (category == 2) {
-                    $('.output-field-group').show(); // Show output-related fields
-                }
-                if (category == 1 || category == 2 || category == 3 || category == 4 || category == 5 ||
-                    category == 6) {
-                    // Show ordered/unordered list
+                    $('.output-field-group').show();
                     $('#ff_label').parent().show();
+                    $('#ff_label-ckeditor').parent().hide();
+                }
+                if (category == 3) {
+                    $('#ff_label').parent().show();
+                    $('#ff_label-ckeditor').parent().hide();
+                }
+                if (category == 4) {
+                    $('#ff_label').parent().hide();
+                    $('#ff_label-ckeditor').parent().show();
                 }
             });
-
 
             $('#ff_is_table').on('change', function() {
                 if ($(this).prop('checked')) {
@@ -615,18 +689,22 @@
                 var isTableChecked = $('#ff_is_table').prop('checked');
 
                 if (selectedCategory == 1) {
-                    $('#ff_label').parent().show();
-
                     $('.input-field-group').show();
+                    $('#ff_label').parent().show();
+                    $('#ff_label-ckeditor').parent().hide();
                 }
                 if (selectedCategory == 2) {
-                    $('#ff_label').parent().show();
-
                     $('.output-field-group').show();
-                }
-                if (selectedCategory == 1 || selectedCategory == 2 || selectedCategory == 3 || selectedCategory ==
-                    4 || selectedCategory == 5 || selectedCategory == 6) {
                     $('#ff_label').parent().show();
+                    $('#ff_label-ckeditor').parent().hide();
+                }
+                if (selectedCategory == 3) {
+                    $('#ff_label').parent().show();
+                    $('#ff_label-ckeditor').parent().hide();
+                }
+                if (selectedCategory == 4) {
+                    $('#ff_label').parent().hide();
+                    $('#ff_label-ckeditor').parent().show();
                 }
                 // Handle table-related settings visibility
                 if (isTableChecked) {
@@ -636,29 +714,28 @@
                 }
             }
 
-            // Reset the form fields visibility
             function resetFormSections() {
                 $('#ff_datakey').prop('disabled', true);
                 $('.input-field-group').hide();
                 $('.output-field-group').hide();
                 $('#ff_label').parent().hide();
+                $('#ff_label-ckeditor').parent().hide();
                 $('.table-settings-group').hide();
             }
 
-            // Filter output attributes based on selected table
+            function resetExtraFields() {
+                $('#ff_table').trigger('change');
+                $('#ff_extra_datakey').val("").prop('disabled', true);
+                $('#ff_extra_condition').val("").prop('disabled', true);
+            }
+
             $('#ff_table').on('change', function() {
-                var selectedTable = $(this).val();
+                const selectedTable = $(this).val();
 
-                if (selectedTable != '') {
-                    $('#ff_datakey').prop('disabled', false);
-                } else {
-                    $('#ff_datakey').prop('disabled', true);
-                }
-
+                $('#ff_datakey').prop('disabled', selectedTable === '');
+                $('#ff_datakey').val('');
                 $('#ff_datakey option').each(function() {
-                    var table = $(this).data('table');
-
-                    // Keep disabled headers and empty values visible
+                    const table = $(this).data('table');
                     if ($(this).is(':disabled') || !table) {
                         $(this).hide();
                     } else if (table === selectedTable) {
@@ -668,30 +745,69 @@
                     }
                 });
 
-                $('#ff_datakey').val('');
+
+                if (selectedTable === 'staff') {
+                    $('#ff_extra_datakey option').each(function() {
+                        const table = $(this).data('table');
+                        if (table === 'staff') {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+
+                    $('#ff_extra_datakey').prop('disabled', false).show();
+                }
             });
 
+            $('#ff_extra_datakey').on('change', function() {
+                const selectedKey = $(this).val();
+
+                if (selectedKey === 'supervision_role') {
+                    $('#ff_extra_condition option').each(function() {
+                        const table = $(this).data('table');
+                        if (table === 'supervision_role') {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+
+                    $('#ff_extra_condition').prop('disabled', false).show();
+                } else {
+                    $('#ff_extra_condition').val('').prop('disabled', true).hide();
+                }
+            });
 
             // Add Attribute Function
-            $('#addAttributeBtn-submit').click(function() {
-                // Gather values for general attributes
-                var rowLabel = $('#ff_label').val();
-                var rowCategory = $('#ff_category').val();
+            $('#addFormFieldBtn-submit').click(function() {
 
-                // Gather values for input attributes
+                var rowCategory = $('#ff_category').val();
+                var rowLabel;
+
+                if (rowCategory != "4") {
+                    rowLabel = $('#ff_label').val();
+                } else {
+                    rowLabel = ckLabelEditor.getData();
+                }
+
                 var rowType = $('#ff_component_type').val();
                 var rowPlaceholder = $('#ff_placeholder').val();
                 var rowRequired = $('#ff_component_required').val();
                 var rowValueOptions = $('#ff_value_options').val();
-                var rowRepeatable = $('#ff_repeatable').val();
                 var rowAppendText = $('#ff_append_text').val();
 
-                // Gather values for output attributes
                 var rowTable = $('#ff_table').val();
                 var rowDataKey = $('#ff_datakey').val();
 
+                var rowExtraDatakey = $('#ff_extra_datakey').val();
+                var rowExtraCondition = $('#ff_extra_condition').val();
 
-                // Create a data object to send in the request
+                if (rowTable === 'staffs' && (!rowExtraDatakey || !rowExtraCondition)) {
+                    showToast('error', 'Please select extra datakey and condition for staff table.');
+                    return;
+                }
+
                 var requestData = {
                     _token: "{{ csrf_token() }}",
                     actid: selectedOpt,
@@ -702,10 +818,11 @@
                     ff_placeholder: rowPlaceholder,
                     ff_component_required: rowRequired,
                     ff_value_options: rowValueOptions,
-                    ff_repeatable: rowRepeatable,
                     ff_append_text: rowAppendText,
                     ff_table: rowTable,
-                    ff_datakey: rowDataKey
+                    ff_datakey: rowDataKey,
+                    ff_extra_datakey: rowExtraDatakey,
+                    ff_extra_condition: rowExtraCondition,
                 };
 
                 // Send the AJAX request
@@ -715,8 +832,9 @@
                     data: requestData,
                     success: function(response) {
                         if (response.success) {
-                            $('#addAttributeModal').modal('hide');
+                            $('#addFormFieldModal').modal('hide');
                             $('#ff_label').val('');
+                            ckLabelEditor.setData('');
                             $('#ff_category').val('');
                             $('#ff_component_type').val('');
                             $('#ff_placeholder').val('');
@@ -729,6 +847,7 @@
                             getFormData();
                             initializeFormVisibility();
                             resetFormSections();
+                            resetExtraFields();
                             showToast('success', response.message);
 
                         } else {
