@@ -328,6 +328,13 @@ class SubmissionController extends Controller
 
             $userData = [];
 
+            $specialMappings = [
+                'prog_mode' => [
+                    'FT' => 'Full-Time',
+                    'PT' => 'Part-Time',
+                ],
+            ];
+
             $joinMap = [
                 'students' => [
                     'programmes' => [
@@ -339,6 +346,20 @@ class SubmissionController extends Controller
                         'alias' => 'c',
                         'table' => 'semesters',
                         'on' => ['a.semester_id', '=', 'c.id'],
+                    ],
+                ],
+                'submissions' => [
+                    'documents' => [
+                        'alias' => 'b',
+                        'table' => 'documents',
+                        'on' => ['a.document_id', '=', 'b.id'],
+                    ],
+                ],
+                'documents' => [
+                    'submissions' => [
+                        'alias' => 'b',
+                        'table' => 'submissions',
+                        'on' => ['a.id', '=', 'b.document_id'],
                     ],
                 ],
             ];
@@ -386,25 +407,73 @@ class SubmissionController extends Controller
                     $query->where('a.id', $student->id);
                 }
 
+                if ($baseTable === 'semesters') {
+                    $query->where('a.sem_status', 1);
+                }
+
+                if ($baseTable === 'submissions') {
+                    if (!in_array('b', $joinedAliases)) {
+                        $joinData = $joinMap['submissions']['documents'];
+                        $query->join($joinData['table'] . ' as ' . $joinData['alias'], ...$joinData['on']);
+                        $joinedAliases[] = 'b';
+                    }
+                    $query->where('a.student_id', $student->id)
+                        ->where('a.submission_status', 3)
+                        ->where('b.activity_id', $act->id);
+                }
+
+                if ($baseTable === 'documents') {
+                    if (!in_array('b', $joinedAliases)) {
+                        $joinData = $joinMap['documents']['submissions'];
+                        $query->join($joinData['table'] . ' as ' . $joinData['alias'], ...$joinData['on']);
+                        $joinedAliases[] = 'b';
+                    }
+                    $query->where('b.student_id', $student->id)
+                        ->where('b.submission_status', 3)
+                        ->where('a.activity_id', $act->id)
+                        ->where('a.isShowDoc', 1);
+                }
+
+
                 if (!empty($extraKey) && !empty($extraCondition)) {
                     $query->where($extraKey, $extraCondition);
                 }
 
-                $values = $query->first(array_values($fullKeys));
+                $results = $query->get(array_values($fullKeys));
 
                 $finalValue = '-';
-                if ($values) {
-                    $tempParts = [];
-                    foreach ($fullKeys as $col => $_alias) {
-                        $val = $values->$col ?? '';
-                        $tempParts[] = $val;
+
+                if (!$results->isEmpty()) {
+                    $tempLines = [];
+
+                    foreach ($results as $row) {
+                        $tempParts = [];
+
+                        foreach ($fullKeys as $col => $_alias) {
+                            $val = $row->$col ?? '';
+
+                            // Apply special value mapping if available
+                            if (isset($specialMappings[$col]) && isset($specialMappings[$col][$val])) {
+                                $val = $specialMappings[$col][$val];
+                            }
+
+                            // Format as date if valid
+                            if ($val && strtotime($val)) {
+                                $carbonDate = Carbon::parse($val);
+                                $val = $carbonDate->format('j F Y g:ia');
+                            }
+
+                            $tempParts[] = $val;
+                        }
+
+                        $tempLines[] = implode(' : ', $tempParts);
                     }
-                    $finalValue = implode(' ', $tempParts);
+
+                    $finalValue = implode("<br>", $tempLines);
                 }
 
                 $userData[str_replace(' ', '_', strtolower($field->ff_label))] = $finalValue ?: '-';
             }
-
             // dd($userData);
 
             $pdf = Pdf::loadView('student.programme.form-template.activity-document', [

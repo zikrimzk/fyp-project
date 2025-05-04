@@ -50,13 +50,15 @@
         }
 
         .info-table td {
-            padding: 10px 5px;
+            padding: 6px;
             vertical-align: top;
         }
 
         .label {
-            width: 35%;
+            width: 35% !important;
+            font-size: 11pt;
             font-weight: bold;
+            text-transform: capitalize;
         }
 
         .label span.isrequired {
@@ -66,13 +68,15 @@
         }
 
         .colon {
-            width: 2%;
+            width: 2% !important;
         }
 
         .value {
-            width: 63%;
+            width: 63% !important;
             border-bottom: 1px solid #000;
-            text-transform: uppercase;
+            text-transform: capitalize;
+            word-wrap: break-word;
+            white-space: pre-line;
         }
 
         .value-input {
@@ -130,7 +134,7 @@
         }
 
         .section-header {
-            font-size: 13pt;
+            font-size: 12pt;
             font-weight: bold;
             text-transform: uppercase;
             color: #000;
@@ -297,7 +301,7 @@
                 <tr>
                     <td class="label">{{ $ff->ff_label }}</td>
                     <td class="colon">:</td>
-                    <td class="value">{{ $value }}</td>
+                    <td class="value">{!! $value !!}</td>
                 </tr>
             @elseif($ff->ff_category == 3)
                 <!-- CATEGORY : SECTION -->

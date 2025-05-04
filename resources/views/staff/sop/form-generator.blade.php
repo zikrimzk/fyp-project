@@ -276,7 +276,7 @@
                                         <option value="" selected>-- Select Field Table --</option>
                                         <option value="students">Student</option>
                                         <option value="staffs">Staff</option>
-                                        <option value="activities">Activity</option>
+                                        <option value="documents">Document</option>
                                         <option value="submissions">Submission</option>
                                         <option value="semesters">Semester</option>
                                     </select>
@@ -303,15 +303,35 @@
                                         <option value="staff_email" data-table="staffs">Email</option>
                                         <option value="staff_phoneno" data-table="staffs">Phone No</option>
 
-                                        <option value="" disabled>-- Activity --</option>
-                                        <option value="doc_name" data-table="activities">Document Name</option>
+                                        <option value="submission_document" data-table="documents">Journal/Conference Name</option>
+
 
                                         <option value="" disabled>-- Submission --</option>
-                                        <option value="submission_duedate" data-table="submissions">Submission Due Date</option>
-                                        <option value="submission_date" data-table="submissions">Submission Date</option>
+                                        <option value="doc_name : [submission_duedate]" data-table="submissions">Submission Due Date</option>
+                                        <option value="doc_name : [submission_date]" data-table="submissions">Submission Date</option>
 
                                         <option value="" disabled>-- Semester --</option>
                                         <option value="sem_label" data-table="semesters">Current Semester</option>
+                                    </select>
+                                </div>
+
+                                {{-- UNFINISHED --}}
+                                <!-- Field Extra Datakey -->
+                                <div class="mb-3 output-field-group">
+                                    <label for="ff_extra_datakey" class="form-label">Extra Field Attribute</label>
+                                    <select name="ff_extra_datakey" class="form-select" id="ff_extra_datakey">
+                                        <option value="supervision_role" data-table="staff">Supervision Role</option>
+                                    </select>
+                                </div>
+
+                                 <!-- Field Extra condition -->
+                                 <div class="mb-3 output-field-group">
+                                    <label for="ff_extra_condition" class="form-label">Extra Condition</label>
+                                    <select name="ff_extra_condition" class="form-select" id="ff_extra_condition">
+                                        <option value="" selected>-- Select Extra Condition --</option>
+                                        <option value="supervision_role" data-table="supervision_role">Main Supervisor</option>
+                                        <option value="supervision_role" data-table="supervision_role">Co-Supervisor</option>
+
                                     </select>
                                 </div>
                             </div>
