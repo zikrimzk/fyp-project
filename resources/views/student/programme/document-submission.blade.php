@@ -136,7 +136,7 @@
                                                 <tr style="height:80px" class="bg-light">
                                                     <th scope="row" class="fw-bold">Time remaining</th>
                                                     <td class="{{ $isEarly ? 'bg-light-success' : 'bg-light-danger' }}">
-                                                        Assignment was submitted {{ $humanDiff }}
+                                                        Document was submitted {{ $humanDiff }}
                                                         {{ $isEarly ? 'earlier' : 'late' }}
                                                     </td>
                                                 </tr>

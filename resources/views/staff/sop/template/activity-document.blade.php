@@ -17,31 +17,50 @@
         }
 
         .header {
+            margin-bottom: 20px;
+            
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .logo-cell {
+            width: 100px;
             text-align: center;
-            margin-bottom: 30px;
+            vertical-align: top;
         }
 
-        .header img {
+        .faculty-logo {
             width: 120px;
-            margin-bottom: 10px;
         }
 
-        .header h2,
-        .header h3 {
-            margin: 0;
+        .text-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .faculty-name,
+        .university-name {
+            font-size: 12pt;
             font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+            padding: 0;
         }
 
         .line-title {
             border-top: 1px solid #000;
-            margin-top: 5px;
+            margin: 10px 0;
         }
 
         .form-title {
-            font-size: 14pt;
+            text-align: center;
+            font-size: 12pt;
             font-weight: bold;
-            margin-top: 12px;
             text-transform: uppercase;
+            margin-top: 5px;
         }
 
         .info-table {
@@ -58,7 +77,7 @@
         .label {
             width: 35% !important;
             font-size: 12pt;
-            font-weight: bold;
+            /* font-weight: bold; */
             text-transform: capitalize;
         }
 
@@ -177,6 +196,10 @@
             margin-top: 5px;
             margin-bottom: 5px;
         }
+
+        p {
+            margin: 0;
+        }
     </style>
 </head>
 
@@ -184,12 +207,23 @@
 
     <!-- Header -->
     <div class="header">
-        <!-- Logo & Faculty based on system default faculty -->
-        <img src="{{ public_path('assets/images/logo-faculty/ftmk.png') }}" alt="FTMK Logo">
-        <h3>FAKULTI TEKNOLOGI MAKLUMAT DAN KOMUNIKASI</h3>
-        <h3>UNIVERSITI TEKNIKAL MALAYSIA MELAKA</h3>
+        <table class="header-table" width="100%">
+            <tr>
+                <td class="logo-cell">
+                    @if ($faculty->fac_logo && file_exists(public_path('storage/' . $faculty->fac_logo)))
+                        <img src="{{ public_path('storage/' . $faculty->fac_logo) }}"
+                            alt="{{ $faculty->fac_code }} LOGO" class="faculty-logo">
+                    @endif
+                </td>
+                <td class="text-cell">
+                    <div class="faculty-name">{{ $faculty->fac_name }}</div>
+                    <div class="university-name">Universiti Teknikal Malaysia Melaka</div>
+                </td>
+            </tr>
+        </table>
+
         <div class="line-title"></div>
-        <!-- Activity Name will be based on user selection [Activity Table] -->
+
         <div class="form-title">{{ $form_title }}</div>
     </div>
 

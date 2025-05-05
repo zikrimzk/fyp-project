@@ -149,14 +149,12 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/activity-document-preview', [SOPController::class, 'previewActivityDocument'])->name('activity-document-preview-get');
     // [Debug Function]
     Route::get('/preview-activity-document', [SOPController::class, 'testActivityDocument'])->name('preview-activity-document-get');
-
-    Route::post('/add-attribute', [SOPController::class, 'addFormField'])->name('add-attribute-post');
-    // [Unfinished]
-    Route::post('/update-attribute', [SOPController::class, 'updateFormField'])->name('update-attribute-post');
-     
-    Route::post('/update-order-attribute', [SOPController::class, 'updateFormFieldOrder'])->name('update-order-attribute-post');
-    Route::post('/delete-attribute', [SOPController::class, 'deleteFormField'])->name('delete-attribute-post');
+    Route::post('/add-form-field', [SOPController::class, 'addFormField'])->name('add-form-field-post');
+    Route::post('/update-form-field', [SOPController::class, 'updateFormField'])->name('update-form-field-post');
+    Route::post('/update-order-form-field', [SOPController::class, 'updateFormFieldOrder'])->name('update-order-form-field-post');
+    Route::post('/delete-form-field', [SOPController::class, 'deleteFormField'])->name('delete-form-field-post');
     Route::get('/get-form-field-data', [SOPController::class, 'getFormFieldData'])->name('get-form-field-data-get');
+    Route::get('/get-single-form-field-data', [SOPController::class, 'getSingleFormFieldData'])->name('get-single-form-field-data-get');
 
 
     // Setting 

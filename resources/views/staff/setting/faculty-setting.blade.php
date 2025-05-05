@@ -82,7 +82,7 @@
                                 <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
                                     title="Set Default Faculty" id="setdefaultModalBtn" data-bs-toggle="modal"
                                     data-bs-target="#setdefaultModal">
-                                    <i class="ti ti-plus f-18"></i>
+                                    <i class="ti ti-edit-circle f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
                                         Set Default Faculty
                                     </span>

@@ -2,26 +2,87 @@
 
 @section('content')
     <style>
+        .preview-wrapper {
+            height: 100%;
+            min-height: 1000px;
+            position: relative;
+            background-color: rgba(50, 54, 57, 255);
+            border-radius: 4px;
+
+        }
+
+        .document-frame {
+            width: 100%;
+            height: 950px;
+            border: none;
+        }
+
+        .preview-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+        }
+
         .draggable-item {
             cursor: move;
-            transition: background-color 0.2s ease;
-            border: 2px dashed #000000;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            user-select: none;
+            margin-bottom: 0.7rem;
+            outline: 1px dashed #000000;
 
         }
 
         .draggable-item:hover {
-            background-color: #f8f9fa;
+            background-color: #f1f3f5;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+            transform: scale(1.015);
+        }
+
+        .draggable-item.ui-sortable-helper {
+            transform: scale(1.04);
+            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.25);
+            z-index: 1000;
+            cursor: grabbing;
         }
 
         .drag-handle {
             cursor: grab;
         }
 
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
         .ui-state-highlight {
-            background-color: #e9ecef !important;
-            border: 2px dashed #adb5bd;
+            background-color: #ced4da !important;
+            border: 2px dashed #6c757d;
             height: 3rem;
             margin-bottom: 0.5rem;
+            border-radius: 6px;
+            transition: background-color 0.15s ease;
+        }
+
+        /* Subtle pulse animation for the placeholder */
+        @keyframes pulseHighlight {
+            0% {
+                background-color: #dee2e6;
+            }
+
+            100% {
+                background-color: #ced4da;
+            }
         }
 
         .ck-editor__editable_inline {
@@ -99,7 +160,6 @@
                                                         class="mb-3 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                                         <button type="button"
                                                             class="btn btn-light-primary btn-sm d-flex align-items-center gap-2"
-                                                            data-bs-toggle="modal" data-bs-target="#addFormFieldModal"
                                                             title="Add Field" id="addFormFieldBtn" disabled>
                                                             <i class="ti ti-plus f-18"></i> <span
                                                                 class="d-none d-sm-inline me-2">Add Field</span>
@@ -172,12 +232,21 @@
                                 <!-- [ Form Setting ] end -->
 
                                 <!-- [ Form Preview ] start -->
-                                <div class="col-sm-8 text-center">
-                                    <h5 class="mb-3 mt-3 text-center">Preview</h5>
-                                    <a href="{{ route('preview-activity-document-get') }}?actid={{ $formdata->activity_id }}&af_id={{ $formdata->id }}"
-                                        class="link-primary">View Preview (.html)</a>
-                                    <iframe id="documentContainer" style="width:100%; height:1000px;" frameborder="1"
-                                        class="mt-3"></iframe>
+                                <div class="col-sm-8 position-relative preview-wrapper">
+                                    <div class="text-center m-3">
+                                        <a href="{{ route('preview-activity-document-get') }}?actid={{ $formdata->activity_id }}&af_id={{ $formdata->id }}"
+                                            class="link-light" target="_blank">View Preview (.html)</a>
+                                    </div>
+
+
+                                    <!-- Loading Spinner -->
+                                    <div id="preview-loader" class="preview-loader d-none">
+                                        <div class="spinner-border text-primary" role="status"></div>
+                                        <span class="ms-2">Loading preview...</span>
+                                    </div>
+
+                                    <!-- Iframe Preview -->
+                                    <iframe id="documentContainer" class="mt-3 document-frame" frameborder="0"></iframe>
                                 </div>
                                 <!-- [ Form Preview ] end -->
 
@@ -188,17 +257,20 @@
                 </div>
                 <!-- [ Form Generator ] end -->
 
-                <!-- [ Add Form Field Modal ] start -->
-                <div class="modal fade" id="addFormFieldModal" tabindex="-1" aria-labelledby="addFormFieldModal"
+                <!-- [ Add & Update Form Field Modal ] start -->
+                <div class="modal fade" id="formFieldModal" tabindex="-1" aria-labelledby="formFieldModal"
                     aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="addModalLabel">Add Field</h5>
+                                <h5 class="modal-title" id="formFieldModalLabel"></h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
+                                <!-- ff_id Hidden -->
+                                <input type="hidden" id="ff_id-hidden" />
+
                                 <!-- Field Category -->
                                 <div class="mb-3">
                                     <label for="ff_category" class="form-label">Field Category</label>
@@ -208,6 +280,9 @@
                                         <option value="2">Output</option>
                                         <option value="3">Section</option>
                                         <option value="4">Text</option>
+                                        <option value="5" disabled>Table</option>
+                                        <option value="6">Signature</option>
+
                                     </select>
                                 </div>
 
@@ -348,39 +423,11 @@
                                             <button type="button" class="btn btn-light btn-pc-default w-100"
                                                 data-bs-dismiss="modal">Cancel</button>
                                             <button type="button" id="addFormFieldBtn-submit"
-                                                class="btn btn-primary w-100">
+                                                class="btn btn-primary w-100 d-block">
                                                 Add Field
                                             </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- [ Add Form Field Modal ] end -->
-
-                <!-- [ Update Form Field Modal ][UNFINISH] start -->
-                <div class="modal fade" id="updateFormFieldModal" tabindex="-1" aria-labelledby="updateFormFieldModal"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="updateFormFieldModalLabel">Update Field</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                {{-- TO BE IMPLEMENTED --}}
-                            </div>
-                            <div class="modal-footer justify-content-end">
-                                <div class="flex-grow-1 text-end">
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-between gap-3 align-items-center">
-                                            <button type="button" class="btn btn-light btn-pc-default w-100"
-                                                data-bs-dismiss="modal">Cancel</button>
                                             <button type="button" id="updateFormFieldBtn-submit"
-                                                class="btn btn-primary w-100">
+                                                class="btn btn-primary w-100 d-none">
                                                 Save Changes
                                             </button>
                                         </div>
@@ -390,7 +437,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- [ Update Form Field Modal ] end -->
+                <!-- [ Add & Update Form Field Modal ] end -->
 
             </div>
             <!-- [ Main Content ] end -->
@@ -401,24 +448,9 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            let ckLabelEditor;
-
-            ClassicEditor.create(document.querySelector('#ff_label-ckeditor'), {
-                    toolbar: [
-                        'heading', '|',
-                        'bold', 'italic', '|',
-                        'bulletedList', 'numberedList', '|',
-                        'link', 'undo', 'redo'
-                    ]
-                })
-                .then(editor => {
-                    ckLabelEditor = editor;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-
-
+            /*********************************************************
+             ***************GLOBAL FUNCTION & VARIABLES***************
+             *********************************************************/
             function showToast(type, message) {
                 const toastId = 'toast-' + Date.now();
                 const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle';
@@ -446,17 +478,50 @@
                 toastEl.show();
             }
 
+            function stripHTML(html) {
+                const div = document.createElement("div");
+                div.innerHTML = html;
+                return div.textContent || div.innerText || "";
+            }
+
+            function truncateText(text, maxLength = 50) {
+                return text.length > maxLength ? text.substring(0, maxLength).trim() + "..." : text;
+            }
+
             var selectedOpt = "{{ $formdata->activity_id }}";
             var af_id = "{{ $formdata->id }}";
             let debounceTimer;
             let fieldIdCounter = 0;
+            let ckLabelEditor;
 
             window.onload = function() {
                 getFormData();
-                initializeFormVisibility();
                 resetFormSections();
                 resetExtraFields();
             };
+
+            /*********************************************************
+             *******************CKEDITOR INITIALIZE*******************
+             *********************************************************/
+
+            ClassicEditor.create(document.querySelector('#ff_label-ckeditor'), {
+                    toolbar: [
+                        'heading', '|',
+                        'bold', 'italic', '|',
+                        'bulletedList', 'numberedList', '|',
+                        'link', 'undo', 'redo'
+                    ]
+                })
+                .then(editor => {
+                    ckLabelEditor = editor;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+
+            /*********************************************************
+             *******************GETTERS FUNCTIONS*********************
+             *********************************************************/
 
             function getFormData() {
                 const addFFBtn = $('#addFormFieldBtn');
@@ -469,6 +534,12 @@
                         actid: selectedOpt
                     },
                     success: function(response) {
+                        $('#preview-loader').removeClass('d-none');
+
+                        $('#documentContainer').on('load', function() {
+                            $('#preview-loader').addClass('d-none');
+                        });
+
                         if (response.success) {
                             $('#txt_form_title').val(response.formTitle);
                             $('#select_form_target').val(response.formTarget);
@@ -545,48 +616,11 @@
                 });
             }
 
-            function stripHTML(html) {
-                const div = document.createElement("div");
-                div.innerHTML = html;
-                return div.textContent || div.innerText || "";
-            }
+            /*********************************************************
+             ****************FORM SETTING FUNCTION********************
+             *********************************************************/
 
-            function truncateText(text, maxLength = 50) {
-                return text.length > maxLength ? text.substring(0, maxLength).trim() + "..." : text;
-            }
-
-            function appendFormField(label, datakey, order, ff_id = null) {
-                const id = ff_id ?? `temp_${fieldIdCounter++}`;
-                const shortLabel = truncateText(stripHTML(label), 10);
-                const item = `
-                    <li class="list-group-item draggable-item" data-id="${id}">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="drag-handle text-secondary" title="Drag to reorder">
-                                <i class="ti ti-drag-drop fs-5"></i>
-                            </span>
-                            <div>
-                                <strong>${shortLabel}</strong>
-                                <div class="text-muted small">[${datakey ?? 'Others'}]</div>
-                            </div>
-                        </div>
-                        <div class="row g-1">
-                            <div class="col-6">
-                                <button class="btn btn-sm btn-outline-primary w-100 update-field-btn" data-id="${id}" data-label="${label}" data-key="${datakey}">
-                                    <i class="bi bi-pencil"></i> Update
-                                </button>
-                            </div>
-                            <div class="col-6">
-                                <button class="btn btn-sm btn-outline-danger w-100 delete-field-btn" data-id="${id}">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
-                            </div>
-                        </div>
-                    </li>
-                `;
-                $('#fieldList').append(item);
-            }
-
-            // Update Form Title in Preview
+            // UPDATE TITLE OF FORM
             $('#txt_form_title').on('input', function() {
                 clearTimeout(debounceTimer);
 
@@ -604,7 +638,7 @@
                 }, 300);
             });
 
-            // Update Form Setting
+            // SAVE FORM SETTING 
             $('#saveFormSetting').click(function() {
                 var formTarget = $('#select_form_target_hidden').val();
                 var formStatus = $('#select_form_status').val();
@@ -631,7 +665,6 @@
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
-                            // Laravel validation error
                             const errors = xhr.responseJSON?.message;
                             if (errors) {
                                 let msg = '';
@@ -644,13 +677,17 @@
                                     'Validation failed, but no message returned.');
                             }
                         } else {
-                            // Other server errors
                             showToast('error', 'Something went wrong. Please try again.');
                         }
                     }
                 });
             });
 
+            /*********************************************************
+             ******************FORM FIELD FORM CONTROL****************
+             *********************************************************/
+
+            // CATEGORY FILTER
             $('#ff_category').on('change', function() {
                 var category = $(this).val();
 
@@ -676,50 +713,16 @@
                 }
             });
 
-            $('#ff_is_table').on('change', function() {
-                if ($(this).prop('checked')) {
-                    $('.table-settings-group').show();
-                } else {
-                    $('.table-settings-group').hide();
-                }
-            });
-
-            function initializeFormVisibility() {
-                var selectedCategory = $('#ff_category').val();
-                var isTableChecked = $('#ff_is_table').prop('checked');
-
-                if (selectedCategory == 1) {
-                    $('.input-field-group').show();
-                    $('#ff_label').parent().show();
-                    $('#ff_label-ckeditor').parent().hide();
-                }
-                if (selectedCategory == 2) {
-                    $('.output-field-group').show();
-                    $('#ff_label').parent().show();
-                    $('#ff_label-ckeditor').parent().hide();
-                }
-                if (selectedCategory == 3) {
-                    $('#ff_label').parent().show();
-                    $('#ff_label-ckeditor').parent().hide();
-                }
-                if (selectedCategory == 4) {
-                    $('#ff_label').parent().hide();
-                    $('#ff_label-ckeditor').parent().show();
-                }
-                // Handle table-related settings visibility
-                if (isTableChecked) {
-                    $('.table-settings-group').show();
-                } else {
-                    $('.table-settings-group').hide();
-                }
-            }
-
+            // RESET FORM FUNCTIONS
             function resetFormSections() {
-                $('#ff_datakey').prop('disabled', true);
                 $('.input-field-group').hide();
                 $('.output-field-group').hide();
+
                 $('#ff_label').parent().hide();
                 $('#ff_label-ckeditor').parent().hide();
+
+                $('#ff_datakey').prop('disabled', true);
+
                 $('.table-settings-group').hide();
             }
 
@@ -729,6 +732,7 @@
                 $('#ff_extra_condition').val("").prop('disabled', true);
             }
 
+            // EXTRA FIELD AND CONDITION FILTER
             $('#ff_table').on('change', function() {
                 const selectedTable = $(this).val();
 
@@ -740,6 +744,8 @@
                         $(this).hide();
                     } else if (table === selectedTable) {
                         $(this).show();
+                        $('#ff_extra_datakey').val("").prop('disabled', true);
+                        $('#ff_extra_condition').val("").prop('disabled', true);
                     } else {
                         $(this).hide();
                     }
@@ -779,7 +785,145 @@
                 }
             });
 
-            // Add Attribute Function
+            // TABLE SETTINGS [UNUSED]
+            $('#ff_is_table').on('change', function() {
+                if ($(this).prop('checked')) {
+                    $('.table-settings-group').show();
+                } else {
+                    $('.table-settings-group').hide();
+                }
+            });
+
+            /*********************************************************
+             ***************DRAG & DROP SECTION CONTROL***************
+             *********************************************************/
+
+            // DESIGN PART
+            function appendFormField(label, datakey, order, ff_id = null) {
+                const id = ff_id ?? `temp_${fieldIdCounter++}`;
+                const shortLabel = truncateText(stripHTML(label), 10);
+                const item = `
+                    <li class="list-group-item draggable-item" data-id="${id}">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="drag-handle text-secondary" title="Drag to reorder">
+                                <i class="ti ti-drag-drop fs-5"></i>
+                            </span>
+                            <div>
+                                <strong>${shortLabel}</strong>
+                                <div class="text-muted small">[${datakey ?? 'Others'}]</div>
+                            </div>
+                        </div>
+                        <div class="row g-1">
+                            <div class="col-6">
+                                <button class="btn btn-sm btn-outline-primary w-100 update-field-btn" data-id="${id}" data-label="${label}" data-key="${datakey}">
+                                    <i class="bi bi-pencil"></i> Update
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-sm btn-outline-danger w-100 delete-field-btn" data-id="${id}">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </li>
+                `;
+                $('#fieldList').append(item);
+            }
+
+            // DRAG AND DROP INITIALIZATION & UPDATE FIELD ORDERING
+            $('#fieldList').sortable({
+                placeholder: "ui-state-highlight",
+                update: function(event, ui) {
+                    // console.log("New order:", $('#fieldList').sortable('toArray', {
+                    //     attribute: 'data-id'
+                    // }));
+
+                    const newOrder = [];
+                    $('#fieldList li').each(function(index) {
+                        newOrder.push({
+                            id: $(this).data('id'),
+                            order: index + 1
+                        });
+                    });
+
+                    $.ajax({
+                        url: "{{ route('update-order-form-field-post') }}",
+                        method: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            fields: newOrder
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                //showToast('success', response.message);
+                                getFormData();
+                            } else {
+                                showToast('error', response.message);
+                            }
+                        },
+                        error: function() {
+                            showToast('error', 'Failed to update field order.');
+                        }
+                    });
+                }
+            }).disableSelection();
+
+            /*********************************************************
+             ******************FORM FIELD CRUD CONTROL****************
+             *********************************************************/
+
+            function modalInit(option, isOpen) {
+                if (option == "add") {
+                    // MODAL TITLE
+                    $('#formFieldModalLabel').html('Add Form Field');
+
+                    // SUBMIT BUTTON SECTIONS
+                    $('#addFormFieldBtn-submit').removeClass('d-none');
+                    $('#addFormFieldBtn-submit').addClass('d-block');
+                    $('#updateFormFieldBtn-submit').removeClass('d-block');
+                    $('#updateFormFieldBtn-submit').addClass('d-none');
+
+                    // RESET FORM
+                    $('#formFieldModal').modal('hide');
+                    $('#ff_label').val('');
+                    ckLabelEditor.setData('');
+                    $('#ff_category').val('');
+                    $('#ff_category').trigger('change');
+                    $('#ff_category').prop('disabled', false);
+                    $('#ff_component_type').val('');
+                    $('#ff_placeholder').val('');
+                    $('#ff_component_required').val('1');
+                    $('#ff_value_options').val('');
+                    $('#ff_repeatable').val('0');
+                    $('#ff_append_text').val('');
+                    $('#ff_table').val('');
+                    $('#ff_datakey').val('');
+                    resetFormSections();
+                    resetExtraFields();
+
+
+                } else if (option == "update") {
+                    // MODAL TITLE
+                    $('#formFieldModalLabel').html('Update Form Field');
+
+                    // SUBMIT BUTTON SECTIONS
+                    $('#updateFormFieldBtn-submit').addClass('d-block');
+                    $('#updateFormFieldBtn-submit').removeClass('d-none');
+                    $('#addFormFieldBtn-submit').addClass('d-none');
+                    $('#addFormFieldBtn-submit').removeClass('d-block');
+
+                }
+
+                if (isOpen) {
+                    $('#formFieldModal').modal('show');
+                }
+            }
+
+            // TRIGGER: ADD BUTTON
+            $('#addFormFieldBtn').click(function() {
+                modalInit('add', true);
+            });
+            // ADD FORM FIELD FUNCTION
             $('#addFormFieldBtn-submit').click(function() {
 
                 var rowCategory = $('#ff_category').val();
@@ -825,17 +969,17 @@
                     ff_extra_condition: rowExtraCondition,
                 };
 
-                // Send the AJAX request
                 $.ajax({
-                    url: "{{ route('add-attribute-post') }}",
+                    url: "{{ route('add-form-field-post') }}",
                     type: "POST",
                     data: requestData,
                     success: function(response) {
                         if (response.success) {
-                            $('#addFormFieldModal').modal('hide');
+                            $('#formFieldModal').modal('hide');
                             $('#ff_label').val('');
                             ckLabelEditor.setData('');
                             $('#ff_category').val('');
+                            $('#ff_category').trigger('change');
                             $('#ff_component_type').val('');
                             $('#ff_placeholder').val('');
                             $('#ff_component_required').val('1');
@@ -845,7 +989,6 @@
                             $('#ff_table').val('');
                             $('#ff_datakey').val('');
                             getFormData();
-                            initializeFormVisibility();
                             resetFormSections();
                             resetExtraFields();
                             showToast('success', response.message);
@@ -874,58 +1017,145 @@
                 });
             });
 
-            // Enable drag and drop sorting Function
-            $('#fieldList').sortable({
-                placeholder: "ui-state-highlight",
-                update: function(event, ui) {
-                    console.log("New order:", $('#fieldList').sortable('toArray', {
-                        attribute: 'data-id'
-                    }));
-
-                    const newOrder = [];
-                    $('#fieldList li').each(function(index) {
-                        newOrder.push({
-                            id: $(this).data('id'),
-                            order: index + 1
-                        });
-                    });
-
-                    $.ajax({
-                        url: "{{ route('update-order-attribute-post') }}",
-                        method: "POST",
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                            fields: newOrder
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                showToast('success', response.message);
-                                getFormData();
-                            } else {
-                                showToast('error', response.message);
-                            }
-                        },
-                        error: function() {
-                            showToast('error', 'Failed to update field order.');
-                        }
-                    });
-                }
-            }).disableSelection();
-
-            // Update field button [Unfinished]
+            // TRIGGER: UPDATE BUTTON
             $(document).on('click', '.update-field-btn', function() {
                 const id = $(this).data('id');
+                $('#ff_id-hidden').val(id);
                 const label = $(this).data('label');
                 const key = $(this).data('key');
-                // show modal or inline editing
-                alert(`Update feature triggered for: ${label} [${key}]`);
-                // You can implement modal re-use here
+
+                $.ajax({
+                    url: "{{ route('get-single-form-field-data-get') }}",
+                    method: "GET",
+                    data: {
+                        ff_id: id
+                    },
+                    success: function(response) {
+                        modalInit('update', true);
+                        $('#ff_category').val(response.fields.ff_category);
+                        $('#ff_category').trigger('change');
+                        $('#ff_category').prop('disabled', true);
+                        $('#ff_label').val(label);
+                        ckLabelEditor.setData(label);
+                        $('#ff_component_type').val(response.fields.ff_component_type);
+                        $('#ff_placeholder').val(response.fields.ff_placeholder);
+                        $('#ff_component_required').val(response.fields.ff_component_required);
+                        $('#ff_value_options').val(response.fields.ff_value_options);
+                        $('#ff_repeatable').val(response.fields.ff_repeatable);
+                        $('#ff_append_text').val(response.fields.ff_append_text);
+                        $('#ff_table').val(response.fields.ff_table);
+                        $('#ff_table').trigger('change');
+                        $('#ff_datakey').val(response.fields.ff_datakey);
+                        $('#ff_datakey').trigger('change');
+                        $('#ff_extra_datakey').val(response.fields.ff_extra_datakey);
+                        $('#ff_extra_condition').val(response.fields.ff_extra_condition);
+                    },
+                    error: function() {
+                        showToast('error', 'Failed to load the form field data.');
+                    }
+                });
+
+
             });
 
-            // Delete Attribute Function
+            // UPDATE FORM FIELD FUNCTION
+            $('#updateFormFieldBtn-submit').click(function() {
+
+                var rowID = $('#ff_id-hidden').val();
+                var rowCategory = $('#ff_category').val();
+                var rowLabel;
+
+                if (rowCategory != "4") {
+                    rowLabel = $('#ff_label').val();
+                } else {
+                    rowLabel = ckLabelEditor.getData();
+                }
+
+                var rowType = $('#ff_component_type').val();
+                var rowPlaceholder = $('#ff_placeholder').val();
+                var rowRequired = $('#ff_component_required').val();
+                var rowValueOptions = $('#ff_value_options').val();
+                var rowAppendText = $('#ff_append_text').val();
+
+                var rowTable = $('#ff_table').val();
+                var rowDataKey = $('#ff_datakey').val();
+
+                var rowExtraDatakey = $('#ff_extra_datakey').val();
+                var rowExtraCondition = $('#ff_extra_condition').val();
+
+                if (rowTable === 'staffs' && (!rowExtraDatakey || !rowExtraCondition)) {
+                    showToast('error', 'Please select extra datakey and condition for staff table.');
+                    return;
+                }
+
+                var requestData = {
+                    _token: "{{ csrf_token() }}",
+                    ff_id: rowID,
+                    ff_label: rowLabel,
+                    ff_category: rowCategory,
+                    ff_component_type: rowType,
+                    ff_placeholder: rowPlaceholder,
+                    ff_component_required: rowRequired,
+                    ff_value_options: rowValueOptions,
+                    ff_append_text: rowAppendText,
+                    ff_table: rowTable,
+                    ff_datakey: rowDataKey,
+                    ff_extra_datakey: rowExtraDatakey,
+                    ff_extra_condition: rowExtraCondition,
+                };
+
+                $.ajax({
+                    url: "{{ route('update-form-field-post') }}",
+                    type: "POST",
+                    data: requestData,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#formFieldModal').modal('hide');
+                            $('#ff_id-hidden').val('');
+                            $('#ff_label').val('');
+                            ckLabelEditor.setData('');
+                            $('#ff_category').val('');
+                            $('#ff_category').trigger('change');
+                            $('#ff_component_type').val('');
+                            $('#ff_placeholder').val('');
+                            $('#ff_component_required').val('1');
+                            $('#ff_value_options').val('');
+                            $('#ff_repeatable').val('0');
+                            $('#ff_append_text').val('');
+                            $('#ff_table').val('');
+                            $('#ff_datakey').val('');
+                            getFormData();
+                            resetFormSections();
+                            resetExtraFields();
+                            showToast('success', response.message);
+                        } else {
+                            showToast('error', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON?.errors;
+                            if (errors) {
+                                let msg = '';
+                                Object.values(errors).forEach(function(error) {
+                                    msg += `• ${error[0]}<br>`;
+                                });
+                                showToast('error', msg);
+                            } else {
+                                showToast('error',
+                                    'Validation failed, but no message returned.');
+                            }
+                        } else {
+                            showToast('error', 'Something went wrong. Please try again.');
+                        }
+                    }
+                });
+            });
+
+            // DELETE FORM FIELD FUNCTION
             $(document).on('click', '.delete-field-btn', function() {
                 $.ajax({
-                    url: "{{ route('delete-attribute-post') }}",
+                    url: "{{ route('delete-form-field-post') }}",
                     method: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",

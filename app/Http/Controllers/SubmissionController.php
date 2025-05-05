@@ -326,6 +326,8 @@ class SubmissionController extends Controller
                 ->orderBy('ff_order')
                 ->get();
 
+            $faculty = Faculty::where('fac_status', 3)->first();
+
             $userData = [];
 
             $specialMappings = [
@@ -497,6 +499,7 @@ class SubmissionController extends Controller
                 'form_title' => $form->af_title,
                 'formfields' => $formfields,
                 'userData' => $userData,
+                'faculty' => $faculty,
             ]);
 
             $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';

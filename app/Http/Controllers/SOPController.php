@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Models\Faculty;
 use App\Models\Activity;
 use App\Models\Document;
 use App\Models\FormField;
@@ -12,14 +13,14 @@ use Illuminate\Support\Str;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use function Laravel\Prompts\form;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
+
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
-
-use function Laravel\Prompts\form;
 
 class SOPController extends Controller
 {
@@ -730,13 +731,14 @@ class SOPController extends Controller
             $act = Activity::where('id', $req->actid)->first();
             $actform = ActivityForm::where('id',  $req->af_id)->first();
             $formfield = FormField::where('af_id',  $req->af_id)->orderby('ff_order')->get();
+            $faculty = Faculty::where('fac_status', 3)->first();
             $pdf = Pdf::loadView('staff.sop.template.activity-document', [
                 'title' => $act->act_name . " Document",
                 'act' => $act,
                 'form_title' => $req->title,
                 'actform' => $actform,
                 'formfields' => $formfield,
-
+                'faculty' => $faculty,
             ]);
 
             return $pdf->stream('preview.pdf');
@@ -752,12 +754,14 @@ class SOPController extends Controller
             $act = Activity::where('id', $req->actid)->first();
             $actform = ActivityForm::where('id',  $req->af_id)->first();
             $formfield = FormField::where('af_id',  $req->af_id)->orderby('ff_order')->get();
+            $faculty = Faculty::where('fac_status', 3)->first();
             return view('staff.sop.template.activity-document', [
                 'title' => $act->act_name . " Document",
                 'act' => $act,
                 'form_title' => $req->title,
                 'actform' => $actform,
                 'formfields' => $formfield,
+                'faculty' => $faculty,
 
             ]);
         } catch (Exception $e) {
@@ -800,7 +804,7 @@ class SOPController extends Controller
             'ff_component_type' => 'nullable|string',
             'ff_placeholder' => 'nullable|string',
             'ff_component_required' => 'nullable|in:1,2',
-            'ff_value_options' => 'nullable|string',
+            'ff_value_options' => 'nullable|json',
             'ff_append_text' => 'nullable|string',
             'ff_table' => 'nullable|string',
             'ff_datakey' => 'nullable|string',
@@ -874,31 +878,80 @@ class SOPController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-            ], 200);
+            ], 500);
         }
     }
 
-    // [Unfinished]
     public function updateFormField(Request $req)
     {
-        try {
-            $fields = $req->input('fields', []);
+        $validator = Validator::make($req->all(), [
+            'ff_id' => 'required|integer|exists:form_fields,id',
+            'ff_label' => 'required|string',
+            'ff_component_type' => 'nullable|string',
+            'ff_placeholder' => 'nullable|string',
+            'ff_component_required' => 'nullable|in:1,2',
+            'ff_value_options' => 'nullable|json',
+            'ff_append_text' => 'nullable|string',
+            'ff_table' => 'nullable|string',
+            'ff_datakey' => 'nullable|string',
+            'ff_extra_datakey' => 'nullable|string',
+            'ff_extra_condition' => 'nullable|string',
+        ], [], [
+            'ff_id' => 'form field',
+            'ff_label' => 'label',
+            'ff_component_type' => 'component type',
+            'ff_placeholder' => 'placeholder',
+            'ff_component_required' => 'required status',
+            'ff_value_options' => 'value options',
+            'ff_append_text' => 'append text',
+            'ff_table' => 'source table',
+            'ff_datakey' => 'data key',
+            'ff_extra_datakey' => 'extra data key',
+            'ff_extra_condition' => 'extra condition',
+        ]);
 
-            foreach ($fields as $field) {
-                FormField::where('id', $field['id'])->update([
-                    'ff_order' => $field['order']
-                ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $validated = $validator->validated();
+            $checkExists = FormField::where('id', $validated['ff_id'])->exists();
+
+            if (!$checkExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Field does not exist !',
+                ], 200);
             }
+
+            $formfield = FormField::where('id', $validated['ff_id'])->update([
+                'ff_label' => $validated['ff_label'],
+                'ff_component_type' => $validated['ff_component_type'],
+                'ff_placeholder' => $validated['ff_placeholder'] ?? null,
+                'ff_component_required' => $validated['ff_component_required'] ?? '2',
+                'ff_value_options' => $validated['ff_value_options'] ?? null,
+                'ff_append_text' => $validated['ff_append_text'] ?? null,
+                'ff_table' => $validated['ff_table'] ?? null,
+                'ff_datakey' => $validated['ff_datakey'],
+                'ff_extra_datakey' => $validated['ff_extra_datakey'] ?? null,
+                'ff_extra_condition' => $validated['ff_extra_condition'] ?? null,
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Attribute order updated successfully.',
+                'message' => 'Field updated successfully.',
+                'formfield' => $formfield,
             ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-            ], 200);
+            ], 500);
         }
     }
 
@@ -921,7 +974,7 @@ class SOPController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-            ], 200);
+            ], 500);
         }
     }
 
@@ -946,7 +999,7 @@ class SOPController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-            ], 200);
+            ], 500);
         }
     }
 
@@ -977,8 +1030,25 @@ class SOPController extends Controller
 
             return response()->json([
                 'success' => true,
-                'fields' => $fields 
-            ]);
+                'fields' => $fields
+            ],200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getSingleFormFieldData(Request $req)
+    {
+        try {
+            $fields = FormField::where('id', $req->ff_id)->first();
+
+            return response()->json([
+                'success' => true,
+                'fields' => $fields
+            ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
