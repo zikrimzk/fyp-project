@@ -184,7 +184,16 @@
 
                             </div>
                             <div class="card-footer d-flex justify-content-end align-items-center">
-                                <a href="{{ route('student-confirm-submission-get', Crypt::encrypt($act->activity_id)) }}" class="btn btn-sm btn-light-danger">Confirm Submission (Beta)</a>
+                                {{-- <a href="{{ route('student-confirm-submission-get', Crypt::encrypt($act->activity_id)) }}"
+                                    class="btn btn-sm btn-light-danger">Confirm Submission (Beta)</a> --}}
+                                <a href="{{ route('student-confirm-submission-get', Crypt::encrypt($act->activity_id)) }}"
+                                    class="btn btn-sm btn-light-danger" data-bs-toggle="modal"
+                                    data-bs-target="#confirmSubmissionModal">
+                                    <i class="fas fa-file-signature ms-2 me-2"></i>
+                                    <span class="me-2">
+                                        Confirm Submission
+                                    </span>
+                                </a>
                             </div>
                         </div>
                     @empty
@@ -193,10 +202,128 @@
                         </div>
                     @endforelse
                 </div>
+
+                <!-- [ Confirm Submission Modal ] start -->
+                <form method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal fade" id="confirmSubmissionModal" tabindex="-1"
+                        aria-labelledby="confirmSubmissionModal" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="confirmSubmissionModalLabel">Confirm Submission</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <canvas id="signatureCanvas"
+                                                    style="border:1px solid #000000; border-radius:10px; width:100%; height:200px;"></canvas>
+                                                <input type="hidden" name="signature" id="signatureData">
+                                            </div>
+                                            <div class="d-flex align-items-center text-muted mb-1">
+                                                <div class="avtar avtar-s bg-light-primary flex-shrink-0 me-2">
+                                                    <i class="material-icons-two-tone text-primary f-20">security</i>
+                                                </div>
+                                                <span class="text-muted text-sm w-100">
+                                                    By submitting this work electronically, I confirm that this submission
+                                                    is my own original work and I understand that this electronic
+                                                    submission holds the same validity as a physical signature under
+                                                    applicable local law.
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer justify-content-end">
+                                    <div class="flex-grow-1 text-end">
+                                        <div class="col-sm-12">
+                                            <div class="d-flex justify-content-between gap-3 align-items-center">
+                                                <button type="button"
+                                                    class="btn btn-light btn-pc-default w-100 d-flex justify-content-center align-items-center"
+                                                    id="clearSig">
+                                                    <i class="ti ti-eraser me-2"></i>
+                                                    Start over
+                                                </button>
+                                                <button type="submit"
+                                                    class="btn btn-primary w-100 d-flex justify-content-center align-items-center"
+                                                    id="submitSig">
+                                                    <i class="ti ti-writing-sign me-2"></i>
+                                                    Confirm & Sign
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!-- [ Confirm Submission Modal ] end -->
+
                 <!-- [ Programme Overview ] end -->
 
             </div>
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+
+    <script>
+        let signaturePad;
+
+        const confirmModal = document.getElementById('confirmSubmissionModal');
+
+        if (confirmModal) {
+            confirmModal.addEventListener('shown.bs.modal', function() {
+                const canvas = document.getElementById('signatureCanvas');
+                if (!canvas) return;
+
+                // Resize canvas properly for desktop and mobile
+                function resizeCanvas() {
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    canvas.width = canvas.offsetWidth * ratio;
+                    canvas.height = canvas.offsetHeight * ratio;
+                    canvas.getContext('2d').scale(ratio, ratio);
+                    if (signaturePad) signaturePad.clear();
+                }
+
+                resizeCanvas(); // Resize on open
+
+                signaturePad = new SignaturePad(canvas, {
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    penColor: 'black',
+                });
+            });
+
+            // Clear button
+            let clearSigBtn = document.getElementById('clearSig');
+            if (clearSigBtn) {
+                clearSigBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (signaturePad) signaturePad.clear();
+                });
+            }
+
+            // Optional: Submit Signature Button (to test only)
+            let submitSigBtn = document.getElementById('submitSig');
+            if (submitSigBtn) {
+                submitSigBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (!signaturePad || signaturePad.isEmpty()) {
+                        alert("Please provide a signature.");
+                        return;
+                    }
+
+                    const dataURL = signaturePad.toDataURL('image/png');
+                    console.log("Captured Signature:", dataURL);
+                    document.getElementById('signatureData').value = dataURL;
+                    alert("Signature saved. Now click Confirm & Sign to submit.");
+                });
+            }
+        }
+    </script>
 @endsection

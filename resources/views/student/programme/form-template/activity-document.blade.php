@@ -379,7 +379,6 @@
                 @php $i++; @endphp
             @elseif ($ff->ff_category == 6)
                 @php
-                    // Collect consecutive signature fields from current index
                     $signatureGroup = collect();
                     while ($i < $total && $formfields[$i]->ff_category == 6) {
                         $signatureGroup->push($formfields[$i]);
@@ -397,8 +396,8 @@
                                         <td class="signature-cell">
                                             <div class="signature-box-clean">
                                                 @if (!empty($sig->ff_signature_key))
-                                                    <img src="{{ public_path('assets/images/e-pgs-signature/dummy-signature.png') }}"
-                                                        class="signature-img-clean" alt="Signature">
+                                                    <img src=""
+                                                        class="signature-img-clean">
                                                 @endif
                                             </div>
                                             <div class="signature-label-clean">
