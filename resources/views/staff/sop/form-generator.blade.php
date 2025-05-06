@@ -415,6 +415,18 @@
 
                                     </select>
                                 </div>
+
+                                <!-- Field Signature Role -->
+                                <div class="mb-3 signature-field-group">
+                                    <label for="ff_signature_role" class="form-label">Signature by</label>
+                                    <select class="form-select" id="ff_signature_role" name="ff_signature_role">
+                                        <option value="" selected>-- Select User Role --</option>
+                                        <option value="1">Student</option>
+                                        <option value="2">Main Supervisor</option>
+                                        <option value="3">Co-Supervisor</option>
+                                        <option value="4">Committee Member / Deputy Dean / Dean</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="modal-footer justify-content-end">
                                 <div class="flex-grow-1 text-end">
@@ -711,12 +723,18 @@
                     $('#ff_label').parent().hide();
                     $('#ff_label-ckeditor').parent().show();
                 }
+                if (category == 6) {
+                    $('.signature-field-group').show();
+                    $('#ff_label').parent().show();
+                    $('#ff_label-ckeditor').parent().hide();
+                }
             });
 
             // RESET FORM FUNCTIONS
             function resetFormSections() {
                 $('.input-field-group').hide();
                 $('.output-field-group').hide();
+                $('.signature-field-group').hide();
 
                 $('#ff_label').parent().hide();
                 $('#ff_label-ckeditor').parent().hide();
@@ -894,10 +912,10 @@
                     $('#ff_placeholder').val('');
                     $('#ff_component_required').val('1');
                     $('#ff_value_options').val('');
-                    $('#ff_repeatable').val('0');
                     $('#ff_append_text').val('');
                     $('#ff_table').val('');
                     $('#ff_datakey').val('');
+                    $('#ff_signature_role').val('');
                     resetFormSections();
                     resetExtraFields();
 
@@ -928,26 +946,38 @@
 
                 var rowCategory = $('#ff_category').val();
                 var rowLabel;
-
                 if (rowCategory != "4") {
                     rowLabel = $('#ff_label').val();
                 } else {
                     rowLabel = ckLabelEditor.getData();
                 }
-
                 var rowType = $('#ff_component_type').val();
                 var rowPlaceholder = $('#ff_placeholder').val();
                 var rowRequired = $('#ff_component_required').val();
                 var rowValueOptions = $('#ff_value_options').val();
                 var rowAppendText = $('#ff_append_text').val();
-
                 var rowTable = $('#ff_table').val();
                 var rowDataKey = $('#ff_datakey').val();
-
                 var rowExtraDatakey = $('#ff_extra_datakey').val();
                 var rowExtraCondition = $('#ff_extra_condition').val();
+                var rowSignatureRole = $('#ff_signature_role').val();
+                
+                if (rowCategory == "1" && !rowType) {
+                    showToast('error', 'Please select component type first before proceed.');
+                    return;
+                } else if (rowCategory == "2" && !rowTable) {
+                    showToast('error', 'Please select table first before proceed.');
+                    return;
+                } else if (rowCategory == "6" && !rowSignatureRole) {
+                    showToast('error', 'Please select signature by first before proceed.');
+                    return;
+                }
 
-                if (rowTable === 'staffs' && (!rowExtraDatakey || !rowExtraCondition)) {
+                if (rowTable && !rowDataKey) {
+                    showToast('error', 'Please select datakey first before proceed.');
+                    return;
+                }
+                if (rowTable === 'staff' && (!rowExtraDatakey || !rowExtraCondition)) {
                     showToast('error', 'Please select extra datakey and condition for staff table.');
                     return;
                 }
@@ -967,6 +997,7 @@
                     ff_datakey: rowDataKey,
                     ff_extra_datakey: rowExtraDatakey,
                     ff_extra_condition: rowExtraCondition,
+                    ff_signature_role: rowSignatureRole,
                 };
 
                 $.ajax({
@@ -976,21 +1007,8 @@
                     success: function(response) {
                         if (response.success) {
                             $('#formFieldModal').modal('hide');
-                            $('#ff_label').val('');
-                            ckLabelEditor.setData('');
-                            $('#ff_category').val('');
-                            $('#ff_category').trigger('change');
-                            $('#ff_component_type').val('');
-                            $('#ff_placeholder').val('');
-                            $('#ff_component_required').val('1');
-                            $('#ff_value_options').val('');
-                            $('#ff_repeatable').val('0');
-                            $('#ff_append_text').val('');
-                            $('#ff_table').val('');
-                            $('#ff_datakey').val('');
+                            modalInit("add", false);
                             getFormData();
-                            resetFormSections();
-                            resetExtraFields();
                             showToast('success', response.message);
 
                         } else {
@@ -1049,6 +1067,7 @@
                         $('#ff_datakey').trigger('change');
                         $('#ff_extra_datakey').val(response.fields.ff_extra_datakey);
                         $('#ff_extra_condition').val(response.fields.ff_extra_condition);
+                        $('#ff_signature_role').val(response.fields.ff_signature_role);
                     },
                     error: function() {
                         showToast('error', 'Failed to load the form field data.');
@@ -1064,26 +1083,39 @@
                 var rowID = $('#ff_id-hidden').val();
                 var rowCategory = $('#ff_category').val();
                 var rowLabel;
-
                 if (rowCategory != "4") {
                     rowLabel = $('#ff_label').val();
                 } else {
                     rowLabel = ckLabelEditor.getData();
                 }
-
                 var rowType = $('#ff_component_type').val();
                 var rowPlaceholder = $('#ff_placeholder').val();
                 var rowRequired = $('#ff_component_required').val();
                 var rowValueOptions = $('#ff_value_options').val();
                 var rowAppendText = $('#ff_append_text').val();
-
                 var rowTable = $('#ff_table').val();
                 var rowDataKey = $('#ff_datakey').val();
-
                 var rowExtraDatakey = $('#ff_extra_datakey').val();
                 var rowExtraCondition = $('#ff_extra_condition').val();
+                var rowSignatureRole = $('#ff_signature_role').val();
 
-                if (rowTable === 'staffs' && (!rowExtraDatakey || !rowExtraCondition)) {
+                if (rowCategory == "1" && !rowType) {
+                    showToast('error', 'Please select component type first before proceed.');
+                    return;
+                } else if (rowCategory == "2" && !rowTable) {
+                    showToast('error', 'Please select table first before proceed.');
+                    return;
+                } else if (rowCategory == "6" && !rowSignatureRole) {
+                    showToast('error', 'Please select signature by first before proceed.');
+                    return;
+                }
+
+                if (rowTable && !rowDataKey) {
+                    showToast('error', 'Please select datakey first before proceed.');
+                    return;
+                }
+
+                if (rowTable === 'staff' && (!rowExtraDatakey || !rowExtraCondition)) {
                     showToast('error', 'Please select extra datakey and condition for staff table.');
                     return;
                 }
@@ -1102,6 +1134,7 @@
                     ff_datakey: rowDataKey,
                     ff_extra_datakey: rowExtraDatakey,
                     ff_extra_condition: rowExtraCondition,
+                    ff_signature_role: rowSignatureRole,
                 };
 
                 $.ajax({
@@ -1111,22 +1144,8 @@
                     success: function(response) {
                         if (response.success) {
                             $('#formFieldModal').modal('hide');
-                            $('#ff_id-hidden').val('');
-                            $('#ff_label').val('');
-                            ckLabelEditor.setData('');
-                            $('#ff_category').val('');
-                            $('#ff_category').trigger('change');
-                            $('#ff_component_type').val('');
-                            $('#ff_placeholder').val('');
-                            $('#ff_component_required').val('1');
-                            $('#ff_value_options').val('');
-                            $('#ff_repeatable').val('0');
-                            $('#ff_append_text').val('');
-                            $('#ff_table').val('');
-                            $('#ff_datakey').val('');
+                            modalInit("add", false);
                             getFormData();
-                            resetFormSections();
-                            resetExtraFields();
                             showToast('success', response.message);
                         } else {
                             showToast('error', response.message);

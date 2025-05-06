@@ -95,6 +95,10 @@
             border-bottom: 1px solid #000;
             word-wrap: break-word;
             white-space: pre-line;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .value-input {
@@ -156,39 +160,51 @@
             font-weight: bold;
             text-transform: uppercase;
             color: #000;
-            margin: 0px 0 5px;
+            margin: 15px 0 5px 0;
             border-bottom: 1px solid #000;
             padding-bottom: 5px;
         }
 
-        .signature-table {
+        .signature-table.clean-signature {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 40px;
-            display: none;
+            border-collapse: separate;
         }
 
-        .signature-table td {
-            vertical-align: center;
-            padding: 0 10px;
+        .signature-cell {
+            width: 33.33%;
+            text-align: center;
+            vertical-align: top;
+            padding: 10px 15px;
         }
 
-        .signature-user {
-            height: 50px;
+        .signature-box-clean {
+            height: 100px;
+            border-bottom: 1px solid #000;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
         }
 
-        .signature-label {
+        .signature-img-clean {
+            max-height: 80px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .signature-label-clean {
             font-weight: bold;
             font-size: 11pt;
-            border-left: 1px solid #000;
-            border-right: 1px solid #000;
-            border-bottom: 1px solid #000;
+            margin-top: 5px;
         }
 
-        .date-label {
+        .signature-date-clean {
             font-size: 10.5pt;
-            margin-top: 5px;
-            margin-bottom: 5px;
+            margin-top: 3px;
+        }
+
+        p {
+            margin: 0;
         }
     </style>
 </head>
@@ -219,7 +235,15 @@
 
     <!-- Student Info [ Dynamic Field Here ] -->
     <table class="info-table">
-        @foreach ($formfields as $ff)
+        @php
+            $i = 0;
+            $total = count($formfields);
+        @endphp
+
+        @while ($i < $total)
+            @php
+                $ff = $formfields[$i];
+            @endphp
             @if ($ff->ff_category == 1)
                 <!-- CATEGORY : INPUT -->
                 @php
@@ -320,6 +344,9 @@
                                 <input type="text" id="{{ $key }}" name="{{ $key }}"
                                     value="{{ e($value) }}" placeholder="{{ $placeholder }}" {{ $required }}>
                         @endswitch
+
+                        @php $i++; @endphp
+
                     </td>
                 </tr>
             @elseif($ff->ff_category == 2)
@@ -333,6 +360,7 @@
                     <td class="colon">:</td>
                     <td class="value">{!! $value !!}</td>
                 </tr>
+                @php $i++; @endphp
             @elseif($ff->ff_category == 3)
                 <!-- CATEGORY : SECTION -->
                 <tr>
@@ -340,6 +368,7 @@
                         <div class="section-header">{{ $ff->ff_label }}</div>
                     </td>
                 </tr>
+                @php $i++; @endphp
             @elseif($ff->ff_category == 4)
                 <!-- CATEGORY : TEXT -->
                 <tr>
@@ -347,34 +376,49 @@
                         {!! $ff->ff_label !!}
                     </td>
                 </tr>
+                @php $i++; @endphp
+            @elseif ($ff->ff_category == 6)
+                @php
+                    // Collect consecutive signature fields from current index
+                    $signatureGroup = collect();
+                    while ($i < $total && $formfields[$i]->ff_category == 6) {
+                        $signatureGroup->push($formfields[$i]);
+                        $i++;
+                    }
+                    $signatureChunks = $signatureGroup->chunk(3);
+                @endphp
+
+                @foreach ($signatureChunks as $chunk)
+                    <tr>
+                        <td colspan="3">
+                            <table class="signature-table clean-signature">
+                                <tr>
+                                    @foreach ($chunk as $sig)
+                                        <td class="signature-cell">
+                                            <div class="signature-box-clean">
+                                                @if (!empty($sig->ff_signature_key))
+                                                    <img src="{{ public_path('assets/images/e-pgs-signature/dummy-signature.png') }}"
+                                                        class="signature-img-clean" alt="Signature">
+                                                @endif
+                                            </div>
+                                            <div class="signature-label-clean">
+                                                {{ $sig->ff_label }}
+                                            </div>
+                                            <div class="signature-date-clean">
+                                                <span class="date-label">Date:</span>
+                                                {{ $sig->ff_signature_date_key ?? '' }}
+                                            </div>
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                @endforeach
             @endif
-        @endforeach
+        @endwhile
     </table>
 
-    <!-- Signature Section -->
-    <table class="signature-table">
-        <tr>
-            <td style="width: 33.33%; height: 120px;  border: 1px solid #000; border-bottom: none;"></td>
-            <td style="width: 33.33%; height: 120px;  border: 1px solid #000; border-bottom: none;"></td>
-            <td style="width: 33.33%; height: 120px;  border: 1px solid #000; border-bottom: none;"></td>
-        </tr>
-        <tr class="signature-user">
-            <td class="signature-label">Student’s Signature</td>
-            <td class="signature-label">Supervisor’s Signature & Stamp</td>
-            <td class="signature-label">Deputy Dean (Research & Postgraduate)</td>
-        </tr>
-        <tr>
-            <td class="signature-label">
-                <div class="date-label">Date:</div>
-            </td>
-            <td class="signature-label">
-                <div class="date-label">Date:</div>
-            </td>
-            <td class="signature-label">
-                <div class="date-label">Date:</div>
-            </td>
-        </tr>
-    </table>
 
 </body>
 

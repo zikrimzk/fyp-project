@@ -32,6 +32,11 @@ class FormField extends Model
         'ff_table_structure',
         'ff_table_data',
 
+        // SIGNATURE ATTRIBUTES
+        'ff_signature_role',
+        'ff_signature_key',
+        'ff_signature_date_key',
+
         // ADDITIONAL ATTRIBUTES
         'ff_append_text',
 

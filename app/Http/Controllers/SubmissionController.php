@@ -327,6 +327,7 @@ class SubmissionController extends Controller
                 ->get();
 
             $faculty = Faculty::where('fac_status', 3)->first();
+            $signatures = $formfields->where('ff_category', 6);
 
             $userData = [];
 
@@ -500,6 +501,7 @@ class SubmissionController extends Controller
                 'formfields' => $formfields,
                 'userData' => $userData,
                 'faculty' => $faculty,
+                'signatures'=> $signatures
             ]);
 
             $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';

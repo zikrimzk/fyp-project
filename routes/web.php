@@ -60,7 +60,6 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::post('/submit-document', [SubmissionController::class, 'submitDocument'])->name('student-submit-document-post');
     Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->name('student-remove-document-get');
     Route::get('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-get');
-
 });
 
 
@@ -147,14 +146,15 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/form-generator-{formID}-{afTarget}', [SOPController::class, 'formGenerator'])->name('form-generator');
     Route::post('/get-activity-form-data', [SOPController::class, 'getActivityFormData'])->name('get-activity-form-data-post');
     Route::get('/activity-document-preview', [SOPController::class, 'previewActivityDocument'])->name('activity-document-preview-get');
-    // [Debug Function]
-    Route::get('/preview-activity-document', [SOPController::class, 'testActivityDocument'])->name('preview-activity-document-get');
     Route::post('/add-form-field', [SOPController::class, 'addFormField'])->name('add-form-field-post');
     Route::post('/update-form-field', [SOPController::class, 'updateFormField'])->name('update-form-field-post');
     Route::post('/update-order-form-field', [SOPController::class, 'updateFormFieldOrder'])->name('update-order-form-field-post');
     Route::post('/delete-form-field', [SOPController::class, 'deleteFormField'])->name('delete-form-field-post');
     Route::get('/get-form-field-data', [SOPController::class, 'getFormFieldData'])->name('get-form-field-data-get');
     Route::get('/get-single-form-field-data', [SOPController::class, 'getSingleFormFieldData'])->name('get-single-form-field-data-get');
+
+    // [Debug Function]
+    Route::get('/preview-activity-document', [SOPController::class, 'previewActivityDocumentbyHTML'])->name('preview-activity-document-get');
 
 
     // Setting 
@@ -166,7 +166,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/delete-faculty-{id}-{opt}', [SettingController::class, 'deleteFaculty'])->name('delete-faculty-get');
     Route::post('/set-default-faculty', [SettingController::class, 'setDefaultFaculty'])->name('set-default-faculty-post');
 
- 
+
     /* Department Setting */
     Route::get('/department-setting', [SettingController::class, 'departmentSetting'])->name('department-setting');
     Route::post('/add-department', [SettingController::class, 'addDepartment'])->name('add-department-post');

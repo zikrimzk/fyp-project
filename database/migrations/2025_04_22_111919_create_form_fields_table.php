@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('form_fields', function (Blueprint $table) {
             $table->id();
             // GENERAL ATTRIBUTES
-            $table->integer('ff_category')->comment('1 - input, 2 - output, 3 - Section, 4 - Text, 5 - Ordered List, 6 - Unordered List');
+            $table->integer('ff_category')->comment('1 - input, 2 - output, 3 - Section, 4 - Text, 5 - Table, 6 - Signature');
             $table->text('ff_label')->nullable()->comment('Label/title/description depending on category');
             $table->integer('ff_order')->default(1)->comment('Display order in the form');
 
@@ -34,6 +34,11 @@ return new class extends Migration
             $table->boolean('ff_is_table')->default(false)->comment('Is this field a dynamic table?');
             $table->json('ff_table_structure')->nullable()->comment('JSON defining table columns, headers, types');
             $table->json('ff_table_data')->nullable()->comment('Optional default data in the table (rows)');
+
+            // SIGNATURE ATTRIBUTES
+            $table->integer('ff_signature_role')->nullable()->comment('Related table for data output');
+            $table->string('ff_signature_key')->nullable()->comment('Key to map to the actual signature image, e.g., "supervisor_signature"');
+            $table->string('ff_signature_date_key')->nullable()->comment('Key to map to signature date, e.g., "supervisor_signature_date"');
 
             // ADDITIONAL ATTRIBUTES
             $table->text('ff_append_text')->nullable()->comment('Text to append after field label');

@@ -731,6 +731,7 @@ class SOPController extends Controller
             $act = Activity::where('id', $req->actid)->first();
             $actform = ActivityForm::where('id',  $req->af_id)->first();
             $formfield = FormField::where('af_id',  $req->af_id)->orderby('ff_order')->get();
+            $signatures = $formfield->where('ff_category', 6);
             $faculty = Faculty::where('fac_status', 3)->first();
             $pdf = Pdf::loadView('staff.sop.template.activity-document', [
                 'title' => $act->act_name . " Document",
@@ -739,6 +740,8 @@ class SOPController extends Controller
                 'actform' => $actform,
                 'formfields' => $formfield,
                 'faculty' => $faculty,
+                'signatures' => $signatures
+
             ]);
 
             return $pdf->stream('preview.pdf');
@@ -748,12 +751,13 @@ class SOPController extends Controller
     }
 
     // [Debug Function]
-    public function testActivityDocument(Request $req)
+    public function previewActivityDocumentbyHTML(Request $req)
     {
         try {
             $act = Activity::where('id', $req->actid)->first();
             $actform = ActivityForm::where('id',  $req->af_id)->first();
             $formfield = FormField::where('af_id',  $req->af_id)->orderby('ff_order')->get();
+            $signatures = $formfield->where('ff_category', 6);
             $faculty = Faculty::where('fac_status', 3)->first();
             return view('staff.sop.template.activity-document', [
                 'title' => $act->act_name . " Document",
@@ -762,6 +766,7 @@ class SOPController extends Controller
                 'actform' => $actform,
                 'formfields' => $formfield,
                 'faculty' => $faculty,
+                'signatures' => $signatures
 
             ]);
         } catch (Exception $e) {
@@ -810,6 +815,7 @@ class SOPController extends Controller
             'ff_datakey' => 'nullable|string',
             'ff_extra_datakey' => 'nullable|string',
             'ff_extra_condition' => 'nullable|string',
+            'ff_signature_role' => 'nullable|integer',
             'actid' => 'required|integer|exists:activities,id',
             'af_id' => 'required|integer|exists:activity_forms,id',
         ], [], [
@@ -824,6 +830,7 @@ class SOPController extends Controller
             'ff_datakey' => 'data key',
             'ff_extra_datakey' => 'extra data key',
             'ff_extra_condition' => 'extra condition',
+            'ff_signature_role' => 'user role',
             'actid' => 'Activity',
             'af_id' => 'Activity Form',
         ]);
@@ -845,13 +852,35 @@ class SOPController extends Controller
             if ($checkExists) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Attribute already exists.',
+                    'message' => 'Field already exists.',
                 ], 200);
             }
 
             // Get the next order number
             $af_count = FormField::where('af_id', $af_id)->count();
             $nextOrder = $af_count + 1;
+
+            // CHECK WHETHER USER ROLE EXIST IN ff_signature_role
+            $signature_key = null;
+            $signature_date_key = null;
+            if ($validated['ff_signature_role'] != null) {
+                $userRole = $validated['ff_signature_role'];
+
+                if ($userRole == 1) {
+                    $signature_key = 'student_signature';
+                    $signature_date_key = 'student_signature_date';
+                } else if ($userRole == 2) {
+                    $signature_key = 'sv_signature';
+                    $signature_date_key = 'sv_signature_date';
+                } else if ($userRole == 3) {
+                    $signature_key = 'cosv_signature';
+                    $signature_date_key = 'cosv_signature_date';
+                } else if ($userRole == 4) {
+                    $signature_key = 'comm_signature';
+                    $signature_date_key = 'comm_signature_date';
+                }
+            }
+
 
             $formfield = FormField::create([
                 'ff_label' => $validated['ff_label'],
@@ -866,6 +895,9 @@ class SOPController extends Controller
                 'ff_datakey' => $validated['ff_datakey'],
                 'ff_extra_datakey' => $validated['ff_extra_datakey'] ?? null,
                 'ff_extra_condition' => $validated['ff_extra_condition'] ?? null,
+                'ff_signature_role' => $validated['ff_signature_role'] ?? null,
+                'ff_signature_key' => $signature_key,
+                'ff_signature_date_key' => $signature_date_key,
                 'af_id' => $af_id,
             ]);
 
@@ -896,6 +928,7 @@ class SOPController extends Controller
             'ff_datakey' => 'nullable|string',
             'ff_extra_datakey' => 'nullable|string',
             'ff_extra_condition' => 'nullable|string',
+            'ff_signature_role' => 'nullable|integer',
         ], [], [
             'ff_id' => 'form field',
             'ff_label' => 'label',
@@ -908,6 +941,7 @@ class SOPController extends Controller
             'ff_datakey' => 'data key',
             'ff_extra_datakey' => 'extra data key',
             'ff_extra_condition' => 'extra condition',
+            'ff_signature_role' => 'user role',
         ]);
 
 
@@ -929,6 +963,27 @@ class SOPController extends Controller
                 ], 200);
             }
 
+            // CHECK WHETHER USER ROLE EXIST IN ff_signature_role
+            $signature_key = null;
+            $signature_date_key = null;
+            if ($validated['ff_signature_role'] != null) {
+                $userRole = $validated['ff_signature_role'];
+
+                if ($userRole == 1) {
+                    $signature_key = 'student_signature';
+                    $signature_date_key = 'student_signature_date';
+                } else if ($userRole == 2) {
+                    $signature_key = 'sv_signature';
+                    $signature_date_key = 'sv_signature_date';
+                } else if ($userRole == 3) {
+                    $signature_key = 'cosv_signature';
+                    $signature_date_key = 'cosv_signature_date';
+                } else if ($userRole == 4) {
+                    $signature_key = 'comm_signature';
+                    $signature_date_key = 'comm_signature_date';
+                }
+            }
+
             $formfield = FormField::where('id', $validated['ff_id'])->update([
                 'ff_label' => $validated['ff_label'],
                 'ff_component_type' => $validated['ff_component_type'],
@@ -940,6 +995,9 @@ class SOPController extends Controller
                 'ff_datakey' => $validated['ff_datakey'],
                 'ff_extra_datakey' => $validated['ff_extra_datakey'] ?? null,
                 'ff_extra_condition' => $validated['ff_extra_condition'] ?? null,
+                'ff_signature_role' => $validated['ff_signature_role'] ?? null,
+                'ff_signature_key' => $signature_key,
+                'ff_signature_date_key' => $signature_date_key,
             ]);
 
             return response()->json([
@@ -1014,7 +1072,9 @@ class SOPController extends Controller
                 1 => 'Input',
                 2 => 'Output',
                 3 => 'Section',
-                4 => 'Text'
+                4 => 'Text',
+                5 => 'Table',
+                6 => 'Signature'
             ];
 
             $fields = $fields->map(function ($field) use ($categoryMap) {
@@ -1031,7 +1091,7 @@ class SOPController extends Controller
             return response()->json([
                 'success' => true,
                 'fields' => $fields
-            ],200);
+            ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
