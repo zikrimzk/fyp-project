@@ -62,6 +62,7 @@
                 <!-- [ Programme Overview ] start -->
                 <div class="col-12">
                     @forelse($acts as $act)
+                        <!-- [ Activity Details ] start -->
                         <div class="card mb-4 mt-3 border-2 shadow-md rounded-4">
                             <div class="card-body">
 
@@ -71,8 +72,14 @@
                                     <div>
                                         <h5 class="fw-bold mb-1">{{ $act->act_name }}</h5>
                                         @if ($act->init_status == 1)
+                                            <span class="badge bg-warning">Pending</span>
+                                        @elseif ($act->init_status == 2)
+                                            <span class="badge bg-success">Approved by Supervisor</span>
+                                        @elseif ($act->init_status == 3)
+                                            <span class="badge bg-success">Approved by Committee / Deputy Dean / Dean</span>
+                                        @elseif ($act->init_status == 10)
                                             <span class="badge bg-success badge-flash">Open for Submission</span>
-                                        @elseif($act->init_status == 2)
+                                        @elseif($act->init_status == 11)
                                             <span class="badge bg-danger">Locked</span>
                                         @else
                                             <span class="badge bg-secondary">N/A</span>
@@ -93,6 +100,17 @@
                                         <p class="text-muted fst-italic mb-0">No material uploaded</p>
                                     @endif
                                 </div>
+
+                                {{-- Final Document Section [UNFINISH] --}}
+                                @if (isset($act->confirmed_document))
+                                    <div class="mt-4 mb-4">
+                                        <h6 class="fw-semibold mb-2">Final Document</h6>
+                                        <a href="{{ route('student-view-material-get', ['filename' => Crypt::encrypt($act->confirmed_document)]) }}"
+                                            class="text-decoration-none d-inline-flex align-items-center gap-2 text-primary">
+                                            <i class="ti ti-file-check"></i> View Final Document
+                                        </a>
+                                    </div>
+                                @endif
 
                                 {{-- Document Submission Section --}}
                                 <div class="mb-2">
@@ -154,20 +172,29 @@
                                                                 </div>
                                                             </div>
                                                             <div class="text-md-end">
-                                                                @if ($item->submission_status == 1 || $item->submission_status == 4)
-                                                                    <a href="{{ route('student-document-submission', Crypt::encrypt($item->submission_id)) }}"
-                                                                        class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
-                                                                        <i class="ti ti-upload"></i> Submit Document
-                                                                    </a>
-                                                                @elseif($item->submission_status == 3)
-                                                                    <a href="{{ route('student-document-submission', Crypt::encrypt($item->submission_id)) }}"
-                                                                        class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
-                                                                        <i class="ti ti-upload"></i> View Submission
-                                                                    </a>
+                                                                @if (in_array($act->init_status, [10, 11]))
+                                                                    {{-- Allow submission based on status --}}
+                                                                    @if ($item->submission_status == 1 || $item->submission_status == 4)
+                                                                        <a href="{{ route('student-document-submission', Crypt::encrypt($item->submission_id)) }}"
+                                                                            class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
+                                                                            <i class="ti ti-upload"></i> Submit Document
+                                                                        </a>
+                                                                    @elseif($item->submission_status == 3)
+                                                                        <a href="{{ route('student-document-submission', Crypt::encrypt($item->submission_id)) }}"
+                                                                            class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
+                                                                            <i class="ti ti-upload"></i> View Submission
+                                                                        </a>
+                                                                    @else
+                                                                        <a href="javascript:void(0)"
+                                                                            class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 disabled-a">
+                                                                            <i class="ti ti-upload"></i> Submit Document
+                                                                        </a>
+                                                                    @endif
                                                                 @else
+                                                                    {{-- If confirmed, lock the button --}}
                                                                     <a href="javascript:void(0)"
                                                                         class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 disabled-a">
-                                                                        <i class="ti ti-upload"></i> Submit Document
+                                                                        <i class="ti ti-lock"></i> Locked
                                                                     </a>
                                                                 @endif
                                                             </div>
@@ -184,85 +211,117 @@
 
                             </div>
                             <div class="card-footer d-flex justify-content-end align-items-center">
-                                {{-- <a href="{{ route('student-confirm-submission-get', Crypt::encrypt($act->activity_id)) }}"
-                                    class="btn btn-sm btn-light-danger">Confirm Submission (Beta)</a> --}}
-                                <a href="{{ route('student-confirm-submission-get', Crypt::encrypt($act->activity_id)) }}"
-                                    class="btn btn-sm btn-light-danger" data-bs-toggle="modal"
-                                    data-bs-target="#confirmSubmissionModal">
+                                <button class="btn btn-sm btn-light-danger" data-bs-toggle="modal"
+                                    data-bs-target="#confirmSubmissionModal-{{ $act->activity_id }}">
                                     <i class="fas fa-file-signature ms-2 me-2"></i>
                                     <span class="me-2">
                                         Confirm Submission
                                     </span>
-                                </a>
+                                </button>
                             </div>
                         </div>
+                        <!-- [ Activity Details ] end -->
+
+
+                        <!-- [ Confirm Submission Modal ] start -->
+                        <form method="GET"
+                            action="{{ route('student-confirm-submission-get', Crypt::encrypt($act->activity_id)) }}"
+                            enctype="multipart/form-data">
+                            @csrf
+                            <div class="modal fade" id="confirmSubmissionModal-{{ $act->activity_id }}" tabindex="-1"
+                                aria-labelledby="confirmSubmissionModalLabel-{{ $act->activity_id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title"
+                                                id="confirmSubmissionModalLabel-{{ $act->activity_id }}">
+                                                Confirm Submission</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <div class="alert alert-light" role="alert"
+                                                    style="font-size: 0.95rem;">
+                                                    <h5 class="mb-3">
+                                                        <i class="ti ti-info-circle me-2"></i>
+                                                        Submission Guidelines Before Confirmation
+                                                    </h5>
+                                                    <p class="mb-2"><strong>Please read the following carefully before
+                                                            signing and confirming your submission:</strong></p>
+
+                                                    <ul class="mb-3 ps-3">
+                                                        <li class="mb-2">
+                                                            <strong>Final Review:</strong><br>
+                                                            Ensure that all uploaded documents are <u>correct</u>,
+                                                            <u>complete</u>, and meet the required format.
+                                                            Once confirmed, you <strong>cannot update or change</strong>
+                                                            your submission.
+                                                        </li>
+                                                        <li class="mb-2">
+                                                            <strong>Electronic Signature Declaration:</strong><br>
+                                                            By providing your signature, you are certifying that:
+                                                            <ul class="ps-4">
+                                                                <li>The submission is <strong>100% your original
+                                                                        work</strong>.</li>
+                                                                <li>You understand that this signature has <strong>legal
+                                                                        validity</strong> under applicable laws.</li>
+                                                                <li>This electronic signature represents your
+                                                                    <strong>handwritten signature</strong>.
+                                                                </li>
+                                                            </ul>
+                                                        </li>
+                                                        <li class="mb-2">
+                                                            <strong>After Confirmation:</strong><br>
+                                                            Your submission will be <strong>locked</strong> and sent for
+                                                            review by the relevant committee.
+                                                            You will be notified once your submission is either
+                                                            <strong>approved</strong> or <strong>requires revision</strong>.
+                                                        </li>
+                                                    </ul>
+
+                                                    <p class="mb-0 text-danger"><strong>By signing below, you acknowledge
+                                                            and accept all the above terms.</strong></p>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <canvas id="signatureCanvas-{{ $act->activity_id }}"
+                                                    style="border:1px solid #000000; border-radius:10px; width:100%; height:200px;"></canvas>
+                                                <input type="hidden" name="signatureData"
+                                                    id="signatureData-{{ $act->activity_id }}">
+                                            </div>
+                                            <div class="d-flex align-items-center text-muted mb-1">
+                                                <div class="avtar avtar-s bg-light-primary flex-shrink-0 me-2">
+                                                    <i class="fas fa-shield-alt text-primary f-20"></i>
+                                                </div>
+                                                <span class="text-muted text-sm w-100">
+                                                    All signatures are securely stored within the system.
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer justify-content-end">
+                                            <div class="d-flex justify-content-between gap-3 align-items-center w-100">
+                                                <button type="button" class="btn btn-light w-100"
+                                                    data-clear="{{ $act->activity_id }}">
+                                                    <i class="ti ti-eraser me-2"></i> Start over
+                                                </button>
+                                                <button type="submit" class="btn btn-danger w-100"
+                                                    data-submit="{{ $act->activity_id }}">
+                                                    <i class="ti ti-writing-sign me-2"></i> Confirm & Sign
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <!-- [ Confirm Submission Modal ] end -->
                     @empty
                         <div class="alert alert-info">
                             No activities found for your programme.
                         </div>
                     @endforelse
                 </div>
-
-                <!-- [ Confirm Submission Modal ] start -->
-                <form method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal fade" id="confirmSubmissionModal" tabindex="-1"
-                        aria-labelledby="confirmSubmissionModal" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="confirmSubmissionModalLabel">Confirm Submission</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="mb-3">
-                                                <canvas id="signatureCanvas"
-                                                    style="border:1px solid #000000; border-radius:10px; width:100%; height:200px;"></canvas>
-                                                <input type="hidden" name="signature" id="signatureData">
-                                            </div>
-                                            <div class="d-flex align-items-center text-muted mb-1">
-                                                <div class="avtar avtar-s bg-light-primary flex-shrink-0 me-2">
-                                                    <i class="material-icons-two-tone text-primary f-20">security</i>
-                                                </div>
-                                                <span class="text-muted text-sm w-100">
-                                                    By submitting this work electronically, I confirm that this submission
-                                                    is my own original work and I understand that this electronic
-                                                    submission holds the same validity as a physical signature under
-                                                    applicable local law.
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer justify-content-end">
-                                    <div class="flex-grow-1 text-end">
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="button"
-                                                    class="btn btn-light btn-pc-default w-100 d-flex justify-content-center align-items-center"
-                                                    id="clearSig">
-                                                    <i class="ti ti-eraser me-2"></i>
-                                                    Start over
-                                                </button>
-                                                <button type="submit"
-                                                    class="btn btn-primary w-100 d-flex justify-content-center align-items-center"
-                                                    id="submitSig">
-                                                    <i class="ti ti-writing-sign me-2"></i>
-                                                    Confirm & Sign
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-                <!-- [ Confirm Submission Modal ] end -->
-
                 <!-- [ Programme Overview ] end -->
 
             </div>
@@ -273,57 +332,45 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
 
     <script>
-        let signaturePad;
+        const signaturePads = {};
 
-        const confirmModal = document.getElementById('confirmSubmissionModal');
+        document.addEventListener('shown.bs.modal', function(event) {
+            const modal = event.target;
+            const activityId = modal.id.split('-')[1];
+            const canvas = document.getElementById(`signatureCanvas-${activityId}`);
 
-        if (confirmModal) {
-            confirmModal.addEventListener('shown.bs.modal', function() {
-                const canvas = document.getElementById('signatureCanvas');
-                if (!canvas) return;
+            if (canvas) {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext('2d').scale(ratio, ratio);
 
-                // Resize canvas properly for desktop and mobile
-                function resizeCanvas() {
-                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                    canvas.width = canvas.offsetWidth * ratio;
-                    canvas.height = canvas.offsetHeight * ratio;
-                    canvas.getContext('2d').scale(ratio, ratio);
-                    if (signaturePad) signaturePad.clear();
+                signaturePads[activityId] = new SignaturePad(canvas, {
+                    backgroundColor: 'rgba(255,255,255,1)',
+                    penColor: 'black'
+                });
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            // Handle clear signature
+            if (e.target.matches('[data-clear]')) {
+                e.preventDefault();
+                const activityId = e.target.getAttribute('data-clear');
+                if (signaturePads[activityId]) signaturePads[activityId].clear();
+            }
+
+            // Handle submit signature
+            if (e.target.matches('[data-submit]')) {
+                const activityId = e.target.getAttribute('data-submit');
+                if (signaturePads[activityId] && signaturePads[activityId].isEmpty()) {
+                    e.preventDefault();
+                    alert("Please provide a signature.");
+                } else {
+                    const dataURL = signaturePads[activityId].toDataURL('image/png');
+                    document.getElementById(`signatureData-${activityId}`).value = dataURL;
                 }
-
-                resizeCanvas(); // Resize on open
-
-                signaturePad = new SignaturePad(canvas, {
-                    backgroundColor: 'rgba(255, 255, 255, 1)',
-                    penColor: 'black',
-                });
-            });
-
-            // Clear button
-            let clearSigBtn = document.getElementById('clearSig');
-            if (clearSigBtn) {
-                clearSigBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (signaturePad) signaturePad.clear();
-                });
             }
-
-            // Optional: Submit Signature Button (to test only)
-            let submitSigBtn = document.getElementById('submitSig');
-            if (submitSigBtn) {
-                submitSigBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (!signaturePad || signaturePad.isEmpty()) {
-                        alert("Please provide a signature.");
-                        return;
-                    }
-
-                    const dataURL = signaturePad.toDataURL('image/png');
-                    console.log("Captured Signature:", dataURL);
-                    document.getElementById('signatureData').value = dataURL;
-                    alert("Signature saved. Now click Confirm & Sign to submit.");
-                });
-            }
-        }
+        });
     </script>
 @endsection

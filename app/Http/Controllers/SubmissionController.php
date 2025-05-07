@@ -17,8 +17,10 @@ use App\Models\Submission;
 use Illuminate\Support\Str;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
+use App\Models\StudentActivity;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
@@ -63,14 +65,22 @@ class SubmissionController extends Controller
                 ->get()
                 ->groupBy('activity_id');
 
+            $student_activity = StudentActivity::where('student_id', auth()->user()->id)->get();
+
+            // dd($student_activity);
+
             foreach ($programmeActivity as $activity) {
                 $activitySubmissions = $document->get($activity->activity_id);
-                $lockedSubmission = $activitySubmissions->firstWhere('submission_status', 2);
+                $studentAct = $student_activity->firstWhere('activity_id', $activity->activity_id);
 
-                if ($lockedSubmission) {
-                    $activity->init_status = 2; // Locked
+                if ($studentAct) {
+                    // Change status based on SA status
+                    $activity->init_status = $studentAct->sa_status;
+                    $activity->confirmed_document = $studentAct->sa_final_submission;
                 } else {
-                    $activity->init_status = 1; // Open
+                    // No confirmation yet
+                    $lockedSubmission = $activitySubmissions?->firstWhere('submission_status', 2);
+                    $activity->init_status = $lockedSubmission ? 11 : 10;
                 }
             }
 
@@ -85,6 +95,7 @@ class SubmissionController extends Controller
                 'title' => 'Programme Overview',
                 'acts' => $programmeActivity,
                 'docs' => $filtered_documents,
+                'sa' => $student_activity
 
             ]);
         } catch (Exception $e) {
@@ -236,9 +247,21 @@ class SubmissionController extends Controller
             $student = auth()->user();
 
             if (!$student) {
-                return back()->with('error', 'Student record not found.');
+                return back()->with('error', 'Unauthorized access : Student record is not found.');
             }
 
+            $activity = Activity::where('id', $actID)->first()->act_name;
+            $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+
+            //---------------------------------------------------------------------------//
+            //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
+            //---------------------------------------------------------------------------//
+
+            $signatureData = request()->input('signatureData');
+
+            // 1 - Signature Role [Student]
+            // 1 - Document Status [Pending]
+            $this->storeSignature($actID, $student, $signatureData, $documentName, 1, 1);
 
             //---------------------------------------------------------------------------//
             //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
@@ -246,7 +269,6 @@ class SubmissionController extends Controller
 
             // RETRIEVE ACTIVITY PATH
             $progcode = strtoupper($student->programmes->prog_code);
-            $activity = Activity::where('id', $actID)->first()->act_name;
             $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
 
             if (!File::exists($basePath)) {
@@ -293,10 +315,11 @@ class SubmissionController extends Controller
             }
 
             // SAVE THE MERGED PDF
-            $mergedPath =  $finalDocPath . '/' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+            $mergedPath =  $finalDocPath . '/' . $documentName;
             $pdf->Output($mergedPath, 'F');
 
-            return back()->with('success', 'All documents merged successfully.');
+
+            return back()->with('success', 'Submission has been confirmed successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
         }
@@ -318,16 +341,19 @@ class SubmissionController extends Controller
                 ['af_target', 1],
             ])->first();
 
-            if (!$form) {
-                return back()->with('error', 'Activity form not found.');
-            }
-
             $formfields = FormField::where('af_id', $form->id)
                 ->orderBy('ff_order')
                 ->get();
 
             $faculty = Faculty::where('fac_status', 3)->first();
             $signatures = $formfields->where('ff_category', 6);
+
+            $signatureRecord = StudentActivity::where([
+                ['activity_id', $actID],
+                ['student_id', $student->id]
+            ])->select('sa_signature_data')->first();
+
+            $signatureData = $signatureRecord ? json_decode($signatureRecord->sa_signature_data) : null;
 
             $userData = [];
 
@@ -492,7 +518,6 @@ class SubmissionController extends Controller
 
                 $userData[str_replace(' ', '_', strtolower($field->ff_label))] = $finalValue ?: '-';
             }
-            // dd($userData);
 
             $pdf = Pdf::loadView('student.programme.form-template.activity-document', [
                 'title' => $act->act_name . " Document",
@@ -501,7 +526,8 @@ class SubmissionController extends Controller
                 'formfields' => $formfields,
                 'userData' => $userData,
                 'faculty' => $faculty,
-                'signatures'=> $signatures
+                'signatures' => $signatures,
+                'signatureData' => $signatureData
             ]);
 
             $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';
@@ -514,6 +540,72 @@ class SubmissionController extends Controller
             return back()->with('error', 'Oops! Error generating activity form: ' . $e->getMessage());
         }
     }
+
+    public function storeSignature($actID, $student, $signatureData, $documentName, $signatureRole, $status)
+    {
+        try {
+            if ($signatureData) {
+                // Get the signature field for this role & activity
+                $form = ActivityForm::where([
+                    ['activity_id', $actID],
+                    ['af_status', 1],
+                    ['af_target', 1],
+                ])->first();
+
+                if (!$form) {
+                    return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+                }
+
+                $signatureField = FormField::where([
+                    ['af_id', $form->id],
+                    ['ff_category', 6],
+                    ['ff_signature_role', $signatureRole]
+                ])->first();
+
+                if ($signatureField) {
+                    $signatureKey = $signatureField->ff_signature_key;
+                    $dateKey = $signatureField->ff_signature_date_key;
+
+                    $newSignatureData = [
+                        $signatureKey => $signatureData,
+                        $dateKey => now()->format('d M Y')
+                    ];
+
+                    // Retrieve or create StudentActivity
+                    $studentActivity = StudentActivity::where([
+                        ['activity_id', $actID],
+                        ['student_id', $student->id]
+                    ])->first();
+
+                    // Decode existing signature JSON if exists
+                    $existingSignatureData = [];
+                    if ($studentActivity && $studentActivity->sa_signature_data) {
+                        $existingSignatureData = json_decode($studentActivity->sa_signature_data, true);
+                    }
+
+                    // Merge new data into existing data
+                    $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
+
+                    // Save or create StudentActivity record
+                    if (!$studentActivity) {
+                        StudentActivity::create([
+                            'activity_id' => $actID,
+                            'student_id' => $student->id,
+                            'sa_final_submission' => $documentName,
+                            'sa_signature_data' => json_encode($mergedSignatureData)
+                        ]);
+                    } else {
+                        $studentActivity->sa_status = $status;
+                        $studentActivity->sa_signature_data = json_encode($mergedSignatureData);
+                        $studentActivity->save();
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error storing signature: ' . $e->getMessage());
+        }
+    }
+
     /* Submission Management [Staff] */
     public function submissionManagement(Request $req)
     {

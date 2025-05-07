@@ -187,7 +187,7 @@
         }
 
         .signature-img-clean {
-            max-height: 80px;
+            max-height: 120px;
             max-width: 100%;
             object-fit: contain;
         }
@@ -395,17 +395,15 @@
                                     @foreach ($chunk as $sig)
                                         <td class="signature-cell">
                                             <div class="signature-box-clean">
-                                                @if (!empty($sig->ff_signature_key))
-                                                    <img src=""
-                                                        class="signature-img-clean">
-                                                @endif
+                                                <img src="{{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key}) ? $signatureData->{$sig->ff_signature_key} : '' }}"
+                                                    class="signature-img-clean">
                                             </div>
                                             <div class="signature-label-clean">
                                                 {{ $sig->ff_label }}
                                             </div>
                                             <div class="signature-date-clean">
                                                 <span class="date-label">Date:</span>
-                                                {{ $sig->ff_signature_date_key ?? '' }}
+                                                {{ $signatureData && $sig->ff_signature_date_key && isset($signatureData->{$sig->ff_signature_date_key}) ? $signatureData->{$sig->ff_signature_date_key} : '-' }}
                                             </div>
                                         </td>
                                     @endforeach
