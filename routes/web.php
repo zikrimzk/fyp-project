@@ -60,6 +60,8 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::post('/submit-document', [SubmissionController::class, 'submitDocument'])->name('student-submit-document-post');
     Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->name('student-remove-document-get');
     Route::get('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-get');
+    Route::get('/view-final-document/{actID}/{filename}', [SubmissionController::class, 'viewFinalDocument'])->where('filename', '.*')->name('student-view-final-document-get');
+
 });
 
 

@@ -658,7 +658,10 @@ class SOPController extends Controller
 
             $validated = $validator->validated();
 
-            $checkExists = ActivityForm::where('activity_id', $validated['actid'])->where('af_target', $validated['formTarget'])->exists();
+            $checkExists = ActivityForm::where([
+                ['activity_id', $validated['actid']],
+                ['af_target', $validated['formTarget']],
+            ])->exists();
             $message = '';
 
             if ($checkExists) {
@@ -691,7 +694,7 @@ class SOPController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-            ], 200);
+            ], 500);
         }
     }
 
@@ -954,15 +957,16 @@ class SOPController extends Controller
 
         try {
             $validated = $validator->validated();
-            $checkExists = FormField::where('id', $validated['ff_id'])->exists();
+            // $getAfId = FormField::where('id', $validated['ff_id'])->first()->af_id;
+            // $checkExists = FormField::where('ff_label', $validated['ff_label'])->where('af_id', $getAfId)->exists();
 
-            if (!$checkExists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Field does not exist !',
-                ], 200);
-            }
-
+            // if ($checkExists) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Field already exists.',
+            //     ], 200);
+            // }
+            
             // CHECK WHETHER USER ROLE EXIST IN ff_signature_role
             $signature_key = null;
             $signature_date_key = null;

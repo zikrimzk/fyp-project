@@ -32,7 +32,7 @@ use setasign\Fpdi\PdfParser\StreamReader;
 
 class SubmissionController extends Controller
 {
-    /* Programme Overview [Student] [UNFINISHED] */
+    /* Programme Overview [Student] */
     public function studentProgrammeOverview()
     {
         try {
@@ -66,12 +66,21 @@ class SubmissionController extends Controller
                 ->groupBy('activity_id');
 
             $student_activity = StudentActivity::where('student_id', auth()->user()->id)->get();
+            $documentQueryTwo = DB::table('documents as a')
+                ->join('submissions as b', 'a.id', '=', 'b.document_id')
+                ->where('b.student_id', auth()->user()->id)
+                ->get();
 
-            // dd($student_activity);
+            // dd($documentQueryTwo);
 
             foreach ($programmeActivity as $activity) {
                 $activitySubmissions = $document->get($activity->activity_id);
                 $studentAct = $student_activity->firstWhere('activity_id', $activity->activity_id);
+                $requiredDocument = $documentQueryTwo->where('activity_id', $activity->activity_id)->where('isRequired', 1)->count();
+                $optionalDocument = $documentQueryTwo->where('activity_id', $activity->activity_id)->where('isRequired', 0)->count();
+                $submittedRequiredDocument = $documentQueryTwo->where('activity_id', $activity->activity_id)->where('isRequired', 1)->where('submission_status', 3)->count();
+                $submittedOptionalDocument = $documentQueryTwo->where('activity_id', $activity->activity_id)->where('isRequired', 0)->where('submission_status', 3)->count();
+
 
                 if ($studentAct) {
                     // Change status based on SA status
@@ -82,6 +91,11 @@ class SubmissionController extends Controller
                     $lockedSubmission = $activitySubmissions?->firstWhere('submission_status', 2);
                     $activity->init_status = $lockedSubmission ? 11 : 10;
                 }
+
+                $activity->required_document = $requiredDocument;
+                $activity->optional_document = $optionalDocument;
+                $activity->submitted_required_document = $submittedRequiredDocument;
+                $activity->submitted_optional_document = $submittedOptionalDocument;
             }
 
             // Filter out submissions with 'submission_status' of 2 or 5
@@ -251,6 +265,16 @@ class SubmissionController extends Controller
             }
 
             $activity = Activity::where('id', $actID)->first()->act_name;
+            $form = ActivityForm::where([
+                ['activity_id', $actID],
+                ['af_status', 1],
+                ['af_target', 1],
+            ])->first();
+
+            if (!$form) {
+                return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+            }
+
             $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
 
             //---------------------------------------------------------------------------//
@@ -261,7 +285,7 @@ class SubmissionController extends Controller
 
             // 1 - Signature Role [Student]
             // 1 - Document Status [Pending]
-            $this->storeSignature($actID, $student, $signatureData, $documentName, 1, 1);
+            $this->storeSignature($actID, $student, $form, $signatureData, $documentName, 1, 1);
 
             //---------------------------------------------------------------------------//
             //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
@@ -284,7 +308,7 @@ class SubmissionController extends Controller
 
             $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
 
-            $this->generateActivityForm($actID, $student, $relativePath);
+            $this->generateActivityForm($actID, $student, $form, $relativePath);
 
             //---------------------------------------------------------------------------//
             //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
@@ -325,7 +349,7 @@ class SubmissionController extends Controller
         }
     }
 
-    public function generateActivityForm($actID, $student, $finalDocRelativePath)
+    public function generateActivityForm($actID, $student, $form, $finalDocRelativePath)
     {
         try {
 
@@ -334,12 +358,6 @@ class SubmissionController extends Controller
             if (!$act) {
                 return back()->with('error', 'Activity not found.');
             }
-
-            $form = ActivityForm::where([
-                ['activity_id', $actID],
-                ['af_status', 1],
-                ['af_target', 1],
-            ])->first();
 
             $formfields = FormField::where('af_id', $form->id)
                 ->orderBy('ff_order')
@@ -541,21 +559,11 @@ class SubmissionController extends Controller
         }
     }
 
-    public function storeSignature($actID, $student, $signatureData, $documentName, $signatureRole, $status)
+    public function storeSignature($actID, $student, $form, $signatureData, $documentName, $signatureRole, $status)
     {
         try {
             if ($signatureData) {
                 // Get the signature field for this role & activity
-                $form = ActivityForm::where([
-                    ['activity_id', $actID],
-                    ['af_status', 1],
-                    ['af_target', 1],
-                ])->first();
-
-                if (!$form) {
-                    return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
-                }
-
                 $signatureField = FormField::where([
                     ['af_id', $form->id],
                     ['ff_category', 6],
@@ -603,6 +611,27 @@ class SubmissionController extends Controller
             }
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error storing signature: ' . $e->getMessage());
+        }
+    }
+
+    public function viewFinalDocument($actID, $filename)
+    {
+        $actID = decrypt($actID);
+        $filename = Crypt::decrypt($filename);
+
+        try {
+            $student = auth()->user();
+            $activity = Activity::where('id', $actID)->first()->act_name;
+            $progcode = strtoupper($student->programmes->prog_code);
+            $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/Final Document/{$filename}");
+
+            if (!file_exists($basePath)) {
+                abort(404, 'File not found.');
+            }
+
+            return response()->file($basePath);
+        } catch (Exception $e) {
+            return abort(500, $e->getMessage());
         }
     }
 

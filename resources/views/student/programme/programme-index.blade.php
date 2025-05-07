@@ -74,9 +74,13 @@
                                         @if ($act->init_status == 1)
                                             <span class="badge bg-warning">Pending</span>
                                         @elseif ($act->init_status == 2)
-                                            <span class="badge bg-success">Approved by Supervisor</span>
+                                            <span class="badge bg-light-success">Approved by Supervisor</span>
                                         @elseif ($act->init_status == 3)
-                                            <span class="badge bg-success">Approved by Committee / Deputy Dean / Dean</span>
+                                            <span class="badge bg-light-success">Approved by Committee / Deputy Dean / Dean</span>
+                                        @elseif($act->init_status == 4)
+                                            <span class="badge bg-light-danger">Rejected by Supervisor</span>
+                                        @elseif($act->init_status == 5)
+                                            <span class="badge bg-light-danger">Rejected by Committee / Deputy Dean / Dean</span>
                                         @elseif ($act->init_status == 10)
                                             <span class="badge bg-success badge-flash">Open for Submission</span>
                                         @elseif($act->init_status == 11)
@@ -105,7 +109,8 @@
                                 @if (isset($act->confirmed_document))
                                     <div class="mt-4 mb-4">
                                         <h6 class="fw-semibold mb-2">Final Document</h6>
-                                        <a href="{{ route('student-view-material-get', ['filename' => Crypt::encrypt($act->confirmed_document)]) }}"
+                                        <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'filename' => Crypt::encrypt($act->confirmed_document)]) }}"
+                                            target="_blank"
                                             class="text-decoration-none d-inline-flex align-items-center gap-2 text-primary">
                                             <i class="ti ti-file-check"></i> View Final Document
                                         </a>
@@ -172,7 +177,7 @@
                                                                 </div>
                                                             </div>
                                                             <div class="text-md-end">
-                                                                @if (in_array($act->init_status, [10, 11]))
+                                                                @if (in_array($act->init_status, [10, 11, 4, 5]))
                                                                     {{-- Allow submission based on status --}}
                                                                     @if ($item->submission_status == 1 || $item->submission_status == 4)
                                                                         <a href="{{ route('student-document-submission', Crypt::encrypt($item->submission_id)) }}"
@@ -190,7 +195,7 @@
                                                                             <i class="ti ti-upload"></i> Submit Document
                                                                         </a>
                                                                     @endif
-                                                                @else
+                                                                @elseif(in_array($act->init_status, [1, 2, 3]))
                                                                     {{-- If confirmed, lock the button --}}
                                                                     <a href="javascript:void(0)"
                                                                         class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 disabled-a">
@@ -210,15 +215,18 @@
                                 </div>
 
                             </div>
-                            <div class="card-footer d-flex justify-content-end align-items-center">
-                                <button class="btn btn-sm btn-light-danger" data-bs-toggle="modal"
-                                    data-bs-target="#confirmSubmissionModal-{{ $act->activity_id }}">
-                                    <i class="fas fa-file-signature ms-2 me-2"></i>
-                                    <span class="me-2">
-                                        Confirm Submission
-                                    </span>
-                                </button>
-                            </div>
+
+                            @if (
+                                ($act->required_document > 0 && $act->submitted_required_document == $act->required_document && !in_array($act->init_status, [1, 2, 3])) ||
+                                    ($act->required_document == 0 && $act->optional_document > 0 && $act->submitted_optional_document >= 1 && !in_array($act->init_status, [1, 2, 3])))
+                                <div class="card-footer d-flex justify-content-end align-items-center">
+                                    <button class="btn btn-sm btn-light-danger" data-bs-toggle="modal"
+                                        data-bs-target="#confirmSubmissionModal-{{ $act->activity_id }}">
+                                        <i class="fas fa-file-signature ms-2 me-2"></i>
+                                        <span class="me-2">Confirm Submission</span>
+                                    </button>
+                                </div>
+                            @endif
                         </div>
                         <!-- [ Activity Details ] end -->
 
