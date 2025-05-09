@@ -1336,4 +1336,207 @@ class SubmissionController extends Controller
             return back()->with('error', 'Error generating ZIP: ' . $e->getMessage());
         }
     }
+
+    /* Submission Management [Staff] [Supervisor/Co Supervisor] */
+    public function mySupervisionSubmissionApproval(Request $req)
+    {
+        try {
+            $data = DB::table('students as a')
+                ->join('semesters as b', 'b.id', '=', 'a.semester_id')
+                ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+                ->join('submissions as d', 'd.student_id', '=', 'a.id')
+                ->join('documents as e', 'e.id', '=', 'd.document_id')
+                ->join('activities as f', 'f.id', '=', 'e.activity_id')
+                ->join('supervisions as g', 'g.student_id', '=', 'a.id')
+                ->select(
+                    'a.*',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'd.id as submission_id',
+                    'd.submission_status',
+                    'd.submission_date',
+                    'd.submission_duedate',
+                    'd.submission_document',
+                    'e.id as document_id',
+                    'e.doc_name as document_name',
+                    'f.id as activity_id',
+                    'f.act_name as activity_name'
+                )
+                ->where('g.staff_id', auth()->user()->id)
+                ->orderBy('f.act_name');
+
+            if ($req->ajax()) {
+
+                // Apply filters
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('semester_id', $req->input('semester'));
+                }
+                if ($req->has('activity') && !empty($req->input('activity'))) {
+                    $data->where('activity_id', $req->input('activity'));
+                }
+                if ($req->has('document') && !empty($req->input('document'))) {
+                    $data->where('document_id', $req->input('document'));
+                }
+                if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
+                    // If a status is selected (even status 5), show it
+                    $data->where('submission_status', $req->input('status'));
+                } else {
+                    // Default: exclude status 5
+                    $data->where('submission_status', '!=', 5);
+                }
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->submission_id . '">';
+                });
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('submission_duedate', function ($row) {
+                    return Carbon::parse($row->submission_duedate)->format('d M Y g:i A') ?? '-';
+                });
+
+                $table->addColumn('submission_date', function ($row) {
+                    return  $row->submission_date == null ? '-' : Carbon::parse($row->submission_date)->format('d M Y g:i A');
+                });
+
+                $table->addColumn('submission_status', function ($row) {
+                    $status = '';
+
+                    if ($row->submission_status == 1) {
+                        $status = '<span class="badge bg-light-warning">' . 'No Attempt' . '</span>';
+                    } elseif ($row->submission_status == 2) {
+                        $status = '<span class="badge bg-danger">' . 'Locked' . '</span>';
+                    } elseif ($row->submission_status == 3) {
+                        $status = '<span class="badge bg-light-success">' . 'Submitted' . '</span>';
+                    } elseif ($row->submission_status == 4) {
+                        $status = '<span class="badge bg-light-danger">' . 'Overdue' . '</span>';
+                    } elseif ($row->submission_status == 5) {
+                        $status = '<span class="badge bg-secondary">' . 'Archive' . '</span>';
+                    } else {
+                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                    }
+
+                    return $status;
+                });
+
+                $table->addColumn('action', function ($row) {
+                    // STUDENT SUBMISSION DIRECTORY
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name;
+                    $htmlOne =
+                        '
+                            <div class="dropdown">
+                                <a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none"
+                                    href="javascript: void(0)" data-bs-toggle="dropdown" 
+                                    aria-haspopup="true" aria-expanded="false">
+                                    <i class="material-icons-two-tone f-18">more_vert</i>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end">
+                        ';
+                    if ($row->submission_document != '-' && $row->submission_status != 5) {
+                        $htmlTwo =
+                            '          
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#settingModal-' . $row->submission_id . '">
+                                        Setting 
+                                    </a>
+                                    <a class="dropdown-item" href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->submission_document)]) . '" download="' . $row->submission_document . '">Download</a> 
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal-' . $row->submission_id . '">
+                                        Archive
+                                    </a> 
+                            ';
+                    } elseif ($row->submission_status == 5 && $row->submission_document != '-') {
+                        $htmlTwo = '
+                                    <a class="dropdown-item" href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->submission_document)]) . '" download="' . $row->submission_document . '">Download</a>  
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#unarchiveModal-' . $row->submission_id . '">
+                                        Unarchive 
+                                    </a>
+                        ';
+                    } elseif ($row->submission_status == 5 && $row->submission_document == '-') {
+                        $htmlTwo = '
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#unarchiveModal-' . $row->submission_id . '">
+                                        Unarchive 
+                                    </a>
+                        ';
+                    } else {
+                        $htmlTwo =
+                            '           
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#settingModal-' . $row->submission_id . '">
+                                        Setting 
+                                    </a>
+                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal-' . $row->submission_id . '">
+                                        Archive
+                                    </a>
+                            ';
+                    }
+
+                    $htmlThree =
+                        '
+                                </div>
+                            </div>
+                        ';
+
+                    return $htmlOne . $htmlTwo . $htmlThree;
+                });
+
+
+                $table->rawColumns(['checkbox', 'student_photo', 'submission_duedate', 'submission_date', 'submission_status', 'action']);
+
+                return $table->make(true);
+            }
+            return view('staff.my-supervision.submission-approval', [
+                'title' => 'Submission Management',
+                'studs' => Student::all(),
+                'current_sem' => Semester::where('sem_status', 1)->first()->sem_label ?? 'N/A',
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'acts' => Activity::all(),
+                'docs' => Document::all(),
+                'subs' => $data->get()
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500);
+        }
+    }
 }

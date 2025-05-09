@@ -129,7 +129,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearFacFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -150,7 +150,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearSemFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSemFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -172,7 +172,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -186,7 +186,7 @@
                                                 <option value="{{ $fil->id }}">{{ $fil->act_name }}</option>
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearActivityFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
@@ -207,7 +207,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearDocumentFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
@@ -224,7 +224,7 @@
                                             <option value="4">Overdue</option>
                                             <option value="5">Archive</option>
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
                                             <i class="ti ti-x"></i>
                                         </button>

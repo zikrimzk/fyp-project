@@ -1,6 +1,7 @@
 @php
     use App\Models\Semester;
 @endphp
+
 @extends('staff.layouts.main')
 
 @section('content')
@@ -12,13 +13,14 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">My Supervision</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Submission</a></li>
-                                <li class="breadcrumb-item" aria-current="page">Submission Management</li>
+                                <li class="breadcrumb-item" aria-current="page">Submission Approval</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">Submission Management</h2>
+                                <h2 class="mb-0">Submission Approval</h2>
                             </div>
                         </div>
                     </div>
@@ -58,63 +60,11 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Submission Management ] start -->
+                <!-- [ Submission Approval ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
-                            <!-- [ Option Section ] start -->
-                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
-                                <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                    id="clearSelectionBtn">
-                                    0 selected <i class="ti ti-x f-18"></i>
-                                </button>
-                                <a href="{{ route('assign-student-submission') }}"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2"
-                                    title="Re-assign Submission" id="reassignBtn">
-                                    <i class="ti ti-refresh f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Re-assign Submission
-                                    </span>
-                                </a>
-                                <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                    data-bs-toggle="modal" data-bs-target="#multipleSettingModal"
-                                    id="updatemultipleModalBtn" title="Update Submission">
-                                    <i class="ti ti-edit-circle f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Update Submission
-                                    </span>
-                                </button>
-                                <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                    data-bs-toggle="modal" data-bs-target="#archiveMultipleModal"
-                                    id="archivemultipleModalBtn" title="Archive">
-                                    <i class="ti ti-archive f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Archive
-                                    </span>
-                                </button>
-                                <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                    data-bs-toggle="modal" data-bs-target="#unarchiveMultipleModal"
-                                    id="unarchivemultipleModalBtn" title="Unarchive">
-                                    <i class="ti ti-history f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Unarchive
-                                    </span>
-                                </button>
-                                <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                    id="downloadmultipleModalBtn" title="Download (.zip)">
-                                    <i class="ti ti-arrow-bar-to-down f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Download (.zip)
-                                    </span>
-                                </button>
-                            </div>
-                            <!-- [ Option Section ] end -->
-
+                            
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-end">
 
@@ -179,8 +129,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -247,8 +196,7 @@
                                         <tr>
                                             <th><input type="checkbox" id="select-all" class="form-check-input"></th>
                                             <th scope="col">Student</th>
-                                            <th scope="col">Document</th>
-                                            <th scope="col">Due Date</th>
+                                            <th scope="col">Final Document</th>
                                             <th scope="col">Submission Date</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Activity</th>
@@ -261,332 +209,7 @@
                     </div>
                 </div>
 
-                <!-- [ Multiple Submission Update Modal ] start -->
-                <div class="modal fade" id="multipleSettingModal" tabindex="-1" aria-labelledby="multipleSettingModal"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
-                        <div class="modal-content">
-
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="multipleSettingModalLabel">Submission Setting</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <!-- Due Date Input -->
-                                    <div class="col-sm-12 col-md-12 col-lg-12">
-                                        <div class="mb-3">
-                                            <label for="submission_duedate_ups" class="form-label">
-                                                Due Date
-                                            </label>
-                                            <input type="datetime-local"
-                                                class="form-control @error('submission_duedate_ups') is-invalid @enderror"
-                                                id="submission_duedate_ups" name="submission_duedate_ups">
-                                            @error('submission_duedate_ups')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-
-                                    <!-- Status Input -->
-                                    <div class="col-sm-12 col-md-12 col-lg-12">
-                                        <div class="mb-3">
-                                            <label for="submission_status_ups" class="form-label">
-                                                Status
-                                            </label>
-                                            <select
-                                                class="form-select @error('submission_status_ups') is-invalid @enderror"
-                                                name="submission_status_ups" id="submission_status_ups">
-                                                <option value ="" selected>- Select Status -</option>
-                                                <option value ="1">Open Submission</option>
-                                                <option value ="2">Locked</option>
-                                            </select>
-                                            @error('submission_status_ups')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <div class="modal-footer justify-content-end">
-                                <div class="flex-grow-1 text-end">
-                                    <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                        data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary" id="multipleSubmissionUpdateBtn">Save
-                                        Changes</button>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                <!-- [ Multiple Submission Update Modal ] end -->
-
-                <!-- [ Archive Multiple Submission Modal ] start -->
-                <div class="modal fade" id="archiveMultipleModal" data-bs-keyboard="false" tabindex="-1"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-sm-12 mb-4">
-                                        <div class="d-flex justify-content-center align-items-center mb-3">
-                                            <i class="ti ti-archive text-secondary" style="font-size: 100px"></i>
-                                        </div>
-
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-center align-items-center text-center">
-                                            <h2>Are you sure to archive the selected submission ?</h2>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 mb-3">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <p class="fw-normal f-18 text-center">You can revert this action.</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-between gap-3 align-items-center">
-                                            <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-secondary w-100"
-                                                id="multipleSubmissionArchiveBtn">
-                                                Archive
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- [ Archive Multiple Submission Modal ] end -->
-
-                <!-- [ Unarchive Multiple Submission Modal ] start -->
-                <div class="modal fade" id="unarchiveMultipleModal" data-bs-keyboard="false" tabindex="-1"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-sm-12 mb-4">
-                                        <div class="d-flex justify-content-center align-items-center mb-3">
-                                            <i class="ti ti-history text-primary" style="font-size: 100px"></i>
-                                        </div>
-
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-center align-items-center text-center">
-                                            <h2>Are you sure to unarchive the selected submission ?</h2>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 mb-3">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <p class="fw-normal f-18 text-center">You can archive back if needed.</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-between gap-3 align-items-center">
-                                            <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary w-100"
-                                                id="multipleSubmissionUnarchiveBtn">
-                                                Unarchive
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- [ Unarchive Multiple Submission Modal ] end -->
-
-                @foreach ($subs as $upd)
-                    <!-- [ Update Modal ] start -->
-                    <form action="{{ route('update-submission-post', Crypt::encrypt($upd->submission_id)) }}"
-                        method="POST">
-                        @csrf
-                        <div class="modal fade" id="settingModal-{{ $upd->submission_id }}" tabindex="-1"
-                            aria-labelledby="settingModal" aria-hidden="true">
-                            <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="settingModalLabel">Submission Setting</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-
-                                            <!-- Student Name -->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="mb-3">
-                                                    <label for="student_name_up" class="form-label">Student Name </label>
-                                                    <input type="text" class="form-control"
-                                                        value="{{ $upd->student_name }}" readonly>
-                                                </div>
-                                            </div>
-
-                                            <!-- Document Name -->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="mb-3">
-                                                    <label for="student_email_up" class="form-label">Document</label>
-                                                    <input type="text" class="form-control"
-                                                        value="{{ $upd->document_name }}" readonly>
-                                                </div>
-                                            </div>
-
-                                            <!-- Due Date Input -->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="mb-3">
-                                                    <label for="submission_duedate_up" class="form-label">Due Date
-                                                        <span class="text-danger">*</span>
-                                                    </label>
-                                                    <input type="datetime-local"
-                                                        class="form-control @error('submission_duedate_up') is-invalid @enderror"
-                                                        id="submission_duedate_up" name="submission_duedate_up"
-                                                        placeholder="Enter Matric Number"
-                                                        value="{{ $upd->submission_duedate }}" required>
-                                                    @error('submission_duedate_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-
-                                            <!-- Status Input -->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="mb-3">
-                                                    <label for="submission_status_up" class="form-label">
-                                                        Status <span class="text-danger">*</span>
-                                                    </label>
-                                                    <select
-                                                        class="form-select @error('submission_status_up') is-invalid @enderror"
-                                                        name="submission_status_up" id="submission_status_up" required>
-                                                        <option value ="" selected>- Select Status -</option>
-                                                        @if ($upd->submission_status == 1 || $upd->submission_status == 2 || $upd->submission_status == 5)
-                                                            <option value ="1"
-                                                                @if ($upd->submission_status == 1) selected @endif>Open
-                                                                Submission
-                                                            </option>
-                                                            <option value ="2"
-                                                                @if ($upd->submission_status == 2) selected @endif>Locked
-                                                            </option>
-                                                        @elseif($upd->submission_status == 3)
-                                                            <option value ="3" selected>
-                                                                Submitted
-                                                            </option>
-                                                        @elseif($upd->submission_status == 4)
-                                                            <option value ="2">
-                                                                Locked
-                                                            </option>
-                                                            <option value ="4"selected>
-                                                                Overdue
-                                                            </option>
-                                                        @endif
-                                                    </select>
-                                                    @error('submission_status_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer justify-content-end">
-                                        <div class="flex-grow-1 text-end">
-                                            <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                    <!-- [ Update Modal ] end -->
-
-                    <!-- [ Archive Modal ] start -->
-                    <div class="modal fade" id="deleteModal-{{ $upd->submission_id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-archive text-secondary" style="font-size: 100px"></i>
-                                            </div>
-
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center text-center">
-                                                <h2>Are you sure to archive this submission ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">You can revert this action.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 1]) }}"
-                                                    class="btn btn-secondary w-100">Archive</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- [ Archive Modal ] end -->
-
-                    <!-- [ Unarchive Modal ] start -->
-                    <div class="modal fade" id="unarchiveModal-{{ $upd->submission_id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-history text-primary" style="font-size: 100px"></i>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center text-center">
-                                                <h2>Are you sure to unarchive this submission ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">You can archive back if needed.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 2]) }}"
-                                                    class="btn btn-primary w-100">Unarchive</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- [ Unarchive Modal ] end -->
-                @endforeach
-
-                <!-- [ Submission Management ] end -->
+                <!-- [ Submission Approval ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -601,7 +224,7 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('submission-management') }}",
+                    url: "{{ route('my-supervision-submission-management') }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id').val();
                         d.programme = $('#fil_programme_id').val();
@@ -624,10 +247,6 @@
                     {
                         data: 'document_name',
                         name: 'document_name'
-                    },
-                    {
-                        data: 'submission_duedate',
-                        name: 'submission_duedate'
                     },
                     {
                         data: 'submission_date',
@@ -735,7 +354,6 @@
             });
 
             /* SELECT : MULTIPLE STUDENT SELECT */
-            const reassignBtn = $("#reassignBtn");
             const clearBtn = $("#clearSelectionBtn");
             const updatemultipleModalBtn = $("#updatemultipleModalBtn");
             const archivemultipleModalBtn = $('#archivemultipleModalBtn');
@@ -817,7 +435,6 @@
                     }
                 });
 
-                reassignBtn.toggleClass("d-none", selectedCount !== 0);
 
                 updatemultipleModalBtn.prop("disabled", hasArchived);
                 updatemultipleModalBtn.toggleClass("d-none", selectedCount === 0 || hasArchived);

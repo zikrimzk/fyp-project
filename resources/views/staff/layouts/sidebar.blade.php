@@ -86,7 +86,7 @@
                             </a>
                         </li>
                         <li class="pc-item">
-                            <a class="pc-link" href="javascript:void(0)">
+                            <a class="pc-link" href="{{ route('my-supervision-submission-approval') }}">
                                 Submission Approval
                             </a>
                         </li>
@@ -200,6 +200,10 @@
                 </li>
 
             </ul>
+
+            <br/> <br/> <br/> <br/>      
+            <br/> <br/> <br/> <br/>      
+
         </div>
     </div>
 </nav>

@@ -81,7 +81,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     // SUPERVISOR / CO - SUPERVISOR
     
     /* Submission Management */
-    Route::get('/mysupervision-submission-management', [SubmissionController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
+    Route::get('/submission-management-mysupervision', [SubmissionController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
+    Route::get('/submission-approval-mysupervision', [SubmissionController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
+
 
 
 

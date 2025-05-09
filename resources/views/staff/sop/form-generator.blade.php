@@ -89,8 +89,21 @@
             min-height: 200px;
             max-height: 500px;
         }
+
+        @media (max-width: 768px) {
+            .preview-wrapper {
+                min-height: 320px;
+                min-width: 320px;
+                padding: 0.5rem;
+            }
+
+            .document-frame {
+                height: 80vh;
+                /* scale with screen height */
+            }
+        }
     </style>
-    
+
     <div class="pc-container">
         <div class="pc-content">
             <!-- [ Alert ] start -->
@@ -99,7 +112,7 @@
             </div>
             <!-- [ Alert ] end -->
 
-            
+
             <!-- [ Main Content ] start -->
             <div class="row">
                 <!-- [ Form Generator ] start -->
@@ -113,7 +126,8 @@
                                         <div class="col-md-12">
                                             <ul class="breadcrumb text-white">
                                                 <li class="breadcrumb-item">SOP</li>
-                                                <li class="breadcrumb-item"><a href="{{ route('form-setting') }}" class="text-white">Form Setting</a></li>
+                                                <li class="breadcrumb-item"><a href="{{ route('form-setting') }}"
+                                                        class="text-white">Form Setting</a></li>
                                                 <li class="breadcrumb-item">{{ $acts->act_name }}</li>
                                                 <li class="breadcrumb-item" aria-current="page">Form Editor</li>
                                             </ul>
@@ -121,8 +135,7 @@
                                         <div class="col-md-12">
                                             <div class="page-header-title">
                                                 <h2 class="mb-0 text-white d-flex align-items-center ">
-                                                    <a href="{{ route('form-setting') }}"
-                                                        class="btn me-2">
+                                                    <a href="{{ route('form-setting') }}" class="btn me-2">
                                                         <span class="f-18 text-white">
                                                             <i class="ti ti-arrow-left"></i>
                                                         </span>

@@ -5,7 +5,9 @@
     <title>e-PostGrad | {{ $title }}</title>
     <!-- [Meta] -->
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=0.9, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="description" content="-" />
     <meta name="keywords" content="-" />
@@ -40,8 +42,8 @@
         <div class="auth-wrapper v1">
             <div class="auth-form">
                 <div class="text-center">
-                    <a href=""><img src="../assets/images/logo-utem.PNG" alt="img"
-                            class="img-fluid" width="120" height="60" /></a>
+                    <a href=""><img src="../assets/images/logo-utem.PNG" alt="img" class="img-fluid"
+                            width="120" height="60" /></a>
                 </div>
 
                 <div class="card my-5 shadow shadow-lg">
@@ -86,8 +88,8 @@
 
                             <div class="form-floating mb-3">
                                 <input type="email" class="form-control" id="email" placeholder="Email"
-                                    name="email" value="{{ old('email') }}" autocomplete="off" title="Staff or Student Email"
-                                    required />
+                                    name="email" value="{{ old('email') }}" autocomplete="off"
+                                    title="Staff or Student Email" required />
                                 <label for="email">Staff / Student Email</label>
                             </div>
                             <div class="form-floating mb-3">
@@ -152,6 +154,23 @@
     <script src="../assets/js/fonts/custom-font.js"></script>
     <script src="../assets/js/pcoded.js"></script>
     <script src="../assets/js/plugins/feather.min.js"></script>
+
+    <script>
+        // Prevent pinch-to-zoom
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+
+        // Prevent double-tap zoom
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            let now = new Date().getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
 
 </body>
 
