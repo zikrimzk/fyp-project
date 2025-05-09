@@ -78,6 +78,14 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-profile', [AuthenticateController::class, 'updateStaffProfile'])->name('update-staff-profile');
     Route::post('/update-password', [AuthenticateController::class, 'updateStaffPassword'])->name('update-staff-password');
 
+    // SUPERVISOR / CO - SUPERVISOR
+    
+    /* Submission Management */
+    Route::get('/mysupervision-submission-management', [SubmissionController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
+
+
+
+    // COMMITTEE
 
     // Supervision
 
@@ -89,7 +97,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/import-student-data', [SupervisionController::class, 'importStudent'])->name('import-student-post');
     Route::get('/export-student-data', [SupervisionController::class, 'exportStudent'])->name('export-student-get');
     Route::post('/update-multiple-student-status', [SupervisionController::class, 'updateStudentStatus'])->name('update-student-status-post');
-
 
     /* Staff Management */
     Route::get('/staff-management', [SupervisionController::class, 'staffManagement'])->name('staff-management');
@@ -117,9 +124,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-multiple-submission', [SubmissionController::class, 'updateMultipleSubmission'])->name('update-multiple-submission-post');
     Route::post('/archive-multiple-submission', [SubmissionController::class, 'archiveMultipleSubmission'])->name('archive-multiple-submission-post');
     Route::get('/download-multiple-submission', [SubmissionController::class, 'downloadMultipleSubmission'])->name('download-multiple-submission-get');
-
-
-
 
     // Standard Operation Procedure (SOP)
 
@@ -166,7 +170,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-faculty/{id}', [SettingController::class, 'updateFaculty'])->name('update-faculty-post');
     Route::get('/delete-faculty-{id}-{opt}', [SettingController::class, 'deleteFaculty'])->name('delete-faculty-get');
     Route::post('/set-default-faculty', [SettingController::class, 'setDefaultFaculty'])->name('set-default-faculty-post');
-
 
     /* Department Setting */
     Route::get('/department-setting', [SettingController::class, 'departmentSetting'])->name('department-setting');

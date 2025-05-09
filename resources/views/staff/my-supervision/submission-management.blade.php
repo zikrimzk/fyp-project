@@ -12,6 +12,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">My Supervision</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Submission</a></li>
                                 <li class="breadcrumb-item" aria-current="page">Submission Management</li>
                             </ul>
@@ -63,22 +64,14 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- [ Option Section ] start -->
-                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                            <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-5"
                                     id="clearSelectionBtn">
                                     0 selected <i class="ti ti-x f-18"></i>
                                 </button>
-                                <a href="{{ route('assign-student-submission') }}"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2"
-                                    title="Re-assign Submission" id="reassignBtn">
-                                    <i class="ti ti-refresh f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Re-assign Submission
-                                    </span>
-                                </a>
                                 <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-5"
                                     data-bs-toggle="modal" data-bs-target="#multipleSettingModal"
                                     id="updatemultipleModalBtn" title="Update Submission">
                                     <i class="ti ti-edit-circle f-18"></i>
@@ -87,7 +80,7 @@
                                     </span>
                                 </button>
                                 <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-5"
                                     data-bs-toggle="modal" data-bs-target="#archiveMultipleModal"
                                     id="archivemultipleModalBtn" title="Archive">
                                     <i class="ti ti-archive f-18"></i>
@@ -96,7 +89,7 @@
                                     </span>
                                 </button>
                                 <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-5"
                                     data-bs-toggle="modal" data-bs-target="#unarchiveMultipleModal"
                                     id="unarchivemultipleModalBtn" title="Unarchive">
                                     <i class="ti ti-history f-18"></i>
@@ -105,7 +98,7 @@
                                     </span>
                                 </button>
                                 <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-5"
                                     id="downloadmultipleModalBtn" title="Download (.zip)">
                                     <i class="ti ti-arrow-bar-to-down f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
@@ -179,8 +172,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm"
-                                            id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -601,7 +593,7 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('submission-management') }}",
+                    url: "{{ route('my-supervision-submission-management') }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id').val();
                         d.programme = $('#fil_programme_id').val();
@@ -735,7 +727,6 @@
             });
 
             /* SELECT : MULTIPLE STUDENT SELECT */
-            const reassignBtn = $("#reassignBtn");
             const clearBtn = $("#clearSelectionBtn");
             const updatemultipleModalBtn = $("#updatemultipleModalBtn");
             const archivemultipleModalBtn = $('#archivemultipleModalBtn');
@@ -817,7 +808,6 @@
                     }
                 });
 
-                reassignBtn.toggleClass("d-none", selectedCount !== 0);
 
                 updatemultipleModalBtn.prop("disabled", hasArchived);
                 updatemultipleModalBtn.toggleClass("d-none", selectedCount === 0 || hasArchived);

@@ -125,6 +125,10 @@
                                                     <option value="{{ $fil->id }}" class="bg-light-danger">
                                                         {{ $fil->fac_code }} [Inactive]
                                                     </option>
+                                                @elseif($fil->fac_status == 3)
+                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                        {{ $fil->fac_code }} [Default]
+                                                    </option>
                                                 @endif
                                             @endforeach
                                         </select>

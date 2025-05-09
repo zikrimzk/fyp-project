@@ -3,13 +3,14 @@
 @endphp
 <nav class="pc-sidebar">
     <div class="navbar-wrapper">
-        <div class="p-2 bg-light-secondary text-center d-flex justify-content-center align-items-center border border-bottom border-2">
+        <div
+            class="p-2 bg-light-secondary text-center d-flex justify-content-center align-items-center border border-bottom border-2">
             <a href="../dashboard/index.html" class="b-brand text-primary">
                 <img src="../assets/images/logo-utem.PNG" alt="logo" width="100" />
             </a>
         </div>
         <div class="navbar-content bg-light-secondary">
-            
+
             <div class="text-center border-bottom border-2 mb-3">
                 <h6 class="p-2">{{ Semester::where('sem_status', 1)->first()->sem_label }}</h6>
             </div>
@@ -53,6 +54,43 @@
                         </span>
                         <span class="pc-mtext">Dashboard</span>
                     </a>
+                </li>
+
+                <li class="pc-item pc-caption">
+                    <label>My Supervision</label>
+                </li>
+
+                {{-- <li class="pc-item pc-hasmenu">
+                    <a href="#" class="pc-link">
+                        <span class="pc-micon">
+                            <svg class="pc-icon">
+                                <use xlink:href="#custom-status-up"></use>
+                            </svg>
+                        </span>
+                        <span class="pc-mtext">My Student</span>
+                    </a>
+                </li> --}}
+
+                <li class="pc-item pc-hasmenu">
+                    <a href="javascript:void(0)" class="pc-link">
+                        <span class="pc-micon">
+                            <i class="fas fa-upload pc-icon"></i>
+                        </span>
+                        <span class="pc-mtext">Submission</span>
+                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                    </a>
+                    <ul class="pc-submenu">
+                        <li class="pc-item">
+                            <a class="pc-link" href="{{ route('my-supervision-submission-management') }}">
+                                Submission Management
+                            </a>
+                        </li>
+                        <li class="pc-item">
+                            <a class="pc-link" href="javascript:void(0)">
+                                Submission Approval
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
                 <li class="pc-item pc-caption">
@@ -103,7 +141,7 @@
                         </li>
                         <li class="pc-item">
                             <a class="pc-link" href="javascript:void(0)">
-                                e-PG Suggestion System
+                                Suggestion
                             </a>
                         </li>
                     </ul>

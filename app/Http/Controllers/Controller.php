@@ -153,4 +153,57 @@ class Controller extends BaseController
     //     }
     // }
 
+    // public function updateMultipleSubmission(Request $req)
+    // {
+    //     $submissionIds = $req->input('selectedIds');
+
+    //     $rules = [];
+    //     $attributes = [];
+
+    //     if ($req->has('submission_status_ups') && !empty($req->input('submission_status_ups'))) {
+    //         $rules['submission_status_ups'] = 'integer|in:1,2,3,4,5';
+    //         $attributes['submission_status_ups'] = 'submission status';
+    //     }
+
+    //     if ($req->has('submission_duedate_ups') && !empty($req->input('submission_duedate_ups'))) {
+    //         $rules['submission_duedate_ups'] = 'nullable';
+    //         $attributes['submission_duedate_ups'] = 'submission due date';
+    //     }
+
+    //     if (!empty($rules)) {
+    //         $validator = Validator::make($req->all(), $rules, [], $attributes);
+
+    //         if ($validator->fails()) {
+    //             return response()->json([
+    //                 'errors' => $validator->errors(),
+    //                 'message' => 'Validation failed.',
+    //             ], 422);
+    //         }
+    //     }
+
+    //     try {
+    //         $updateData = [];
+
+    //         if ($req->has('submission_status_ups') && !empty($req->input('submission_status_ups'))) {
+    //             $updateData['submission_status'] = $req->input('submission_status_ups');
+    //         }
+
+    //         if ($req->has('submission_duedate_ups') && !empty($req->input('submission_duedate_ups'))) {
+    //             $updateData['submission_duedate'] = $req->input('submission_duedate_ups');
+    //         }
+
+    //         if (!empty($updateData)) {
+    //             Submission::whereIn('id', $submissionIds)->update($updateData);
+    //         }
+
+    //         return response()->json([
+    //             'message' => 'All selected submissions have been updated successfully!',
+    //         ], 200);
+    //     } catch (Exception $e) {
+    //         return response()->json([
+    //             'message' => 'Oops! Error updating submissions: ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
 }

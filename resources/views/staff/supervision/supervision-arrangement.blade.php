@@ -93,10 +93,35 @@
                                                     <option value="{{ $fil->id }}" class="bg-light-danger">
                                                         {{ $fil->fac_code }} [Inactive]
                                                     </option>
+                                                @elseif($fil->fac_status == 3)
+                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                        {{ $fil->fac_code }} [Default]
+                                                    </option>
                                                 @endif
                                             @endforeach
                                         </select>
                                         <button type="button" class="btn btn-outline-danger btn-sm" id="clearFacFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-3 mb-3">
+                                    <div class="input-group">
+                                        <select id="fil_semester_id" class="form-select">
+                                            <option value="">-- Select Semester --</option>
+                                            @foreach ($sems as $fil)
+                                                @if ($fil->sem_status == 1)
+                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                        {{ $fil->sem_label }} [Current]
+                                                    </option>
+                                                @elseif($fil->sem_status == 0)
+                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearSemFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -119,27 +144,6 @@
                                             @endforeach
                                         </select>
                                         <button type="button" class="btn btn-outline-danger btn-sm" id="clearProgFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_semester_id" class="form-select">
-                                            <option value="">-- Select Semester --</option>
-                                            @foreach ($sems as $fil)
-                                                @if ($fil->sem_status == 1)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success">
-                                                        {{ $fil->sem_label }} [Current]
-                                                    </option>
-                                                @elseif($fil->sem_status == 0)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearSemFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
