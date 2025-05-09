@@ -90,70 +90,72 @@
             max-height: 500px;
         }
     </style>
+    
     <div class="pc-container">
         <div class="pc-content">
-            <!-- [ breadcrumb ] start -->
-            <div class="page-header">
-                <div class="page-block">
-                    <div class="row align-items-center">
-                        <div class="col-md-12">
-                            <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">SOP</a></li>
-                                <li class="breadcrumb-item" aria-current="page">Form Generator</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-12">
-                            <div class="page-header-title">
-                                <h2 class="mb-0">Form Generator</h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- [ breadcrumb ] end -->
-
-
             <!-- [ Alert ] start -->
             <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
                 <div id="toastContainer"></div>
             </div>
             <!-- [ Alert ] end -->
 
-            <div class="d-flex justify-content-start align-items-center mb-3">
-                <a href="{{ route('form-setting') }}"
-                    class="btn btn-sm btn-light-primary d-flex align-items-center justify-content-center me-2">
-                    <i class="ti ti-arrow-left me-2"></i>
-                    <span class="me-2">Back</span>
-                </a>
-            </div>
-
-
-
+            
             <!-- [ Main Content ] start -->
             <div class="row">
                 <!-- [ Form Generator ] start -->
                 <div class="col-sm-12">
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-header" style="background-color: rgba(82,86,89,255); border:none;">
+                            <!-- [ breadcrumb ] start -->
+                            <div class="page-header">
+                                <div class="page-block">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-12">
+                                            <ul class="breadcrumb text-white">
+                                                <li class="breadcrumb-item">SOP</li>
+                                                <li class="breadcrumb-item"><a href="{{ route('form-setting') }}" class="text-white">Form Setting</a></li>
+                                                <li class="breadcrumb-item">{{ $acts->act_name }}</li>
+                                                <li class="breadcrumb-item" aria-current="page">Form Editor</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="page-header-title">
+                                                <h2 class="mb-0 text-white d-flex align-items-center ">
+                                                    <a href="{{ route('form-setting') }}"
+                                                        class="btn me-2">
+                                                        <span class="f-18 text-white">
+                                                            <i class="ti ti-arrow-left"></i>
+                                                        </span>
+                                                    </a>
+                                                    Form Editor
+                                                </h2>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ breadcrumb ] end -->
+                        </div>
+                        <div class="card-body" style="background-color: rgba(50, 54, 57, 255);">
                             <div class="row">
                                 <!-- [ Form Setting ] start -->
                                 <div class="col-sm-4">
-                                    <h5 class="mb-3 mt-3 text-center">Form Configuration</h5>
+                                    <h5 class="mb-3 mt-3 text-center text-white">Form Configuration</h5>
 
                                     <div class="accordion card" id="formConfigAccordion">
                                         <!-- [ Form Fields ] start -->
                                         <div class="accordion-item">
                                             <h2 class="accordion-header" id="headingTwo">
-                                                <button class="accordion-button collapsed" type="button"
-                                                    data-bs-toggle="collapse" data-bs-target="#collapseTwo"
-                                                    aria-expanded="true" aria-controls="collapseTwo">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#collapseTwo" aria-expanded="true"
+                                                    aria-controls="collapseTwo">
                                                     <div class="mb-2 mt-2">
                                                         <h5 class="mb-0">Form Fields</h5>
                                                         <small>Customize form fields</small>
                                                     </div>
                                                 </button>
                                             </h2>
-                                            <div id="collapseTwo" class="accordion-collapse collapse"
+                                            <div id="collapseTwo" class="accordion-collapse show"
                                                 aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
                                                 <div class="accordion-body">
                                                     <div
@@ -233,11 +235,6 @@
 
                                 <!-- [ Form Preview ] start -->
                                 <div class="col-sm-8 position-relative preview-wrapper">
-                                    <div class="text-center m-3">
-                                        <a href="{{ route('preview-activity-document-get') }}?actid={{ $formdata->activity_id }}&af_id={{ $formdata->id }}"
-                                            class="link-light" target="_blank">View Preview (.html)</a>
-                                    </div>
-
 
                                     <!-- Loading Spinner -->
                                     <div id="preview-loader" class="preview-loader d-none">
@@ -247,6 +244,11 @@
 
                                     <!-- Iframe Preview -->
                                     <iframe id="documentContainer" class="mt-3 document-frame" frameborder="0"></iframe>
+
+                                    <div class="text-center m-3">
+                                        <a href="{{ route('preview-activity-document-get') }}?actid={{ $formdata->activity_id }}&af_id={{ $formdata->id }}"
+                                            class="link-light" target="_blank">View Preview (.html)</a>
+                                    </div>
                                 </div>
                                 <!-- [ Form Preview ] end -->
 
@@ -424,7 +426,10 @@
                                         <option value="1">Student</option>
                                         <option value="2">Main Supervisor</option>
                                         <option value="3">Co-Supervisor</option>
-                                        <option value="4">Committee Member / Deputy Dean / Dean</option>
+                                        <option value="4">Committee Member</option>
+                                        <option value="5">Deputy Dean</option>
+                                        <option value="6">Dean</option>
+                                        <option value="7">Committee Member / Deputy Dean / Dean</option>
                                     </select>
                                 </div>
                             </div>
@@ -455,8 +460,16 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
     <!-- Ckeditor js -->
     <script src="../assets/js/plugins/ckeditor/classic/ckeditor.js"></script>
+    <!-- jQuery UI (required for sortable) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/smoothness/jquery-ui.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
+
     <script type="text/javascript">
         $(document).ready(function() {
 
@@ -832,16 +845,23 @@
                             </div>
                         </div>
                         <div class="row g-1">
-                            <div class="col-6">
-                                <button class="btn btn-sm btn-outline-primary w-100 update-field-btn" data-id="${id}" data-label="${label}" data-key="${datakey}">
-                                    <i class="bi bi-pencil"></i> Update
+
+                            <div class="col-4">
+                                <button class="btn btn-sm btn-outline-secondary w-100 update-field-btn" data-id="${id}" data-label="${label}" data-key="${datakey}">
+                                    <i class="ti ti-edit-circle"></i>
                                 </button>
                             </div>
-                            <div class="col-6">
+                             <div class="col-4">
+                                <button class="btn btn-sm btn-outline-secondary w-100 copy-field-btn" data-id="${id}" data-key="${datakey}">
+                                    <i class="ti ti-copy"></i> 
+                                </button>
+                            </div>
+                            <div class="col-4">
                                 <button class="btn btn-sm btn-outline-danger w-100 delete-field-btn" data-id="${id}">
-                                    <i class="bi bi-trash"></i> Delete
+                                    <i class="ti ti-trash"></i> 
                                 </button>
                             </div>
+
                         </div>
                     </li>
                 `;
@@ -930,6 +950,20 @@
                     $('#addFormFieldBtn-submit').addClass('d-none');
                     $('#addFormFieldBtn-submit').removeClass('d-block');
 
+                } else if (option == "copy") {
+                    // MODAL TITLE
+                    $('#formFieldModalLabel').html('Copy Form Field');
+
+                    // SUBMIT BUTTON SECTIONS
+                    $('#addFormFieldBtn-submit').removeClass('d-none');
+                    $('#addFormFieldBtn-submit').addClass('d-block');
+                    $('#updateFormFieldBtn-submit').removeClass('d-block');
+                    $('#updateFormFieldBtn-submit').addClass('d-none');
+
+                    // RESET CERTAIN DATA
+                    $('#ff_label').val('');
+                    ckLabelEditor.setData('');
+
                 }
 
                 if (isOpen) {
@@ -941,6 +975,50 @@
             $('#addFormFieldBtn').click(function() {
                 modalInit('add', true);
             });
+
+            // TRIGGER: COPY BUTTON
+            $(document).on('click', '.copy-field-btn', function() {
+                const id = $(this).data('id');
+                $('#ff_id-hidden').val(id);
+                const key = $(this).data('key');
+
+                $.ajax({
+                    url: "{{ route('get-single-form-field-data-get') }}",
+                    method: "GET",
+                    data: {
+                        ff_id: id
+                    },
+                    success: function(response) {
+                        modalInit('copy', true);
+                        $('#ff_category').val(response.fields.ff_category);
+                        $('#ff_category').trigger('change');
+                        $('#ff_category').prop('disabled', true);
+                        $('#ff_component_type').val(response.fields.ff_component_type);
+                        $('#ff_placeholder').val(response.fields.ff_placeholder);
+                        $('#ff_component_required').val(response.fields.ff_component_required);
+                        $('#ff_value_options').val(response.fields.ff_value_options);
+                        $('#ff_repeatable').val(response.fields.ff_repeatable);
+                        $('#ff_append_text').val(response.fields.ff_append_text);
+                        $('#ff_table').val(response.fields.ff_table);
+                        $('#ff_table').trigger('change');
+                        $('#ff_datakey').val(response.fields.ff_datakey);
+                        $('#ff_datakey').trigger('change');
+                        $('#ff_extra_datakey').val(response.fields.ff_extra_datakey);
+                        if (response.fields.ff_extra_datakey !== null) {
+                            $('#ff_extra_datakey').trigger('change');
+
+                        }
+                        $('#ff_extra_condition').val(response.fields.ff_extra_condition);
+                        $('#ff_signature_role').val(response.fields.ff_signature_role);
+                    },
+                    error: function() {
+                        showToast('error', 'Failed to load the form field data.');
+                    }
+                });
+
+
+            });
+
             // ADD FORM FIELD FUNCTION
             $('#addFormFieldBtn-submit').click(function() {
 
@@ -961,7 +1039,7 @@
                 var rowExtraDatakey = $('#ff_extra_datakey').val();
                 var rowExtraCondition = $('#ff_extra_condition').val();
                 var rowSignatureRole = $('#ff_signature_role').val();
-                
+
                 if (rowCategory == "1" && !rowType) {
                     showToast('error', 'Please select component type first before proceed.');
                     return;
@@ -1067,6 +1145,9 @@
                         $('#ff_datakey').trigger('change');
                         $('#ff_extra_datakey').val(response.fields.ff_extra_datakey);
                         $('#ff_extra_condition').val(response.fields.ff_extra_condition);
+                        if (response.fields.ff_extra_datakey !== null) {
+                            $('#ff_extra_datakey').trigger('change');
+                        }
                         $('#ff_signature_role').val(response.fields.ff_signature_role);
                     },
                     error: function() {

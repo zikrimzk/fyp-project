@@ -13,12 +13,10 @@ use Illuminate\Support\Str;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
-use function Laravel\Prompts\form;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
-
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 
@@ -538,7 +536,7 @@ class SOPController extends Controller
         return response()->file($path);
     }
 
-    /* Form Setting */
+    /* Form Setting [Checked : 9/5/2025] */
     public function formSetting(Request $req)
     {
         $data = DB::table('activities as a')
@@ -605,7 +603,7 @@ class SOPController extends Controller
                 $html =
                     '
                     <div class="d-flex justify-content-end align-items-center gap-2">
-                        <a href="' . route('form-generator', ['formID' => $row->af_id, 'afTarget' => $row->form_target]) . '" class="avtar avtar-xs btn-light-primary">
+                        <a href="' . route('form-editor', ['formID' => Crypt::encrypt($row->af_id), 'afTarget' => $row->form_target]) . '" class="avtar avtar-xs btn-light-primary">
                             <i class="ti ti-edit f-20"></i>
                         </a>
                         <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
@@ -638,7 +636,7 @@ class SOPController extends Controller
         $validator = Validator::make($req->all(), [
             'actid' => 'required|integer|exists:activities,id',
             'formTitle'  => 'required',
-            'formTarget' => 'required',
+            'formTarget' => 'required|in:1,2,3',
             'formStatus' => 'required',
         ], [], [
             'actid' => 'activity',
@@ -689,6 +687,7 @@ class SOPController extends Controller
                 'success' => true,
                 'message' => $message,
                 'activityForm' => $activityForm,
+                'url' => route('form-editor', ['formID' => Crypt::encrypt($activityForm->id), 'afTarget' => $activityForm->af_target]),
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -704,26 +703,34 @@ class SOPController extends Controller
             $afID = decrypt($afID);
             FormField::where('af_id', $afID)->delete();
             ActivityForm::where('id', $afID)->delete();
-            return back()->with('success', 'Form deleted successfully.');
+            return back()->with('success', 'Form and all related setting deleted successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting forms: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting activity forms: ' . $e->getMessage());
         }
     }
 
-    public function formGenerator($formID, $afTarget)
+    /* Form Editor [Checked : 9/5/2025] [Notes : Require Enhancement and Update] */
+    public function formEditor($formID, $afTarget)
     {
         try {
+            $formID = decrypt($formID);
             $formdata = ActivityForm::where('id', $formID)->where('af_target', $afTarget)->first();
             if (!$formdata) {
                 return abort(404, 'Form not found.');
             }
 
+            $actdata = Activity::where('id', $formdata->activity_id)->first();
+
+            if (!$actdata) {
+                return abort(404, 'Activity not found.');
+            }
+
             return view('staff.sop.form-generator', [
-                'title' => 'Form Generator',
+                'title' => 'Form Editor',
                 'formdata' => $formdata,
+                'acts' => $actdata,
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
@@ -737,7 +744,7 @@ class SOPController extends Controller
             $signatures = $formfield->where('ff_category', 6);
             $faculty = Faculty::where('fac_status', 3)->first();
             $pdf = Pdf::loadView('staff.sop.template.activity-document', [
-                'title' => $act->act_name . " Document",
+                'title' => $actform->af_title,
                 'act' => $act,
                 'form_title' => $req->title,
                 'actform' => $actform,
@@ -747,13 +754,12 @@ class SOPController extends Controller
 
             ]);
 
-            return $pdf->stream('preview.pdf');
+            return $pdf->stream(strtoupper(str_replace(' ', '_', $actform->af_title)) . '.pdf');
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()]);
         }
     }
 
-    // [Debug Function]
     public function previewActivityDocumentbyHTML(Request $req)
     {
         try {
@@ -799,7 +805,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Error getting the activity form data: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -855,7 +861,7 @@ class SOPController extends Controller
             if ($checkExists) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Field already exists.',
+                    'message' => 'Field label already exists within the same form. Please make the field label unique.',
                 ], 200);
             }
 
@@ -881,6 +887,15 @@ class SOPController extends Controller
                 } else if ($userRole == 4) {
                     $signature_key = 'comm_signature';
                     $signature_date_key = 'comm_signature_date';
+                } else if ($userRole == 5) {
+                    $signature_key = 'deputy_dean_signature';
+                    $signature_date_key = 'deputy_dean_signature_date';
+                } else if ($userRole == 6) {
+                    $signature_key = 'dean_signature';
+                    $signature_date_key = 'dean_signature_date';
+                } else if ($userRole == 7) {
+                    $signature_key = 'higherUps_signature';
+                    $signature_date_key = 'higherUps_signature_date';
                 }
             }
 
@@ -912,7 +927,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Error adding the form field: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -957,16 +972,19 @@ class SOPController extends Controller
 
         try {
             $validated = $validator->validated();
-            // $getAfId = FormField::where('id', $validated['ff_id'])->first()->af_id;
-            // $checkExists = FormField::where('ff_label', $validated['ff_label'])->where('af_id', $getAfId)->exists();
+            $getAfId = FormField::where('id', $validated['ff_id'])->value('af_id');
 
-            // if ($checkExists) {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => 'Field already exists.',
-            //     ], 200);
-            // }
-            
+            $checkExists = FormField::where('ff_label', $validated['ff_label'])
+                ->where('af_id', $getAfId)
+                ->where('id', '!=', $validated['ff_id'])
+                ->exists();
+
+            if ($checkExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Field label already exists within the same form. Please make the field label unique.',
+                ], 200);
+            }
             // CHECK WHETHER USER ROLE EXIST IN ff_signature_role
             $signature_key = null;
             $signature_date_key = null;
@@ -985,6 +1003,15 @@ class SOPController extends Controller
                 } else if ($userRole == 4) {
                     $signature_key = 'comm_signature';
                     $signature_date_key = 'comm_signature_date';
+                } else if ($userRole == 5) {
+                    $signature_key = 'deputy_dean_signature';
+                    $signature_date_key = 'deputy_dean_signature_date';
+                } else if ($userRole == 6) {
+                    $signature_key = 'dean_signature';
+                    $signature_date_key = 'dean_signature_date';
+                } else if ($userRole == 7) {
+                    $signature_key = 'higherUps_signature';
+                    $signature_date_key = 'higherUps_signature_date';
                 }
             }
 
@@ -1012,7 +1039,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Error updating the form field: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1035,7 +1062,8 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Error updating the form field order: ' . $e->getMessage(),
+
             ], 500);
         }
     }
@@ -1060,7 +1088,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Error deleting the form field: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1099,7 +1127,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Error getting the form field data: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -1116,7 +1144,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
+                'message' => 'Error getting the selected form field data: ' . $e->getMessage(),
             ], 500);
         }
     }

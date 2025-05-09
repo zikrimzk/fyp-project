@@ -359,8 +359,7 @@
                             $('#select_form_status-' + selectedOpt).val('');
                             $('#txt_form_title-' + selectedOpt).val('');
 
-                            window.location.href = "form-generator-" + response.activityForm
-                                .id + "-" + response.activityForm.af_target;
+                            window.location.href = response.url;
                         } else {
                             showToast('error', response.message);
                         }

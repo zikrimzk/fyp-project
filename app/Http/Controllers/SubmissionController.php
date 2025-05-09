@@ -113,8 +113,7 @@ class SubmissionController extends Controller
 
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
-            return abort(500);
+            return abort(500, $e->getMessage());
         }
     }
 
@@ -934,7 +933,7 @@ class SubmissionController extends Controller
 
             return back()->with('success', $message);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error archiving submission: ' . $e->getMessage());
         }
     }
 
@@ -1018,7 +1017,7 @@ class SubmissionController extends Controller
 
             return back()->with('success', $message);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting submissions: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error archiving selected submissions: ' . $e->getMessage());
         }
     }
 
