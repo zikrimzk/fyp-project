@@ -64,7 +64,7 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
-                            
+
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-end">
 
@@ -129,7 +129,8 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -150,36 +151,16 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_document_id" class="form-select">
-                                            <option value="">-- Select Document --</option>
-                                            @foreach ($docs as $fil)
-                                                @if ($fil->doc_status == 1)
-                                                    <option value="{{ $fil->id }}">{{ $fil->doc_name }}</option>
-                                                @elseif($fil->doc_status == 2)
-                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->doc_name }} [Inactive]
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearDocumentFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
 
                                 <div class="col-sm-12 col-md-4 mb-3">
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
-                                            <option value="1">No Attempt</option>
-                                            <option value="2">Locked</option>
-                                            <option value="3">Submitted</option>
-                                            <option value="4">Overdue</option>
-                                            <option value="5">Archive</option>
+                                            <option value="1">Pending</option>
+                                            <option value="2">Approved (SV)</option>
+                                            <option value="3">Approved (Comm/DD/Dean)</option>
+                                            <option value="4">Rejected (SV)</option>
+                                            <option value="5">Rejected (Comm/DD/Dean)</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
@@ -197,7 +178,7 @@
                                             <th><input type="checkbox" id="select-all" class="form-check-input"></th>
                                             <th scope="col">Student</th>
                                             <th scope="col">Final Document</th>
-                                            <th scope="col">Submission Date</th>
+                                            <th scope="col">Confirmation Date</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Activity</th>
                                             <th scope="col">Action</th>
@@ -217,20 +198,19 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            // DATATABLE : SUBMISSION
+            // DATATABLE : STUDENT ACTIVITIES
             var table = $('.data-table').DataTable({
                 processing: false,
                 serverSide: true,
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('my-supervision-submission-management') }}",
+                    url: "{{ route('my-supervision-submission-approval') }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id').val();
                         d.programme = $('#fil_programme_id').val();
                         d.semester = $('#fil_semester_id').val();
                         d.activity = $('#fil_activity_id').val();
-                        d.document = $('#fil_document_id').val();
                         d.status = $('#fil_status').val();
                     }
                 },
@@ -245,16 +225,16 @@
                         name: 'student_photo'
                     },
                     {
-                        data: 'document_name',
-                        name: 'document_name'
+                        data: 'sa_final_submission',
+                        name: 'sa_final_submission'
                     },
                     {
-                        data: 'submission_date',
-                        name: 'submission_date'
+                        data: 'confirm_date',
+                        name: 'confirm_date'
                     },
                     {
-                        data: 'submission_status',
-                        name: 'submission_status'
+                        data: 'sa_status',
+                        name: 'sa_status'
                     },
                     {
                         data: 'activity_name',
@@ -329,17 +309,6 @@
             $('#clearActivityFilter').click(function() {
                 $('#fil_activity_id').val('').change();
             });
-
-            // FILTER : DOCUMENT
-            $('#fil_document_id').on('change', function() {
-                $('.data-table').DataTable().ajax
-                    .reload();
-            });
-
-            $('#clearDocumentFilter').click(function() {
-                $('#fil_document_id').val('').change();
-            });
-
 
             // FILTER : STATUS
             $('#fil_status').on('change', function() {
