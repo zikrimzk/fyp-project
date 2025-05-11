@@ -20,6 +20,7 @@ use App\Models\ActivityForm;
 use Illuminate\Http\Request;
 use App\Models\StudentActivity;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\SubmissionReview;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -1582,10 +1583,15 @@ class SubmissionController extends Controller
                         ';
                     } elseif ($row->sa_status == 1 && $row->supervision_role == 2) {
                         return '<div class="fst-italic text-muted">No permission to proceed</div>';
-                    } elseif ($row->sa_status == 2 || $row->sa_status == 3) {
-                        return '<div class="fst-italic text-muted">No further action required</div>';
-                    } elseif ($row->sa_status == 4 || $row->sa_status == 5) {
-                        return '<div class="fst-italic text-muted">Awaiting student reconfirmation</div>';
+                    } elseif ($row->sa_status == 2 || $row->sa_status == 3 || $row->sa_status == 4 || $row->sa_status == 5) {
+                        return
+                            '
+                            <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                                data-bs-toggle="modal" data-bs-target="#reviewModal-' . $row->student_activity_id . '">
+                                <i class="ti ti-eye me-2"></i>
+                                <span class="me-2">Review</span>
+                            </button>
+                        ';
                     }
                 });
 
@@ -1593,6 +1599,11 @@ class SubmissionController extends Controller
 
                 return $table->make(true);
             }
+
+            $review = DB::table('submission_reviews as a')
+                    ->join('staff as b', 'a.staff_id', '=', 'b.id')
+                    ->get();
+
             return view('staff.my-supervision.submission-approval', [
                 'title' => 'Submission Approval',
                 'studs' => Student::all(),
@@ -1600,7 +1611,8 @@ class SubmissionController extends Controller
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
                 'acts' => Activity::all(),
-                'subs' => $data->get()
+                'subs' => $data->get(),
+                'reviews' => $review
             ]);
         } catch (Exception $e) {
             dd($e->getMessage());
@@ -1612,14 +1624,13 @@ class SubmissionController extends Controller
     {
         $stuActID = Crypt::decrypt($stuActID);
         try {
+            $studentActivity = StudentActivity::whereId($stuActID)->first();
+            $actID = Crypt::encrypt($studentActivity->activity_id);
+            $student = Student::whereId($studentActivity->student_id)->first();
+            $supervision = Supervision::where('student_id', $student->id)->where('staff_id', auth()->user()->id)->first();
+
             if ($option == 1) {
                 //Approving Student Activity
-
-                $studentActivity = StudentActivity::whereId($stuActID)->first();
-                $actID = Crypt::encrypt($studentActivity->activity_id);
-                $student = Student::whereId($studentActivity->student_id)->first();
-                $supervision = Supervision::where('student_id', $student->id)->where('staff_id', auth()->user()->id)->first();
-
                 $role = 2;
                 $status = 1;
 
@@ -1647,12 +1658,46 @@ class SubmissionController extends Controller
 
                 $this->mergeStudentSubmission($actID, $student, $signatureData, $role, $status);
 
+                if ($request->input('comment') != null) {
+                    SubmissionReview::create([
+                        'student_activity_id' => $stuActID,
+                        'sr_comment' => $request->input('comment'),
+                        'sr_date' => date('Y-m-d'),
+                        'staff_id' => auth()->user()->id
+                    ]);
+                }
+
                 return back()->with('success', 'Submission has been approved successfully.');
             } else if ($option == 2) {
                 //Rejecting Student Activity
+                $status = 1;
+
+                if (!$supervision && (auth()->user()->staff_role == 1 || auth()->user()->staff_role == 3 || auth()->user()->staff_role == 4)) {
+                    // COMMITTEE / DEPUTY DEAN / DEAN
+                    $status = 5;
+                } elseif ($supervision->supervision_role == 1 || $supervision->supervision_role == 2) {
+                    $status = 4;
+                }
+
+                StudentActivity::whereId($stuActID)->update([
+                    'sa_status' => $status,
+                ]);
+
+                if ($request->input('comment') != null) {
+                    SubmissionReview::create([
+                        'student_activity_id' => $stuActID,
+                        'sr_comment' => $request->input('comment'),
+                        'sr_date' => date('Y-m-d'),
+                        'staff_id' => auth()->user()->id
+                    ]);
+                }
+
+                return back()->with('success', 'Submission has been rejected successfully.');
             } else if ($option == 3) {
                 //Reverting Student Activity
+                SubmissionReview::where('student_activity_id',$stuActID)->delete();
                 StudentActivity::whereId($stuActID)->delete();
+
                 return back()->with('success', 'The student submission has been successfully reverted. Please notify the student to reconfirm their submission.');
             } else {
                 return back()->with('error', 'Oops! Invalid option. Please try again.');

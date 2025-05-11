@@ -1,10 +1,21 @@
 @php
     use App\Models\Semester;
+    use Carbon\Carbon;
 @endphp
 
 @extends('staff.layouts.main')
 
 @section('content')
+    <style>
+        .timeline {
+            position: relative;
+        }
+
+        .timeline-dot {
+            z-index: 1;
+        }
+    </style>
+
     <div class="pc-container">
         <div class="pc-content">
             <!-- [ breadcrumb ] start -->
@@ -193,7 +204,9 @@
 
                 @foreach ($subs as $upd)
                     <!-- [ Approve Modal ] Start -->
-                    <form method="GET" action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 1]) }}" enctype="multipart/form-data">
+                    <form method="GET"
+                        action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 1]) }}"
+                        enctype="multipart/form-data">
                         @csrf
                         <div class="modal fade" id="approveModal-{{ $upd->student_activity_id }}"
                             data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
@@ -298,7 +311,8 @@
                     <!-- [ Approve Modal ] End -->
 
                     <!-- [ Reject Modal ] Start -->
-                    <form method="GET" action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 2]) }}">
+                    <form method="GET"
+                        action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 2]) }}">
                         @csrf
                         <div class="modal fade" id="rejectModal-{{ $upd->student_activity_id }}"
                             data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
@@ -359,7 +373,8 @@
                     <!-- [ Reject Modal ] End -->
 
                     <!-- [ Revert Modal ] Start -->
-                    <form method="GET" action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 3]) }}">
+                    <form method="GET"
+                        action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 3]) }}">
                         @csrf
                         <div class="modal fade" id="revertModal-{{ $upd->student_activity_id }}"
                             data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
@@ -411,6 +426,68 @@
                         </div>
                     </form>
                     <!-- [ Revert Modal ] End -->
+
+                    <!-- [ Review Modal ] Start -->
+                    <div class="modal fade" id="reviewModal-{{ $upd->student_activity_id }}" data-bs-keyboard="false"
+                        tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="multipleSettingModalLabel">Submission Review(s)</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            @php
+                                                $activityReviews = $reviews->where(
+                                                    'student_activity_id',
+                                                    $upd->student_activity_id,
+                                                );
+                                            @endphp
+
+                                            @if ($activityReviews->isEmpty())
+                                                <div class="alert alert-light text-center">
+                                                    <i class="ti ti-info-circle"></i> There are no reviews for this
+                                                    submission yet.
+                                                </div>
+                                            @else
+                                                <div class="timeline">
+                                                    @foreach ($activityReviews as $review)
+                                                        <div
+                                                            class="timeline-item mb-4 position-relative ps-4 border-start border-2 border-secondary">
+                                                            <div class="card">
+                                                                <div class="card-body p-3">
+                                                                    <div class="d-flex justify-content-between mb-2">
+                                                                        <small class="text-muted">
+                                                                            {{ \Carbon\Carbon::parse($review->sr_date)->format('d M Y, h:i A') }}
+                                                                        </small>
+                                                                        <small class="text-muted">
+                                                                            — {{ $review->staff_name }}
+                                                                        </small>
+                                                                    </div>
+                                                                    <p class="mb-0 text-dark">
+                                                                        {{ $review->sr_comment }}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <span
+                                                                class="timeline-dot position-absolute top-0 start-0 translate-middle bg-secondary rounded-circle"
+                                                                style="width: 12px; height: 12px;"></span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ Review Modal ] End -->
                 @endforeach
 
 
