@@ -82,9 +82,10 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     
     /* Submission Management */
     Route::get('/submission-management-mysupervision', [SubmissionController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
+
+    /* Submission Approval */
     Route::get('/submission-approval-mysupervision', [SubmissionController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
-
-
+    Route::get('/student-submission-approval/{stuActID}-{option}', [SubmissionController::class, 'studentActivitySubmissionApproval'])->name('staff-submission-approval-post');
 
 
     // COMMITTEE

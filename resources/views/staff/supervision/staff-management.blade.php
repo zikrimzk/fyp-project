@@ -164,7 +164,7 @@
                                             <option value="">-- Select Role --</option>
                                             <option value="1">Committee</option>
                                             <option value="2">Lecturer</option>
-                                            <option value="3">Timbalan Dekan Pendidikan</option>
+                                            <option value="3">Deputy Dean</option>
                                             <option value="4">Dekan</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-danger btn-sm"

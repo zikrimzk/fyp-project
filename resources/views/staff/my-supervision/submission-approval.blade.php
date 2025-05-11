@@ -186,15 +186,280 @@
                                     </thead>
                                 </table>
                             </div>
+
                         </div>
                     </div>
                 </div>
+
+                @foreach ($subs as $upd)
+                    <!-- [ Approve Modal ] Start -->
+                    <form method="GET" action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 1]) }}" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal fade" id="approveModal-{{ $upd->student_activity_id }}"
+                            data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-body">
+                                        <div class="row">
+
+                                            <!-- Icon -->
+                                            <div class="col-sm-12 mb-4 text-center">
+                                                <i class="ti ti-circle-check text-success" style="font-size: 100px"></i>
+                                            </div>
+
+                                            <!-- Title -->
+                                            <div class="col-sm-12 text-center">
+                                                <h2 class="f-18">Approve Student Confirmation?</h2>
+                                            </div>
+
+                                            <!-- Instruction -->
+                                            <div class="col-sm-12 mb-3">
+                                                <div class="alert alert-light border text-start f-14">
+                                                    <strong class="d-block mb-1">Instructions:</strong>
+                                                    <ul class="mb-2 ps-3">
+                                                        <li>Carefully review the student's submission document.</li>
+                                                        <li>If necessary, provide comments or notes below.</li>
+                                                        <li>Sign using the signature box to confirm your approval.</li>
+                                                        <li>Click <strong>"Confirm & Sign"</strong> to finalize this action.
+                                                        </li>
+                                                        <li class="text-danger"><strong>This action is final and cannot be
+                                                                undone.</strong></li>
+                                                    </ul>
+                                                    <div class="mt-2">
+                                                        <strong class="text-muted fst-italic d-block">
+                                                            By signing below, you confirm that the signature is your own
+                                                            handwriting and that it is legally binding within the
+                                                            institution’s authority and applicable regulations.
+                                                        </strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Optional Comment -->
+                                            <div class="col-sm-12 mb-3">
+                                                <label for="comment_txt_{{ $upd->student_activity_id }}"
+                                                    class="form-label">
+                                                    Comment / Notes <span class="text-muted">(optional)</span>
+                                                </label>
+                                                <textarea name="comment" id="comment_txt_{{ $upd->student_activity_id }}" class="form-control" rows="4"
+                                                    placeholder="Enter any remarks if needed..."></textarea>
+                                            </div>
+
+                                            <!-- Signature Canvas -->
+                                            <div class="col-sm-12 mb-3">
+                                                <label class="form-label">Signature <span
+                                                        class="text-danger">*</span></label>
+                                                <canvas id="signatureCanvas-{{ $upd->student_activity_id }}"
+                                                    style="border:1px solid #000000; border-radius:10px; width:100%; height:200px;"></canvas>
+                                                <input type="hidden" name="signatureData"
+                                                    id="signatureData-{{ $upd->student_activity_id }}">
+                                            </div>
+
+                                            <!-- Signature Actions -->
+                                            <div class="col-sm-12 mb-3 d-flex justify-content-between gap-3">
+                                                <button type="button" class="btn btn-light w-100"
+                                                    data-clear="{{ $upd->student_activity_id }}">
+                                                    <i class="ti ti-eraser me-2"></i> Clear Signature
+                                                </button>
+                                            </div>
+
+                                            <!-- Signature Notice -->
+                                            <div class="col-sm-12 mb-3">
+                                                <div class="d-flex align-items-center text-muted">
+                                                    <div class="avtar avtar-s bg-light-primary flex-shrink-0 me-2">
+                                                        <i class="fas fa-shield-alt text-primary f-20"></i>
+                                                    </div>
+                                                    <span class="text-sm">All signatures are securely stored within the
+                                                        system.</span>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <div class="d-flex justify-content-between gap-3 w-100">
+                                            <button type="button" class="btn btn-light w-50"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                            {{-- <button type="submit" class="btn btn-success w-50"
+                                                onclick="handleSignatureSubmission({{ $upd->student_activity_id }})">
+                                                Confirm & Sign
+                                            </button> --}}
+                                            <button type="submit" class="btn btn-danger w-100"
+                                                data-submit="{{ $upd->student_activity_id }}">
+                                                <i class="ti ti-writing-sign me-2"></i> Confirm & Sign
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- [ Approve Modal ] End -->
+
+                    <!-- [ Reject Modal ] Start -->
+                    <form method="GET" action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 2]) }}">
+                        @csrf
+                        <div class="modal fade" id="rejectModal-{{ $upd->student_activity_id }}"
+                            data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered  modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-body">
+                                        <div class="row">
+
+                                            <!-- Icon -->
+                                            <div class="col-sm-12 mb-4">
+                                                <div class="d-flex justify-content-center align-items-center mb-3">
+                                                    <i class="ti ti-circle-x text-danger" style="font-size: 100px"></i>
+                                                </div>
+                                            </div>
+
+                                            <!-- Title -->
+                                            <div class="col-sm-12">
+                                                <div class="d-flex justify-content-center align-items-center text-center">
+                                                    <h2 class="f-18">Reject Student Confirmation?</h2>
+                                                </div>
+                                            </div>
+
+                                            <!-- Message -->
+                                            <div class="col-sm-12 mb-3">
+                                                <div class="d-flex justify-content-center align-items-center">
+                                                    <p class="fw-normal f-14 text-center text-muted">
+                                                        This action will mark the student's submission as
+                                                        <strong>rejected</strong>.<br>
+                                                        The student will need to review and <strong>resubmit</strong> their
+                                                        confirmation for approval.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Optional Comment -->
+                                            <div class="col-sm-12 mb-3">
+                                                <label for="comment_txt_{{ $upd->student_activity_id }}"
+                                                    class="form-label">
+                                                    Comment / Reason / Notes <span class="text-muted">(optional)</span>
+                                                </label>
+                                                <textarea name="comment" id="comment_txt_{{ $upd->student_activity_id }}" cols="30" rows="4"
+                                                    class="form-control" placeholder="Enter any remarks if needed..."></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <div class="d-flex justify-content-between gap-3 align-items-center w-100">
+                                            <button type="reset" class="btn btn-light w-50"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger w-50">Confirm Reject</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- [ Reject Modal ] End -->
+
+                    <!-- [ Revert Modal ] Start -->
+                    <form method="GET" action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 3]) }}">
+                        @csrf
+                        <div class="modal fade" id="revertModal-{{ $upd->student_activity_id }}"
+                            data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-body">
+                                        <div class="row">
+
+                                            <!-- Icon -->
+                                            <div class="col-sm-12 mb-4">
+                                                <div class="d-flex justify-content-center align-items-center mb-3">
+                                                    <i class="ti ti-refresh-alert text-warning"
+                                                        style="font-size: 100px"></i>
+                                                </div>
+                                            </div>
+
+                                            <!-- Title -->
+                                            <div class="col-sm-12">
+                                                <div class="d-flex justify-content-center align-items-center text-center">
+                                                    <h2 class="f-18">Revert Student Confirmation?</h2>
+                                                </div>
+                                            </div>
+
+                                            <!-- Message -->
+                                            <div class="col-sm-12 mb-3">
+                                                <div class="d-flex justify-content-center align-items-center">
+                                                    <p class="fw-normal f-14 text-center text-muted">
+                                                        This action will <strong>cancel</strong> the student's current
+                                                        confirmation.<br>
+                                                        The student must log in and <strong>confirm again</strong> before
+                                                        proceeding further.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div class="col-sm-12">
+                                                <div class="d-flex justify-content-between gap-3 align-items-center">
+                                                    <button type="reset" class="btn btn-light w-50"
+                                                        data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-warning w-50">Confirm
+                                                        Revert</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <!-- [ Revert Modal ] End -->
+                @endforeach
+
+
 
                 <!-- [ Submission Approval ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+    <script>
+        const signaturePads = {};
+
+        document.addEventListener('shown.bs.modal', function(event) {
+            const modal = event.target;
+            const studentActivityId = modal.id.split('-')[1];
+            const canvas = document.getElementById(`signatureCanvas-${studentActivityId}`);
+
+            if (canvas && !signaturePads[studentActivityId]) {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext('2d').scale(ratio, ratio);
+
+                signaturePads[studentActivityId] = new SignaturePad(canvas, {
+                    backgroundColor: 'rgba(255,255,255,1)',
+                    penColor: 'black'
+                });
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('[data-clear]')) {
+                const id = e.target.getAttribute('data-clear');
+                if (signaturePads[id]) signaturePads[id].clear();
+            }
+
+            if (e.target.matches('[data-submit]')) {
+                const confirmId = e.target.getAttribute('data-submit');
+                if (signaturePads[confirmId] && signaturePads[confirmId].isEmpty()) {
+                    e.preventDefault();
+                    alert("Please provide a signature.");
+                } else {
+                    const dataURL = signaturePads[confirmId].toDataURL('image/png');
+                    document.getElementById(`signatureData-${confirmId}`).value = dataURL;
+                }
+            }
+        });
+    </script>
     <script type="text/javascript">
         $(document).ready(function() {
 

@@ -14,6 +14,7 @@ use App\Models\Semester;
 use App\Models\FormField;
 use App\Models\Programme;
 use App\Models\Submission;
+use App\Models\Supervision;
 use Illuminate\Support\Str;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
@@ -343,6 +344,95 @@ class SubmissionController extends Controller
 
 
             return back()->with('success', 'Submission has been confirmed successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
+        }
+    }
+
+    public function mergeStudentSubmission($actID, $student, $signatureData, $role, $status)
+    {
+        try {
+            $actID = decrypt($actID);
+
+            if (!$student) {
+                return back()->with('error', 'Unauthorized access : Student record is not found.');
+            }
+
+            $activity = Activity::where('id', $actID)->first()->act_name;
+            $form = ActivityForm::where([
+                ['activity_id', $actID],
+                ['af_status', 1],
+                ['af_target', 1],
+            ])->first();
+
+            if (!$form) {
+                return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+            }
+
+            $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+
+            //---------------------------------------------------------------------------//
+            //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
+            //---------------------------------------------------------------------------//
+
+            // 1 - Signature Role [Student]
+            // 1 - Document Status [Pending]
+            $this->storeSignature($actID, $student, $form, $signatureData, $documentName, $role, $status);
+
+            //---------------------------------------------------------------------------//
+            //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
+            //---------------------------------------------------------------------------//
+
+            // RETRIEVE ACTIVITY PATH
+            $progcode = strtoupper($student->programmes->prog_code);
+            $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
+
+            if (!File::exists($basePath)) {
+                return back()->with('error', 'Activity folder not found.');
+            }
+
+            // CREATE A NEW FOLDER (FINAL DOCUMENT)
+            $finalDocPath = $basePath . '/Final Document';
+
+            if (!File::exists($finalDocPath)) {
+                File::makeDirectory($finalDocPath, 0755, true);
+            }
+
+            $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
+
+            $this->generateActivityForm($actID, $student, $form, $relativePath);
+
+            //---------------------------------------------------------------------------//
+            //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
+            //---------------------------------------------------------------------------//
+
+            // RETRIEVE PDF FILES
+            $pdfFiles = File::files($basePath);
+
+            $pdfFiles = array_filter($pdfFiles, function ($file) {
+                return strtolower($file->getExtension()) === 'pdf';
+            });
+
+            if (empty($pdfFiles)) {
+                return back()->with('error', 'No PDF documents found in the activity folder.' .  $basePath);
+            }
+
+            $pdf = new Fpdi();
+
+            foreach ($pdfFiles as $file) {
+                $pageCount = $pdf->setSourceFile(StreamReader::createByFile($file->getPathname()));
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $template = $pdf->importPage($pageNo);
+                    $size = $pdf->getTemplateSize($template);
+
+                    $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $pdf->useTemplate($template);
+                }
+            }
+
+            // SAVE THE MERGED PDF
+            $mergedPath =  $finalDocPath . '/' . $documentName;
+            return $pdf->Output($mergedPath, 'F');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
         }
@@ -1355,6 +1445,7 @@ class SubmissionController extends Controller
                     'c.id as student_activity_id',
                     'c.sa_status',
                     'c.sa_final_submission',
+                    'c.activity_id',
                     'c.created_at',
                     'e.supervision_role',
                 )
@@ -1431,10 +1522,10 @@ class SubmissionController extends Controller
                     // STUDENT SUBMISSION DIRECTORY
                     $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Final Document';
 
-                    $final_submission = 
-                    '
+                    $final_submission =
+                        '
                         <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->sa_final_submission)]) . '" 
-                            target="_blank" class="link-dark d-flex justify-content-center align-items-center">
+                            target="_blank" class="link-dark d-flex align-items-center mb-2">
                             <i class="fas fa-file-pdf me-2 text-danger"></i>
                             <span class="fw-semibold">View Document</span>
                         </a>
@@ -1467,7 +1558,35 @@ class SubmissionController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
-                   return 'No Action';
+
+                    if ($row->sa_status == 1 && $row->supervision_role == 1) {
+                        return
+                            '
+                            <button type="button" class="btn btn-light-success btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                                data-bs-toggle="modal" data-bs-target="#approveModal-' . $row->student_activity_id . '">
+                                <i class="ti ti-circle-check me-2"></i>
+                                <span class="me-2">Approve</span>
+                            </button>
+
+                            <button type="button" class="btn btn-light-danger btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                                data-bs-toggle="modal" data-bs-target="#rejectModal-' . $row->student_activity_id . '">
+                                <i class="ti ti-circle-x me-2"></i>
+                                <span class="me-2">Reject</span>
+                            </button>
+
+                            <button type="button" class="btn btn-light-warning btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                                data-bs-toggle="modal" data-bs-target="#revertModal-' . $row->student_activity_id . '">
+                                <i class="ti ti-rotate me-2"></i>
+                                <span class="me-2">Revert</span>
+                            </button>
+                        ';
+                    } elseif ($row->sa_status == 1 && $row->supervision_role == 2) {
+                        return '<div class="fst-italic text-muted">No permission to proceed</div>';
+                    } elseif ($row->sa_status == 2 || $row->sa_status == 3) {
+                        return '<div class="fst-italic text-muted">No further action required</div>';
+                    } elseif ($row->sa_status == 4 || $row->sa_status == 5) {
+                        return '<div class="fst-italic text-muted">Awaiting student reconfirmation</div>';
+                    }
                 });
 
                 $table->rawColumns(['checkbox', 'student_photo', 'sa_final_submission', 'confirm_date', 'sa_status', 'action']);
@@ -1486,6 +1605,60 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             dd($e->getMessage());
             return abort(500);
+        }
+    }
+
+    public function studentActivitySubmissionApproval(Request $request, $stuActID, $option)
+    {
+        $stuActID = Crypt::decrypt($stuActID);
+        try {
+            if ($option == 1) {
+                //Approving Student Activity
+
+                $studentActivity = StudentActivity::whereId($stuActID)->first();
+                $actID = Crypt::encrypt($studentActivity->activity_id);
+                $student = Student::whereId($studentActivity->student_id)->first();
+                $supervision = Supervision::where('student_id', $student->id)->where('staff_id', auth()->user()->id)->first();
+
+                $role = 2;
+                $status = 1;
+
+                if (!$supervision && auth()->user()->staff_role == 1) {
+                    // COMMITTEE
+                    $role = 4;
+                    $status = 3;
+                } elseif (!$supervision &&  auth()->user()->staff_role == 3) {
+                    // DEPUTY DEAN
+                    $role = 5;
+                    $status = 3;
+                } elseif (!$supervision && auth()->user()->staff_role == 4) {
+                    // DEAN
+                    $role = 6;
+                    $status = 3;
+                } elseif ($supervision->supervision_role == 1) {
+                    $role = 2;
+                    $status = 2;
+                } elseif ($supervision->supervision_role == 2) {
+                    $role = 3;
+                    $status = 2;
+                }
+
+                $signatureData = $request->input('signatureData');
+
+                $this->mergeStudentSubmission($actID, $student, $signatureData, $role, $status);
+
+                return back()->with('success', 'Submission has been approved successfully.');
+            } else if ($option == 2) {
+                //Rejecting Student Activity
+            } else if ($option == 3) {
+                //Reverting Student Activity
+                StudentActivity::whereId($stuActID)->delete();
+                return back()->with('success', 'The student submission has been successfully reverted. Please notify the student to reconfirm their submission.');
+            } else {
+                return back()->with('error', 'Oops! Invalid option. Please try again.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error occurred: ' . $e->getMessage());
         }
     }
 }

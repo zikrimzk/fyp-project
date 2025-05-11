@@ -179,7 +179,6 @@
 
         .signature-box-clean {
             height: 100px;
-            border-bottom: 1px solid #000;
             margin-bottom: 10px;
             display: flex;
             justify-content: center;
@@ -190,12 +189,14 @@
             max-height: 120px;
             max-width: 100%;
             object-fit: contain;
+            margin-bottom: 5px;
         }
 
         .signature-label-clean {
+            border-top: 1px solid #000;
             font-weight: bold;
             font-size: 11pt;
-            margin-top: 5px;
+            padding-top: 5px;
         }
 
         .signature-date-clean {
