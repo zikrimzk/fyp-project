@@ -294,11 +294,7 @@
                                         <div class="d-flex justify-content-between gap-3 w-100">
                                             <button type="button" class="btn btn-light w-50"
                                                 data-bs-dismiss="modal">Cancel</button>
-                                            {{-- <button type="submit" class="btn btn-success w-50"
-                                                onclick="handleSignatureSubmission({{ $upd->student_activity_id }})">
-                                                Confirm & Sign
-                                            </button> --}}
-                                            <button type="submit" class="btn btn-danger w-100"
+                                            <button type="submit" class="btn btn-success w-100"
                                                 data-submit="{{ $upd->student_activity_id }}">
                                                 <i class="ti ti-writing-sign me-2"></i> Confirm & Sign
                                             </button>
@@ -430,7 +426,7 @@
                     <!-- [ Review Modal ] Start -->
                     <div class="modal fade" id="reviewModal-{{ $upd->student_activity_id }}" data-bs-keyboard="false"
                         tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
 
                                 <div class="modal-header">
@@ -463,7 +459,7 @@
                                                                 <div class="card-body p-3">
                                                                     <div class="d-flex justify-content-between mb-2">
                                                                         <small class="text-muted">
-                                                                            {{ \Carbon\Carbon::parse($review->sr_date)->format('d M Y, h:i A') }}
+                                                                            {{ \Carbon\Carbon::parse($review->sr_date)->format('d M Y') }}
                                                                         </small>
                                                                         <small class="text-muted">
                                                                             — {{ $review->staff_name }}

@@ -16,6 +16,7 @@ use App\Models\Programme;
 use App\Models\Submission;
 use App\Models\Supervision;
 use Illuminate\Support\Str;
+use App\Mail\SubmissionMail;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
 use App\Models\StudentActivity;
@@ -24,6 +25,7 @@ use App\Models\SubmissionReview;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -34,6 +36,56 @@ use setasign\Fpdi\PdfParser\StreamReader;
 
 class SubmissionController extends Controller
 {
+    /* General Function [REQUIRE CHECKING] */
+    private function sendSubmissionNotification($data, $userType, $actName, $emailType, $approvalRole)
+    {
+        //USER TYPE 
+        // 1 - Student
+        // 2 - Staff
+
+        if ($userType == 1) {
+            $name = $data->student_name;
+            $email = $data->student_email;
+        } elseif ($userType == 2) {
+            $name = $data->staff_name;
+            $email = $data->staff_email;
+        } else {
+            $name = null;
+            $email = null;
+        }
+
+        // APPROVAL ROLE 
+        if ($approvalRole == 2) {
+            $approvalUser = 'Supervisor';
+        } elseif ($approvalRole == 3) {
+            $approvalUser = 'Co-Supervisor';
+        } elseif ($approvalRole == 4) {
+            $approvalUser = 'Committee';
+        } elseif ($approvalRole == 5) {
+            $approvalUser = 'Deputy Dean';
+        } elseif ($approvalRole == 6) {
+            $approvalUser = 'Dean';
+        } else {
+            $approvalUser = null;
+        }
+
+        //EMAIL TYPE
+        // 1 - SUBMISSION REMINDER
+        // 2 - SUBMISSION CONFIRMED
+        // 3 - SUBMISSION APPROVED
+        // 4 - SUBMISSION REJECTED
+        // 5 - SUBMISSION REVERTED
+        // 6 - ACTIVITY COMPLETED
+
+        Mail::to($email)->send(new SubmissionMail([
+            'eType' => $emailType,
+            'act_name' => $actName,
+            'approvalUser' => $approvalUser,
+            'name' => Str::headline($name),
+            'sa_date' => Carbon::now()->format('d F Y g:i A'),
+        ]));
+    }
+
     /* Programme Overview [Student] */
     public function studentProgrammeOverview()
     {
@@ -1428,7 +1480,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Submission Management [Staff] [Supervisor/Co Supervisor] */
+    /* Submission Management [Staff] [Supervisor/Co Supervisor] [UNFINISHED] */
     public function mySupervisionSubmissionApproval(Request $req)
     {
         try {
@@ -1601,8 +1653,8 @@ class SubmissionController extends Controller
             }
 
             $review = DB::table('submission_reviews as a')
-                    ->join('staff as b', 'a.staff_id', '=', 'b.id')
-                    ->get();
+                ->join('staff as b', 'a.staff_id', '=', 'b.id')
+                ->get();
 
             return view('staff.my-supervision.submission-approval', [
                 'title' => 'Submission Approval',
@@ -1628,6 +1680,7 @@ class SubmissionController extends Controller
             $actID = Crypt::encrypt($studentActivity->activity_id);
             $student = Student::whereId($studentActivity->student_id)->first();
             $supervision = Supervision::where('student_id', $student->id)->where('staff_id', auth()->user()->id)->first();
+            $activity = Activity::whereId($studentActivity->activity_id)->first();
 
             if ($option == 1) {
                 //Approving Student Activity
@@ -1667,15 +1720,31 @@ class SubmissionController extends Controller
                     ]);
                 }
 
+                $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
+
                 return back()->with('success', 'Submission has been approved successfully.');
             } else if ($option == 2) {
                 //Rejecting Student Activity
+                $role = 2;
                 $status = 1;
 
-                if (!$supervision && (auth()->user()->staff_role == 1 || auth()->user()->staff_role == 3 || auth()->user()->staff_role == 4)) {
-                    // COMMITTEE / DEPUTY DEAN / DEAN
+                if (!$supervision && auth()->user()->staff_role == 1) {
+                    // COMMITTEE
+                    $role = 4;
                     $status = 5;
-                } elseif ($supervision->supervision_role == 1 || $supervision->supervision_role == 2) {
+                } elseif (!$supervision &&  auth()->user()->staff_role == 3) {
+                    // DEPUTY DEAN
+                    $role = 5;
+                    $status = 5;
+                } elseif (!$supervision && auth()->user()->staff_role == 4) {
+                    // DEAN
+                    $role = 6;
+                    $status = 5;
+                } elseif ($supervision->supervision_role == 1) {
+                    $role = 2;
+                    $status = 4;
+                } elseif ($supervision->supervision_role == 2) {
+                    $role = 3;
                     $status = 4;
                 }
 
@@ -1692,11 +1761,15 @@ class SubmissionController extends Controller
                     ]);
                 }
 
+                $this->sendSubmissionNotification($student, 1, $activity->act_name, 4, $role);
+
                 return back()->with('success', 'Submission has been rejected successfully.');
             } else if ($option == 3) {
                 //Reverting Student Activity
-                SubmissionReview::where('student_activity_id',$stuActID)->delete();
+                SubmissionReview::where('student_activity_id', $stuActID)->delete();
                 StudentActivity::whereId($stuActID)->delete();
+
+                $this->sendSubmissionNotification($student, 1, $activity->act_name, 5, 0);
 
                 return back()->with('success', 'The student submission has been successfully reverted. Please notify the student to reconfirm their submission.');
             } else {
