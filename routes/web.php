@@ -61,12 +61,15 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->name('student-remove-document-get');
     Route::get('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-get');
     Route::get('/view-final-document/{actID}/{filename}', [SubmissionController::class, 'viewFinalDocument'])->where('filename', '.*')->name('student-view-final-document-get');
-
 });
 
 
 
 Route::prefix('staff')->middleware('auth:staff')->group(function () {
+
+    // ---------------------------------------------------------------------------------------------------------------------//
+    // -----------------------------------------------------ALL STAFF ------------------------------------------------------//
+    // ---------------------------------------------------------------------------------------------------------------------//
 
     //Authentication - Account Management
 
@@ -78,17 +81,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-profile', [AuthenticateController::class, 'updateStaffProfile'])->name('update-staff-profile');
     Route::post('/update-password', [AuthenticateController::class, 'updateStaffPassword'])->name('update-staff-password');
 
-    // SUPERVISOR / CO - SUPERVISOR
-    
-    /* Submission Management */
-    Route::get('/submission-management-mysupervision', [SubmissionController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
-
-    /* Submission Approval */
-    Route::get('/submission-approval-mysupervision', [SubmissionController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
-    Route::get('/student-submission-approval/{stuActID}-{option}', [SubmissionController::class, 'studentActivitySubmissionApproval'])->name('staff-submission-approval-post');
-
-
-    // COMMITTEE
+    // ---------------------------------------------------------------------------------------------------------------------//
+    // ---------------------------------------------COMMITTEE / DD / DEAN---------------------------------------------------//
+    // ---------------------------------------------------------------------------------------------------------------------//
 
     // Supervision
 
@@ -127,6 +122,11 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-multiple-submission', [SubmissionController::class, 'updateMultipleSubmission'])->name('update-multiple-submission-post');
     Route::post('/archive-multiple-submission', [SubmissionController::class, 'archiveMultipleSubmission'])->name('archive-multiple-submission-post');
     Route::get('/download-multiple-submission', [SubmissionController::class, 'downloadMultipleSubmission'])->name('download-multiple-submission-get');
+
+    /* Submission Approval */
+    Route::get('/submission-approval', [SubmissionController::class, 'submissionApproval'])->name('submission-approval');
+    Route::get('/student-submission-approval/{stuActID}-{option}', [SubmissionController::class, 'studentActivitySubmissionApproval'])->name('staff-submission-approval-post');
+    Route::get('/download-multiple-final-document', [SubmissionController::class, 'downloadMultipleFinalDocument'])->name('download-multiple-final-document-get');
 
     // Standard Operation Procedure (SOP)
 
@@ -192,4 +192,15 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-semester/{id}', [SettingController::class, 'updateSemester'])->name('update-semester-post');
     Route::get('/delete-semester-{id}-{opt}', [SettingController::class, 'deleteSemester'])->name('delete-semester-get');
     Route::post('/change-current-semester', [SettingController::class, 'changeCurrentSemester'])->name('change-semester-post');
+
+
+    // ---------------------------------------------------------------------------------------------------------------------//
+    // ------------------------------------------SUPERVISOR / CO - SUPERVISOR ----------------------------------------------//
+    // ---------------------------------------------------------------------------------------------------------------------//
+
+    /* Submission Management */
+    Route::get('/mysupervision-submission-management', [SubmissionController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
+
+    /* Submission Approval */
+    Route::get('/mysupervision-submission-approval', [SubmissionController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
 });

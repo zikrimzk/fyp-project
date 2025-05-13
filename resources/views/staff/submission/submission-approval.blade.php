@@ -24,7 +24,6 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">My Supervision</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Submission</a></li>
                                 <li class="breadcrumb-item" aria-current="page">Submission Approval</li>
                             </ul>
@@ -193,20 +192,6 @@
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-4 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_role" class="form-select">
-                                            <option value="">-- Select Role --</option>
-                                            <option value="1" selected>Main Supervisor</option>
-                                            <option value="2">Co-Supervisor</option>
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearRoleFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -517,9 +502,7 @@
                     </div>
                     <!-- [ Review Modal ] End -->
                 @endforeach
-
-
-
+                
                 <!-- [ Submission Approval ] end -->
             </div>
             <!-- [ Main Content ] end -->
@@ -576,14 +559,13 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('my-supervision-submission-approval') }}",
+                    url: "{{ route('submission-approval') }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id').val();
                         d.programme = $('#fil_programme_id').val();
                         d.semester = $('#fil_semester_id').val();
                         d.activity = $('#fil_activity_id').val();
                         d.status = $('#fil_status').val();
-                        d.role = $('#fil_role').val();
                     }
                 },
                 columns: [{
@@ -692,18 +674,6 @@
 
             $('#clearStatusFilter').click(function() {
                 $('#fil_status').val('').change();
-            });
-
-             // FILTER : ROLE
-            $('#fil_role').on('change', function() {
-                $('.data-table').DataTable().ajax
-                    .reload();
-                clearBtn.trigger('click');
-
-            });
-
-            $('#clearRoleFilter').click(function() {
-                $('#fil_role').val('').change();
             });
 
             /* SELECT : MULTIPLE STUDENT SELECT */
