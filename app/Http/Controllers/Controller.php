@@ -206,4 +206,42 @@ class Controller extends BaseController
     //     }
     // }
 
+
+     // $table->addColumn('action', function ($row) {
+
+                //     if ($row->sa_status == 1 && $row->supervision_role == 1) {
+                //         return
+                //             '
+                //             <button type="button" class="btn btn-light-success btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                //                 data-bs-toggle="modal" data-bs-target="#approveModal-' . $row->student_activity_id . '">
+                //                 <i class="ti ti-circle-check me-2"></i>
+                //                 <span class="me-2">Approve</span>
+                //             </button>
+
+                //             <button type="button" class="btn btn-light-danger btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                //                 data-bs-toggle="modal" data-bs-target="#rejectModal-' . $row->student_activity_id . '">
+                //                 <i class="ti ti-circle-x me-2"></i>
+                //                 <span class="me-2">Reject</span>
+                //             </button>
+
+                //             <button type="button" class="btn btn-light-warning btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                //                 data-bs-toggle="modal" data-bs-target="#revertModal-' . $row->student_activity_id . '">
+                //                 <i class="ti ti-rotate me-2"></i>
+                //                 <span class="me-2">Revert</span>
+                //             </button>
+                //         ';
+                //     } elseif ($row->sa_status == 1 && $row->supervision_role == 2) {
+                //         return '<div class="fst-italic text-muted">No permission to proceed</div>';
+                //     } elseif ($row->sa_status == 2 || $row->sa_status == 3 || $row->sa_status == 4 || $row->sa_status == 5) {
+                //         return
+                //             '
+                //             <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                //                 data-bs-toggle="modal" data-bs-target="#reviewModal-' . $row->student_activity_id . '">
+                //                 <i class="ti ti-eye me-2"></i>
+                //                 <span class="me-2">Review</span>
+                //             </button>
+                //         ';
+                //     }
+                // });
+
 }

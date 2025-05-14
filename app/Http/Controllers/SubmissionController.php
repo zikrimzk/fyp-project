@@ -1321,7 +1321,7 @@ class SubmissionController extends Controller
                 if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
                     $data->where('sa_status', $req->input('status'));
                 }
-               
+
                 $data = $data->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
@@ -1466,7 +1466,36 @@ class SubmissionController extends Controller
             $actID = Crypt::encrypt($studentActivity->activity_id);
             $student = Student::whereId($studentActivity->student_id)->first();
             $supervision = Supervision::where('student_id', $student->id)->where('staff_id', auth()->user()->id)->first();
-            $activity = Activity::whereId($studentActivity->activity_id)->first();
+
+            $hasSvfield = DB::table('activity_forms as a')
+                ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                ->where('a.activity_id', $studentActivity->activity_id)
+                ->where('b.ff_category', 6)
+                ->where('b.ff_signature_role', 2)
+                ->exists();
+
+            $hasCoSvfield = DB::table('activity_forms as a')
+                ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                ->where('a.activity_id', $studentActivity->activity_id)
+                ->where('b.ff_category', 6)
+                ->where('b.ff_signature_role', 3)
+                ->exists();
+
+            $hasCoSv = $hasSvfield && $hasCoSvfield;
+
+            $hasSvSignature = false;
+            $hasCoSvSignature = false;
+
+            if (!empty($studentActivity->sa_signature_data)) {
+                $signatureData = json_decode($studentActivity->sa_signature_data, true);
+
+                if (isset($signatureData['sv_signature'])) {
+                    $hasSvSignature = true;
+                }
+                if (isset($signatureData['cosv_signature'])) {
+                    $hasCoSvSignature = true;
+                }
+            }
 
             if ($option == 1) {
                 //Approving Student Activity
@@ -1487,14 +1516,14 @@ class SubmissionController extends Controller
                     $status = 3;
                 } elseif ($supervision->supervision_role == 1) {
                     $role = 2;
-                    $status = 2;
                 } elseif ($supervision->supervision_role == 2) {
                     $role = 3;
-                    $status = 2;
                 }
 
+                // dd($role, $status);
                 $signatureData = $request->input('signatureData');
 
+                // 1. Call the merge function first – handles and stores signature data
                 $this->mergeStudentSubmission($actID, $student, $signatureData, $role, $status);
 
                 if ($request->input('comment') != null) {
@@ -1506,7 +1535,32 @@ class SubmissionController extends Controller
                     ]);
                 }
 
-                $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
+                // 2. Re-fetch updated studentActivity to get the latest sa_signature_data
+                $updatedActivity = StudentActivity::whereId($stuActID)->first();
+
+                $hasSvSignature = false;
+                $hasCoSvSignature = false;
+
+                if (!empty($updatedActivity->sa_signature_data)) {
+                    $updatedSignatureData = json_decode($updatedActivity->sa_signature_data, true);
+                    $hasSvSignature = isset($updatedSignatureData['sv_signature']);
+                    $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
+                }
+
+                // 3. Re-evaluate the final status now that signatures are stored
+                if ($hasCoSv) {
+                    $status = ($hasSvSignature && $hasCoSvSignature) ? 2 : 1;
+                } else {
+                    $status = 2;
+                }
+
+                // 4. Update the student activity with the final status
+                $updatedActivity->update([
+                    'sa_status' => $status
+                ]);
+
+
+                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
 
                 return back()->with('success', 'Submission has been approved successfully.');
             } else if ($option == 2) {
@@ -1547,7 +1601,7 @@ class SubmissionController extends Controller
                     ]);
                 }
 
-                $this->sendSubmissionNotification($student, 1, $activity->act_name, 4, $role);
+                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 4, $role);
 
                 return back()->with('success', 'Submission has been rejected successfully.');
             } else if ($option == 3) {
@@ -1555,7 +1609,7 @@ class SubmissionController extends Controller
                 SubmissionReview::where('student_activity_id', $stuActID)->delete();
                 StudentActivity::whereId($stuActID)->delete();
 
-                $this->sendSubmissionNotification($student, 1, $activity->act_name, 5, 0);
+                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 5, 0);
 
                 return back()->with('success', 'The student submission has been successfully reverted. Please notify the student to reconfirm their submission.');
             } else {
@@ -1859,6 +1913,7 @@ class SubmissionController extends Controller
                     'c.id as student_activity_id',
                     'c.sa_status',
                     'c.sa_final_submission',
+                    'c.sa_signature_data',
                     'c.activity_id',
                     'c.created_at',
                     'e.supervision_role',
@@ -1973,9 +2028,56 @@ class SubmissionController extends Controller
 
                 $table->addColumn('action', function ($row) {
 
-                    if ($row->sa_status == 1 && $row->supervision_role == 1) {
-                        return
-                            '
+                    $hasSvfield = DB::table('activity_forms as a')
+                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                        ->where('a.activity_id', $row->activity_id)
+                        ->where('b.ff_category', 6)
+                        ->where('b.ff_signature_role', 2)
+                        ->exists();
+
+                    $hasCoSvfield = DB::table('activity_forms as a')
+                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                        ->where('a.activity_id', $row->activity_id)
+                        ->where('b.ff_category', 6)
+                        ->where('b.ff_signature_role', 3)
+                        ->exists();
+
+                    $hasCoSv = ($hasSvfield && $hasCoSvfield);
+
+                    // return $hasCoSv;
+
+                    $hasSvSignature = false;
+                    $hasCoSvSignature = false;
+
+                    if (!empty($row->sa_signature_data)) {
+                        $signatureData = json_decode($row->sa_signature_data, true);
+                        $hasSvSignature = isset($signatureData['sv_signature']);
+                        $hasCoSvSignature = isset($signatureData['cosv_signature']);
+                    }
+
+                    $signatureExists = ($hasCoSv && $hasSvSignature && $hasCoSvSignature);
+
+                    // Case: Signature exists, show review
+                    if ($signatureExists) {
+                        return '
+                            <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                                data-bs-toggle="modal" data-bs-target="#reviewModal-' . $row->student_activity_id . '">
+                                <i class="ti ti-eye me-2"></i>
+                                <span class="me-2">Review</span>
+                            </button>
+                            <p class="mb-0">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
+                            ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p> 
+                        ';
+                    } elseif (!$signatureExists && $row->sa_status == 1) {
+                        if ($row->supervision_role == 1 && !$hasSvfield) {
+                            return '<div class="fst-italic text-muted">No action to proceed</div>';
+                        }
+                        if ($row->supervision_role == 2 && !$hasCoSvfield) {
+                            return '<div class="fst-italic text-muted">No action to proceed</div>';
+                        }
+
+
+                        return '
                             <button type="button" class="btn btn-light-success btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
                                 data-bs-toggle="modal" data-bs-target="#approveModal-' . $row->student_activity_id . '">
                                 <i class="ti ti-circle-check me-2"></i>
@@ -1993,20 +2095,23 @@ class SubmissionController extends Controller
                                 <i class="ti ti-rotate me-2"></i>
                                 <span class="me-2">Revert</span>
                             </button>
+                             <p class="mb-0">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
+                            ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p>
                         ';
-                    } elseif ($row->sa_status == 1 && $row->supervision_role == 2) {
-                        return '<div class="fst-italic text-muted">No permission to proceed</div>';
-                    } elseif ($row->sa_status == 2 || $row->sa_status == 3 || $row->sa_status == 4 || $row->sa_status == 5) {
-                        return
-                            '
+                    } else {
+                        return '
                             <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
                                 data-bs-toggle="modal" data-bs-target="#reviewModal-' . $row->student_activity_id . '">
                                 <i class="ti ti-eye me-2"></i>
                                 <span class="me-2">Review</span>
                             </button>
+                            <p class="mb-0">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
+                            ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p> 
                         ';
                     }
                 });
+
+
 
                 $table->rawColumns(['checkbox', 'student_photo', 'sa_final_submission', 'confirm_date', 'sa_status', 'action']);
 
