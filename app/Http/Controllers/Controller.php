@@ -244,4 +244,151 @@ class Controller extends BaseController
                 //     }
                 // });
 
+
+
+                 // $table->addColumn('action', function ($row) {
+
+                //     $hasSvfield = DB::table('activity_forms as a')
+                //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                //         ->where('a.activity_id', $row->activity_id)
+                //         ->where('b.ff_category', 6)
+                //         ->where('b.ff_signature_role', 2)
+                //         ->exists();
+
+                //     $hasCoSvfield = DB::table('activity_forms as a')
+                //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                //         ->where('a.activity_id', $row->activity_id)
+                //         ->where('b.ff_category', 6)
+                //         ->where('b.ff_signature_role', 3)
+                //         ->exists();
+
+                //     $hasCoSv = ($hasSvfield && $hasCoSvfield);
+
+                //     // return $hasCoSv;
+
+                //     $hasSvSignature = false;
+                //     $hasCoSvSignature = false;
+
+                //     if (!empty($row->sa_signature_data)) {
+                //         $signatureData = json_decode($row->sa_signature_data, true);
+                //         $hasSvSignature = isset($signatureData['sv_signature']);
+                //         $hasCoSvSignature = isset($signatureData['cosv_signature']);
+                //     }
+
+                //     $signatureExists = ($hasCoSv && $hasSvSignature && $hasCoSvSignature);
+
+                //     $svNoBtn = ($row->supervision_role == 1 && $hasSvSignature);
+                //     $cosvNoBtn = ($row->supervision_role == 2 && $hasCoSvSignature);
+
+                //     $svnopermision = $row->supervision_role == 1 && !$hasSvfield;
+                //     $cosvnopermision = $row->supervision_role == 2 && !$hasCoSvfield;
+
+                //     // Case: Signature exists, show review
+                //     if ($signatureExists) {
+                //         return '
+                //             <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                //                 data-bs-toggle="modal" data-bs-target="#reviewModal-' . $row->student_activity_id . '">
+                //                 <i class="ti ti-eye me-2"></i>
+                //                 <span class="me-2">Review</span>
+                //             </button>
+                //               <p class="mb-2">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
+                //             ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p>
+
+                //              <p class="mb-3">Have SV sign: ' . ($hasSvfield ? 'true' : 'false') .
+                //             ' | Have CoSV sign: ' . ($hasCoSvfield ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO BUTTON: ' . ($svNoBtn ? 'true' : 'false') .
+                //             ' | CoSV NO BUTTON: ' . ($cosvNoBtn ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO PERMISSION: ' . ($svnopermision ? 'true' : 'false') .
+                //             ' | CoSV NO PERMISSION: ' . ($cosvnopermision ? 'true' : 'false') . '</p> 
+                //         ';
+                //     } elseif (!$signatureExists && $row->sa_status == 1) {
+
+
+                //         if ($svNoBtn || $svnopermision ) {
+                //             return '<div class="fst-italic text-muted">No action to proceed</div>
+                //               <p class="mb-2">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
+                //             ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p>
+                            
+                //              <p class="mb-3">Have SV sign: ' . ($hasSvfield ? 'true' : 'false') .
+                //             ' | Have CoSV sign: ' . ($hasCoSvfield ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO BUTTON: ' . ($svNoBtn ? 'true' : 'false') .
+                //             ' | CoSV NO BUTTON: ' . ($cosvNoBtn ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO PERMISSION: ' . ($svnopermision ? 'true' : 'false') .
+                //             ' | CoSV NO PERMISSION: ' . ($cosvnopermision ? 'true' : 'false') . '</p> 
+                //             ';
+                //         }
+
+                //         if ($cosvNoBtn || $cosvnopermision) {
+                //             return '<div class="fst-italic text-muted">No action to proceed</div>
+                //              <p class="mb-2">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
+                //             ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p>
+                            
+                //              <p class="mb-3">Have SV sign: ' . ($hasSvfield ? 'true' : 'false') .
+                //             ' | Have CoSV sign: ' . ($hasCoSvfield ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO BUTTON: ' . ($svNoBtn ? 'true' : 'false') .
+                //             ' | CoSV NO BUTTON: ' . ($cosvNoBtn ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO PERMISSION: ' . ($svnopermision ? 'true' : 'false') .
+                //             ' | CoSV NO PERMISSION: ' . ($cosvnopermision ? 'true' : 'false') . '</p> 
+                //             ';
+                //         }
+
+
+                //         return '
+                //             <button type="button" class="btn btn-light-success btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                //                 data-bs-toggle="modal" data-bs-target="#approveModal-' . $row->student_activity_id . '">
+                //                 <i class="ti ti-circle-check me-2"></i>
+                //                 <span class="me-2">Approve</span>
+                //             </button>
+
+                //             <button type="button" class="btn btn-light-danger btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                //                 data-bs-toggle="modal" data-bs-target="#rejectModal-' . $row->student_activity_id . '">
+                //                 <i class="ti ti-circle-x me-2"></i>
+                //                 <span class="me-2">Reject</span>
+                //             </button>
+
+                //             <button type="button" class="btn btn-light-warning btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                //                 data-bs-toggle="modal" data-bs-target="#revertModal-' . $row->student_activity_id . '">
+                //                 <i class="ti ti-rotate me-2"></i>
+                //                 <span class="me-2">Revert</span>
+                //             </button>
+                //              <p class="mb-2">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
+                //             ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p>
+                            
+                //              <p class="mb-3">Have SV sign: ' . ($hasSvfield ? 'true' : 'false') .
+                //             ' | Have CoSV sign: ' . ($hasCoSvfield ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO BUTTON: ' . ($svNoBtn ? 'true' : 'false') .
+                //             ' | CoSV NO BUTTON: ' . ($cosvNoBtn ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO PERMISSION: ' . ($svnopermision ? 'true' : 'false') .
+                //             ' | CoSV NO PERMISSION: ' . ($cosvnopermision ? 'true' : 'false') . '</p> 
+                //         ';
+                //     } else {
+                //         return '
+                //             <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                //                 data-bs-toggle="modal" data-bs-target="#reviewModal-' . $row->student_activity_id . '">
+                //                 <i class="ti ti-eye me-2"></i>
+                //                 <span class="me-2">Review</span>
+                //             </button>
+                //              <p class="mb-2">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
+                //             ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p>
+                            
+                //              <p class="mb-3">Have SV sign: ' . ($hasSvfield ? 'true' : 'false') .
+                //             ' | Have CoSV sign: ' . ($hasCoSvfield ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO BUTTON: ' . ($svNoBtn ? 'true' : 'false') .
+                //             ' | CoSV NO BUTTON: ' . ($cosvNoBtn ? 'true' : 'false') . '</p> 
+
+                //              <p class="mb-2">SV NO PERMISSION: ' . ($svnopermision ? 'true' : 'false') .
+                //             ' | CoSV NO PERMISSION: ' . ($cosvnopermision ? 'true' : 'false') . '</p> 
+                //         ';
+                //     }
+                // });
+
 }

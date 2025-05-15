@@ -2007,10 +2007,49 @@ class SubmissionController extends Controller
                 });
 
                 $table->addColumn('sa_status', function ($row) {
+
+                    $hasSvfield = DB::table('activity_forms as a')
+                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                        ->where('a.activity_id', $row->activity_id)
+                        ->where('b.ff_category', 6)
+                        ->where('b.ff_signature_role', 2)
+                        ->exists();
+
+                    $hasCoSvfield = DB::table('activity_forms as a')
+                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                        ->where('a.activity_id', $row->activity_id)
+                        ->where('b.ff_category', 6)
+                        ->where('b.ff_signature_role', 3)
+                        ->exists();
+
+                    $hasCoSv = ($hasSvfield && $hasCoSvfield);
+
+                    $hasSvSignature = false;
+                    $hasCoSvSignature = false;
+
+                    if (!empty($row->sa_signature_data)) {
+                        $signatureData = json_decode($row->sa_signature_data, true);
+                        $hasSvSignature = isset($signatureData['sv_signature']);
+                        $hasCoSvSignature = isset($signatureData['cosv_signature']);
+                    }
                     $status = '';
 
                     if ($row->sa_status == 1) {
-                        $status = '<span class="badge bg-light-warning">' . 'Pending Approval' . '</span>';
+
+                        if ($hasCoSv) {
+                            if ($hasSvSignature) {
+                                $status .= '<span class="badge bg-light-success">' . 'Approved (Sv)' . '</span>';
+                            } else {
+                                $status .= '<span class="badge bg-light-danger">' . 'Required: Approval (Sv)' . '</span>';
+                            }
+                            if ($hasCoSvSignature) {
+                                $status .= '<span class="badge bg-light-success">' . 'Approved (CoSv)' . '</span>';
+                            } else {
+                                $status .= '<span class="badge bg-light-danger">' . 'Required: Approval (CoSv)' . '</span>';
+                            }
+                        } else {
+                            $status = '<span class="badge bg-light-warning">' . 'Pending Approval' . '</span>';
+                        }
                     } elseif ($row->sa_status == 2) {
                         $status = '<span class="badge bg-success">' . 'Approved (SV)' . '</span>';
                     } elseif ($row->sa_status == 3) {
@@ -2057,6 +2096,12 @@ class SubmissionController extends Controller
 
                     $signatureExists = ($hasCoSv && $hasSvSignature && $hasCoSvSignature);
 
+                    $svNoBtn = ($row->supervision_role == 1 && $hasSvSignature);
+                    $cosvNoBtn = ($row->supervision_role == 2 && $hasCoSvSignature);
+
+                    $svnopermision = $row->supervision_role == 1 && !$hasSvfield;
+                    $cosvnopermision = $row->supervision_role == 2 && !$hasCoSvfield;
+
                     // Case: Signature exists, show review
                     if ($signatureExists) {
                         return '
@@ -2065,14 +2110,15 @@ class SubmissionController extends Controller
                                 <i class="ti ti-eye me-2"></i>
                                 <span class="me-2">Review</span>
                             </button>
-                            <p class="mb-0">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
-                            ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p> 
                         ';
                     } elseif (!$signatureExists && $row->sa_status == 1) {
-                        if ($row->supervision_role == 1 && !$hasSvfield) {
+
+
+                        if ($svNoBtn || $svnopermision) {
                             return '<div class="fst-italic text-muted">No action to proceed</div>';
                         }
-                        if ($row->supervision_role == 2 && !$hasCoSvfield) {
+
+                        if ($cosvNoBtn || $cosvnopermision) {
                             return '<div class="fst-italic text-muted">No action to proceed</div>';
                         }
 
@@ -2095,8 +2141,6 @@ class SubmissionController extends Controller
                                 <i class="ti ti-rotate me-2"></i>
                                 <span class="me-2">Revert</span>
                             </button>
-                             <p class="mb-0">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
-                            ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p>
                         ';
                     } else {
                         return '
@@ -2105,13 +2149,9 @@ class SubmissionController extends Controller
                                 <i class="ti ti-eye me-2"></i>
                                 <span class="me-2">Review</span>
                             </button>
-                            <p class="mb-0">SV sign: ' . ($hasSvSignature ? 'true' : 'false') .
-                            ' | CoSV sign: ' . ($hasCoSvSignature ? 'true' : 'false') . '</p> 
                         ';
                     }
                 });
-
-
 
                 $table->rawColumns(['checkbox', 'student_photo', 'sa_final_submission', 'confirm_date', 'sa_status', 'action']);
 

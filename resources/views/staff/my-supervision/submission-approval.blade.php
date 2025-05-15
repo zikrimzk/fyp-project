@@ -202,7 +202,7 @@
                                     <div class="input-group">
                                         <select id="fil_role" class="form-select">
                                             <option value="">-- Select Role --</option>
-                                            <option value="1" selected>Main Supervisor</option>
+                                            <option value="1">Main Supervisor</option>
                                             <option value="2">Co-Supervisor</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
@@ -694,7 +694,7 @@
                 $('#fil_status').val('').change();
             });
 
-             // FILTER : ROLE
+            // FILTER : ROLE
             $('#fil_role').on('change', function() {
                 $('.data-table').DataTable().ajax
                     .reload();
