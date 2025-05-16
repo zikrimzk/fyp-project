@@ -6,18 +6,9 @@
 @extends('staff.layouts.main')
 
 @section('content')
-    <style>
-        .timeline {
-            position: relative;
-        }
-
-        .timeline-dot {
-            z-index: 1;
-        }
-    </style>
-
     <div class="pc-container">
         <div class="pc-content">
+
             <!-- [ breadcrumb ] start -->
             <div class="page-header">
                 <div class="page-block">
@@ -66,6 +57,9 @@
                     </div>
                 @endif
             </div>
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                <div id="toastContainer"></div>
+            </div>
             <!-- [ Alert ] end -->
 
             <!-- [ Main Content ] start -->
@@ -96,7 +90,6 @@
 
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-end">
-
                                 <div class="col-sm-12 col-md-4 mb-3">
                                     <div class="input-group">
                                         <select id="fil_faculty_id" class="form-select">
@@ -185,11 +178,11 @@
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
-                                            <option value="1" selected>Pending</option>
-                                            <option value="2">Approved (SV)</option>
-                                            <option value="3">Approved (Comm/DD/Dean)</option>
-                                            <option value="4">Rejected (SV)</option>
-                                            <option value="5">Rejected (Comm/DD/Dean)</option>
+                                            <option value="1" selected>Pending Approval: Supervisor</option>
+                                            <option value="2">Pending Approval: (Comm/DD/Dean)</option>
+                                            <option value="3">Approved & Completed</option>
+                                            <option value="4">Rejected: Supervisor</option>
+                                            <option value="5">Rejected: (Comm/DD/Dean)</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
@@ -454,71 +447,25 @@
                         </div>
                     </form>
                     <!-- [ Revert Modal ] End -->
+                @endforeach
 
-                    <!-- [ Review Modal ] Start -->
-                    <div class="modal fade" id="reviewModal-{{ $upd->student_activity_id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
+                <!-- [ Review Modal ] Start -->
+                <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable  modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Submission Review(s)</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
 
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="multipleSettingModalLabel">Submission Review(s)</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            @php
-                                                $activityReviews = $reviews->where(
-                                                    'student_activity_id',
-                                                    $upd->student_activity_id,
-                                                );
-                                            @endphp
-
-                                            @if ($activityReviews->isEmpty())
-                                                <div class="alert alert-light text-center">
-                                                    <i class="ti ti-info-circle"></i> There are no reviews for this
-                                                    submission yet.
-                                                </div>
-                                            @else
-                                                <div class="timeline">
-                                                    @foreach ($activityReviews as $review)
-                                                        <div
-                                                            class="timeline-item mb-4 position-relative ps-4 border-start border-2 border-secondary">
-                                                            <div class="card">
-                                                                <div class="card-body p-3">
-                                                                    <div class="d-flex justify-content-between mb-2">
-                                                                        <small class="text-muted">
-                                                                            {{ \Carbon\Carbon::parse($review->sr_date)->format('d M Y') }}
-                                                                        </small>
-                                                                        <small class="text-muted">
-                                                                            — {{ $review->staff_name }}
-                                                                        </small>
-                                                                    </div>
-                                                                    <p class="mb-0 text-dark">
-                                                                        {{ $review->sr_comment }}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <span
-                                                                class="timeline-dot position-absolute top-0 start-0 translate-middle bg-secondary rounded-circle"
-                                                                style="width: 12px; height: 12px;"></span>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="modal-body">
+                                <div id="reviewList" class="row gy-3"></div>
                             </div>
                         </div>
                     </div>
-                    <!-- [ Review Modal ] End -->
-                @endforeach
-
-
+                </div>
+                <!-- [ Review Modal ] End -->
 
                 <!-- [ Submission Approval ] end -->
             </div>
@@ -526,7 +473,52 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
-    <script>
+
+    <script></script>
+
+    <script type="text/javascript">
+        /*********************************************************
+         ***************GLOBAL FUNCTION & VARIABLES***************
+         *********************************************************/
+        function showToast(type, message) {
+            const toastId = 'toast-' + Date.now();
+            const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle';
+            const bgClass = type === 'success' ? 'bg-light-success' : 'bg-light-danger';
+            const txtClass = type === 'success' ? 'text-success' : 'text-danger';
+            const colorClass = type === 'success' ? 'success' : 'danger';
+            const title = type === 'success' ? 'Success' : 'Error';
+
+            const toastHtml = `
+                    <div id="${toastId}" class="toast border-0 shadow-sm mb-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                        <div class="toast-body text-white ${bgClass} rounded d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0 ${txtClass}">
+                                    <i class="${iconClass} me-2"></i> ${title}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                            <p class="mb-0 ${txtClass}">${message}</p>
+                        </div>
+                    </div>
+                `;
+
+            $('#toastContainer').append(toastHtml);
+            const toastEl = new bootstrap.Toast(document.getElementById(toastId));
+            toastEl.show();
+        }
+
+        var modalToShow = "{{ session('modal') }}";
+        if (modalToShow) {
+            var modalElement = $("#" + modalToShow);
+            if (modalElement.length) {
+                var modal = new bootstrap.Modal(modalElement[0]);
+                modal.show();
+            }
+        }
+
+        /*********************************************************
+         ***************SIGNATURE PADS INITIALIZATION*************
+         *********************************************************/
         const signaturePads = {};
 
         document.addEventListener('shown.bs.modal', function(event) {
@@ -557,19 +549,135 @@
                 const confirmId = e.target.getAttribute('data-submit');
                 if (signaturePads[confirmId] && signaturePads[confirmId].isEmpty()) {
                     e.preventDefault();
-                    alert("Please provide a signature.");
+                    showToast('danger', 'Please provide a signature.');
                 } else {
                     const dataURL = signaturePads[confirmId].toDataURL('image/png');
                     document.getElementById(`signatureData-${confirmId}`).value = dataURL;
                 }
             }
         });
-    </script>
 
-    <script type="text/javascript">
+        /*********************************************************
+         *********************REVIEW FUNCTIONS********************
+         *********************************************************/
+        function loadReviews(sa_id) {
+            $.ajax({
+                url: "{{ route('get-review-data-post') }}",
+                type: "POST",
+                data: {
+                    sa_id: sa_id,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const reviewList = $('#reviewList');
+                        reviewList.empty();
+
+                        if (response.review.length === 0) {
+                            reviewList.html(`<div class="alert alert-light text-center">
+                                <i class="fas fa-info-circle me-3"></i> No reviews found.
+                            </div>`);
+                        } else {
+                            const currUser = "{{ auth()->user()->id }}";
+                            response.review.forEach(review => {
+                                const isOwner = review.staff_id == currUser;
+                                const reviewCard = `
+                                    <div class="col-12">
+                                        <div class="card shadow-sm border">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between flex-wrap mb-2">
+                                                    <small class="text-muted">Date: ${new Date(review.sr_date).toLocaleDateString()}</small>
+                                                    <small class="text-muted">By: ${review.staff_name}</small>
+                                                </div>
+                                                <textarea id="sr_comment-${review.review_id}" class="form-control mb-3" rows="3" ${isOwner ? '' : 'readonly'}>${review.sr_comment}</textarea>
+                                                ${isOwner ? `
+                                                                                        <div class="d-flex justify-content-start gap-2">
+                                                                                            <button class="btn btn-sm btn-light-danger w-50" onclick="deleteReview(${review.review_id}, ${review.student_activity_id})">
+                                                                                                <i class="ti ti-trash me-2"></i>
+                                                                                                <span class="me-2">Delete</span>
+                                                                                            </button>
+                                                                                            <button class="btn btn-sm btn-light-primary w-50" onclick="updateReview(${review.review_id})">
+                                                                                                <i class="ti ti-edit-circle me-2"></i>
+                                                                                                <span class="me-2">Update</span>
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+
+                                reviewList.append(reviewCard);
+                            });
+                        }
+                        $('#reviewModal').modal('show');
+                    } else {
+                        showToast('error', 'Failed to load reviews.');
+                    }
+                },
+                error: function(xhr) {
+                    showToast('error', 'Something went wrong while fetching reviews.');
+                }
+            });
+        }
+
+        function updateReview(review_id) {
+            const comment = $(`#sr_comment-${review_id}`).val();
+
+            $.ajax({
+                url: "{{ route('update-review-post') }}",
+                type: "POST",
+                data: {
+                    review_id: review_id,
+                    sr_comment: comment,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showToast('success', response.message);
+                        loadReviews(response.review.student_activity_id);
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        Object.values(errors).forEach(msgs => showToast('error', msgs[0]));
+                    } else {
+                        showToast('error', 'Unexpected error occurred during update.');
+                    }
+                }
+            });
+        }
+
+        function deleteReview(review_id, student_activity_id) {
+            if (!confirm("Are you sure you want to delete this review?")) return;
+
+            $.ajax({
+                url: "{{ route('delete-review-post') }}",
+                type: "POST",
+                data: {
+                    review_id: review_id,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showToast('success', response.message);
+                        loadReviews(student_activity_id);
+                    } else {
+                        showToast('error', response.message);
+                    }
+                },
+                error: function() {
+                    showToast('error', 'Something went wrong while deleting.');
+                }
+            });
+        }
+
         $(document).ready(function() {
 
-            // DATATABLE : STUDENT ACTIVITIES
+            /*********************************************************/
+            /************DATATABLE : STUDENT ACTIVITIES***************/
+            /*********************************************************/
             var table = $('.data-table').DataTable({
                 processing: false,
                 serverSide: true,
@@ -633,14 +741,10 @@
 
             });
 
-            var modalToShow = "{{ session('modal') }}";
-            if (modalToShow) {
-                var modalElement = $("#" + modalToShow);
-                if (modalElement.length) {
-                    var modal = new bootstrap.Modal(modalElement[0]);
-                    modal.show();
-                }
-            }
+
+            /*********************************************************/
+            /********************DATATABLE : FILTERS******************/
+            /*********************************************************/
 
             // FILTER : FACULTY
             $('#fil_faculty_id').on('change', function() {
@@ -706,7 +810,9 @@
                 $('#fil_role').val('').change();
             });
 
-            /* SELECT : MULTIPLE STUDENT SELECT */
+            /*********************************************************/
+            /**********SELECT : MULTIPLE STUDENT SELECT***************/
+            /*********************************************************/
             const clearBtn = $("#clearSelectionBtn");
             const downloadmultipleModalBtn = $('#downloadmultipleModalBtn');
 
@@ -771,6 +877,10 @@
                 selectedIds.clear();
                 toggleSelectButton();
             });
+
+            /*********************************************************/
+            /**********SELECT : DOWNLOAD STUDENT DOCUMENT*************/
+            /*********************************************************/
 
             downloadmultipleModalBtn.on('click', function() {
                 let selectedIds = $(".user-checkbox:checked").map(function() {

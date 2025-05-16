@@ -7,17 +7,6 @@ use App\Http\Controllers\SupervisionController;
 use App\Http\Controllers\AuthenticateController;
 use App\Http\Controllers\SubmissionController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
 Route::get('/', [AuthenticateController::class, 'mainLogin'])
     ->middleware('redirectIfAuthenticatedMulti')
     ->name('main-login');
@@ -127,6 +116,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/submission-approval', [SubmissionController::class, 'submissionApproval'])->name('submission-approval');
     Route::get('/student-submission-approval/{stuActID}-{option}', [SubmissionController::class, 'studentActivitySubmissionApproval'])->name('staff-submission-approval-post');
     Route::get('/download-multiple-final-document', [SubmissionController::class, 'downloadMultipleFinalDocument'])->name('download-multiple-final-document-get');
+    Route::post('/get-submission-review', [SubmissionController::class, 'getReview'])->name('get-review-data-post');
+    Route::post('/update-review-activity', [SubmissionController::class, 'updateReview'])->name('update-review-post');
+    Route::post('/delete-review-activity', [SubmissionController::class, 'deleteReview'])->name('delete-review-post');
 
     // Standard Operation Procedure (SOP)
 
