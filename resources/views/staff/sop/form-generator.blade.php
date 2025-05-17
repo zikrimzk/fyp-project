@@ -473,7 +473,8 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
-
+    <!-- Include PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <!-- Ckeditor js -->
     <script src="../assets/js/plugins/ckeditor/classic/ckeditor.js"></script>
     <!-- jQuery UI (required for sortable) -->
@@ -532,11 +533,10 @@
             let fieldIdCounter = 0;
             let ckLabelEditor;
 
-            window.onload = function() {
-                getFormData();
-                resetFormSections();
-                resetExtraFields();
-            };
+            getFormData();
+            resetFormSections();
+            resetExtraFields();
+
 
             /*********************************************************
              *******************CKEDITOR INITIALIZE*******************
@@ -859,19 +859,29 @@
                         </div>
                         <div class="row g-1">
 
-                            <div class="col-4">
+                            <div class="col-2">
+                                <button class="btn btn-sm btn-outline-primary w-100 move-up-btn" data-id="${id}" title="Move Up">
+                                    <i class="ti ti-chevron-up"></i>
+                                </button>
+                            </div>
+                            <div class="col-2">
+                                <button class="btn btn-sm btn-outline-primary w-100 move-down-btn" data-id="${id}" title="Move Down">
+                                    <i class="ti ti-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="col-2">
                                 <button class="btn btn-sm btn-outline-secondary w-100 update-field-btn" data-id="${id}" data-label="${label}" data-key="${datakey}">
                                     <i class="ti ti-edit-circle"></i>
                                 </button>
                             </div>
-                             <div class="col-4">
+                            <div class="col-2">
                                 <button class="btn btn-sm btn-outline-secondary w-100 copy-field-btn" data-id="${id}" data-key="${datakey}">
-                                    <i class="ti ti-copy"></i> 
+                                    <i class="ti ti-copy"></i>
                                 </button>
                             </div>
                             <div class="col-4">
                                 <button class="btn btn-sm btn-outline-danger w-100 delete-field-btn" data-id="${id}">
-                                    <i class="ti ti-trash"></i> 
+                                    <i class="ti ti-trash"></i>
                                 </button>
                             </div>
 
@@ -884,40 +894,55 @@
             // DRAG AND DROP INITIALIZATION & UPDATE FIELD ORDERING
             $('#fieldList').sortable({
                 placeholder: "ui-state-highlight",
-                update: function(event, ui) {
-                    // console.log("New order:", $('#fieldList').sortable('toArray', {
-                    //     attribute: 'data-id'
-                    // }));
-
-                    const newOrder = [];
-                    $('#fieldList li').each(function(index) {
-                        newOrder.push({
-                            id: $(this).data('id'),
-                            order: index + 1
-                        });
-                    });
-
-                    $.ajax({
-                        url: "{{ route('update-order-form-field-post') }}",
-                        method: "POST",
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                            fields: newOrder
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                //showToast('success', response.message);
-                                getFormData();
-                            } else {
-                                showToast('error', response.message);
-                            }
-                        },
-                        error: function() {
-                            showToast('error', 'Failed to update field order.');
-                        }
-                    });
-                }
+                update: updateOrderAjax
             }).disableSelection();
+
+            $(document).on('click', '.move-up-btn', function() {
+                const item = $(this).closest('li');
+                const prev = item.prev('li');
+                if (prev.length) {
+                    item.insertBefore(prev).hide().slideDown();
+                    updateOrderAjax();
+                }
+            });
+
+            $(document).on('click', '.move-down-btn', function() {
+                const item = $(this).closest('li');
+                const next = item.next('li');
+                if (next.length) {
+                    item.insertAfter(next).hide().slideDown();
+                    updateOrderAjax();
+                }
+            });
+
+            function updateOrderAjax() {
+                const newOrder = [];
+                $('#fieldList li').each(function(index) {
+                    newOrder.push({
+                        id: $(this).data('id'),
+                        order: index + 1
+                    });
+                });
+
+                $.ajax({
+                    url: "{{ route('update-order-form-field-post') }}",
+                    method: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        fields: newOrder
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            getFormData(); // Or update order visually
+                        } else {
+                            showToast('error', response.message);
+                        }
+                    },
+                    error: function() {
+                        showToast('error', 'Failed to update field order.');
+                    }
+                });
+            }
 
             /*********************************************************
              ******************FORM FIELD CRUD CONTROL****************
