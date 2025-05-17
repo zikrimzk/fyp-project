@@ -282,7 +282,7 @@
                                             <button type="reset" class="btn btn-light btn-pc-default w-50"
                                                 data-bs-dismiss="modal">Cancel</button>
                                             <a class="btn btn-danger w-100"
-                                                href="{{ route('student-remove-document-get', ['id' => Crypt::encrypt($doc->submission_id),'filename' => Crypt::encrypt($submission_dir . '/' . $doc->submission_document)]) }}">Remove
+                                                href="{{ route('student-remove-document-get', ['id' => Crypt::encrypt($doc->submission_id), 'filename' => Crypt::encrypt($submission_dir . '/' . $doc->submission_document)]) }}">Remove
                                                 Anyways</a>
                                         </div>
                                     </div>
@@ -326,11 +326,16 @@
 
             $('#saveChangesBtn').on('click', function() {
                 const uploadedFiles = uppy.getFiles();
+                const $btn = $(this);
 
                 if (uploadedFiles.length === 0) {
                     alert('No file selected. Please upload your document before submitting.');
                     return;
                 }
+                
+                $btn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...'
+                    );
 
                 const file = uploadedFiles[0].data;
                 const formData = new FormData();
@@ -339,7 +344,6 @@
                 formData.append('activity_id', "{{ $doc->activity_id }}");
                 formData.append('submission_id', "{{ $doc->submission_id }}");
 
-
                 $.ajax({
                     url: "{{ route('student-submit-document-post') }}",
                     method: 'POST',
@@ -347,7 +351,7 @@
                     processData: false,
                     contentType: false,
                     success: function(response) {
-                        location.reload();
+                        location.reload(); 
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
@@ -356,6 +360,8 @@
                         } else {
                             alert('Oops! Something went wrong. Please try again.');
                         }
+                        
+                        $btn.prop('disabled', false).html('Save Changes');
                     }
                 });
             });

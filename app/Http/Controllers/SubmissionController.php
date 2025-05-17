@@ -125,7 +125,12 @@ class SubmissionController extends Controller
                 ->where('b.student_id', auth()->user()->id)
                 ->get();
 
-            // dd($documentQueryTwo);
+            $submissionReview = DB::table('submission_reviews as a')
+                ->join('staff as b', 'a.staff_id', '=', 'b.id')
+                ->select('a.id as review_id', 'a.*', 'b.staff_name')
+                ->get();
+
+            // dd($submissionReview);
 
             foreach ($programmeActivity as $activity) {
                 $activitySubmissions = $document->get($activity->activity_id);
@@ -150,6 +155,7 @@ class SubmissionController extends Controller
                 $activity->optional_document = $optionalDocument;
                 $activity->submitted_required_document = $submittedRequiredDocument;
                 $activity->submitted_optional_document = $submittedOptionalDocument;
+                $activity->student_activity_id = $studentAct->id ?? null;
             }
 
             // Filter out submissions with 'submission_status' of 2 or 5
@@ -159,14 +165,18 @@ class SubmissionController extends Controller
                 });
             });
 
+            // dd($programmeActivity);
+
             return view('student.programme.programme-index', [
                 'title' => 'Programme Overview',
                 'acts' => $programmeActivity,
                 'docs' => $filtered_documents,
-                'sa' => $student_activity
+                'sa' => $student_activity,
+                'submissionReview' => $submissionReview
 
             ]);
         } catch (Exception $e) {
+            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
@@ -1376,7 +1386,7 @@ class SubmissionController extends Controller
                                 <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
                                 <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
                                 <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
-                                <small class="text-muted d-block fw-bold mt-2 mb-2">Supervisor: <br><span class="fw-normal">' .  $svname->staff_name . '</span></small>
+                                <small class="text-muted d-block fw-bold mt-2 mb-2">Main Supervisor: <br><span class="fw-normal">' .  $svname->staff_name . '</span></small>
                                 <small class="text-muted d-block fw-bold mb-2">Co-Supervisor: <br><span class="fw-normal">' .  $cosvname->staff_name . '</span></small>
                             </div>
                         </div>
@@ -1433,7 +1443,7 @@ class SubmissionController extends Controller
 
                     if ($row->sa_status == 1) {
                         $roleMap = [
-                            2 => 'Supervisor',
+                            2 => 'Main Supervisor',
                             3 => 'Co-Supervisor',
                         ];
                         $signatureKeys = [
@@ -1566,6 +1576,12 @@ class SubmissionController extends Controller
                                 <i class="ti ti-circle-x me-2"></i>
                                 <span class="me-2">Reject</span>
                             </button>
+
+                            <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                                onclick="loadReviews(' . $studentActivityId . ')">
+                                <i class="ti ti-eye me-2"></i>
+                                <span class="me-2">Review</span>
+                            </button>
                         ';
                     }
 
@@ -1593,8 +1609,7 @@ class SubmissionController extends Controller
                 'subs' => $data->get(),
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
-            return abort(500);
+            return abort(500, $e->getMessage());
         }
     }
 
@@ -1724,6 +1739,17 @@ class SubmissionController extends Controller
                     }
 
                     $updatedActivity->update(['sa_status' => $finalStatus]);
+
+                    if ($finalStatus == 3) {
+                        //COMMENT FOR TESTING PURPOSE
+                        // DB::table('submissions as a')
+                        //     ->join('documents as b', 'a.document_id', '=', 'b.id')
+                        //     ->join('activities as c', 'b.activity_id', '=', 'c.id')
+                        //     ->where('a.student_id', $student->id)
+                        //     ->where('c.id', $studentActivity->activity_id)
+                        //     ->update(['a.submission_status' => 5]);
+                        // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                    }
                 } else {
                     // Committee / Deputy Dean / Dean
                     $formFields = DB::table('activity_forms as a')
@@ -1756,8 +1782,18 @@ class SubmissionController extends Controller
                         ->every(fn($signed) => $signed) ? 3 : 2;
 
                     $updatedActivity->update(['sa_status' => $finalStatus]);
-                }
 
+                    if ($finalStatus == 3) {
+                        //COMMENT FOR TESTING PURPOSE
+                        // DB::table('submissions as a')
+                        //     ->join('documents as b', 'a.document_id', '=', 'b.id')
+                        //     ->join('activities as c', 'b.activity_id', '=', 'c.id')
+                        //     ->where('a.student_id', $student->id)
+                        //     ->where('c.id', $studentActivity->activity_id)
+                        //     ->update(['a.submission_status' => 5]);
+                        // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                    }
+                }
 
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
                 return back()->with('success', 'Submission has been approved successfully.');
@@ -2173,8 +2209,7 @@ class SubmissionController extends Controller
                 'subs' => $data->get()
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
-            return abort(500);
+            return abort(500, $e->getMessage());
         }
     }
 
@@ -2188,6 +2223,7 @@ class SubmissionController extends Controller
                 ->join('activities as d', 'd.id', '=', 'c.activity_id')
                 ->join('supervisions as e', 'e.student_id', '=', 'a.id')
                 ->select(
+                    'a.id as student_id',
                     'a.*',
                     'b.prog_code',
                     'b.prog_mode',
@@ -2250,6 +2286,20 @@ class SubmissionController extends Controller
                         default => "N/A",
                     };
 
+                    $svname = DB::table('supervisions as a')
+                        ->join('staff as b', 'b.id', '=', 'a.staff_id')
+                        ->where('a.student_id', $row->student_id)
+                        ->where('a.supervision_role', 1)
+                        ->select('b.staff_name')
+                        ->first();
+
+                    $cosvname = DB::table('supervisions as a')
+                        ->join('staff as b', 'b.id', '=', 'a.staff_id')
+                        ->where('a.student_id', $row->student_id)
+                        ->where('a.supervision_role', 2)
+                        ->select('b.staff_name')
+                        ->first();
+
                     $photoUrl = empty($row->student_photo)
                         ? asset('assets/images/user/default-profile-1.jpg')
                         : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
@@ -2264,7 +2314,9 @@ class SubmissionController extends Controller
                                 <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
                                 <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
                                 <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
-                                <small class="text-muted d-block fw-medium">Your Role: <span class="text-danger">' .  $svrole . '</span></small>
+                                <small class="text-muted d-block fw-bold mt-2 mb-2">Main Supervisor: <br><span class="fw-normal">' .  $svname->staff_name . '</span></small>
+                                <small class="text-muted d-block fw-bold mb-2">Co-Supervisor: <br><span class="fw-normal">' .  $cosvname->staff_name . '</span></small>
+                                <small class="text-muted d-block fw-medium">Your Role: <span class="fw-normal text-danger">' .  $svrole . '</span></small>
                             </div>
                         </div>
                     ';
@@ -2320,7 +2372,7 @@ class SubmissionController extends Controller
 
                     if ($row->sa_status == 1) {
                         $roleMap = [
-                            2 => 'Supervisor',
+                            2 => 'Main Supervisor',
                             3 => 'Co-Supervisor',
                         ];
                         $signatureKeys = [
@@ -2414,8 +2466,19 @@ class SubmissionController extends Controller
                     }
 
                     if (!$signatureExists && $row->sa_status == 1) {
-                        if ($svNoBtn || $svNoPermission || $cosvNoBtn || $cosvNoPermission) {
+
+                        if ($svNoPermission || $cosvNoPermission) {
                             return '<div class="fst-italic text-muted">No action to proceed</div>';
+                        }
+
+                        if ($svNoBtn || $cosvNoBtn) {
+                            return ' 
+                                <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                                    onclick="loadReviews(' . $row->student_activity_id . ')">
+                                    <i class="ti ti-eye me-2"></i>
+                                    <span class="me-2">Review</span>
+                                </button>
+                            ';
                         }
 
                         return '
@@ -2463,8 +2526,7 @@ class SubmissionController extends Controller
                 'subs' => $data->get(),
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
-            return abort(500);
+            return abort(500, $e->getMessage());
         }
     }
 }

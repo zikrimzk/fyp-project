@@ -370,7 +370,8 @@
                                         <div class="d-flex justify-content-between gap-3 align-items-center w-100">
                                             <button type="reset" class="btn btn-light w-50"
                                                 data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-danger w-50">Confirm Reject</button>
+                                            <button type="submit" class="btn btn-danger w-50 confirm-btn">Confirm
+                                                Reject</button>
                                         </div>
                                     </div>
                                 </div>
@@ -382,15 +383,15 @@
 
                 <!-- [ Review Modal ] Start -->
                 <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-scrollable  modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Submission Review(s)</h5>
+                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+                        <div class="modal-content rounded-3 shadow-sm">
+                            <div class="modal-header bg-light border-bottom">
+                                <h5 class="modal-title fw-semibold">Submission Review(s)</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
 
-                            <div class="modal-body">
+                            <div class="modal-body p-4">
                                 <div id="reviewList" class="row gy-3"></div>
                             </div>
                         </div>
@@ -482,8 +483,16 @@
                     e.preventDefault();
                     showToast('danger', 'Please provide a signature.');
                 } else {
+                    const $btn = $(e.target);
+                    $btn.prop('disabled', true);
+                    $btn.html(
+                        '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...'
+                    );
+
                     const dataURL = signaturePads[confirmId].toDataURL('image/png');
                     document.getElementById(`signatureData-${confirmId}`).value = dataURL;
+
+                    $btn.closest('form').submit();
                 }
             }
         });
@@ -505,34 +514,39 @@
                         reviewList.empty();
 
                         if (response.review.length === 0) {
-                            reviewList.html(`<div class="alert alert-light text-center">
-                                <i class="fas fa-info-circle me-3"></i> No reviews found.
-                            </div>`);
+                            reviewList.html(`
+                        <div class="alert alert-light text-center">
+                            <i class="fas fa-info-circle me-2"></i> No reviews found.
+                        </div>
+                    `);
                         } else {
                             const currUser = "{{ auth()->user()->id }}";
                             response.review.forEach(review => {
                                 const isOwner = review.staff_id == currUser;
+
                                 const reviewCard = `
-                                    <div class="col-12">
-                                        <div class="card shadow-sm border">
+                                    <div class="col-12 mb-3">
+                                        <div class="card border-0 shadow-sm rounded-3">
                                             <div class="card-body">
-                                                <div class="d-flex justify-content-between flex-wrap mb-2">
-                                                    <small class="text-muted">Date: ${new Date(review.sr_date).toLocaleDateString()}</small>
-                                                    <small class="text-muted">By: ${review.staff_name}</small>
+                                                <div class="d-flex flex-column flex-md-row justify-content-between mb-2 small text-muted">
+                                                    <div><i class="ti ti-calendar-event me-1"></i> ${new Date(review.sr_date).toLocaleDateString()}</div>
+                                                    <div><i class="ti ti-user me-1"></i> ${review.staff_name}</div>
                                                 </div>
+
                                                 <textarea id="sr_comment-${review.review_id}" class="form-control mb-3" rows="3" ${isOwner ? '' : 'readonly'}>${review.sr_comment}</textarea>
+
                                                 ${isOwner ? `
-                                                        <div class="d-flex justify-content-start gap-2">
-                                                                                                <button class="btn btn-sm btn-light-danger w-50" onclick="deleteReview(${review.review_id}, ${review.student_activity_id})">
-                                                                                                    <i class="ti ti-trash me-2"></i>
-                                                                                                    <span class="me-2">Delete</span>
-                                                                                                </button>
-                                                                                                <button class="btn btn-sm btn-light-primary w-50" onclick="updateReview(${review.review_id})">
-                                                                                                    <i class="ti ti-edit-circle me-2"></i>
-                                                                                                    <span class="me-2">Update</span>
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        ` : ''}
+                                                                        <div class="d-flex flex-column flex-md-row justify-content-end gap-2">
+                                                                            <button class="btn btn-sm btn-light-danger" onclick="deleteReview(${review.review_id}, ${review.student_activity_id})">
+                                                                                <i class="ti ti-trash me-2"></i>
+                                                                                <span class="me-2">Delete</span>
+                                                                            </button>
+                                                                            <button class="btn btn-sm btn-light-primary" onclick="updateReview(${review.review_id})">
+                                                                                <i class="ti ti-edit-circle me-2"></i>
+                                                                                <span class="me-2">Update</span>
+                                                                            </button>
+                                                                        </div>
+                                                                    ` : ''}
                                             </div>
                                         </div>
                                     </div>
@@ -541,6 +555,7 @@
                                 reviewList.append(reviewCard);
                             });
                         }
+
                         $('#reviewModal').modal('show');
                     } else {
                         showToast('error', 'Failed to load reviews.');
@@ -610,7 +625,7 @@
             /************DATATABLE : STUDENT ACTIVITIES***************/
             /*********************************************************/
             var table = $('.data-table').DataTable({
-                processing: false,
+                processing: true,
                 serverSide: true,
                 responsive: true,
                 autoWidth: true,
@@ -741,6 +756,7 @@
                 $('#fil_role').val('').change();
             });
 
+
             /*********************************************************/
             /**********SELECT : MULTIPLE STUDENT SELECT***************/
             /*********************************************************/
@@ -828,6 +844,19 @@
                 } else {
                     alert("No valid data selected for document download.");
                 }
+            });
+
+            /*********************************************************/
+            /*******************EXTRA : LOADING INDICATOR*************/
+            /*********************************************************/
+
+            $('.confirm-btn').on('click', function() {
+                const $btn = $(this);
+                $btn.prop('disabled', true);
+                $btn.html(
+                    '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...'
+                );
+                $btn.closest('form').submit();
             });
 
         });

@@ -72,15 +72,17 @@
                                     <div>
                                         <h5 class="fw-bold mb-1">{{ $act->act_name }}</h5>
                                         @if ($act->init_status == 1)
-                                            <span class="badge bg-warning">Pending</span>
+                                            <span class="badge bg-light-warning">Pending Approval : Supervisor </span>
                                         @elseif ($act->init_status == 2)
-                                            <span class="badge bg-light-success">Approved by Supervisor</span>
+                                            <span class="badge bg-light-warning">Pending Approval : Committee / Deputy Dean
+                                                / Dean </span>
                                         @elseif ($act->init_status == 3)
-                                            <span class="badge bg-light-success">Approved by Committee / Deputy Dean / Dean</span>
+                                            <span class="badge bg-success">Approved & Completed</span>
                                         @elseif($act->init_status == 4)
-                                            <span class="badge bg-light-danger">Rejected by Supervisor</span>
+                                            <span class="badge bg-light-danger">Rejected : Supervisor</span>
                                         @elseif($act->init_status == 5)
-                                            <span class="badge bg-light-danger">Rejected by Committee / Deputy Dean / Dean</span>
+                                            <span class="badge bg-light-danger">Rejected : Committee / Deputy Dean /
+                                                Dean</span>
                                         @elseif ($act->init_status == 10)
                                             <span class="badge bg-success badge-flash">Open for Submission</span>
                                         @elseif($act->init_status == 11)
@@ -105,7 +107,7 @@
                                     @endif
                                 </div>
 
-                                {{-- Final Document Section [UNFINISH] --}}
+                                {{-- Final Document Section --}}
                                 @if (isset($act->confirmed_document))
                                     <div class="mt-4 mb-4">
                                         <h6 class="fw-semibold mb-2">Final Document</h6>
@@ -113,6 +115,18 @@
                                             target="_blank"
                                             class="text-decoration-none d-inline-flex align-items-center gap-2 text-primary">
                                             <i class="ti ti-file-check"></i> View Final Document
+                                        </a>
+                                    </div>
+                                @endif
+
+                                {{-- View Review Section --}}
+                                @if (isset($act->student_activity_id))
+                                    <div class="mt-4 mb-4">
+                                        <h6 class="fw-semibold mb-2">Reviews</h6>
+                                        <a href="javascript:void(0)" data-bs-toggle="modal"
+                                            data-bs-target="#review-modal-{{ $act->student_activity_id }}"
+                                            class="text-decoration-none d-inline-flex align-items-center gap-2 text-primary">
+                                            <i class="ti ti-message-circle-2"></i> View Review
                                         </a>
                                     </div>
                                 @endif
@@ -217,8 +231,13 @@
                             </div>
 
                             @if (
-                                ($act->required_document > 0 && $act->submitted_required_document == $act->required_document && !in_array($act->init_status, [1, 2, 3])) ||
-                                    ($act->required_document == 0 && $act->optional_document > 0 && $act->submitted_optional_document >= 1 && !in_array($act->init_status, [1, 2, 3])))
+                                ($act->required_document > 0 &&
+                                    $act->submitted_required_document == $act->required_document &&
+                                    !in_array($act->init_status, [1, 2, 3])) ||
+                                    ($act->required_document == 0 &&
+                                        $act->optional_document > 0 &&
+                                        $act->submitted_optional_document >= 1 &&
+                                        !in_array($act->init_status, [1, 2, 3])))
                                 <div class="card-footer d-flex justify-content-end align-items-center">
                                     <button class="btn btn-sm btn-light-danger" data-bs-toggle="modal"
                                         data-bs-target="#confirmSubmissionModal-{{ $act->activity_id }}">
@@ -324,6 +343,52 @@
                             </div>
                         </form>
                         <!-- [ Confirm Submission Modal ] end -->
+
+                        <!-- [ Review Modal ] start -->
+                        @if (isset($act->student_activity_id))
+                            <div class="modal fade" id="review-modal-{{ $act->student_activity_id }}" tabindex="-1"
+                                aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+                                    <div class="modal-content rounded-3 shadow-sm">
+                                        <div class="modal-header bg-light border-bottom">
+                                            <h5 class="modal-title fw-semibold">Submission Review(s)</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body p-4">
+                                            @forelse ($submissionReview->where('student_activity_id', $act->student_activity_id) as $review)
+                                                <div class="card mb-3 border-1">
+                                                    <div class="card-body">
+                                                        <div
+                                                            class="d-flex flex-column flex-md-row justify-content-between mb-2">
+                                                            <div class="text-muted small">
+                                                                <i class="ti ti-calendar-event me-1"></i>
+                                                                {{ Carbon::parse($review->updated_at)->format('d M Y, g:i A') }}
+                                                                • {{ Carbon::parse($review->updated_at)->diffForHumans() }}
+                                                            </div>
+                                                            <div class="fw-medium text-dark">
+                                                                <i class="ti ti-user me-1"></i>{{ $review->staff_name }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="border-top mt-2 text-body">
+                                                            <p class="mb-0" style="white-space: pre-line;">
+                                                                {{ $review->sr_comment }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @empty
+                                                <div class="alert alert-light text-center">
+                                                    <i class="ti ti-info-circle me-2"></i> No reviews found.
+                                                </div>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                        <!-- [ Review Modal ] end -->
+
                     @empty
                         <div class="alert alert-info">
                             No activities found for your programme.
@@ -375,8 +440,14 @@
                     e.preventDefault();
                     alert("Please provide a signature.");
                 } else {
+                    const $btn = $(e.target);
+                    $btn.prop('disabled', true);
+                    $btn.html(
+                        '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...'
+                    );
                     const dataURL = signaturePads[activityId].toDataURL('image/png');
                     document.getElementById(`signatureData-${activityId}`).value = dataURL;
+                    $btn.closest('form').submit();
                 }
             }
         });
