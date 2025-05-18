@@ -22,16 +22,18 @@ return new class extends Migration
             $table->string('student_gender');
             $table->integer('student_status')->default(1)->comment('1- Active 2- Inactive');
             $table->integer('student_role')->default(1)->comment('1- Normal Student');
-            $table->string('student_bio')->nullable();
             $table->text('student_photo')->nullable();
             $table->text('student_directory')->nullable();
-            $table->string('student_titleOfResearch')->nullable();     
+            $table->string('student_titleOfResearch')->nullable();
             $table->integer('student_semcount')->default(1)->comment('Start with Semester 1');
             $table->integer('student_opcode')->default(1);
             $table->foreignId('semester_id')->constrained('semesters');
             $table->foreignId('programme_id')->constrained('programmes');
             $table->rememberToken();
             $table->timestamps();
+
+
+            /*$table->string('student_bio')->nullable();*/
         });
     }
 
