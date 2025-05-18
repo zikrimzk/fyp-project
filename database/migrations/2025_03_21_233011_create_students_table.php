@@ -25,7 +25,7 @@ return new class extends Migration
             $table->text('student_photo')->nullable();
             $table->text('student_directory')->nullable();
             $table->string('student_titleOfResearch')->nullable();
-            $table->integer('student_semcount')->default(1)->comment('Start with Semester 1');
+            $table->integer('student_semcount')->default(0)->comment('Start with Semester 0');
             $table->integer('student_opcode')->default(1);
             $table->foreignId('semester_id')->constrained('semesters');
             $table->foreignId('programme_id')->constrained('programmes');

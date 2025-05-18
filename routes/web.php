@@ -101,6 +101,13 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/delete-supervision-{id}', [SupervisionController::class, 'deleteSupervision'])->name('delete-supervision-get');
     Route::get('/export-supervision-data', [SupervisionController::class, 'exportSupervision'])->name('export-supervision-get');
 
+    /* Student Semester Assignment */
+    Route::get('/student-semester-assignment', [SupervisionController::class, 'studentSemesterAssignment'])->name('student-semester-assignment');
+    Route::post('/import-student-semester-data', [SupervisionController::class, 'importStudentNewSemester'])->name('import-student-semester-post');
+    Route::get('/semester-student-list-{semID}', [SupervisionController::class, 'semesterStudentList'])->name('semester-student-list');
+    Route::post('/update-student-semester-{studentID}-{semID}', [SupervisionController::class, 'updateStudentSemester'])->name('update-student-semester-post');
+    Route::get('/delete-student-semester-{studentID}-{semID}', [SupervisionController::class, 'deleteStudentSemester'])->name('delete-student-semester-get');
+
     // Submission
 
     /* Submission Management */

@@ -57,7 +57,7 @@
                 </li>
 
                 <li class="pc-item pc-caption">
-                    <label>My Supervision</label>
+                    <label>Supervisor</label>
                 </li>
 
                 {{-- <li class="pc-item pc-hasmenu">
@@ -109,6 +109,11 @@
                         <li class="pc-item">
                             <a class="pc-link" href="{{ route('supervision-arrangement') }}">
                                 Supervision Arrangement
+                            </a>
+                        </li>
+                        <li class="pc-item">
+                            <a class="pc-link" href="{{ route('student-semester-assignment') }}">
+                                Student Semester Assignment
                             </a>
                         </li>
                         <li class="pc-item">
@@ -206,8 +211,8 @@
 
             </ul>
 
-            <br/> <br/> <br/> <br/>      
-            <br/> <br/> <br/> <br/>      
+            <br /> <br /> <br /> <br />
+            <br /> <br /> <br /> <br />
 
         </div>
     </div>

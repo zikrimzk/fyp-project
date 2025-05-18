@@ -153,17 +153,8 @@
                                                 @enderror
                                             </div>
                                         </div>
-
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="mb-3">
-                                                <label for="prog_mode_up" class="form-label">Status</label>
-                                                <input type="text" class="form-control" value="Inactive" readonly>
-                                            </div>
-                                        </div>
-
                                     </div>
                                 </div>
-
                                 <div class="modal-footer justify-content-end">
                                     <div class="flex-grow-1 text-end">
                                         <div class="col-sm-12">
@@ -313,7 +304,7 @@
                                                 <div class="mb-3">
                                                     <label for="prog_mode_up" class="form-label">Status</label>
                                                     <input type="text" class="form-control"
-                                                        value="@if ($upd->sem_status == 1) Active @elseif($upd->sem_status == 2) Inactive @else Prohibited @endif"
+                                                        value="@if ($upd->sem_status == 1) Active @elseif($upd->sem_status == 2) Upcoming @else Past @endif"
                                                         readonly>
                                                 </div>
                                             </div>

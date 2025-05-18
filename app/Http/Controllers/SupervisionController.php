@@ -21,6 +21,7 @@ use App\Exports\SupervisionExport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Crypt;
+use App\Imports\StudentSemesterImport;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
@@ -1207,6 +1208,249 @@ class SupervisionController extends Controller
             return Excel::download(new SupervisionExport($selectedIds), 'e-PGS_SUPERVISION_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error exporting supervisions data: ' . $e->getMessage());
+        }
+    }
+
+    /* Student Semester Assignment [UNFINISHED] */
+    public function studentSemesterAssignment(Request $req)
+    {
+        try {
+            $data = DB::table('semesters as a')
+                ->select(
+                    'a.id as sem_id',
+                    'a.sem_label',
+                    'a.sem_status',
+                    'a.sem_startdate',
+                    'a.sem_enddate',
+                    DB::raw('COUNT(b.student_id) as total_students')
+                )
+                ->leftJoin('student_semesters as b', 'a.id', '=', 'b.semester_id')
+                ->whereIn('a.sem_status', [1, 3])
+                ->groupBy('a.id', 'a.sem_label', 'a.sem_status', 'a.sem_startdate', 'a.sem_enddate')
+                ->orderBy('a.sem_startdate');
+
+            if ($req->ajax()) {
+
+                if ($req->has('date_range') && !empty($req->input('date_range'))) {
+                    $dates = explode(' to ', $req->date_range);
+                    $startdate = Carbon::parse($dates[0])->format('Y-m-d');
+                    $enddate = Carbon::parse($dates[1])->format('Y-m-d');
+
+                    $data->where(function ($query) use ($startdate, $enddate) {
+                        $query->where(function ($q) use ($startdate, $enddate) {
+                            $q->where('sem_startdate', '<=', $enddate)
+                                ->where('sem_enddate', '>=', $startdate);
+                        });
+                    });
+                }
+
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    $data->where('sem_status', $req->input('status'));
+                }
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('semester', function ($row) {
+
+                    $startDate = Carbon::parse($row->sem_startdate)->format('d M Y');
+                    $endDate = Carbon::parse($row->sem_enddate)->format('d M Y');
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->sem_label . '</span>
+                                <small class="text-muted d-block fw-medium">' . $startDate . ' - ' . $endDate . '</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('sem_status', function ($row) {
+                    $status = match ($row->sem_status) {
+                        1 =>  '<span class="badge bg-light-success">' . 'Active (Current)' . '</span>',
+                        2 => '<span class="badge bg-light-secondary">' . 'Upcoming' . '</span>',
+                        3 => '<span class="badge bg-light-danger">' . 'Past' . '</span>',
+                        default => '<span class="badge bg-light-danger">' . 'N/A' . '</span>',
+                    };
+
+                    return $status;
+                });
+
+                $table->addColumn('total_student', function ($row) {
+                    $total = '
+                        <span class="mb-0 fw-medium">' . $row->total_students . ' student(s)</span>
+                    ';
+                    return $total;
+                });
+
+                $table->addColumn('action', function ($row) {
+
+                    return
+                        '
+                            <a href="' . route('semester-student-list', Crypt::encrypt($row->sem_id)) . '" class="btn btn-light-primary btn-sm">
+                                <i class="ti ti-edit me-2"></i>
+                                <span class="me-2">View Students</span>
+                            </a>
+                        ';
+                });
+
+                $table->rawColumns(['semester', 'sem_status', 'total_student', 'action']);
+
+                return $table->make(true);
+            }
+            return view('staff.supervision.student-semester-assignment', [
+                'title' => 'Student Semester Assignment',
+            ]);
+        } catch (Exception $e) {
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    public function semesterStudentList(Request $req, $semID)
+    {
+        try {
+            $semID = Crypt::decrypt($semID);
+
+            $data = DB::table('students as a')
+                ->join('student_semesters as b', 'b.student_id', '=', 'a.id')
+                ->join('semesters as c', 'c.id', '=', 'b.semester_id')
+                ->join('programmes as d', 'd.id', '=', 'a.programme_id')
+                ->select('a.id as student_id','a.*', 'c.sem_label', 'd.prog_code', 'd.prog_mode', 'b.ss_status')
+                ->where('b.semester_id', $semID)
+                ->orderBy('a.student_name');
+
+            if ($req->ajax()) {
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('fac_id', $req->input('faculty'));
+                }
+
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('programme_id', $req->input('programme'));
+                }
+
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    $data->where('ss_status', $req->input('status'));
+                }
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->id . '">';
+                });
+
+                $table->addColumn('student_photo', function ($row) {
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('student_programme', function ($row) {
+                    $mode = null;
+                    if ($row->prog_mode == "FT") {
+                        $mode = "Full-Time";
+                    } elseif ($row->prog_mode == "PT") {
+                        $mode = "Part-Time";
+                    } else {
+                        $mode = "N/A";
+                    }
+                    $programme = '
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <p class="mb-0 text-truncate">' . $row->prog_code . '</p>
+                            <p class="mb-0  text-truncate">' . $mode . '</p>
+                        </div>
+                    </div>              
+                    ';
+                    return $programme;
+                });
+
+                $table->addColumn('ss_status', function ($row) {
+                    $status = '';
+
+                    if ($row->ss_status == 1) {
+                        $status = '<span class="badge bg-light-success">' . 'Active' . '</span>';
+                    } elseif ($row->ss_status == 2) {
+                        $status = '<span class="badge bg-light-secondary">' . 'Inactive' . '</span>';
+                    } elseif ($row->ss_status == 3) {
+                        $status = '<span class="badge bg-light-danger">' . 'Barred' . '</span>';
+                    } elseif ($row->ss_status == 4) {
+                        $status = '<span class="badge bg-success">' . 'Completed' . '</span>';
+                    } else {
+                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                    }
+
+                    return $status;
+                });
+
+                $table->addColumn('action', function ($row) {
+                    return '
+                            <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
+                                data-bs-target="#updateModal-' . $row->id . '">
+                                <i class="ti ti-edit f-20"></i>
+                            </a>
+                             <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
+                                data-bs-target="#deleteModal-' . $row->id . '">
+                                <i class="ti ti-trash f-20"></i>
+                            </a>
+                        ';
+                });
+
+                $table->rawColumns(['checkbox', 'student_photo', 'student_programme', 'ss_status', 'action']);
+
+                return $table->make(true);
+            }
+            return view('staff.supervision.semester-student-list', [
+                'title' => 'Student List',
+                'studs' => $data->get(),
+                'sem_id' => $semID,
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::whereId($semID)->first(),
+            ]);
+        } catch (Exception $e) {
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    public function importStudentNewSemester(Request $request)
+    {
+        try {
+            $request->validate([
+                'semester_file' => 'required|mimes:xlsx,csv'
+            ]);
+
+            $import = new StudentSemesterImport();
+            Excel::import($import, $request->file('semester_file'));
+
+            $response = back()->with(
+                'success',
+                "{$import->insertedCount} students successfully being enrolled in this semester. {$import->skippedCount} students were not enrolled."
+            );
+
+            if (!empty($import->skippedRows)) {
+                $response->with('skippedRows', $import->skippedRows);
+            }
+
+            return $response;
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error importing student new semester data: Invalid excel file.');
         }
     }
 }

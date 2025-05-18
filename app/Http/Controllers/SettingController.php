@@ -628,14 +628,12 @@ class SettingController extends Controller
                 });
 
                 $table->addColumn('sem_status', function ($row) {
-                    $status = '';
-                    if ($row->sem_status == 1) {
-                        $status = '<span class="badge bg-light-success">' . 'Active' . '</span>';
-                    } elseif ($row->sem_status == 2) {
-                        $status = '<span class="badge bg-light-secondary">' . 'Inactive' . '</span>';
-                    } else {
-                        $status = '<span class="badge bg-light-danger">' . 'Prohibited' . '</span>';
-                    }
+                    $status = match ($row->sem_status) {
+                        1 =>  '<span class="badge bg-light-success">' . 'Active (Current)' . '</span>',
+                        2 => '<span class="badge bg-light-secondary">' . 'Upcoming' . '</span>',
+                        3 => '<span class="badge bg-light-danger">' . 'Past' . '</span>',
+                        default => '<span class="badge bg-light-danger">' . 'N/A' . '</span>',
+                    };
 
                     return $status;
                 });
@@ -708,14 +706,15 @@ class SettingController extends Controller
         try {
             $validated = $validator->validated();
 
-            $currDate = Carbon::now()->format('d-m-Y');
-            $startDate = Carbon::parse($validated['sem_startdate'])->format('d-m-Y');
+            $currDate = Carbon::now();
+            $startDate = Carbon::parse($validated['sem_startdate']);
 
-            if ($startDate < $currDate) {
-                $validated['sem_status'] = 0;
-            } else {
+            if ($startDate->lt($currDate)) {
+                $validated['sem_status'] = 3;
+            } elseif ($startDate->gt($currDate)) {
                 $validated['sem_status'] = 2;
             }
+
             Semester::create([
                 'sem_label' => Str::upper($validated['sem_label']),
                 'sem_startdate' => $validated['sem_startdate'],
@@ -752,12 +751,12 @@ class SettingController extends Controller
         try {
             $validated = $validator->validated();
 
-            $currDate = Carbon::now()->format('d-m-Y');
-            $startDate = Carbon::parse($validated['sem_startdate_up'])->format('d-m-Y');
+            $currDate = Carbon::now();
+            $startDate = Carbon::parse($validated['sem_startdate_up']);
 
-            if ($startDate < $currDate) {
-                $validated['sem_status'] = 0;
-            } else {
+            if ($startDate->lt($currDate)) {
+                $validated['sem_status'] = 3;
+            } elseif ($startDate->gt($currDate)) {
                 $validated['sem_status'] = 2;
             }
 
