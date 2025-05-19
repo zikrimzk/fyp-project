@@ -83,6 +83,13 @@ class StudentSemesterImport implements ToCollection, WithHeadingRow
                 'semester_id' => $validated['current_semester_id']
             ]);
 
+            /* UPDATE STUDENT SEMESTER COUNT */
+            $semCount = StudentSemester::where('student_id', $validated['student_matricno'])->whereIn('ss_status', [1,4])->count();
+
+            $student = Student::where('id', $validated['student_matricno'])->first();
+            $student->student_semcount = $semCount;
+            $student->save();
+
             $this->insertedCount++;
         }
     }

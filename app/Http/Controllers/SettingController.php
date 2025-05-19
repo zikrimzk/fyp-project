@@ -10,6 +10,7 @@ use App\Models\Programme;
 use App\Models\Department;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\StudentSemester;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
@@ -793,18 +794,25 @@ class SettingController extends Controller
     {
         try {
 
-            if ($req->id === null) {
-                return back()->with('error', 'Please select new semester !');
+            if ($req->semester_id === null) {
+                return back()->with('error', 'Please select new semester to continue.');
             }
-            // $semcount = Student::where('student_status', '=', 1)->select('id', 'student_semcount')->get();
-            // foreach ($semcount as $sem) {
-            //     Student::where('id', '=', $sem->id)->update(['student_semcount' => $sem->semcount + 1]);
-            // }
-            Semester::where('sem_status', 1)->update(['sem_status' => 0]);
-            $updatedsem = Semester::where('id', $req->id)->update(['sem_status' => 1]);
-            return back()->with('success', 'Current semester have been change to ' . $updatedsem->sem_label);
+            // GET CURRENT SEMESTER
+            $currsemester = Semester::where('sem_status', 1)->first();
+
+            // UPDATE STUDENT PREVIOUS SEMESTER STATUS TO "Completed"
+            StudentSemester::where('semester_id', $currsemester->id)->where('ss_status', 1)->update(['ss_status' => 4]);
+
+            // UPDATE THE PREVIOUS SEM STATUS TO "Past"
+            $currsemester->sem_status = 3;
+            $currsemester->save();
+
+            // UPDATE THE CURRENT SEM STATUS TO "Current"
+            Semester::where('id', $req->semester_id)->update(['sem_status' => 1]);
+            $newsem = Semester::where('sem_status', 1)->first();
+            return back()->with('success', 'Current semester have been change to ' . $newsem->sem_label);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Something went wrong. Please try again.');
+            return back()->with('error', 'Oops! Something went wrong. Please try again.' . $e->getMessage());
         }
     }
 }

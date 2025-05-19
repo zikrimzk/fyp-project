@@ -103,10 +103,14 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Student Semester Assignment */
     Route::get('/student-semester-assignment', [SupervisionController::class, 'studentSemesterAssignment'])->name('student-semester-assignment');
-    Route::post('/import-student-semester-data', [SupervisionController::class, 'importStudentNewSemester'])->name('import-student-semester-post');
+    Route::post('/get-student-data', [SupervisionController::class, 'getStudentData'])->name('get-student-data-post');
+    Route::post('/assign-new-semester-{semID}', [SupervisionController::class, 'assignStudentSemester'])->name('assign-student-post');
     Route::get('/semester-student-list-{semID}', [SupervisionController::class, 'semesterStudentList'])->name('semester-student-list');
-    Route::post('/update-student-semester-{studentID}-{semID}', [SupervisionController::class, 'updateStudentSemester'])->name('update-student-semester-post');
-    Route::get('/delete-student-semester-{studentID}-{semID}', [SupervisionController::class, 'deleteStudentSemester'])->name('delete-student-semester-get');
+    Route::post('/update-status-student-semester-{studentID}-{semID}', [SupervisionController::class, 'updateStudentSemester'])->name('update-student-semester-post');
+    Route::get('/delete-registered-student-{studentID}-{semID}', [SupervisionController::class, 'deleteStudentSemester'])->name('delete-student-semester-get');
+    Route::post('/update-status-multiple-student-semester', [SupervisionController::class, 'updateMultipleStudentSemester'])->name('update-multiple-student-semester-post');
+    Route::post('/delete-registered-multiple-student-semester', [SupervisionController::class, 'deleteMultipleStudentSemester'])->name('delete-multiple-student-semester-post');
+    Route::post('/import-student-semester-data', [SupervisionController::class, 'importStudentNewSemester'])->name('import-student-semester-post');
 
     // Submission
 

@@ -67,7 +67,7 @@
                                 <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
                                     data-bs-toggle="modal" data-bs-target="#setCurrSem"><i
                                         class="ti ti-edit-circle f-18"></i>
-                                    Change Current Semester
+                                    Set Current Semester
                                 </button>
                             </div>
                         </div>
@@ -184,7 +184,7 @@
                             <div class="modal-content">
 
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="setCurrSemLabel">Change Semester</h5>
+                                    <h5 class="modal-title" id="setCurrSemLabel">Set Current Semester</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
                                 </div>
@@ -205,7 +205,7 @@
                                             <div class="mb-3">
                                                 <label for="sem_label" class="form-label">New Semester <span
                                                         class="text-danger">*</span></label>
-                                                <select name="new_sem" id="new_sem" class="form-select" required>
+                                                <select name="semester_id" id="semester_id" class="form-select" required>
                                                     <option value="">- Select Semester -</option>
                                                     @foreach ($sems->where('sem_status', 2) as $sem)
                                                         <option value="{{ $sem->id }}">{{ $sem->sem_label }}
@@ -225,7 +225,7 @@
                                                     data-bs-dismiss="modal">Cancel</button>
                                                 <button type="submit" class="btn btn-primary w-100"
                                                     id="addApplicationBtn">
-                                                    Change Semester
+                                                    Confirm & Set Semester
                                                 </button>
                                             </div>
                                         </div>

@@ -17,6 +17,7 @@ use App\Imports\StaffImport;
 use Illuminate\Http\Request;
 use App\Exports\StudentExport;
 use App\Imports\StudentImport;
+use App\Models\StudentSemester;
 use App\Exports\SupervisionExport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -480,7 +481,8 @@ class SupervisionController extends Controller
     {
         try {
             $selectedIds = $req->query('ids');
-            return Excel::download(new StudentExport($selectedIds), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
+            $semesterId = $req->query('semester_id');
+            return Excel::download(new StudentExport($selectedIds,$semesterId), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
         }
@@ -1317,7 +1319,7 @@ class SupervisionController extends Controller
                 ->join('student_semesters as b', 'b.student_id', '=', 'a.id')
                 ->join('semesters as c', 'c.id', '=', 'b.semester_id')
                 ->join('programmes as d', 'd.id', '=', 'a.programme_id')
-                ->select('a.id as student_id','a.*', 'c.sem_label', 'd.prog_code', 'd.prog_mode', 'b.ss_status')
+                ->select('a.id as student_id', 'a.*', 'c.sem_label', 'd.prog_code', 'd.prog_mode', 'b.ss_status')
                 ->where('b.semester_id', $semID)
                 ->orderBy('a.student_name');
 
@@ -1340,7 +1342,7 @@ class SupervisionController extends Controller
                 $table = DataTables::of($data)->addIndexColumn();
 
                 $table->addColumn('checkbox', function ($row) {
-                    return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->id . '">';
+                    return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->student_id . '">';
                 });
 
                 $table->addColumn('student_photo', function ($row) {
@@ -1402,11 +1404,11 @@ class SupervisionController extends Controller
                 $table->addColumn('action', function ($row) {
                     return '
                             <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
-                                data-bs-target="#updateModal-' . $row->id . '">
+                                data-bs-target="#updateStatusModal-' . $row->student_id . '">
                                 <i class="ti ti-edit f-20"></i>
                             </a>
                              <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
-                                data-bs-target="#deleteModal-' . $row->id . '">
+                                data-bs-target="#deleteModal-' . $row->student_id . '">
                                 <i class="ti ti-trash f-20"></i>
                             </a>
                         ';
@@ -1441,7 +1443,7 @@ class SupervisionController extends Controller
 
             $response = back()->with(
                 'success',
-                "{$import->insertedCount} students successfully being enrolled in this semester. {$import->skippedCount} students were not enrolled."
+                "{$import->insertedCount} students successfully assigned to this semester. {$import->skippedCount} students were not assigned."
             );
 
             if (!empty($import->skippedRows)) {
@@ -1450,7 +1452,222 @@ class SupervisionController extends Controller
 
             return $response;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing student new semester data: Invalid excel file.');
+            return back()->with('error', 'Oops! Error importing student new semester data: ' . $e->getMessage());
+        }
+    }
+
+    public function getStudentData(Request $req)
+    {
+        try {
+            $matricNo = $req->input('matricNo');
+            $student = DB::table('students as a')
+                ->join('programmes as b', 'a.programme_id', '=', 'b.id')
+                ->select('a.student_name', 'b.prog_code', 'b.prog_mode')
+                ->where('a.student_matricno', $matricNo)
+                ->first();
+
+            if (empty($student)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No records found',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'student' => $student,
+                'message' => 'Successfully fetched student details',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Error fetching student details: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function assignStudentSemester(Request $req, $semID)
+    {
+        try {
+            $semID = decrypt($semID);
+            $validator = Validator::make($req->all(), [
+                'student_matricno' => 'required|exists:students,student_matricno',
+            ], [], [
+                'student_matricno' => 'student matric no',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('modal', 'assignModal');
+            }
+
+            $validated = $validator->validated();
+            $student = Student::where('student_matricno', $validated['student_matricno'])->first();
+
+
+            $checkSemExist = StudentSemester::where('student_id', $student->id)->where('semester_id', $semID)->exists();
+
+            if ($checkSemExist) {
+                return back()->with('error', 'This student is already assigned to this semester.');
+            }
+
+            StudentSemester::create([
+                'student_id' => $student->id,
+                'semester_id' => $semID
+            ]);
+
+            $semCount = StudentSemester::where('student_id', $student->id)->whereIn('ss_status', [1, 4])->count();
+
+            $student->student_semcount = $semCount;
+            $student->save();
+
+            return back()->with('success', 'Student has been assigned to this semester successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error assigning student: ' . $e->getMessage());
+        }
+    }
+
+    public function updateStudentSemester(Request $req, $studentID, $semID)
+    {
+        try {
+            $studentID = Crypt::decrypt($studentID);
+            $semID = Crypt::decrypt($semID);
+            $student = Student::where('id', $studentID)->first();
+
+            $validator = Validator::make($req->all(), [
+                'student_semester_status_change' => 'required|integer|in:1,2,3,4',
+            ], [], [
+                'student_semester_status_change' => 'Student Semester Status',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('modal', 'updateStatusModal-' . $studentID);
+            }
+
+            $validated = $validator->validated();
+
+
+            StudentSemester::where('student_id', $studentID)->where('semester_id', $semID)->update([
+                'ss_status' => $validated['student_semester_status_change'],
+            ]);
+
+            $semCount = StudentSemester::where('student_id', $studentID)->whereIn('ss_status', [1, 4])->count();
+
+            if ($validated['student_semester_status_change'] != 1) {
+                $student->student_semcount = $semCount;
+                $student->save();
+            } else {
+                $student->student_semcount = $semCount;
+                $student->save();
+            }
+
+            return back()->with('success', 'Student semester status updated successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error updating student semester status: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteStudentSemester($studentID, $semID)
+    {
+        try {
+            $studentID = Crypt::decrypt($studentID);
+            $semID = Crypt::decrypt($semID);
+            $student = Student::where('id', $studentID)->first();
+
+            StudentSemester::where('student_id', $studentID)->where('semester_id', $semID)->delete();
+
+            $semCount = StudentSemester::where('student_id', $studentID)->whereIn('ss_status', [1, 4])->count();
+
+            $student->student_semcount = $semCount;
+            $student->save();
+
+            return back()->with('success', 'Student has been deleted successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error deleting student: ' . $e->getMessage());
+        }
+    }
+
+    public function updateMultipleStudentSemester(Request $req)
+    {
+        DB::beginTransaction();
+
+        try {
+            $studentIds = $req->input('student_ids');
+            $sem_id = $req->input('semester_id');
+            $updatedStatus = $req->input('status');
+
+            $students = Student::whereIn('id', $studentIds)->get();
+
+            foreach ($students as $student) {
+                StudentSemester::where('student_id', $student->id)
+                    ->where('semester_id', $sem_id)
+                    ->update(['ss_status' => $updatedStatus]);
+
+                $student->student_semcount = StudentSemester::where('student_id', $student->id)
+                    ->whereIn('ss_status', [1, 4])
+                    ->count();
+
+                $student->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'All selected student semester statuses have been updated successfully.',
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Error updating selected student semester statuses: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function deleteMultipleStudentSemester(Request $req)
+    {
+        DB::beginTransaction();
+
+        try {
+            $studentIds = $req->input('student_ids');
+            $sem_id = $req->input('semester_id');
+
+            $students = Student::whereIn('id', $studentIds)->get();
+
+            foreach ($students as $student) {
+                // Delete the semester record for this student
+                StudentSemester::where('student_id', $student->id)
+                    ->where('semester_id', $sem_id)
+                    ->delete();
+
+                // Recalculate the student_semcount
+                $student->student_semcount = StudentSemester::where('student_id', $student->id)
+                    ->whereIn('ss_status', [1, 4])
+                    ->count();
+
+                $student->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'All selected student have been deleted successfully.',
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Oops! Error deleting selected student: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

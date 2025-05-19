@@ -16,21 +16,28 @@ class StudentExport implements FromCollection, WithEvents
      * @return \Illuminate\Support\Collection
      */
     protected $selectedIds;
+    protected $semesterId;
 
-    public function __construct($selectedIds = null)
+    public function __construct($selectedIds = null, $semesterId = null)
     {
         $this->selectedIds = $selectedIds ? explode(',', $selectedIds) : null;
+        $this->semesterId = $semesterId ?? null;
     }
 
     public function collection()
     {
         $data = DB::table('students as a')
-            ->join('semesters as b', 'b.id', '=', 'a.semester_id')
-            ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-            ->select('a.student_matricno', 'a.student_name', 'a.student_name', 'a.student_gender', 'a.student_email', 'a.student_phoneno', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'a.student_status');
+            ->join('programmes as b', 'b.id', '=', 'a.programme_id')
+            ->leftJoin('student_semesters as c', 'c.student_id', '=', 'a.id')
+            ->leftJoin('semesters as d', 'd.id', '=', 'c.semester_id')
+            ->select('a.student_matricno', 'a.student_name', 'a.student_name', 'a.student_gender', 'a.student_email', 'a.student_phoneno', 'd.sem_label', 'b.prog_code', 'b.prog_mode', 'a.student_status');
 
         if (!empty($this->selectedIds)) {
             $data->whereIn('a.id', $this->selectedIds);
+        }
+
+        if (!empty($this->semesterId)) {
+            $data->where('c.semester_id', $this->semesterId);
         }
 
         $data = $data->get();
@@ -79,7 +86,11 @@ class StudentExport implements FromCollection, WithEvents
 
                 // TITLE
                 $sheet->setCellValue('A2', 'E-POSTGRAD | UNIVERSITI TEKNIKAL MALAYSIA MELAKA (UTeM)');
-                $sheet->setCellValue('A3', 'STUDENT LIST');
+                if (!empty($this->semesterId)) {
+                    $sheet->setCellValue('A3', 'STUDENT LIST (' . DB::table('semesters')->where('id', $this->semesterId)->first()->sem_label . ')');
+                } else {
+                    $sheet->setCellValue('A3', 'STUDENT LIST');
+                }
 
                 // STYLING HEADER AND CONTENT
                 $sheet->mergeCells('A1:I1');

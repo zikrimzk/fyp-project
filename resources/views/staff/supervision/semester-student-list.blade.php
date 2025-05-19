@@ -1,5 +1,6 @@
 @php
     use App\Models\Semester;
+    use App\Models\Student;
     use Illuminate\Support\Facades\Crypt;
 @endphp
 @extends('staff.layouts.main')
@@ -16,12 +17,19 @@
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervision</a></li>
                                 <li class="breadcrumb-item"><a href="{{ route('student-semester-assignment') }}">Student
                                         Semester Assignment</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $sems->sem_label }} Student List</li>
+                                <li class="breadcrumb-item" aria-current="page">Student List ({{ $sems->sem_label }})</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">{{ $sems->sem_label }} Student List</h2>
+                                <h3 class="mb-0 d-flex align-items-center ">
+                                    <a href="{{ route('student-semester-assignment') }}" class="btn me-2">
+                                        <span class="f-18">
+                                            <i class="ti ti-arrow-left"></i>
+                                        </span>
+                                    </a>
+                                    Student List ({{ $sems->sem_label }})
+                                </h3>
                             </div>
                         </div>
                     </div>
@@ -67,7 +75,9 @@
                         <ul>
                             @foreach (session('skippedRows') as $row)
                                 <li>
-                                    <strong>Student Matric No:</strong> {{ $row['data']['matricno'] }} -
+                                    <strong>Student Matric No:</strong>
+                                    {{ Student::where('id', $row['data']['student_matricno'])->first()->student_matricno ?? 'Not Found' }}
+                                    -
                                     <strong>Student Name:</strong> {{ $row['data']['student_name'] }}
                                     <br>
                                     <strong>Errors:</strong>
@@ -92,49 +102,74 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- [ Option Section ] start -->
-                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
-                                <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                    id="clearSelectionBtn">
-                                    0 selected <i class="ti ti-x f-18"></i>
-                                </button>
-                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addModal" title="Add Student"
-                                    id="addStudentBtn">
-                                    <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add Student</span>
-                                </button>
-                                <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
-                                    id="excelExportBtn" title="Export Data">
-                                    <i class="ti ti-file-export f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Export Data
-                                    </span>
-                                </button>
-                                <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                    data-bs-toggle="modal" data-bs-target="#changestatusModal" id="updateStatusModalBtn"
-                                    title=" Update Semester Status">
-                                    <i class="ti ti-edit f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Update Semester Status
-                                    </span>
-                                </button>
-                                 <button type="button"
-                                    class="btn btn-outline-danger d-flex align-items-center gap-2 d-none"
-                                    data-bs-toggle="modal" data-bs-target="#deleteModal" id="deleteModalBtn"
-                                    title=" Delete Student">
-                                    <i class="ti ti-trash f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Delete Student
-                                    </span>
-                                </button>
-                            </div>
+                            @if ($sems->sem_status == 1)
+                                <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                    <button type="button"
+                                        class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                        id="clearSelectionBtn">
+                                        0 selected <i class="ti ti-x f-18"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                        data-bs-toggle="modal" data-bs-target="#assignModal" title="Add Student"
+                                        id="assignStudentBtn">
+                                        <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Assign
+                                            Student</span>
+                                    </button>
+                                    <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                        data-bs-toggle="modal" data-bs-target="#import-assign-Modal" id="importStudentBtn"
+                                        title="Import Student">
+                                        <i class="ti ti-file-import f-18"></i>
+                                        <span class="d-none d-sm-inline me-2">Import Student</span>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
+                                        id="excelExportBtn" title="Export Data">
+                                        <i class="ti ti-file-export f-18"></i>
+                                        <span class="d-none d-sm-inline me-2">
+                                            Export Data
+                                        </span>
+                                    </button>
+                                    <button type="button"
+                                        class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                        data-bs-toggle="modal" data-bs-target="#updateStatusModal" id="updateStatusModalBtn"
+                                        title=" Update Semester Status">
+                                        <i class="ti ti-edit f-18"></i>
+                                        <span class="d-none d-sm-inline me-2">
+                                            Update Semester Status
+                                        </span>
+                                    </button>
+                                    <button type="button"
+                                        class="btn btn-outline-danger d-flex align-items-center gap-2 d-none"
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal" id="deleteModalBtn"
+                                        title=" Delete Student">
+                                        <i class="ti ti-trash f-18"></i>
+                                        <span class="d-none d-sm-inline me-2">
+                                            Delete Student
+                                        </span>
+                                    </button>
+                                </div>
+                            @else
+                                <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                    <button type="button"
+                                        class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                        id="clearSelectionBtn">
+                                        0 selected <i class="ti ti-x f-18"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
+                                        id="excelExportBtn" title="Export Data">
+                                        <i class="ti ti-file-export f-18"></i>
+                                        <span class="d-none d-sm-inline me-2">
+                                            Export Data
+                                        </span>
+                                    </button>
+                                </div>
+                            @endif
+
                             <!-- [ Option Section ] end -->
 
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-end">
 
-                                <div class="col-sm-12 col-md-3 mb-3">
+                                <div class="col-sm-12 col-md-4 mb-3">
                                     <div class="input-group">
                                         <select id="fil_faculty_id" class="form-select">
                                             <option value="">-- Select Faculty --</option>
@@ -146,19 +181,21 @@
                                                         {{ $fil->fac_code }} [Inactive]
                                                     </option>
                                                 @elseif($fil->fac_status == 3)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                    <option value="{{ $fil->id }}" class="bg-light-success"
+                                                        selected>
                                                         {{ $fil->fac_code }} [Default]
                                                     </option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearFacFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
+                                <div class="col-sm-12 col-md-4 mb-3">
                                     <div class="input-group">
                                         <select id="fil_programme_id" class="form-select">
                                             <option value="">-- Select Programme --</option>
@@ -174,13 +211,14 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
+                                <div class="col-sm-12 col-md-4 mb-3">
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
@@ -212,74 +250,191 @@
                                     </thead>
                                 </table>
                             </div>
+
                         </div>
                     </div>
                 </div>
 
-                <!-- [ Add Modal ] start -->
-                <form action="{{ route('add-student-post') }}" method="POST" enctype="multipart/form-data">
+                <!-- [ Assign Modal ] start -->
+                <form action="{{ route('assign-student-post', Crypt::encrypt($sem_id)) }}" method="POST">
                     @csrf
-                    <div class="modal fade" id="addModal" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="mb-0">Add Student</h5>
-                                    <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
-                                        data-bs-dismiss="modal">
-                                        <i class="ti ti-x f-20"></i>
-                                    </a>
+                    <div class="modal fade" id="assignModal" data-bs-keyboard="false" tabindex="-1"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content border-0 shadow-lg rounded-3">
+                                <div class="modal-header bg-light">
+                                    <h5 class="mb-0"><i class="ti ti-user-plus me-2"></i>Assign Student</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
                                 </div>
-                                <div class="modal-body">
 
+                                <div class="modal-body px-4 py-3">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="student_matricno" class="form-label">Student Matric No</label>
+                                            <div class="input-group">
+                                                <input type="text"
+                                                    class="form-control @error('student_matricno') is-invalid @enderror"
+                                                    id="student_matricno" name="student_matricno"
+                                                    placeholder="Enter Matric Number" required>
+                                                <button type="button" class="btn btn-outline-primary"
+                                                    id="studentFindBtn">
+                                                    <i class="ti ti-search me-1"></i> Find
+                                                </button>
+                                            </div>
+                                            @error('student_matricno')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label">Student Name</label>
+                                            <input type="text" class="form-control bg-light" id="student_name"
+                                                readonly>
+                                        </div>
+
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label">Student Programme</label>
+                                            <input type="text" class="form-control bg-light" id="student_programme"
+                                                readonly>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="modal-footer justify-content-end">
-                                    <div class="flex-grow-1 text-end">
-                                        <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                            data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Add Student</button>
+
+                                <!-- Modal Footer -->
+                                <div class="modal-footer pt-2 bg-light">
+                                    <div class="row w-100 g-2">
+                                        <div class="col-12 col-md-6">
+                                            <button type="reset" class="btn btn-outline-secondary w-100"
+                                                data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <button type="submit" class="btn btn-primary w-100" id="assignBtn" disabled>
+                                                Assign Student
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </form>
-                <!-- [ Add Modal ] end -->
+                <!-- [ Assign Modal ] end -->
 
-                <!-- [ Change Semester Status Modal ] start -->
-                <div class="modal fade" id="changestatusModal" data-bs-keyboard="false" tabindex="-1"
+                <!-- [ Import Student Modal ] start -->
+                <form action="{{ route('import-student-semester-post') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal fade" id="import-assign-Modal" data-bs-keyboard="false" tabindex="-1"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-header bg-light">
+                                    <h5 class="mb-0"><i class="ti ti-upload me-2"></i> Import Student (Excel)
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row g-3">
+                                        <!-- File Input Section -->
+                                        <div class="col-12">
+                                            <!-- Alert Note -->
+                                            <div class="alert alert-light d-flex align-items-start gap-2" role="alert">
+                                                <i class="ti ti-alert-circle mt-1"></i>
+                                                <div>
+                                                    <strong>Important:</strong>
+                                                    <ul class="mb-0 ps-3">
+                                                        <li>Please make sure to follow the template provided.</li>
+                                                        <li>Do not change the column headers in the template.</li>
+                                                        <li>Ensure the <strong>current semester</strong> is set before
+                                                            continuing the assignment process.</li>
+                                                        <li> Supported file formats are <strong>CSV (*.csv)</strong> and
+                                                            <strong>Excel (*.xlsx)</strong>.
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                            <!-- Custom File Upload -->
+                                            <div class="mt-3">
+                                                <label for="file" class="form-label fw-semibold">Upload File</label>
+                                                <div class="input-group">
+                                                    <input type="file" class="form-control d-none" id="file"
+                                                        name="semester_file" accept=".csv, .xlsx" required>
+                                                    <input type="text" class="form-control" id="file-name"
+                                                        placeholder="No file chosen" readonly>
+                                                    <button class="btn btn-outline-primary" type="button"
+                                                        id="browse-btn">
+                                                        <i class="ti ti-folder-up"></i> Browse
+                                                    </button>
+                                                </div>
+                                                <div class="form-text mt-2">
+                                                    <a href="{{ asset('assets/excel-template/e-PGS_ASSIGN_STUDENT_SEMESTER_TEMPLATE.xlsx') }}"
+                                                        class="link-primary" target="_blank" download>Download the
+                                                        template here</a>.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Modal Footer -->
+                                <div class="modal-footer justify-content-end bg-light">
+                                    <div class="flex-grow-1 text-end">
+                                        <div class="col-sm-12">
+                                            <div class="d-flex justify-content-between gap-3 align-items-center">
+                                                <button type="reset" class="btn btn-outline-secondary w-100"
+                                                    data-bs-dismiss="modal">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit" class="btn btn-primary w-100" id="import-btn"
+                                                    disabled>
+                                                    Confirm Assignment
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!-- [ Import Student Modal ] end -->
+
+                <!-- [ Multiple Update Status Modal ] start -->
+                <div class="modal fade" id="updateStatusModal" data-bs-keyboard="false" tabindex="-1"
                     aria-hidden="true">
                     <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Update Semester Status</h5>
+                        <div class="modal-content shadow-sm rounded-4 border-0">
+
+                            <!-- Modal Header -->
+                            <div class="modal-header bg-light border-bottom">
+                                <h5 class="modal-title mb-0">Update Semester Status</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
-                            <div class="modal-body">
+
+                            <!-- Modal Body -->
+                            <div class="modal-body p-4">
                                 <div class="row">
-                                    <!-- Status Input Section -->
-                                    <div class="col-sm-12 col-md-12 col-lg-12">
+                                    <div class="col-12">
                                         <div class="mb-3">
-                                            <label class="form-label">
+                                            <label for="student_semester_status_change" class="form-label fw-semibold">
                                                 Semester Status <span class="text-danger">*</span>
                                             </label>
                                             <select
                                                 class="form-select @error('student_semester_status_change') is-invalid @enderror"
                                                 name="student_semester_status_change" id="student_semester_status_change"
                                                 required>
-                                                <option value ="" selected>- Select Semester Status -</option>
-                                                <option value ="1" @if (old('student_semester_status_change') == 1) selected @endif>
-                                                    Active
-                                                </option>
-                                                <option value ="2" @if (old('student_semester_status_change') == 2) selected @endif>
-                                                    Inactive
-                                                </option>
-                                                <option value ="3" @if (old('student_semester_status_change') == 3) selected @endif>
-                                                    Barred
-                                                </option>
-                                                <option value ="4" @if (old('student_semester_status_change') == 4) selected @endif>
-                                                    Completed
-                                                </option>
+                                                <option value="" selected>- Select Semester Status -</option>
+                                                <option value="1" @if (old('student_semester_status_change') == 1) selected @endif>
+                                                    Active</option>
+                                                <option value="2" @if (old('student_semester_status_change') == 2) selected @endif>
+                                                    Inactive</option>
+                                                <option value="3" @if (old('student_semester_status_change') == 3) selected @endif>
+                                                    Barred</option>
+                                                <option value="4" @if (old('student_semester_status_change') == 4) selected @endif>
+                                                    Completed</option>
                                             </select>
                                             @error('student_semester_status_change')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -288,118 +443,173 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="modal-footer justify-content-end">
-                                <div class="flex-grow-1 text-end">
-                                    <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                        data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary" id="updatestatusBtn" disabled>Save
-                                        Changes</button>
+
+                            <!-- Modal Footer -->
+                            <div class="modal-footer pt-2 bg-light">
+                                <div class="row w-100 g-2">
+                                    <div class="col-12 col-md-6">
+                                        <button type="reset" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <button type="submit" class="btn btn-primary w-100" id="updatestatusBtn"
+                                            disabled>
+                                            Save Changes
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
-                <!-- [ Change Semester Status Modal ] end -->
+                <!-- [ Multiple Update Status Modal ] end -->
+
+                <!-- [ Multiple Delete Modal ] start -->
+                <div class="modal fade" id="deleteModal" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content shadow-lg rounded-4 border-0">
+
+                            <div class="modal-body p-4">
+                                <!-- Trash Icon -->
+                                <div class="d-flex justify-content-center mb-3">
+                                    <i class="ti ti-trash text-danger" style="font-size: 80px;"></i>
+                                </div>
+
+                                <!-- Confirmation Title -->
+                                <h4 class="text-center fw-semibold mb-2">Are you sure?</h4>
+
+                                <!-- Description -->
+                                <p class="text-center text-muted mb-4">The student will be removed from this semester.
+                                    This action is reversible, and you can add the student back anytime.</p>
+
+                                <!-- Action Buttons -->
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-6">
+                                        <button type="reset" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <a href="javascript:void(0)" class="btn btn-danger w-100" id="deleteStudentBtn">
+                                            Delete Anyways
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Multiple Delete Modal ] end -->
 
                 @foreach ($studs as $upd)
-                    <!-- [ Update Modal ] start -->
+                    <!-- [ Update Status Modal ] start -->
                     <form
                         action="{{ route('update-student-semester-post', ['studentID' => Crypt::encrypt($upd->student_id), 'semID' => Crypt::encrypt($sem_id)]) }}"
                         method="POST">
                         @csrf
-                        <div class="modal fade" id="updateModal-{{ $upd->id }}" tabindex="-1"
-                            aria-labelledby="updateModal" aria-hidden="true">
+                        <div class="modal fade" id="updateStatusModal-{{ $upd->student_id }}" tabindex="-1"
+                            aria-labelledby="updateModalLabel" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
+                                <div class="modal-content shadow-lg rounded-4 border-0">
 
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Update Semester Status</h5>
+                                    <!-- Modal Header -->
+                                    <div class="modal-header bg-light rounded-top-4">
+                                        <h5 class="modal-title fw-semibold" id="updateModalLabel">Update Semester Status
+                                        </h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <!-- Status Input Section -->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="mb-3">
-                                                    <label class="form-label">
-                                                        Semester Status <span class="text-danger">*</span>
-                                                    </label>
-                                                    <select
-                                                        class="form-select @error('student_semester_status_change') is-invalid @enderror"
-                                                        name="student_semester_status_change" required>
-                                                        <option value ="" selected>- Select Semester Status -</option>
-                                                        <option value ="1"
-                                                            @if ($upd->ss_status == 1) selected @endif>
-                                                            Active
-                                                        </option>
-                                                        <option value ="2"
-                                                            @if ($upd->ss_status == 2) selected @endif>
-                                                            Inactive
-                                                        </option>
-                                                        <option value ="3"
-                                                            @if ($upd->ss_status == 3) selected @endif>
-                                                            Barred
-                                                        </option>
-                                                        <option value ="4"
-                                                            @if ($upd->ss_status == 4) selected @endif>
-                                                            Completed
-                                                        </option>
-                                                    </select>
-                                                    @error('student_semester_status_change')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer justify-content-end">
-                                        <div class="flex-grow-1 text-end">
-                                            <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+
+                                    <!-- Modal Body -->
+                                    <div class="modal-body px-4 py-3">
+                                        <div class="mb-3">
+                                            <label for="student_semester_status_change" class="form-label fw-semibold">
+                                                Semester Status <span class="text-danger">*</span>
+                                            </label>
+                                            <select id="student_semester_status_change"
+                                                class="form-select @error('student_semester_status_change') is-invalid @enderror"
+                                                name="student_semester_status_change" required>
+                                                <option value="" selected disabled>- Select Semester Status -
+                                                </option>
+                                                <option value="1" @if ($upd->ss_status == 1) selected @endif>
+                                                    Active</option>
+                                                <option value="2" @if ($upd->ss_status == 2) selected @endif>
+                                                    Inactive</option>
+                                                <option value="3" @if ($upd->ss_status == 3) selected @endif>
+                                                    Barred</option>
+                                                <option value="4" @if ($upd->ss_status == 4) selected @endif>
+                                                    Completed</option>
+                                            </select>
+                                            @error('student_semester_status_change')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
                                         </div>
                                     </div>
 
+                                    <!-- Modal Footer -->
+                                    <div class="modal-footer pt-2 bg-light">
+                                        <div class="row w-100 g-2">
+                                            <div class="col-12 col-md-6">
+                                                <button type="reset" class="btn btn-outline-secondary w-100"
+                                                    data-bs-dismiss="modal">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    Save Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </form>
-                    <!-- [ Update Modal ] end -->
+                    <!-- [ Update Status Modal ] end -->
+
 
                     <!-- [ Delete Modal ] start -->
                     <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-keyboard="false"
                         tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-trash text-danger" style="font-size: 100px"></i>
-                                            </div>
+                            <div class="modal-content shadow-lg rounded-4 border-0">
 
+                                <div class="modal-body p-4">
+                                    <!-- Trash Icon -->
+                                    <div class="d-flex justify-content-center mb-3">
+                                        <i class="ti ti-trash text-danger" style="font-size: 80px;"></i>
+                                    </div>
+
+                                    <!-- Confirmation Title -->
+                                    <h4 class="text-center fw-semibold mb-2">Are you sure?</h4>
+
+                                    <!-- Description -->
+                                    <p class="text-center text-muted mb-4">The student will be removed from this semester.
+                                        This action is reversible, and you can add the student back anytime.</p>
+
+                                    <!-- Action Buttons -->
+                                    <div class="row g-2">
+                                        <div class="col-12 col-md-6">
+                                            <button type="reset" class="btn btn-outline-secondary w-100"
+                                                data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
                                         </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Are you sure ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">This action cannot be undone.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-student-semester-get', ['studentID' => Crypt::encrypt($upd->student_id), 'semID' => Crypt::encrypt($sem_id)]) }}"
-                                                    class="btn btn-danger w-100">Delete Anyways</a>
-                                            </div>
+                                        <div class="col-12 col-md-6">
+                                            <a href="{{ route('delete-student-semester-get', ['studentID' => Crypt::encrypt($upd->student_id), 'semID' => Crypt::encrypt($sem_id)]) }}"
+                                                class="btn btn-danger w-100">
+                                                Delete Anyways
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -414,7 +624,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            // DATATABLE : STUDENT
+            // DATATABLE : STUDENT LIST
             var table = $('.data-table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -505,14 +715,69 @@
                 $('#fil_status').val('').change();
             });
 
+            // IMPORT : STUDENT
+            $('#browse-btn').on('click', function() {
+                $('#file').click();
+            });
+
+            $('#file').on('change', function() {
+                let fileName = $(this).val().split("\\").pop();
+                $('#file-name').val(fileName || "No file chosen");
+                $('#import-btn').prop('disabled', false);
+            });
+
+            /* ASSIGN STUDENT : FETCHING STUDENT DATA */
+            const studentMatricTxt = $('#student_matricno');
+            const studentFindBtn = $('#studentFindBtn');
+            const studentNameTxt = $('#student_name');
+            const studentProgrammeTxt = $('#student_programme');
+            const assignBtn = $('#assignBtn');
+
+            function getStudentData(matricno) {
+                $.ajax({
+                    url: "{{ route('get-student-data-post') }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        matricNo: matricno
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            studentNameTxt.val(response.student.student_name);
+                            const programme = response.student.prog_code + " (" + response.student
+                                .prog_mode + ")";
+                            studentProgrammeTxt.val(programme);
+                            assignBtn.prop('disabled', false);
+                        } else {
+                            studentNameTxt.val("Not Found");
+                            studentProgrammeTxt.val("Not Found");
+                            assignBtn.prop('disabled', true);
+                        }
+                    },
+                    error: function(xhr) {
+                        studentNameTxt.val("Not Found");
+                        studentProgrammeTxt.val("Not Found");
+                        assignBtn.prop('disabled', true);
+                    }
+                });
+            }
+
+            studentFindBtn.on('click', function() {
+                const matricno = studentMatricTxt.val();
+                getStudentData(matricno);
+            });
+
 
             /* SELECT : MULTIPLE STUDENT SELECT */
-            const addBtn = $("#addStudentBtn");
+            const assignStudentBtn = $("#assignStudentBtn");
+            const importStudentBtn = $("#importStudentBtn");
             const excelExportBtn = $("#excelExportBtn");
             const clearBtn = $("#clearSelectionBtn");
             const cstatusBtn = $("#updateStatusModalBtn");
             const updateStatusBtn = $("#updatestatusBtn");
             const deleteModalBtn = $("#deleteModalBtn");
+            const deleteStudentBtn = $("#deleteStudentBtn");
 
 
             let selectedIds = new Set();
@@ -564,7 +829,8 @@
             function toggleSelectButton() {
                 let selectedCount = selectedIds.size;
 
-                addBtn.toggleClass("d-none", selectedIds.size !== 0);
+                assignStudentBtn.toggleClass("d-none", selectedIds.size !== 0);
+                importStudentBtn.toggleClass("d-none", selectedIds.size !== 0);
                 deleteModalBtn.toggleClass("d-none", selectedIds.size === 0);
                 cstatusBtn.toggleClass("d-none", selectedIds.size === 0);
 
@@ -593,6 +859,10 @@
 
                 if (selectedIds.length > 0) {
                     url += "?ids=" + selectedIds.join(",");
+                    url += "&semester_id=" + "{{ $sem_id }}";
+                }
+                else {
+                    url += "?semester_id=" + "{{ $sem_id }}";
                 }
                 window.location.href = url;
             });
@@ -618,35 +888,79 @@
                 if (selectedIds.length > 0) {
 
                     // Disable the button and show loading text
-                    // $button.prop('disabled', true).html(
-                    //     '<span class="spinner-border spinner-border-sm me-2"></span>Saving...'
-                    // );
+                    $button.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-2"></span>Saving...'
+                    );
 
                     $.ajax({
-                        url: "{{ route('update-student-status-post') }}",
+                        url: "{{ route('update-multiple-student-semester-post') }}",
                         type: "POST",
                         data: {
-                            selectedIds: selectedIds,
+                            student_ids: selectedIds,
+                            semester_id: "{{ $sem_id }}",
                             status: status,
                             _token: "{{ csrf_token() }}"
                         },
                         success: function(response) {
-                            $('#changestatusModal').modal('hide');
+                            $('#updateStatusModal').modal('hide');
+                            $('#student_semester_status_change').val("");
                             $('.data-table').DataTable().ajax
                                 .reload();
-                            $('#student_semester_status_change').val("");
-                            updateStatusBtn.prop('disabled', true);
-
-
+                            clearBtn.trigger('click');
                         },
                         error: function(xhr) {
                             console.error(xhr.responseText);
                             alert("Error: " + xhr.responseText);
+                        },
+                        complete: function() {
+                            $button.prop('disabled', true).html('Save Changes');
                         }
                     });
                 } else {
                     alert(
                         "No valid data selected for status change."
+                    );
+                }
+            });
+
+            deleteStudentBtn.on('click', function() {
+                const $button = $(this);
+
+                let selectedIds = $(".user-checkbox:checked").map(function() {
+                    return $(this).val();
+                }).get();
+
+
+                if (selectedIds.length > 0) {
+                    $button.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-2"></span>Deleting...'
+                    );
+
+                    $.ajax({
+                        url: "{{ route('delete-multiple-student-semester-post') }}",
+                        type: "POST",
+                        data: {
+                            student_ids: selectedIds,
+                            semester_id: "{{ $sem_id }}",
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+                            $('#deleteModal').modal('hide');
+                            $('.data-table').DataTable().ajax
+                                .reload();
+                            clearBtn.trigger('click');
+                        },
+                        error: function(xhr) {
+                            console.error(xhr.responseText);
+                            alert("Error: " + xhr.responseText);
+                        },
+                        complete: function() {
+                            $button.prop('disabled', true).html('Save Changes');
+                        }
+                    });
+                } else {
+                    alert(
+                        "No valid data selected for delete."
                     );
                 }
             });
