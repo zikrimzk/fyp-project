@@ -210,19 +210,6 @@
                                                                         readonly>
                                                                 </div>
                                                             </div>
-                                                            <!--Semester Input-->
-                                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                                <div class="mb-3">
-                                                                    <label for="semester_id" class="form-label">Semester
-                                                                        Registered
-                                                                    </label>
-                                                                    <input type="text" class="form-control"
-                                                                        id="semester_id" name="semester_id"
-                                                                        placeholder="Semester Registered"
-                                                                        value="{{ auth()->user()->semesters->sem_label }}"
-                                                                        readonly>
-                                                                </div>
-                                                            </div>
                                                             <!--Programme Input-->
                                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                                 <div class="mb-3">

@@ -151,7 +151,7 @@
                                                     <option value="{{ $fil->id }}" class="bg-light-success" selected>
                                                         {{ $fil->sem_label }} [Current]
                                                     </option>
-                                                @elseif($fil->sem_status == 0)
+                                                @elseif($fil->sem_status == 3)
                                                     <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
                                                     </option>
                                                 @endif

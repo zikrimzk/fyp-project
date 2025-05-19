@@ -26,12 +26,6 @@ class StudentImport implements ToCollection, WithHeadingRow
 
     public function collection(Collection $rows)
     {
-
-        /* GET CURRENT SEMESTER */
-        $currentSemester = Semester::where('sem_status', 1)->first();
-        $curr_sem_id = $currentSemester->id ?? 'N/A';
-        $curr_sem = str_replace('/', '', $currentSemester->sem_label ?? 'N/A');
-
         foreach ($rows as $row) {
 
             if ($row->filter()->isEmpty()) {
@@ -105,7 +99,7 @@ class StudentImport implements ToCollection, WithHeadingRow
             /* MAKE STUDENT DIRECTORY PATH */
             $student_name_dir = Str::upper($validated['student_name']);
             $student_matricno = Str::upper($validated['matricno']);
-            $student_directory = "Student/{$curr_sem}/{$student_matricno}_" . str_replace(' ', '_', $student_name_dir);
+            $student_directory = "Student/{$student_matricno}_" . str_replace(' ', '_', $student_name_dir);
             Storage::makeDirectory($student_directory);
 
             /* SET STUDENT INITIAL PASSWORD & STUDENT NAME FORMATING */
@@ -125,7 +119,6 @@ class StudentImport implements ToCollection, WithHeadingRow
                 'student_photo' => null,
                 'student_directory' => $student_directory,
                 'student_titleOfResearch' => Str::headline($validated['title_of_research'] ?? ''),
-                'semester_id' =>  $curr_sem_id,
                 'programme_id' => $validated['programme_id'],
             ]);
 

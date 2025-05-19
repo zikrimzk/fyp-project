@@ -26,11 +26,27 @@ class StudentExport implements FromCollection, WithEvents
 
     public function collection()
     {
+
+        $latestSemesterSub = DB::table('student_semesters')
+            ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+            ->groupBy('student_id');
+
         $data = DB::table('students as a')
-            ->join('programmes as b', 'b.id', '=', 'a.programme_id')
-            ->leftJoin('student_semesters as c', 'c.student_id', '=', 'a.id')
-            ->leftJoin('semesters as d', 'd.id', '=', 'c.semester_id')
-            ->select('a.student_matricno', 'a.student_name', 'a.student_name', 'a.student_gender', 'a.student_email', 'a.student_phoneno', 'd.sem_label', 'b.prog_code', 'b.prog_mode', 'a.student_status');
+            ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                $join->on('latest.student_id', '=', 'a.id');
+            })
+            ->leftJoin('student_semesters as ss', function ($join) {
+                $join->on('ss.student_id', '=', 'a.id')
+                    ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+            })
+            ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+            ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+            ->select('a.student_matricno', 'a.student_name', 'a.student_name', 'a.student_gender', 'a.student_email', 'a.student_phoneno', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'a.student_status');
+
+        // $data = DB::table('students as a')
+        //     ->join('programmes as b', 'b.id', '=', 'a.programme_id')
+        //     ->leftJoin('student_semesters as c', 'c.student_id', '=', 'a.id')
+        //     ->leftJoin('semesters as d', 'd.id', '=', 'c.semester_id')
 
         if (!empty($this->selectedIds)) {
             $data->whereIn('a.id', $this->selectedIds);
@@ -124,7 +140,7 @@ class StudentExport implements FromCollection, WithEvents
 
 
                 // SET HEADER
-                $headers = ['Matric No', 'Student Name', 'Gender', 'Email', 'Phone Number', 'Semester', 'Programme', 'Mode', 'Status'];
+                $headers = ['Matric No', 'Student Name', 'Gender', 'Email', 'Phone Number', 'Current Semester', 'Programme', 'Mode', 'Status'];
                 $column = 'A';
                 foreach ($headers as $header) {
                     $sheet->setCellValue($column . '5', $header);

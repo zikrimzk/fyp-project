@@ -63,7 +63,7 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- [ Option Section ] start -->
-                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                            <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
                                     class="btn btn-outline-primary  d-flex align-items-center gap-2 d-none"
                                     id="clearSelectionBtn">
@@ -82,6 +82,7 @@
 
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-end">
+
                                 <div class="col-sm-12 col-md-3 mb-3">
                                     <div class="input-group">
                                         <select id="fil_faculty_id" class="form-select">
@@ -100,7 +101,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearFacFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -115,13 +116,13 @@
                                                     <option value="{{ $fil->id }}" class="bg-light-success" selected>
                                                         {{ $fil->sem_label }} [Current]
                                                     </option>
-                                                @elseif($fil->sem_status == 0)
+                                                @elseif($fil->sem_status == 3)
                                                     <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
                                                     </option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearSemFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSemFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -143,7 +144,8 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearProgFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -156,7 +158,8 @@
                                             <option value="1">Assigned</option>
                                             <option value="2">Unassigned</option>
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearStatusFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearStatusFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>

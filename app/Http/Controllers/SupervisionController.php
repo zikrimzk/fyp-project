@@ -29,16 +29,27 @@ use Illuminate\Support\Facades\Validator;
 
 class SupervisionController extends Controller
 {
-    /* Student Management [Checked : 28/3/2025] */
+    /* Student Management [Checked : 20/5/2025] */
     public function studentManagement(Request $req)
     {
         try {
             if ($req->ajax()) {
 
+                $latestSemesterSub = DB::table('student_semesters')
+                    ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                    ->groupBy('student_id');
+
                 $data = DB::table('students as a')
-                    ->join('semesters as b', 'b.id', '=', 'a.semester_id')
+                    ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                        $join->on('latest.student_id', '=', 'a.id');
+                    })
+                    ->leftJoin('student_semesters as ss', function ($join) {
+                        $join->on('ss.student_id', '=', 'a.id')
+                            ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                    })
+                    ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-                    ->select('a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode')
+                    ->select('a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'ss.semester_id')
                     ->orderBy('a.student_name');
 
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
@@ -50,13 +61,12 @@ class SupervisionController extends Controller
                 }
 
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
 
                 if ($req->has('status') && !empty($req->input('status'))) {
                     $data->where('student_status', $req->input('status'));
                 }
-
                 $data = $data->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
@@ -125,7 +135,7 @@ class SupervisionController extends Controller
 
                 $table->addColumn('action', function ($row) {
                     $isReferenced = false;
-                    $isReferenced = DB::table('supervisions')->where('student_id', $row->id)->exists();
+                    $isReferenced = DB::table('supervisions')->where('student_id', $row->id)->exists() || DB::table('student_semesters')->where('student_id', $row->id)->exists();
 
                     $buttonEdit =
                         '
@@ -164,7 +174,6 @@ class SupervisionController extends Controller
             return view('staff.supervision.student-management', [
                 'title' => 'Student Management',
                 'studs' => Student::all(),
-                'current_sem' => Semester::where('sem_status', 1)->first()->sem_label ?? 'N/A',
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
@@ -184,10 +193,9 @@ class SupervisionController extends Controller
             'student_address' => 'nullable|string',
             'student_phoneno' => 'nullable|string|max:13',
             'student_gender' => 'required|string|in:male,female',
-            'student_status' => 'required|integer|in:1,2',
+            'student_status' => 'required|integer|in:1,2,3,4,5',
             'student_photo' => 'nullable|image|mimes:jpg,jpeg,png',
             'student_directory' => 'nullable|string',
-            'semester_id' => 'nullable',
             'programme_id' => 'required|integer',
         ], [], [
             'student_name' => 'student name',
@@ -200,7 +208,6 @@ class SupervisionController extends Controller
             'student_status' => 'student status',
             'student_photo' => 'student photo',
             'student_directory' => 'student directory',
-            'semester_id' => 'semester',
             'programme_id' => 'programme',
         ]);
 
@@ -214,11 +221,6 @@ class SupervisionController extends Controller
         try {
             $validated = $validator->validated();
 
-            /* GET CURRENT SEMESTER */
-            $curr_sem = Semester::where('sem_status', 1)->first();
-            $curr_sem_id = $curr_sem ? $curr_sem->id : null;
-            $curr_sem_label = $curr_sem ? $curr_sem->sem_label : null;
-
             /* GET STUDENT NAME */
             $student_name = Str::upper($validated['student_name']);
 
@@ -226,8 +228,7 @@ class SupervisionController extends Controller
             $password = bcrypt("pg@" . Str::lower($validated['student_matricno']));
 
             /* MAKE STUDENT DIRECTORY PATH */
-            $validated['student_directory'] = "Student/" . ($curr_sem_label ? str_replace('/', '', $curr_sem_label) : 'Unknown') .
-                "/" . $validated['student_matricno'] . "_" . str_replace(' ', '_', $student_name);
+            $validated['student_directory'] = "Student/" . $validated['student_matricno'] . "_" . str_replace(' ', '_', $student_name);
 
             Storage::makeDirectory("{$validated['student_directory']}");
 
@@ -260,13 +261,11 @@ class SupervisionController extends Controller
                 'student_status' => $validated['student_status'],
                 'student_photo' => $fileName ?? null,
                 'student_directory' => $validated['student_directory'] ?? null,
-                'semester_id' =>  $curr_sem_id,
                 'programme_id' => $validated['programme_id'],
             ]);
 
             /* ASSIGN SUBMISSION TO STUDENT [ASSUMING ALL PRE-REQUISITES DATA ARE SET] */
             $this->assignSubmission(Str::upper($validated['student_matricno']));
-
 
             return back()->with('success', 'Student added successfully.');
         } catch (Exception $e) {
@@ -326,7 +325,7 @@ class SupervisionController extends Controller
             'student_address_up' => 'nullable|string',
             'student_phoneno_up' => 'nullable|string|max:13',
             'student_gender_up' => 'required|string|in:male,female',
-            'student_status_up' => 'required|integer|in:1,2',
+            'student_status_up' => 'required|integer|in:1,2,3,4,5',
             'student_photo_up' => 'nullable|image|mimes:jpg,jpeg,png',
             'student_directory_up' => 'nullable|string',
             'programme_id_up' => 'required|integer',
@@ -354,18 +353,12 @@ class SupervisionController extends Controller
             $validated = $validator->validated();
             $student = Student::where('id', $id)->first() ?? null;
 
-            /* GET CURRENT SEMESTER */
-            $curr_sem = Semester::where('id', $student->semester_id)->first();
-            $curr_sem_label = $curr_sem ? $curr_sem->sem_label : null;
-
-
             /* GET STUDENT NAME */
             $student_name = Str::upper($validated['student_name_up']);
 
             /* MAKE STUDENT DIRECTORY PATH */
             $oldDirectory = $student->student_directory;
-            $validated['student_directory_up'] = "Student/" . ($curr_sem_label ? str_replace('/', '', $curr_sem_label) : 'Unknown') .
-                "/" . $validated['student_matricno_up'] . "_" . str_replace(' ', '_', $student_name);
+            $validated['student_directory_up'] = "Student/" . $validated['student_matricno_up'] . "_" . str_replace(' ', '_', $student_name);
 
             if ($oldDirectory !== $validated['student_directory_up']) {
                 Storage::move($oldDirectory, $validated['student_directory_up']);
@@ -482,7 +475,7 @@ class SupervisionController extends Controller
         try {
             $selectedIds = $req->query('ids');
             $semesterId = $req->query('semester_id');
-            return Excel::download(new StudentExport($selectedIds,$semesterId), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
+            return Excel::download(new StudentExport($selectedIds, $semesterId), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
         }
@@ -876,12 +869,41 @@ class SupervisionController extends Controller
         try {
             if ($req->ajax()) {
 
+                $latestSemesterSub = DB::table('student_semesters')
+                    ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                    ->groupBy('student_id');
+
                 $data = DB::table('students as a')
                     ->leftJoin('supervisions as s', 's.student_id', '=', 'a.id')
+                    ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                        $join->on('latest.student_id', '=', 'a.id');
+                    })
+                    ->leftJoin('student_semesters as ss', function ($join) {
+                        $join->on('ss.student_id', '=', 'a.id')
+                            ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                    })
+                    ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-                    ->select('a.*', 'c.prog_code', 'c.prog_mode', 'c.fac_id', 'a.programme_id', 'a.semester_id', DB::raw('COUNT(s.staff_id) as supervision_count'))
+                    ->select(
+                        'a.*',
+                        'c.prog_code',
+                        'c.prog_mode',
+                        'c.fac_id',
+                        'a.programme_id',
+                        'ss.semester_id',
+                        'b.sem_label',
+                        DB::raw('COUNT(s.staff_id) as supervision_count')
+                    )
                     ->where('a.student_status', 1)
-                    ->groupBy('a.id', 'c.prog_code', 'c.fac_id', 'a.programme_id', 'c.prog_mode')
+                    ->groupBy(
+                        'a.id',
+                        'c.prog_code',
+                        'c.prog_mode',
+                        'c.fac_id',
+                        'a.programme_id',
+                        'ss.semester_id',
+                        'b.sem_label'
+                    )
                     ->orderByRaw('supervision_count < 2 DESC');
 
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {

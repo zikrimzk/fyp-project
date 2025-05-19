@@ -791,8 +791,19 @@ class SubmissionController extends Controller
     public function submissionManagement(Request $req)
     {
         try {
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
             $data = DB::table('students as a')
-                ->join('semesters as b', 'b.id', '=', 'a.semester_id')
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('latest.student_id', '=', 'a.id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
                 ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                 ->join('submissions as d', 'd.student_id', '=', 'a.id')
                 ->join('documents as e', 'e.id', '=', 'd.document_id')
@@ -1291,7 +1302,19 @@ class SubmissionController extends Controller
     public function submissionApproval(Request $req)
     {
         try {
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
             $data = DB::table('students as a')
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('latest.student_id', '=', 'a.id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as sem', 'sem.id', '=', 'ss.semester_id')
                 ->join('programmes as b', 'b.id', '=', 'a.programme_id')
                 ->join('student_activities as c', 'c.student_id', '=', 'a.id')
                 ->join('activities as d', 'd.id', '=', 'c.activity_id')
@@ -1300,6 +1323,7 @@ class SubmissionController extends Controller
                     'a.*',
                     'b.prog_code',
                     'b.prog_mode',
+                    'sem.sem_label',
                     'd.id as activity_id',
                     'd.act_name as activity_name',
                     'c.id as student_activity_id',
@@ -1316,6 +1340,7 @@ class SubmissionController extends Controller
                         ->where('e.staff_id', auth()->user()->id);
                 })
                 ->orderBy('d.act_name');
+
 
             if ($req->ajax()) {
 
@@ -2015,8 +2040,44 @@ class SubmissionController extends Controller
     public function mySupervisionSubmissionManagement(Request $req)
     {
         try {
+            // $data = DB::table('students as a')
+            //     ->join('semesters as b', 'b.id', '=', 'a.semester_id')
+            //     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+            //     ->join('submissions as d', 'd.student_id', '=', 'a.id')
+            //     ->join('documents as e', 'e.id', '=', 'd.document_id')
+            //     ->join('activities as f', 'f.id', '=', 'e.activity_id')
+            //     ->join('supervisions as g', 'g.student_id', '=', 'a.id')
+            //     ->select(
+            //         'a.*',
+            //         'b.sem_label',
+            //         'c.prog_code',
+            //         'c.prog_mode',
+            //         'd.id as submission_id',
+            //         'd.submission_status',
+            //         'd.submission_date',
+            //         'd.submission_duedate',
+            //         'd.submission_document',
+            //         'e.id as document_id',
+            //         'e.doc_name as document_name',
+            //         'f.id as activity_id',
+            //         'f.act_name as activity_name'
+            //     )
+            //     ->where('g.staff_id', auth()->user()->id)
+            //     ->orderBy('f.act_name');
+
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
             $data = DB::table('students as a')
-                ->join('semesters as b', 'b.id', '=', 'a.semester_id')
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('latest.student_id', '=', 'a.id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
                 ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                 ->join('submissions as d', 'd.student_id', '=', 'a.id')
                 ->join('documents as e', 'e.id', '=', 'd.document_id')
@@ -2217,7 +2278,42 @@ class SubmissionController extends Controller
     public function mySupervisionSubmissionApproval(Request $req)
     {
         try {
+            // $data = DB::table('students as a')
+            //     ->join('programmes as b', 'b.id', '=', 'a.programme_id')
+            //     ->join('student_activities as c', 'c.student_id', '=', 'a.id')
+            //     ->join('activities as d', 'd.id', '=', 'c.activity_id')
+            //     ->join('supervisions as e', 'e.student_id', '=', 'a.id')
+            //     ->select(
+            //         'a.id as student_id',
+            //         'a.*',
+            //         'b.prog_code',
+            //         'b.prog_mode',
+            //         'd.id as activity_id',
+            //         'd.act_name as activity_name',
+            //         'c.id as student_activity_id',
+            //         'c.sa_status',
+            //         'c.sa_final_submission',
+            //         'c.sa_signature_data',
+            //         'c.activity_id',
+            //         'c.updated_at',
+            //         'e.supervision_role',
+            //     )
+            //     ->where('e.staff_id', auth()->user()->id)
+            //     ->orderBy('d.act_name');
+
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
             $data = DB::table('students as a')
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('latest.student_id', '=', 'a.id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as sem', 'sem.id', '=', 'ss.semester_id')
                 ->join('programmes as b', 'b.id', '=', 'a.programme_id')
                 ->join('student_activities as c', 'c.student_id', '=', 'a.id')
                 ->join('activities as d', 'd.id', '=', 'c.activity_id')
@@ -2236,9 +2332,11 @@ class SubmissionController extends Controller
                     'c.activity_id',
                     'c.updated_at',
                     'e.supervision_role',
+                    'sem.sem_label'
                 )
                 ->where('e.staff_id', auth()->user()->id)
                 ->orderBy('d.act_name');
+
 
             if ($req->ajax()) {
 
