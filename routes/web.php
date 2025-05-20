@@ -3,9 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SOPController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\SupervisionController;
 use App\Http\Controllers\AuthenticateController;
-use App\Http\Controllers\SubmissionController;
 
 Route::get('/', [AuthenticateController::class, 'mainLogin'])
     ->middleware('redirectIfAuthenticatedMulti')
@@ -201,9 +202,13 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     // ------------------------------------------SUPERVISOR / CO - SUPERVISOR ----------------------------------------------//
     // ---------------------------------------------------------------------------------------------------------------------//
 
+    /* My Student */
+    Route::get('/mysupervision-student-list', [SupervisorController::class, 'mySupervisionStudentList'])->name('my-supervision-student-list');
+    Route::get('/export-mysupervision-student-data', [SupervisorController::class, 'exportMySupervisionStudentList'])->name('export-my-supervision-student-get');
+
     /* Submission Management */
-    Route::get('/mysupervision-submission-management', [SubmissionController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
+    Route::get('/mysupervision-submission-management', [SupervisorController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
 
     /* Submission Approval */
-    Route::get('/mysupervision-submission-approval', [SubmissionController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
+    Route::get('/mysupervision-submission-approval', [SupervisorController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
 });

@@ -159,7 +159,7 @@ class SupervisionController extends Controller
                             '
                                 <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-warning ' . ($row->student_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
                                     data-bs-target="#disableModal-' . $row->id . '">
-                                    <i class="ti ti-trash f-20"></i>
+                                    <i class="ti ti-user-off f-20"></i>
                                 </a>
                             ';
                     }
@@ -615,7 +615,7 @@ class SupervisionController extends Controller
                             '
                                  <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-warning ' . ($row->staff_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
                                      data-bs-target="#disableModal-' . $row->id . '">
-                                     <i class="ti ti-trash f-20"></i>
+                                     <i class="ti ti-user-off f-20"></i>
                                  </a>
                              ';
                     }
@@ -1235,7 +1235,7 @@ class SupervisionController extends Controller
         }
     }
 
-    /* Student Semester Assignment [UNFINISHED] */
+    /* Student Semester Assignment */
     public function studentSemesterAssignment(Request $req)
     {
         try {
@@ -1692,4 +1692,5 @@ class SupervisionController extends Controller
             ], 500);
         }
     }
+
 }

@@ -48,166 +48,171 @@
                 <li class="pc-item pc-hasmenu">
                     <a href="{{ route('staff-dashboard') }}" class="pc-link">
                         <span class="pc-micon">
-                            <svg class="pc-icon">
-                                <use xlink:href="#custom-status-up"></use>
-                            </svg>
+                            <i class="fas fa-home pc-icon"></i>
                         </span>
                         <span class="pc-mtext">Dashboard</span>
                     </a>
                 </li>
 
-                <li class="pc-item pc-caption">
-                    <label>Supervisor</label>
-                </li>
+                @php
+                    $supervision = DB::table('supervisions')
+                        ->where('staff_id', auth()->user()->id)
+                        ->exists();
 
-                {{-- <li class="pc-item pc-hasmenu">
-                    <a href="#" class="pc-link">
-                        <span class="pc-micon">
-                            <svg class="pc-icon">
-                                <use xlink:href="#custom-status-up"></use>
-                            </svg>
-                        </span>
-                        <span class="pc-mtext">My Student</span>
-                    </a>
-                </li> --}}
+                    $higherUps = DB::table('staff')
+                        ->where('id', auth()->user()->id)
+                        ->whereIn('staff_role', [1, 3, 4])
+                        ->exists();
 
-                <li class="pc-item pc-hasmenu">
-                    <a href="javascript:void(0)" class="pc-link">
-                        <span class="pc-micon">
-                            <i class="fas fa-upload pc-icon"></i>
-                        </span>
-                        <span class="pc-mtext">Submission</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('my-supervision-submission-management') }}">
-                                Submission Management
-                            </a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('my-supervision-submission-approval') }}">
-                                Submission Approval
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @endphp
 
-                <li class="pc-item pc-caption">
-                    <label>Committee</label>
-                </li>
+                @if ($supervision)
+                    <li class="pc-item pc-caption">
+                        <label>Supervisor</label>
+                    </li>
 
-                <li class="pc-item pc-hasmenu">
-                    <a href="javascript:void(0)" class="pc-link">
-                        <span class="pc-micon">
-                            <i class="fas fa-users-cog pc-icon"></i>
-                        </span>
-                        <span class="pc-mtext">Supervision</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('supervision-arrangement') }}">
-                                Supervision Arrangement
-                            </a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('student-semester-assignment') }}">
-                                Student Semester Assignment
-                            </a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('student-management') }}">
-                                Student Management
-                            </a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('staff-management') }}">
-                                Staff Management
-                            </a>
-                        </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="{{ route('my-supervision-student-list') }}" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-user-graduate pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">My Student</span>
+                        </a>
+                    </li>
 
-                    </ul>
-                </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-upload pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Submission</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('my-supervision-submission-management') }}">
+                                    Submission Management
+                                </a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('my-supervision-submission-approval') }}">
+                                    Submission Approval
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                @endif
 
-                <li class="pc-item pc-hasmenu">
-                    <a href="javascript:void(0)" class="pc-link">
-                        <span class="pc-micon">
-                            <i class="fas fa-upload pc-icon"></i>
-                        </span>
-                        <span class="pc-mtext">Submission</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('submission-management') }}">
-                                Submission Management
-                            </a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('submission-approval') }}">
-                                Submission Approval
-                            </a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="javascript:void(0)">
-                                Suggestion
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                @if ($higherUps)
+                    <li class="pc-item pc-caption">
+                        <label>Administrator</label>
+                    </li>
 
-                <li class="pc-item pc-hasmenu">
-                    <a href="javascript:void(0)" class="pc-link">
-                        <span class="pc-micon">
-                            <i class="fas fa-bezier-curve pc-icon"></i>
-                        </span>
-                        <span class="pc-mtext">SOP</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item"><a class="pc-link" href="{{ route('procedure-setting') }}">Procedure
-                                Setting</a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('activity-setting') }}">Activity Setting</a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('form-setting') }}">Form Setting</a>
-                        </li>
-                    </ul>
-                </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-users-cog pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Supervision</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('supervision-arrangement') }}">
+                                    Supervision Arrangement
+                                </a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('student-semester-assignment') }}">
+                                    Semester Assignment
+                                </a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('student-management') }}">
+                                    Student Management
+                                </a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('staff-management') }}">
+                                    Staff Management
+                                </a>
+                            </li>
 
+                        </ul>
+                    </li>
 
-                <li class="pc-item pc-caption">
-                    <label>Setting</label>
-                </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-upload pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Submission</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('submission-management') }}">
+                                    Submission Management
+                                </a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('submission-approval') }}">
+                                    Submission Approval
+                                </a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="javascript:void(0)">
+                                    Suggestion
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
 
-                <li class="pc-item pc-hasmenu">
-                    <a href="javascript:void(0)" class="pc-link">
-                        <span class="pc-micon">
-                            <svg class="pc-icon">
-                                <use xlink:href="#custom-document"></use>
-                            </svg>
-                        </span>
-                        <span class="pc-mtext">Setting</span>
-                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                    </a>
-                    <ul class="pc-submenu">
-                        <li class="pc-item"><a class="pc-link" href="{{ route('faculty-setting') }}">Faculty
-                                Setting</a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('department-setting') }}">Department Setting</a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('programme-setting') }}">Programme Setting</a>
-                        </li>
-                        <li class="pc-item">
-                            <a class="pc-link" href="{{ route('semester-setting') }}">Semester Setting</a>
-                        </li>
-                    </ul>
-                </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-bezier-curve pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">SOP</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="{{ route('procedure-setting') }}">Procedure
+                                    Setting</a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('activity-setting') }}">Activity Setting</a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('form-setting') }}">Form Setting</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-cogs pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Setting</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item"><a class="pc-link" href="{{ route('faculty-setting') }}">Faculty
+                                    Setting</a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('department-setting') }}">Department Setting</a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('programme-setting') }}">Programme Setting</a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('semester-setting') }}">Semester Setting</a>
+                            </li>
+                        </ul>
+                    </li>
+                @endif
 
             </ul>
 

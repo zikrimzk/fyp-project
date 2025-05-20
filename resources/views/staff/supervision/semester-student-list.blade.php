@@ -15,7 +15,7 @@
                         <div class="col-md-12">
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervision</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('student-semester-assignment') }}">Student
+                                <li class="breadcrumb-item"><a href="{{ route('student-semester-assignment') }}">
                                         Semester Assignment</a></li>
                                 <li class="breadcrumb-item" aria-current="page">Student List ({{ $sems->sem_label }})</li>
                             </ul>
