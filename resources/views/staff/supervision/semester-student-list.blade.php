@@ -16,7 +16,7 @@
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervision</a></li>
                                 <li class="breadcrumb-item"><a href="{{ route('student-semester-assignment') }}">
-                                        Semester Assignment</a></li>
+                                        Student Enrollment</a></li>
                                 <li class="breadcrumb-item" aria-current="page">Student List ({{ $sems->sem_label }})</li>
                             </ul>
                         </div>
@@ -110,9 +110,9 @@
                                 </button>
                                 @if ($sems->sem_status == 1)
                                     <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
-                                        data-bs-toggle="modal" data-bs-target="#assignModal" title="Add Student"
+                                        data-bs-toggle="modal" data-bs-target="#assignModal" title="Enroll Student"
                                         id="assignStudentBtn">
-                                        <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Assign
+                                        <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Enroll
                                             Student</span>
                                     </button>
                                     <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
@@ -245,7 +245,7 @@
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content border-0 shadow-lg rounded-3">
                                 <div class="modal-header bg-light">
-                                    <h5 class="mb-0"><i class="ti ti-user-plus me-2"></i>Assign Student</h5>
+                                    <h5 class="mb-0"><i class="ti ti-user-plus me-2"></i>Enroll Student</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
                                 </div>
@@ -293,7 +293,7 @@
                                         </div>
                                         <div class="col-12 col-md-6">
                                             <button type="submit" class="btn btn-primary w-100" id="assignBtn" disabled>
-                                                Assign Student
+                                                Enroll Student
                                             </button>
                                         </div>
                                     </div>
