@@ -189,35 +189,48 @@
                     <form action="{{ route('update-titleOfResearch-post', Crypt::encrypt($upd->id)) }}" method="POST">
                         @csrf
                         <div class="modal fade" id="updateTitleOfResearchModal-{{ $upd->id }}" tabindex="-1"
-                            aria-labelledby="updateTitleOfResearchModal" aria-hidden="true">
+                            aria-labelledby="updateTitleOfResearchModalLabel" aria-hidden="true">
                             <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
+                                <div class="modal-content shadow rounded-3 border-0">
 
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="updateTitleOfResearchModal">Title Of Research</h5>
+                                    <div class="modal-header bg-light">
+                                        <h5 class="modal-title" id="updateTitleOfResearchModalLabel">Update Title of
+                                            Research</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <!-- Title Of Research Input -->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <input type="text"
-                                                    class="form-control @error('student_titleOfResearch') is-invalid @enderror"
-                                                    id="student_titleOfResearch" name="student_titleOfResearch"
-                                                    placeholder="Enter Title Of Research"
-                                                    value="{{ $upd->student_titleOfResearch }}">
-                                                @error('student_titleOfResearch')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
+
+                                    <div class="modal-body px-4 py-3">
+                                        <div class="mb-3">
+                                            <label for="student_titleOfResearch" class="form-label">
+                                                Title of Research
+                                            </label>
+                                            <input type="text"
+                                                class="form-control @error('student_titleOfResearch') is-invalid @enderror"
+                                                id="student_titleOfResearch" name="student_titleOfResearch"
+                                                placeholder="Enter Title of Research"
+                                                value="{{ $upd->student_titleOfResearch }}">
+                                            @error('student_titleOfResearch')
+                                                <div class="invalid-feedback">
+                                                    {{ $message }}
+                                                </div>
+                                            @enderror
                                         </div>
                                     </div>
-                                    <div class="modal-footer justify-content-end">
-                                        <div class="flex-grow-1 text-end">
-                                            <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+
+                                    <div class="modal-footer pt-2 bg-light">
+                                        <div class="row w-100 g-2">
+                                            <div class="col-12 col-md-6">
+                                                <button type="reset" class="btn btn-outline-secondary w-100"
+                                                    data-bs-dismiss="modal">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    Save Changes
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -231,81 +244,71 @@
                     <form action="{{ route('add-supervision-post', Crypt::encrypt($upd->id)) }}" method="POST">
                         @csrf
                         <div class="modal fade" id="addSupervisionModal-{{ $upd->id }}" tabindex="-1"
-                            aria-labelledby="updateModal" aria-hidden="true">
+                            aria-labelledby="addSupervisionModalLabel" aria-hidden="true">
                             <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
+                                <div class="modal-content shadow-lg rounded-3 border-0">
 
-                                    <div class="modal-header">
+                                    <!-- Modal Header -->
+                                    <div class="modal-header bg-light">
                                         <h5 class="modal-title" id="addSupervisionModalLabel">Add Supervision</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <!--[ Main Supervisor ] Staff Input-->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="mb-3">
-                                                    <label for="staff_id_sv" class="form-label">Main Supervisor <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="staff_id_sv" id="staff_id_sv"
-                                                        class="form-select @error('staff_id_sv') is-invalid @enderror"
-                                                        required>
-                                                        <option value="">- Select Main Supervisor -</option>
-                                                        @foreach ($staffs->where('staff_status', 1) as $st)
-                                                            @if (old('staff_id_sv') == $st->id)
-                                                                <option value="{{ $st->id }}" selected>
-                                                                    {{ $st->staff_name }}
-                                                                </option>
-                                                            @else
-                                                                <option value="{{ $st->id }}">
-                                                                    {{ $st->staff_name }}
-                                                                </option>
-                                                            @endif
-                                                        @endforeach
-                                                    </select>
-                                                    @error('staff_id_sv')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                    <input type="hidden" name="supervision_svrole"
-                                                        id="supervision_role-sv" value="1">
-                                                </div>
-                                            </div>
 
-                                            <!--[ Co-Supervisor ] Staff Input-->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="mb-3">
-                                                    <label for="staff_id_cosv" class="form-label">Co-Supervisor <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="staff_id_cosv" id="staff_id_cosv"
-                                                        class="form-select @error('staff_id_cosv') is-invalid @enderror"
-                                                        required>
-                                                        <option value="">- Select Co-Supervisor -</option>
-                                                        @foreach ($staffs->where('staff_status', 1) as $st)
-                                                            @if (old('staff_id_cosv') == $st->id)
-                                                                <option value="{{ $st->id }}" selected>
-                                                                    {{ $st->staff_name }}
-                                                                </option>
-                                                            @else
-                                                                <option value="{{ $st->id }}">
-                                                                    {{ $st->staff_name }}
-                                                                </option>
-                                                            @endif
-                                                        @endforeach
-                                                    </select>
-                                                    @error('staff_id_cosv')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                    <input type="hidden" name="supervision_cosvrole"
-                                                        id="supervision_role-cosv" value="2">
-                                                </div>
-                                            </div>
+                                    <!-- Modal Body -->
+                                    <div class="modal-body px-4 py-3">
+                                        <div class="mb-4">
+                                            <label for="staff_id_sv" class="form-label">
+                                                Main Supervisor <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="staff_id_sv" id="staff_id_sv"
+                                                class="form-select @error('staff_id_sv') is-invalid @enderror" required>
+                                                <option value="">- Select Main Supervisor -</option>
+                                                @foreach ($staffs->where('staff_status', 1) as $st)
+                                                    <option value="{{ $st->id }}"
+                                                        {{ old('staff_id_sv') == $st->id ? 'selected' : '' }}>
+                                                        {{ $st->staff_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('staff_id_sv')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <input type="hidden" name="supervision_svrole" value="1">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="staff_id_cosv" class="form-label">
+                                                Co-Supervisor <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="staff_id_cosv" id="staff_id_cosv"
+                                                class="form-select @error('staff_id_cosv') is-invalid @enderror" required>
+                                                <option value="">- Select Co-Supervisor -</option>
+                                                @foreach ($staffs->where('staff_status', 1) as $st)
+                                                    <option value="{{ $st->id }}"
+                                                        {{ old('staff_id_cosv') == $st->id ? 'selected' : '' }}>
+                                                        {{ $st->staff_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('staff_id_cosv')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <input type="hidden" name="supervision_cosvrole" value="2">
                                         </div>
                                     </div>
-                                    <div class="modal-footer justify-content-end">
-                                        <div class="flex-grow-1 text-end">
-                                            <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Add Supervision</button>
+
+                                    <!-- Modal Footer -->
+                                    <div class="modal-footer bg-light">
+                                        <div class="row w-100 g-2">
+                                            <div class="col-12 col-md-6">
+                                                <button type="reset" class="btn btn-outline-secondary w-100"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <button type="submit" class="btn btn-primary w-100">Add
+                                                    Supervision</button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -323,7 +326,7 @@
                             <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
 
-                                    <div class="modal-header">
+                                    <div class="modal-header bg-light">
                                         <h5 class="modal-title" id="updateSupervisionModal">Update Supervision</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
@@ -400,14 +403,20 @@
                                             @endforeach
                                         </div>
                                     </div>
-                                    <div class="modal-footer justify-content-end">
-                                        <div class="flex-grow-1 text-end">
-                                            <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+
+                                    <!-- Modal Footer -->
+                                    <div class="modal-footer bg-light">
+                                        <div class="row w-100 g-2">
+                                            <div class="col-12 col-md-6">
+                                                <button type="reset" class="btn btn-outline-secondary w-100"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    Save Changes</button>
+                                            </div>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -415,39 +424,28 @@
                     <!-- [ Update Supervision Modal ] end -->
 
                     <!-- [ Delete Modal ] start -->
-                    <div class="modal fade" id="deleteSupervisionModal-{{ $upd->id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="deleteSupervisionModal-{{ $upd->id }}" data-bs-backdrop="static"
+                        data-bs-keyboard="false" tabindex="-1" aria-labelledby="deleteModalLabel-{{ $upd->id }}"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-trash text-danger" style="font-size: 100px"></i>
-                                            </div>
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-body p-4">
+                                    <div class="text-center mb-3">
+                                        <i class="ti ti-trash text-danger" style="font-size: 80px;"></i>
+                                    </div>
+                                    <h4 class="text-center mb-2" id="deleteModalLabel-{{ $upd->id }}">Are you sure?
+                                    </h4>
+                                    <p class="text-center text-muted mb-4">
+                                        This action will unassign both
+                                        main supervisor and co-supervisor from the student. You will need to
+                                        reassign them afterward.
+                                    </p>
 
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Are you sure ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">This action will unassign both
-                                                    main supervisor and co-supervisor from the student. You will need to
-                                                    reassign them afterward.
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-supervision-get', ['id' => Crypt::encrypt($upd->id)]) }}"
-                                                    class="btn btn-danger w-100">Delete Anyways</a>
-                                            </div>
-                                        </div>
+                                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                        <button type="button" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{{ route('delete-supervision-get', ['id' => Crypt::encrypt($upd->id)]) }}"
+                                            class="btn btn-danger w-100">Delete Anyway</a>
                                     </div>
                                 </div>
                             </div>
@@ -466,7 +464,7 @@
 
             // DATATABLE : SUPERVISION
             var table = $('.data-table').DataTable({
-                processing: false,
+                processing: true,
                 serverSide: true,
                 responsive: true,
                 autoWidth: true,
@@ -640,6 +638,7 @@
                     url += "?ids=" + selectedIds.join(",");
                 }
                 window.location.href = url;
+                clearBtn.trigger('click');
             });
 
 

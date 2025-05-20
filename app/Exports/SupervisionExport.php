@@ -21,17 +21,37 @@ class SupervisionExport implements FromCollection, WithEvents
     {
         $this->selectedIds = $selectedIds ? explode(',', $selectedIds) : null;
     }
-    
+
     public function collection()
     {
+
+        $latestSemesterSub = DB::table('student_semesters')
+            ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+            ->groupBy('student_id');
+
         $rawData = DB::table('supervisions as a')
             ->join('students as b', 'b.id', '=', 'a.student_id')
+            ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                $join->on('latest.student_id', '=', 'b.id');
+            })
+            ->leftJoin('student_semesters as ss', function ($join) {
+                $join->on('ss.student_id', '=', 'b.id')
+                    ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+            })
+            ->leftJoin('semesters as sem', 'sem.id', '=', 'ss.semester_id')
             ->join('staff as c', 'c.id', '=', 'a.staff_id')
             ->join('programmes as d', 'd.id', '=', 'b.programme_id')
-            ->select('b.student_matricno','b.student_name', 'd.prog_code', 'd.prog_mode', 'c.staff_name', 'a.supervision_role');
+            ->select(
+                'b.student_matricno',
+                'b.student_name',
+                'd.prog_code',
+                'd.prog_mode',
+                'c.staff_name',
+                'a.supervision_role',
+            );
 
         if (!empty($this->selectedIds)) {
-            $rawData->whereIn('a.id', $this->selectedIds);
+            $rawData->whereIn('a.student_id', $this->selectedIds);
         }
 
         $rawData = $rawData->get();
@@ -106,7 +126,7 @@ class SupervisionExport implements FromCollection, WithEvents
 
 
                 // SET HEADER
-                $headers = [ 'Matric No', 'Student Name', 'Programme', 'Mode', 'Main Supervisor', 'Co-Supervisor'];
+                $headers = ['Matric No', 'Student Name', 'Programme', 'Mode', 'Main Supervisor', 'Co-Supervisor'];
                 $column = 'A';
                 foreach ($headers as $header) {
                     $sheet->setCellValue($column . '5', $header);

@@ -827,7 +827,6 @@ class SubmissionController extends Controller
 
             if ($req->ajax()) {
 
-                // Apply filters
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
                     $data->where('fac_id', $req->input('faculty'));
                 }
@@ -844,10 +843,8 @@ class SubmissionController extends Controller
                     $data->where('document_id', $req->input('document'));
                 }
                 if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
-                    // If a status is selected (even status 5), show it
                     $data->where('submission_status', $req->input('status'));
                 } else {
-                    // Default: exclude status 5
                     $data->where('submission_status', '!=', 5);
                 }
 
@@ -935,7 +932,7 @@ class SubmissionController extends Controller
                                     </a>
                                     <a class="dropdown-item" href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->submission_document)]) . '" download="' . $row->submission_document . '">Download</a> 
                                     <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal-' . $row->submission_id . '">
+                                        data-bs-target="#archiveModal-' . $row->submission_id . '">
                                         Archive
                                     </a> 
                             ';
@@ -962,7 +959,7 @@ class SubmissionController extends Controller
                                         Setting 
                                     </a>
                                     <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal-' . $row->submission_id . '">
+                                        data-bs-target="#archiveModal-' . $row->submission_id . '">
                                         Archive
                                     </a>
                             ';
@@ -1242,14 +1239,12 @@ class SubmissionController extends Controller
             // Add each implant directory to the ZIP
             foreach ($submissionIds as $id) {
                 $submission = DB::table('students as a')
-                    ->join('semesters as b', 'b.id', '=', 'a.semester_id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                     ->join('submissions as d', 'd.student_id', '=', 'a.id')
                     ->join('documents as e', 'e.id', '=', 'd.document_id')
                     ->join('activities as f', 'f.id', '=', 'e.activity_id')
                     ->select(
                         'a.*',
-                        'b.sem_label',
                         'c.prog_code',
                         'c.prog_mode',
                         'd.id as submission_id',
@@ -1298,7 +1293,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Submission Approval [Staff] [Committee/DD/DEAN] [UNFINISHED] */
+    /* Submission Approval [Staff] [Committee/DD/DEAN] */
     public function submissionApproval(Request $req)
     {
         try {
@@ -1344,7 +1339,6 @@ class SubmissionController extends Controller
 
             if ($req->ajax()) {
 
-                // Apply filters
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
                     $data->where('fac_id', $req->input('faculty'));
                 }
@@ -1387,14 +1381,16 @@ class SubmissionController extends Controller
                         ->where('a.student_id', $row->student_id)
                         ->where('a.supervision_role', 1)
                         ->select('b.staff_name')
-                        ->first();
+                        ->first()
+                        ->staff_name ?? 'N/A';
 
                     $cosvname = DB::table('supervisions as a')
                         ->join('staff as b', 'b.id', '=', 'a.staff_id')
                         ->where('a.student_id', $row->student_id)
                         ->where('a.supervision_role', 2)
                         ->select('b.staff_name')
-                        ->first();
+                        ->first()
+                        ->staff_name ?? 'N/A';
 
 
                     $photoUrl = empty($row->student_photo)
@@ -1411,8 +1407,8 @@ class SubmissionController extends Controller
                                 <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
                                 <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
                                 <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
-                                <small class="text-muted d-block fw-bold mt-2 mb-2">Main Supervisor: <br><span class="fw-normal">' .  $svname->staff_name . '</span></small>
-                                <small class="text-muted d-block fw-bold mb-2">Co-Supervisor: <br><span class="fw-normal">' .  $cosvname->staff_name . '</span></small>
+                                <small class="text-muted d-block fw-bold mt-2 mb-2">Main Supervisor: <br><span class="fw-normal">' .  $svname . '</span></small>
+                                <small class="text-muted d-block fw-bold mb-2">Co-Supervisor: <br><span class="fw-normal">' .  $cosvname . '</span></small>
                             </div>
                         </div>
                     ';
@@ -1440,7 +1436,13 @@ class SubmissionController extends Controller
                 $table->addColumn('sa_status', function ($row) {
 
                     $confirmation_status = match ($row->sa_status) {
-                        1 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval: <br> Supervisor</span>",
+                        1 => "
+                            <div class='alert alert-light' role='alert'>
+                                <i class='ti ti-alert-circle me-1'></i>
+                                <small>By approving this, Supervisor and Co-Supervisor approvals will be skipped.</small>
+                            </div>
+                            <span class='badge bg-light-warning d-block mb-1'>Pending Approval: <br> Supervisor</span>
+                        ",
                         2 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval: <br> (Comm/DD/Dean)</span>",
                         3 => "<span class='badge bg-success d-block mb-1'>Approved & Completed</span>",
                         4 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> Supervisor</span>",
@@ -1558,10 +1560,6 @@ class SubmissionController extends Controller
                     if ($row->sa_status == 1) {
                         return '
                             <div class="d-flex flex-column gap-2 text-start p-1">
-                                <div class="alert alert-light" role="alert">
-                                    <i class="ti ti-alert-circle me-1"></i>
-                                    <small>By approving this, Supervisor and Co-Supervisor approvals will be skipped.</small>
-                                </div>
                                 <button type="button" class="btn btn-light-success btn-sm w-100"
                                     data-bs-toggle="modal" data-bs-target="#approveModal-' . $studentActivityId . '">
                                     <i class="ti ti-circle-check me-2"></i> Approve
@@ -1899,13 +1897,11 @@ class SubmissionController extends Controller
 
             foreach ($submissionIds as $id) {
                 $submission = DB::table('students as a')
-                    ->join('semesters as b', 'b.id', '=', 'a.semester_id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                     ->join('student_activities as g', 'g.student_id', '=', 'a.id')
                     ->join('activities as f', 'f.id', '=', 'g.activity_id')
                     ->select(
                         'a.*',
-                        'b.sem_label',
                         'c.prog_code',
                         'c.prog_mode',
                         'f.id as activity_id',
@@ -2278,29 +2274,6 @@ class SubmissionController extends Controller
     public function mySupervisionSubmissionApproval(Request $req)
     {
         try {
-            // $data = DB::table('students as a')
-            //     ->join('programmes as b', 'b.id', '=', 'a.programme_id')
-            //     ->join('student_activities as c', 'c.student_id', '=', 'a.id')
-            //     ->join('activities as d', 'd.id', '=', 'c.activity_id')
-            //     ->join('supervisions as e', 'e.student_id', '=', 'a.id')
-            //     ->select(
-            //         'a.id as student_id',
-            //         'a.*',
-            //         'b.prog_code',
-            //         'b.prog_mode',
-            //         'd.id as activity_id',
-            //         'd.act_name as activity_name',
-            //         'c.id as student_activity_id',
-            //         'c.sa_status',
-            //         'c.sa_final_submission',
-            //         'c.sa_signature_data',
-            //         'c.activity_id',
-            //         'c.updated_at',
-            //         'e.supervision_role',
-            //     )
-            //     ->where('e.staff_id', auth()->user()->id)
-            //     ->orderBy('d.act_name');
-
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
                 ->groupBy('student_id');

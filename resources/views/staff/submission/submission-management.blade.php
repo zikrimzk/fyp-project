@@ -63,7 +63,7 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- [ Option Section ] start -->
-                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                            <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
                                     class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
                                     id="clearSelectionBtn">
@@ -116,9 +116,9 @@
                             <!-- [ Option Section ] end -->
 
                             <!-- [ Filter Section ] Start -->
-                            <div class="row g-3 align-items-end">
+                            <div class="row g-3 align-items-center mb-3">
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_faculty_id" class="form-select">
                                             <option value="">-- Select Faculty --</option>
@@ -142,7 +142,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_semester_id" class="form-select">
                                             <option value="">-- Select Semester --</option>
@@ -157,13 +157,14 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSemFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearSemFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_programme_id" class="form-select">
                                             <option value="">-- Select Programme --</option>
@@ -186,7 +187,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_activity_id" class="form-select">
                                             <option value="">-- Select Activity --</option>
@@ -201,7 +202,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_document_id" class="form-select">
                                             <option value="">-- Select Document --</option>
@@ -222,7 +223,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
@@ -238,6 +239,7 @@
                                         </button>
                                     </div>
                                 </div>
+
                             </div>
                             <!-- [ Filter Section ] End -->
 
@@ -257,6 +259,7 @@
                                     </thead>
                                 </table>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -267,7 +270,7 @@
                     <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                         <div class="modal-content">
 
-                            <div class="modal-header">
+                            <div class="modal-header bg-light">
                                 <h5 class="modal-title" id="multipleSettingModalLabel">Submission Setting</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
@@ -310,15 +313,22 @@
 
                                 </div>
                             </div>
-                            <div class="modal-footer justify-content-end">
-                                <div class="flex-grow-1 text-end">
-                                    <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                        data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary" id="multipleSubmissionUpdateBtn">Save
-                                        Changes</button>
+                            <div class="modal-footer pt-2 bg-light">
+                                <div class="row w-100 g-2">
+                                    <div class="col-12 col-md-6">
+                                        <button type="reset" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <button type="submit" class="btn btn-primary w-100"
+                                            id="multipleSubmissionUpdateBtn">
+                                            Save Changes
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -326,36 +336,26 @@
 
                 <!-- [ Archive Multiple Submission Modal ] start -->
                 <div class="modal fade" id="archiveMultipleModal" data-bs-keyboard="false" tabindex="-1"
-                    aria-hidden="true">
+                    aria-hidden="true" data-bs-backdrop="static">
                     <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-sm-12 mb-4">
-                                        <div class="d-flex justify-content-center align-items-center mb-3">
-                                            <i class="ti ti-archive text-secondary" style="font-size: 100px"></i>
-                                        </div>
-
+                        <div class="modal-content border-0 rounded-4 shadow">
+                            <div class="modal-body p-4">
+                                <div class="text-center">
+                                    <div class="mb-3">
+                                        <i class="ti ti-archive text-danger" style="font-size: 80px;"></i>
                                     </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-center align-items-center text-center">
-                                            <h2>Are you sure to archive the selected submission ?</h2>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 mb-3">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <p class="fw-normal f-18 text-center">You can revert this action.</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-between gap-3 align-items-center">
-                                            <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-secondary w-100"
-                                                id="multipleSubmissionArchiveBtn">
-                                                Archive
-                                            </button>
-                                        </div>
+                                    <h4 class="fw-bold mb-2">Archive these submissions?</h4>
+                                    <p class="text-muted mb-4">This action will archive the selected student submissions,
+                                        but you can always revert it later.</p>
+                                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                        <button type="button" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                        <button type="submit" class="btn btn-danger w-100"
+                                            id="multipleSubmissionArchiveBtn">
+                                            Archive
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -366,36 +366,25 @@
 
                 <!-- [ Unarchive Multiple Submission Modal ] start -->
                 <div class="modal fade" id="unarchiveMultipleModal" data-bs-keyboard="false" tabindex="-1"
-                    aria-hidden="true">
+                    aria-hidden="true" data-bs-backdrop="static">
                     <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-sm-12 mb-4">
-                                        <div class="d-flex justify-content-center align-items-center mb-3">
-                                            <i class="ti ti-history text-primary" style="font-size: 100px"></i>
-                                        </div>
-
+                        <div class="modal-content border-0 rounded-4 shadow">
+                            <div class="modal-body p-4">
+                                <div class="text-center">
+                                    <div class="mb-3">
+                                        <i class="ti ti-history text-primary" style="font-size: 80px;"></i>
                                     </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-center align-items-center text-center">
-                                            <h2>Are you sure to unarchive the selected submission ?</h2>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12 mb-3">
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <p class="fw-normal f-18 text-center">You can archive back if needed.</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-between gap-3 align-items-center">
-                                            <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary w-100"
-                                                id="multipleSubmissionUnarchiveBtn">
-                                                Unarchive
-                                            </button>
-                                        </div>
+                                    <h4 class="fw-bold mb-2">Unarchive these submissions?</h4>
+                                    <p class="text-muted mb-4">You can archive them again later if needed.</p>
+                                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                        <button type="button" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                        <button type="submit" class="btn btn-primary w-100"
+                                            id="multipleSubmissionUnarchiveBtn">
+                                            Unarchive
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -414,7 +403,7 @@
                             <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
 
-                                    <div class="modal-header">
+                                    <div class="modal-header bg-light">
                                         <h5 class="modal-title" id="settingModalLabel">Submission Setting</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
@@ -496,14 +485,21 @@
 
                                         </div>
                                     </div>
-                                    <div class="modal-footer justify-content-end">
-                                        <div class="flex-grow-1 text-end">
-                                            <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    <div class="modal-footer pt-2 bg-light">
+                                        <div class="row w-100 g-2">
+                                            <div class="col-12 col-md-6">
+                                                <button type="reset" class="btn btn-outline-secondary w-100"
+                                                    data-bs-dismiss="modal">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    Save Changes
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -511,35 +507,27 @@
                     <!-- [ Update Modal ] end -->
 
                     <!-- [ Archive Modal ] start -->
-                    <div class="modal fade" id="deleteModal-{{ $upd->submission_id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="archiveModal-{{ $upd->submission_id }}" data-bs-keyboard="false"
+                        tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-archive text-secondary" style="font-size: 100px"></i>
-                                            </div>
-
+                            <div class="modal-content border-0 rounded-4 shadow">
+                                <div class="modal-body p-4">
+                                    <div class="text-center">
+                                        <div class="mb-3">
+                                            <i class="ti ti-archive text-danger" style="font-size: 80px;"></i>
                                         </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center text-center">
-                                                <h2>Are you sure to archive this submission ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">You can revert this action.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 1]) }}"
-                                                    class="btn btn-secondary w-100">Archive</a>
-                                            </div>
+                                        <h4 class="fw-bold mb-2">Archive this submission?</h4>
+                                        <p class="text-muted mb-4">This action will archive the submission, but you can
+                                            always revert it later.</p>
+                                        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                            <button type="button" class="btn btn-outline-secondary w-100"
+                                                data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                            <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 1]) }}"
+                                                class="btn btn-danger w-100">
+                                                Archive
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -550,33 +538,25 @@
 
                     <!-- [ Unarchive Modal ] start -->
                     <div class="modal fade" id="unarchiveModal-{{ $upd->submission_id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
+                        tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-history text-primary" style="font-size: 100px"></i>
-                                            </div>
+                            <div class="modal-content border-0 rounded-4 shadow">
+                                <div class="modal-body p-4">
+                                    <div class="text-center">
+                                        <div class="mb-3">
+                                            <i class="ti ti-history text-primary" style="font-size: 80px;"></i>
                                         </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center text-center">
-                                                <h2>Are you sure to unarchive this submission ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">You can archive back if needed.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 2]) }}"
-                                                    class="btn btn-primary w-100">Unarchive</a>
-                                            </div>
+                                        <h4 class="fw-bold mb-2">Unarchive this submission?</h4>
+                                        <p class="text-muted mb-4">You can archive it again later if needed.</p>
+                                        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                            <button type="button" class="btn btn-outline-secondary w-100"
+                                                data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                            <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 2]) }}"
+                                                class="btn btn-primary w-100">
+                                                Unarchive
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -596,7 +576,7 @@
 
             // DATATABLE : SUBMISSION
             var table = $('.data-table').DataTable({
-                processing: false,
+                processing: true,
                 serverSide: true,
                 responsive: true,
                 autoWidth: true,

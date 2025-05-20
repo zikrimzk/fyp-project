@@ -883,7 +883,7 @@
 
             // DATATABLE : STUDENT
             var table = $('.data-table').DataTable({
-                processing: false,
+                processing: true,
                 serverSide: true,
                 responsive: true,
                 autoWidth: true,

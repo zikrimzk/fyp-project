@@ -1080,7 +1080,7 @@ class SupervisionController extends Controller
                 'sems' => Semester::all(),
             ]);
         } catch (Exception $e) {
-            return abort(500);
+            return abort(500, $e->getMessage());
         }
     }
 

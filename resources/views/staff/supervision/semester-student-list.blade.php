@@ -102,13 +102,13 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- [ Option Section ] start -->
-                            @if ($sems->sem_status == 1)
-                                <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
-                                    <button type="button"
-                                        class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                        id="clearSelectionBtn">
-                                        0 selected <i class="ti ti-x f-18"></i>
-                                    </button>
+                            <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                <button type="button"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    id="clearSelectionBtn">
+                                    0 selected <i class="ti ti-x f-18"></i>
+                                </button>
+                                @if ($sems->sem_status == 1)
                                     <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
                                         data-bs-toggle="modal" data-bs-target="#assignModal" title="Add Student"
                                         id="assignStudentBtn">
@@ -121,49 +121,32 @@
                                         <i class="ti ti-file-import f-18"></i>
                                         <span class="d-none d-sm-inline me-2">Import Student</span>
                                     </button>
-                                    <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
-                                        id="excelExportBtn" title="Export Data">
-                                        <i class="ti ti-file-export f-18"></i>
-                                        <span class="d-none d-sm-inline me-2">
-                                            Export Data
-                                        </span>
-                                    </button>
-                                    <button type="button"
-                                        class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                        data-bs-toggle="modal" data-bs-target="#updateStatusModal" id="updateStatusModalBtn"
-                                        title=" Update Semester Status">
-                                        <i class="ti ti-edit f-18"></i>
-                                        <span class="d-none d-sm-inline me-2">
-                                            Update Semester Status
-                                        </span>
-                                    </button>
-                                    <button type="button"
-                                        class="btn btn-outline-danger d-flex align-items-center gap-2 d-none"
-                                        data-bs-toggle="modal" data-bs-target="#deleteModal" id="deleteModalBtn"
-                                        title=" Delete Student">
-                                        <i class="ti ti-trash f-18"></i>
-                                        <span class="d-none d-sm-inline me-2">
-                                            Delete Student
-                                        </span>
-                                    </button>
-                                </div>
-                            @else
-                                <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
-                                    <button type="button"
-                                        class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
-                                        id="clearSelectionBtn">
-                                        0 selected <i class="ti ti-x f-18"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
-                                        id="excelExportBtn" title="Export Data">
-                                        <i class="ti ti-file-export f-18"></i>
-                                        <span class="d-none d-sm-inline me-2">
-                                            Export Data
-                                        </span>
-                                    </button>
-                                </div>
-                            @endif
-
+                                @endif
+                                <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
+                                    id="excelExportBtn" title="Export Data">
+                                    <i class="ti ti-file-export f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Export Data
+                                    </span>
+                                </button>
+                                <button type="button"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
+                                    data-bs-toggle="modal" data-bs-target="#updateStatusModal" id="updateStatusModalBtn"
+                                    title=" Update Semester Status">
+                                    <i class="ti ti-edit f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Update Semester Status
+                                    </span>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-2 d-none"
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal" id="deleteModalBtn"
+                                    title=" Delete Student">
+                                    <i class="ti ti-trash f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Delete Student
+                                    </span>
+                                </button>
+                            </div>
                             <!-- [ Option Section ] end -->
 
                             <!-- [ Filter Section ] Start -->
@@ -250,7 +233,6 @@
                                     </thead>
                                 </table>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -389,7 +371,7 @@
                                                 </button>
                                                 <button type="submit" class="btn btn-primary w-100" id="import-btn"
                                                     disabled>
-                                                    Confirm Assignment
+                                                    Import Student
                                                 </button>
                                             </div>
                                         </div>
@@ -419,7 +401,7 @@
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="mb-3">
-                                            <label for="student_semester_status_change" class="form-label fw-semibold">
+                                            <label for="student_semester_status_change" class="form-label">
                                                 Semester Status <span class="text-danger">*</span>
                                             </label>
                                             <select
@@ -468,7 +450,8 @@
                 <!-- [ Multiple Update Status Modal ] end -->
 
                 <!-- [ Multiple Delete Modal ] start -->
-                <div class="modal fade" id="deleteModal" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                <div class="modal fade" id="deleteModal" data-bs-keyboard="false" tabindex="-1" aria-hidden="true"
+                    data-bs-backdrop="static">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content shadow-lg rounded-4 border-0">
 
@@ -482,7 +465,8 @@
                                 <h4 class="text-center fw-semibold mb-2">Are you sure?</h4>
 
                                 <!-- Description -->
-                                <p class="text-center text-muted mb-4">The student will be removed from this semester.
+                                <p class="text-center text-muted mb-4">The selected student will be removed from this
+                                    semester.
                                     This action is reversible, and you can add the student back anytime.</p>
 
                                 <!-- Action Buttons -->
@@ -573,10 +557,9 @@
                     </form>
                     <!-- [ Update Status Modal ] end -->
 
-
                     <!-- [ Delete Modal ] start -->
                     <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
+                        tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content shadow-lg rounded-4 border-0">
 
@@ -860,8 +843,7 @@
                 if (selectedIds.length > 0) {
                     url += "?ids=" + selectedIds.join(",");
                     url += "&semester_id=" + "{{ $sem_id }}";
-                }
-                else {
+                } else {
                     url += "?semester_id=" + "{{ $sem_id }}";
                 }
                 window.location.href = url;

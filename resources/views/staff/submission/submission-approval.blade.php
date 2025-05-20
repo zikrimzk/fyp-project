@@ -81,16 +81,16 @@
                                     id="downloadmultipleModalBtn" title="Download Document (.zip)">
                                     <i class="ti ti-arrow-bar-to-down f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
-                                        Download Document (.zip)
+                                        Download (.zip)
                                     </span>
                                 </button>
                             </div>
                             <!-- [ Option Section ] end -->
 
                             <!-- [ Filter Section ] Start -->
-                            <div class="row g-3 align-items-end">
+                            <div class="row g-3 align-items-center mb-3">
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_faculty_id" class="form-select">
                                             <option value="">-- Select Faculty --</option>
@@ -114,7 +114,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_semester_id" class="form-select">
                                             <option value="">-- Select Semester --</option>
@@ -135,7 +135,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_programme_id" class="form-select">
                                             <option value="">-- Select Programme --</option>
@@ -158,7 +158,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_activity_id" class="form-select">
                                             <option value="">-- Select Activity --</option>
@@ -173,8 +173,7 @@
                                     </div>
                                 </div>
 
-
-                                <div class="col-sm-12 col-md-4 mb-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
@@ -190,6 +189,7 @@
                                         </button>
                                     </div>
                                 </div>
+
                             </div>
                             <!-- [ Filter Section ] End -->
 
@@ -671,7 +671,7 @@
                         data: 'action',
                         name: 'action',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
                     },
                 ],
                 rowGroup: {
