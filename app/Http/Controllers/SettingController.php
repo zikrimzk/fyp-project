@@ -641,7 +641,7 @@ class SettingController extends Controller
 
                 $table->addColumn('action', function ($row) {
                     $isReferenced = false;
-                    $isReferenced = DB::table('students')->where('semester_id', $row->id)->exists();
+                    $isReferenced = DB::table('student_semesters')->where('semester_id', $row->id)->exists();
 
                     $buttonEdit =
                         '

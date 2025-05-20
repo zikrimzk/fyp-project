@@ -432,9 +432,7 @@
 
         $(document).ready(function() {
 
-            $(function() {
-
-                // DATATABLE : SEMESTER
+              // DATATABLE : SEMESTER
                 var table = $('.data-table').DataTable({
                     processing: true,
                     serverSide: true,
@@ -478,8 +476,6 @@
                     ]
 
                 });
-
-            });
 
         });
     </script>
