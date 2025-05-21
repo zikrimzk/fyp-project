@@ -132,6 +132,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-review-activity', [SubmissionController::class, 'updateReview'])->name('update-review-post');
     Route::post('/delete-review-activity', [SubmissionController::class, 'deleteReview'])->name('delete-review-post');
 
+    /* Submission Suggestion */
+    Route::get('/submission-suggestion', [SubmissionController::class, 'submissionSuggestion'])->name('submission-suggestion');
+
     // Standard Operation Procedure (SOP)
 
     /* Activity + Document Setting */

@@ -1652,7 +1652,7 @@ class SubmissionController extends Controller
             }
 
             return view('staff.submission.submission-approval', [
-                'title' => 'My Supervision - Submission Approval',
+                'title' => 'Submission Approval',
                 'studs' => Student::all(),
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
@@ -2060,4 +2060,25 @@ class SubmissionController extends Controller
             ], 500);
         }
     }
+
+    /* Submission Suggestion */
+    public function submissionSuggestion(Request $req)
+    {
+        try {
+        
+            return view('staff.submission.submission-suggestion', [
+                'title' => 'Submission Suggestion',
+                'studs' => Student::all(),
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'acts' => Activity::all(),
+            ]);
+        } catch (Exception $e) {
+            return abort(500, $e->getMessage());
+        }
+    }
+
+
+
 }

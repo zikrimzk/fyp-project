@@ -161,8 +161,8 @@
                                 </a>
                             </li>
                             <li class="pc-item">
-                                <a class="pc-link" href="javascript:void(0)">
-                                    Suggestion
+                                <a class="pc-link" href="{{ route('submission-suggestion') }}">
+                                    Submission Suggestion
                                 </a>
                             </li>
                         </ul>
