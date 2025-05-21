@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('sa_final_submission');
             $table->integer('sa_status')->default(1)->comment('1- Pending 2- Approved 3- Rejected');
+            $table->integer('sa_first_approver')->nullable();
             $table->json('sa_signature_data')->comment('will store the respected signature_key: signature_data , signature_date:Date');
             $table->foreignId('student_id')->constrained('students');
             $table->foreignId('activity_id')->constrained('activities');

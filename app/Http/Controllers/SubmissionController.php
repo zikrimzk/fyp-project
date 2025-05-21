@@ -348,7 +348,7 @@ class SubmissionController extends Controller
 
             // 1 - Signature Role [Student]
             // 1 - Document Status [Pending]
-            $this->storeSignature($actID, $student, $form, $signatureData, $documentName, 1, 1);
+            $this->storeSignature($actID, $student, $form, $signatureData, $documentName, 1, null, 1);
 
             //---------------------------------------------------------------------------//
             //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
@@ -412,7 +412,8 @@ class SubmissionController extends Controller
         }
     }
 
-    public function mergeStudentSubmission($actID, $student, $signatureData, $role, $status)
+    /* Document Handler Function [Start] */
+    public function mergeStudentSubmission($actID, $student, $signatureData, $role, $userName, $status)
     {
         try {
             $actID = decrypt($actID);
@@ -440,7 +441,7 @@ class SubmissionController extends Controller
 
             // 1 - Signature Role [Student]
             // 1 - Document Status [Pending]
-            $this->storeSignature($actID, $student, $form, $signatureData, $documentName, $role, $status);
+            $this->storeSignature($actID, $student, $form, $signatureData, $documentName, $role, $userName, $status);
 
             //---------------------------------------------------------------------------//
             //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
@@ -711,54 +712,81 @@ class SubmissionController extends Controller
         }
     }
 
-    public function storeSignature($actID, $student, $form, $signatureData, $documentName, $signatureRole, $status)
+    public function storeSignature($actID, $student, $form, $signatureData, $documentName, $signatureRole, $userData, $status)
     {
         try {
             if ($signatureData) {
-                // Get the signature field for this role & activity
+
                 $signatureField = FormField::where([
                     ['af_id', $form->id],
                     ['ff_category', 6],
                     ['ff_signature_role', $signatureRole]
                 ])->first();
 
+                $studentActivity = StudentActivity::firstOrNew([
+                    'activity_id' => $actID,
+                    'student_id' => $student->id
+                ]);
+
+                $existingSignatureData = [];
+                if ($studentActivity->sa_signature_data) {
+                    $existingSignatureData = json_decode($studentActivity->sa_signature_data, true);
+                }
+
+                $isCrossApproval = false;
+
+                if (!$signatureField) {
+                    $allSignatureFields = FormField::where([
+                        ['af_id', $form->id],
+                        ['ff_category', 6],
+                    ])->get();
+
+                    foreach ($allSignatureFields as $field) {
+                        $key = $field->ff_signature_key;
+
+                        if (in_array($field->ff_signature_role, [2, 3]) && empty($existingSignatureData[$key])) {
+                            $signatureField = $field;
+                            $isCrossApproval = true;
+                        }
+                    }
+                }
+
                 if ($signatureField) {
                     $signatureKey = $signatureField->ff_signature_key;
                     $dateKey = $signatureField->ff_signature_date_key;
 
-                    $newSignatureData = [
-                        $signatureKey => $signatureData,
-                        $dateKey => now()->format('d M Y')
-                    ];
-
-                    // Retrieve or create StudentActivity
-                    $studentActivity = StudentActivity::where([
-                        ['activity_id', $actID],
-                        ['student_id', $student->id]
-                    ])->first();
-
-                    // Decode existing signature JSON if exists
-                    $existingSignatureData = [];
-                    if ($studentActivity && $studentActivity->sa_signature_data) {
-                        $existingSignatureData = json_decode($studentActivity->sa_signature_data, true);
-                    }
-
-                    // Merge new data into existing data
-                    $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
-
-                    // Save or create StudentActivity record
-                    if (!$studentActivity) {
-                        StudentActivity::create([
-                            'activity_id' => $actID,
-                            'student_id' => $student->id,
-                            'sa_final_submission' => $documentName,
-                            'sa_signature_data' => json_encode($mergedSignatureData)
-                        ]);
+                    if ($signatureRole == 1) {
+                        $newSignatureData = [
+                            $signatureKey => $signatureData,
+                            $dateKey => now()->format('d M Y'),
+                            $signatureKey . '_name' => $student->student_name,
+                            $signatureKey . '_role' => 'Student',
+                            $signatureKey . '_is_cross_approval' => $isCrossApproval
+                        ];
                     } else {
-                        $studentActivity->sa_status = $status;
-                        $studentActivity->sa_signature_data = json_encode($mergedSignatureData);
-                        $studentActivity->save();
+                        $role = match ($userData->staff_role) {
+                            1 => "Committee",
+                            2 => "Lecturer",
+                            3 => "Deputy Dean",
+                            4 => "Dean",
+                            default => "N/A",
+                        };
+
+                        $newSignatureData = [
+                            $signatureKey => $signatureData,
+                            $dateKey => now()->format('d M Y'),
+                            $signatureKey . '_name' => $userData->staff_name,
+                            $signatureKey . '_role' => $role,
+                            $signatureKey . '_is_cross_approval' => $isCrossApproval
+                        ];
                     }
+
+                    // Merge and save
+                    $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
+                    $studentActivity->sa_signature_data = json_encode($mergedSignatureData);
+                    $studentActivity->sa_final_submission = $documentName;
+                    $studentActivity->sa_status = $status;
+                    $studentActivity->save();
                 }
             }
         } catch (Exception $e) {
@@ -786,6 +814,8 @@ class SubmissionController extends Controller
             return abort(500, $e->getMessage());
         }
     }
+
+    /* Document Handler Function [End] */
 
     /* Submission Management [Staff] [Committee] */
     public function submissionManagement(Request $req)
@@ -1715,7 +1745,7 @@ class SubmissionController extends Controller
                 [$role, $status] = $this->determineApprovalRoleStatus($supervision, $authUser->staff_role);
 
                 // Step 1: Merge signature
-                $this->mergeStudentSubmission($actID, $student, $request->input('signatureData'), $role, $status);
+                $this->mergeStudentSubmission($actID, $student, $request->input('signatureData'), $role, $authUser, $status);
 
                 // Step 2: Save review comment if present
                 if ($request->filled('comment')) {
@@ -2030,5 +2060,4 @@ class SubmissionController extends Controller
             ], 500);
         }
     }
-
 }

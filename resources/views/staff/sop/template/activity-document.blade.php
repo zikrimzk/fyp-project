@@ -205,6 +205,11 @@
             margin-top: 3px;
         }
 
+        .date-label,
+        .name-label {
+            display: block;
+        }
+
         p {
             margin: 0;
         }
@@ -275,8 +280,9 @@
                                                 {{ $sig->ff_label }}
                                             </div>
                                             <div class="signature-date-clean">
-                                                <span class="date-label">Date:</span>
-                                                {{ $sig->ff_signature_date_key ?? '' }}
+                                                <span class="name-label">(NAME_OF_APPROVER)</span>
+                                                <span class="date-label">(DATE_OF_APPROVAL)</span>
+                                                {{-- {{ $sig->ff_signature_date_key ?? '' }} --}}
                                             </div>
                                         </td>
                                     @endforeach

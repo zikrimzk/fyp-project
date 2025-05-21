@@ -204,6 +204,23 @@
             margin-top: 3px;
         }
 
+        .date-label,
+        .name-label {
+            display: block;
+        }
+
+        .signature-box-clean-text {
+            height: 100px;
+            line-height: 100px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9pt;
+            color: red;
+            margin-bottom: 10px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
         p {
             margin: 0;
         }
@@ -394,19 +411,47 @@
                             <table class="signature-table clean-signature">
                                 <tr>
                                     @foreach ($chunk as $sig)
-                                        <td class="signature-cell">
-                                            <div class="signature-box-clean">
-                                                <img src="{{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key}) ? $signatureData->{$sig->ff_signature_key} : '' }}"
-                                                    class="signature-img-clean">
-                                            </div>
-                                            <div class="signature-label-clean">
-                                                {{ $sig->ff_label }}
-                                            </div>
-                                            <div class="signature-date-clean">
-                                                <span class="date-label">Date:</span>
-                                                {{ $signatureData && $sig->ff_signature_date_key && isset($signatureData->{$sig->ff_signature_date_key}) ? $signatureData->{$sig->ff_signature_date_key} : '-' }}
-                                            </div>
-                                        </td>
+                                        @if (
+                                            $signatureData &&
+                                                $sig->ff_signature_key &&
+                                                isset($signatureData->{$sig->ff_signature_key . '_is_cross_approval'}) &&
+                                                $signatureData->{$sig->ff_signature_key . '_is_cross_approval'})
+                                            <td class="signature-cell">
+                                                <div class="signature-box-clean-text">
+                                                    Approved by
+                                                    {{ $signatureData->{$sig->ff_signature_key . '_role'} ?? '-' }}
+                                                </div>
+                                                <div class="signature-label-clean">
+                                                    {{ $sig->ff_label }}
+                                                </div>
+                                                <div class="signature-date-clean">
+                                                    <span class="name-label">
+                                                        {{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key . '_name'}) ? $signatureData->{$sig->ff_signature_key . '_name'} : '( NAME_OF_APPROVER )' }}
+                                                    </span>
+                                                    <span class="date-label">
+                                                        {{ $signatureData && $sig->ff_signature_date_key && isset($signatureData->{$sig->ff_signature_date_key}) ? $signatureData->{$sig->ff_signature_date_key} : '( DATE_OF_APPROVAL )' }}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        @else
+                                            <td class="signature-cell">
+                                                <div class="signature-box-clean">
+                                                    <img src="{{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key}) ? $signatureData->{$sig->ff_signature_key} : '' }}"
+                                                        class="signature-img-clean">
+                                                </div>
+                                                <div class="signature-label-clean">
+                                                    {{ $sig->ff_label }}
+                                                </div>
+                                                <div class="signature-date-clean">
+                                                    <span class="name-label">
+                                                        {{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key . '_name'}) ? $signatureData->{$sig->ff_signature_key . '_name'} : '( NAME_OF_APPROVER )' }}
+                                                    </span>
+                                                    <span class="date-label">
+                                                        {{ $signatureData && $sig->ff_signature_date_key && isset($signatureData->{$sig->ff_signature_date_key}) ? $signatureData->{$sig->ff_signature_date_key} : '( DATE_OF_APPROVAL )' }}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        @endif
                                     @endforeach
                                 </tr>
                             </table>

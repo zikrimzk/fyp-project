@@ -698,4 +698,60 @@ class Controller extends BaseController
 
     //     return $status;
     // });
+    
+
+       // public function storeSignature($actID, $student, $form, $signatureData, $documentName, $signatureRole, $status)
+    // {
+    //     try {
+    //         if ($signatureData) {
+
+    //             $signatureField = FormField::where([
+    //                 ['af_id', $form->id],
+    //                 ['ff_category', 6],
+    //                 ['ff_signature_role', $signatureRole]
+    //             ])->first();
+
+    //             if ($signatureField) {
+    //                 $signatureKey = $signatureField->ff_signature_key;
+    //                 $dateKey = $signatureField->ff_signature_date_key;
+
+    //                 $newSignatureData = [
+    //                     $signatureKey => $signatureData,
+    //                     $dateKey => now()->format('d M Y')
+    //                 ];
+
+    //                 // Retrieve or create StudentActivity
+    //                 $studentActivity = StudentActivity::where([
+    //                     ['activity_id', $actID],
+    //                     ['student_id', $student->id]
+    //                 ])->first();
+
+    //                 // Decode existing signature JSON if exists
+    //                 $existingSignatureData = [];
+    //                 if ($studentActivity && $studentActivity->sa_signature_data) {
+    //                     $existingSignatureData = json_decode($studentActivity->sa_signature_data, true);
+    //                 }
+
+    //                 // Merge new data into existing data
+    //                 $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
+
+    //                 // Save or create StudentActivity record
+    //                 if (!$studentActivity) {
+    //                     StudentActivity::create([
+    //                         'activity_id' => $actID,
+    //                         'student_id' => $student->id,
+    //                         'sa_final_submission' => $documentName,
+    //                         'sa_signature_data' => json_encode($mergedSignatureData)
+    //                     ]);
+    //                 } else {
+    //                     $studentActivity->sa_status = $status;
+    //                     $studentActivity->sa_signature_data = json_encode($mergedSignatureData);
+    //                     $studentActivity->save();
+    //                 }
+    //             }
+    //         }
+    //     } catch (Exception $e) {
+    //         return back()->with('error', 'Oops! Error storing signature: ' . $e->getMessage());
+    //     }
+    // }
 }
