@@ -754,4 +754,86 @@ class Controller extends BaseController
     //         return back()->with('error', 'Oops! Error storing signature: ' . $e->getMessage());
     //     }
     // }
+
+    // $data = DB::table('students as s')
+            //     ->select([
+            //         's.id as student_id',
+            //         's.student_name',
+            //         's.student_matricno',
+            //         's.student_email',
+            //         's.student_directory',
+            //         's.student_photo',
+            //         'b.sem_label',
+            //         'c.prog_code',
+            //         'c.prog_mode',
+            //         'c.fac_id',
+            //         's.student_semcount',
+            //         'p.timeline_sem',
+            //         'p.programme_id',
+            //         'a.id as activity_id',
+            //         'a.act_name as activity_name',
+            //         'p.act_seq',
+            //         'p.init_status',
+            //         DB::raw(
+            //             'CASE
+            //             WHEN EXISTS (
+            //                 SELECT 1 FROM student_activities sa_current
+            //                 WHERE sa_current.student_id = s.id
+            //                 AND sa_current.activity_id = p.activity_id
+            //                 AND sa_current.sa_status = 3
+            //             ) THEN 5
+            //             WHEN EXISTS (
+            //                 SELECT 1 FROM documents d
+            //                 JOIN submissions sub ON sub.document_id = d.id
+            //                 WHERE d.activity_id = p.activity_id
+            //                 AND sub.student_id = s.id
+            //                 AND sub.submission_status = 5
+            //             ) THEN 6
+            //             WHEN EXISTS (
+            //                 SELECT 1 FROM student_activities sa_current
+            //                 WHERE sa_current.student_id = s.id
+            //                 AND sa_current.activity_id = p.activity_id
+            //             ) THEN 4
+            //             WHEN EXISTS (
+            //                 SELECT 1 FROM documents d
+            //                 JOIN submissions sub ON sub.document_id = d.id
+            //                 WHERE d.activity_id = p.activity_id
+            //                 AND sub.student_id = s.id
+            //                 AND sub.submission_status IN (1, 4)
+            //             ) 
+            //             AND NOT EXISTS (
+            //                 SELECT 1 FROM student_activities sa
+            //                 WHERE sa.student_id = s.id
+            //                 AND sa.activity_id = p.activity_id
+            //             ) THEN 2
+            //             WHEN EXISTS (
+            //                 SELECT 1 FROM procedures p_prev
+            //                 WHERE p_prev.programme_id = s.programme_id
+            //                 AND p_prev.act_seq < p.act_seq
+            //                 AND NOT EXISTS (
+            //                     SELECT 1 FROM student_activities sa_prev
+            //                     WHERE sa_prev.student_id = s.id
+            //                     AND sa_prev.activity_id = p_prev.activity_id
+            //                     AND sa_prev.sa_status = 3
+            //                 )
+            //             ) THEN 3
+            //             ELSE 1
+            //         END as suggestion_status'
+            //         )
+            //     ])
+            //     ->join('student_semesters as ss', function ($join) {
+            //         $join->on('s.id', '=', 'ss.student_id')
+            //             ->where('ss.ss_status', '=', 1);
+            //     })
+            //     ->join('procedures as p', function ($join) {
+            //         $join->on('s.programme_id', '=', 'p.programme_id')
+            //             ->whereRaw('s.student_semcount >= p.timeline_sem')
+            //             ->where('p.init_status', '=', 2);
+            //     })
+            //     ->join('activities as a', 'p.activity_id', '=', 'a.id')
+            //     ->join('semesters as b', 'b.id', '=', 'ss.semester_id')
+            //     ->join('programmes as c', 'c.id', '=', 's.programme_id')
+            //     ->where('s.student_status', '=', 1)
+            //     ->orderBy('s.student_matricno')
+            //     ->orderBy('p.act_seq');
 }

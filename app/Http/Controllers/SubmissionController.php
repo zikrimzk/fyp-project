@@ -12,6 +12,7 @@ use App\Models\Activity;
 use App\Models\Document;
 use App\Models\Semester;
 use App\Models\FormField;
+use App\Models\Procedure;
 use App\Models\Programme;
 use App\Models\Submission;
 use App\Models\Supervision;
@@ -2065,7 +2066,201 @@ class SubmissionController extends Controller
     public function submissionSuggestion(Request $req)
     {
         try {
-        
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as s')
+                ->select([
+                    's.id as student_id',
+                    's.student_name',
+                    's.student_matricno',
+                    's.student_email',
+                    's.student_directory',
+                    's.student_photo',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'c.fac_id',
+                    's.student_semcount',
+                    'p.timeline_sem',
+                    'p.programme_id',
+                    'a.id as activity_id',
+                    'a.act_name as activity_name',
+                    'p.act_seq',
+                    'p.init_status',
+                    DB::raw(
+                        'CASE
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                            AND sa_current.sa_status = 3
+                        ) THEN 5
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status = 5
+                        ) THEN 6
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                        ) THEN 4
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status IN (1, 4)
+                        ) 
+                        AND NOT EXISTS (
+                            SELECT 1 FROM student_activities sa
+                            WHERE sa.student_id = s.id
+                            AND sa.activity_id = p.activity_id
+                        ) THEN 2
+                        WHEN EXISTS (
+                            SELECT 1 FROM procedures p_prev
+                            WHERE p_prev.programme_id = s.programme_id
+                            AND p_prev.act_seq < p.act_seq
+                            AND NOT EXISTS (
+                                SELECT 1 FROM student_activities sa_prev
+                                WHERE sa_prev.student_id = s.id
+                                AND sa_prev.activity_id = p_prev.activity_id
+                                AND sa_prev.sa_status = 3
+                            )
+                        ) THEN 3
+                        ELSE 1
+                    END as suggestion_status'
+                )])
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('s.id', '=', 'latest.student_id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 's.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('procedures as p', function ($join) {
+                    $join->on('s.programme_id', '=', 'p.programme_id')
+                        ->whereRaw('s.student_semcount >= p.timeline_sem')
+                        ->where('p.init_status', '=', 2);
+                })
+                ->join('activities as a', 'p.activity_id', '=', 'a.id')
+                ->join('programmes as c', 'c.id', '=', 's.programme_id')
+                ->where('s.student_status', '=', 1)
+                ->orderBy('s.student_matricno')
+                ->orderBy('p.act_seq');
+
+            if ($req->ajax()) {
+
+                if ($req->has('activity') && !empty($req->input('activity'))) {
+                    $data->where('a.id', $req->input('activity'));
+                }
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('c.fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('p.programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('semester_id', $req->input('semester'));
+                }
+                if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
+                    $data->having('suggestion_status', $req->input('status'));
+                }
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('checkbox', function ($row) {
+
+                    if ($row->suggestion_status == 1 || $row->suggestion_status == 2) {
+                        return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->student_id . '">';
+                    } else {
+                        return '<input type="checkbox" class="user-checkbox-d form-check-input" disabled>';
+                    }
+                });
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('suggestion_status', function ($row) {
+                    $status = '';
+
+                    if ($row->suggestion_status == 1) {
+                        $status = '<span class="badge bg-light-success">' . 'Eligible' . '</span>';
+                    } elseif ($row->suggestion_status == 2) {
+                        $status = '<span class="badge bg-success">' . 'Submission Opened' . '</span>';
+                    } elseif ($row->suggestion_status == 3) {
+                        $status = '<span class="badge bg-light-warning">' . 'Prerequisite Pending' . '</span>';
+                    } elseif ($row->suggestion_status == 4) {
+                        $status = '<span class="badge bg-light-warning">' . 'Under Review' . '</span>';
+                    } elseif ($row->suggestion_status == 5) {
+                        $status = '<span class="badge bg-light-secondary">' . 'Completed' . '</span>';
+                    } elseif ($row->suggestion_status == 6) {
+                        $status = '<span class="badge bg-light-danger">' . 'Submission Archived' . '</span>';
+                    } else {
+                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                    }
+                    return $status;
+                });
+
+                $table->addColumn('action', function ($row) {
+                    $button = '';
+
+                    if ($row->suggestion_status == 1) {
+                        $button = '
+                            <button type="button" class="btn btn-light-success btn-sm d-flex justify-content-center align-items-center w-100"
+                                data-bs-toggle="modal" data-bs-target="#approveModal-' . $row->student_id . $row->activity_id . '">
+                                <i class="ti ti-circle-check me-2"></i> Approve
+                            </button>
+                        ';
+                    } elseif ($row->suggestion_status == 2) {
+                        $button = '
+                            <button type="button" class="btn btn-light-warning btn-sm d-flex justify-content-center align-items-center w-100"
+                                data-bs-toggle="modal" data-bs-target="#revertModal-' . $row->student_id . $row->activity_id . '">
+                                <i class="ti ti-rotate me-2"></i> Revert
+                            </button>
+                        ';
+                    } else {
+                        $button = '<span class="fst-italic text-muted">No Action Required</span>';
+                    }
+
+                    return $button;
+                });
+
+                $table->rawColumns(['checkbox', 'student_photo', 'suggestion_status', 'action']);
+
+                return $table->make(true);
+            }
+
             return view('staff.submission.submission-suggestion', [
                 'title' => 'Submission Suggestion',
                 'studs' => Student::all(),
@@ -2073,12 +2268,69 @@ class SubmissionController extends Controller
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
                 'acts' => Activity::all(),
+                'data' => $data->get(),
             ]);
         } catch (Exception $e) {
+            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
 
+    public function studentSubmissionSuggestionApproval($studentID, $activityID, $option)
+    {
+        $studentID = Crypt::decrypt($studentID);
+        $activityID = Crypt::decrypt($activityID);
 
+        try {
+            $submissions = DB::table('students as a')
+                ->join('submissions as b', 'a.id', '=', 'b.student_id')
+                ->join('documents as c', 'b.document_id', '=', 'c.id')
+                ->join('student_semesters as d', 'a.id', '=', 'd.student_id')
+                ->join('semesters as e', 'd.semester_id', '=', 'e.id')
+                ->where('a.id', $studentID)
+                ->where('c.activity_id', $activityID)
+                ->where('d.ss_status', 1)
+                ->select('a.programme_id', 'b.*', 'e.sem_startdate', 'e.sem_enddate')
+                ->get();
 
+            $activity = Activity::whereId($activityID)->first();
+            $student = Student::whereId($studentID)->first();
+
+            if ($submissions->isEmpty()) {
+                return back()->with('error', 'No submission found for this student.');
+            }
+
+            if ($option == 1) {
+                /* APPROVE OPENING */
+                foreach ($submissions as $sub) {
+                    $submission = Submission::whereId($sub->id)->first();
+                    $procedures = Procedure::where('programme_id', $sub->programme_id)
+                        ->where('activity_id', $activityID)
+                        ->where('init_status', 2)
+                        ->first();
+
+                    $days = $procedures->timeline_week * 7;
+                    $submissionDate = Carbon::parse($sub->sem_startdate)->addDays($days);
+                    $submission->submission_duedate = $submissionDate;
+                    $submission->submission_status = 1;
+                    $submission->save();
+                }
+
+                return back()->with('success', $student->student_name . ' has been approved for ' . $activity->act_name . ' submission. The submission is now open for this student.');
+            } elseif ($option == 2) {
+                /* REVERT */
+                foreach ($submissions as $sub) {
+                    $submission = Submission::whereId($sub->id)->first();
+                    $submission->submission_status = 2;
+                    $submission->save();
+                }
+
+                return back()->with('success', $student->student_name . ' submission for ' . $activity->act_name . ' has been reverted. The submission is now hidden for this student.');
+            } else {
+                return back()->with('error', 'Oops! Invalid option. Please try again.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error approving student submission opening: ' . $e->getMessage());
+        }
+    }
 }

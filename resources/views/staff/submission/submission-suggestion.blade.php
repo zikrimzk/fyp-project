@@ -72,12 +72,12 @@
                             <!-- [ Option Section ] start -->
                             <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-5"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-4"
                                     id="clearSelectionBtn">
                                     0 selected <i class="ti ti-x f-18"></i>
                                 </button>
                                 <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-5"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-4"
                                     id="downloadmultipleModalBtn" title="Download Document (.zip)">
                                     <i class="ti ti-arrow-bar-to-down f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
@@ -89,8 +89,41 @@
 
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-center mb-3">
+                                <div class="col-sm-12 col-md-6">
+                                    <div class="input-group">
+                                        <select id="fil_activity_id" class="form-select">
+                                            <option value="">-- Select Activity --</option>
+                                            @foreach ($acts as $fil)
+                                                <option value="{{ $fil->id }}">{{ $fil->act_name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearActivityFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 col-md-6">
+                                    <div class="input-group">
+                                        <select id="fil_status" class="form-select">
+                                            <option value="1" selected>Eligible</option>
+                                            <option value="2">Submission Opened</option>
+                                            <option value="3">Prerequisite Pending</option>
+                                            <option value="4">Under Review</option>
+                                            <option value="5">Completed</option>
+                                            <option value="6">Submission Archived</option>
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearStatusFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
-                                <div class="col-sm-12 col-md-3">
+                            <div class="row g-3 align-items-center mb-3">
+
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_faculty_id" class="form-select">
                                             <option value="">-- Select Faculty --</option>
@@ -102,7 +135,7 @@
                                                         {{ $fil->fac_code }} [Inactive]
                                                     </option>
                                                 @elseif($fil->fac_status == 3)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                    <option value="{{ $fil->id }}" class="bg-light-success">
                                                         {{ $fil->fac_code }} [Default]
                                                     </option>
                                                 @endif
@@ -114,7 +147,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_semester_id" class="form-select">
                                             <option value="">-- Select Semester --</option>
@@ -129,13 +162,14 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSemFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearSemFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3">
+                                <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
                                         <select id="fil_programme_id" class="form-select">
                                             <option value="">-- Select Programme --</option>
@@ -158,38 +192,6 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3">
-                                    <div class="input-group">
-                                        <select id="fil_activity_id" class="form-select">
-                                            <option value="">-- Select Activity --</option>
-                                            @foreach ($acts as $fil)
-                                                <option value="{{ $fil->id }}">{{ $fil->act_name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearActivityFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- <div class="col-sm-12 col-md-4">
-                                    <div class="input-group">
-                                        <select id="fil_status" class="form-select">
-                                            <option value="">-- Select Status --</option>
-                                            <option value="1">Pending Approval: Supervisor</option>
-                                            <option value="2" selected>Pending Approval: (Comm/DD/Dean)</option>
-                                            <option value="3">Approved & Completed</option>
-                                            <option value="4">Rejected: Supervisor</option>
-                                            <option value="5">Rejected: (Comm/DD/Dean)</option>
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearStatusFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div> --}}
-
                             </div>
                             <!-- [ Filter Section ] End -->
 
@@ -199,15 +201,256 @@
                                         <tr>
                                             <th><input type="checkbox" id="select-all" class="form-check-input"></th>
                                             <th scope="col">Student</th>
-                                            <th scope="col">Final Document</th>
-                                            <th scope="col">Confirmation Date</th>
-                                            <th scope="col">Status</th>
+                                            <th scope="col">Submission Status</th>
                                             <th scope="col">Activity</th>
                                             <th scope="col">Action</th>
                                         </tr>
                                     </thead>
                                 </table>
                             </div>
+
+
+                            @foreach ($data as $upd)
+                                <!-- [ Approve Modal ] Start -->
+                                <div class="modal fade" id="approveModal-{{ $upd->student_id . $upd->activity_id }}"
+                                    data-bs-keyboard="false" tabindex="-1" aria-hidden="true"
+                                    data-bs-backdrop="static">
+                                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                        <div class="modal-content">
+                                            {{-- <div class="modal-body">
+                                                    <div class="row">
+
+                                                        <!-- Icon -->
+                                                        <div class="col-sm-12 mb-4 text-center">
+                                                            <i class="ti ti-circle-check text-success"
+                                                                style="font-size: 100px"></i>
+                                                        </div>
+
+                                                        <!-- Title -->
+                                                        <div class="col-sm-12 text-center">
+                                                            <h2 class="f-18">Approve Student Confirmation?</h2>
+                                                        </div>
+
+                                                        <!-- Instruction -->
+                                                        <div class="col-sm-12 mb-3">
+                                                            <div class="alert alert-light border text-start f-14">
+                                                                <strong class="d-block mb-1">Instructions:</strong>
+                                                                <ul class="mb-2 ps-3">
+                                                                    <li>Carefully review the student's submission document.
+                                                                    </li>
+                                                                    <li>If necessary, provide comments or notes below.</li>
+                                                                    <li>Sign using the signature box to confirm your
+                                                                        approval.</li>
+                                                                    <li>Click <strong>"Confirm & Sign"</strong> to finalize
+                                                                        this action.
+                                                                    </li>
+                                                                    <li class="text-danger"><strong>This action is final
+                                                                            and cannot be
+                                                                            undone.</strong></li>
+                                                                </ul>
+                                                                <div class="mt-2">
+                                                                    <strong class="text-muted fst-italic d-block">
+                                                                        By signing below, you confirm that the signature is
+                                                                        your own
+                                                                        handwriting and that it is legally binding within
+                                                                        the
+                                                                        institution’s authority and applicable regulations.
+                                                                    </strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Optional Comment -->
+                                                        <div class="col-sm-12 mb-3">
+                                                            <label for="comment_txt_{{ $upd->student_activity_id }}"
+                                                                class="form-label">
+                                                                Comment / Notes <span class="text-muted">(optional)</span>
+                                                            </label>
+                                                            <textarea name="comment" id="comment_txt_{{ $upd->student_activity_id }}" class="form-control" rows="4"
+                                                                placeholder="Enter any remarks if needed..."></textarea>
+                                                        </div>
+
+                                                        <!-- Signature Canvas -->
+                                                        <div class="col-sm-12 mb-3">
+                                                            <label class="form-label">Signature <span
+                                                                    class="text-danger">*</span></label>
+                                                            <canvas id="signatureCanvas-{{ $upd->student_activity_id }}"
+                                                                style="border:1px solid #000000; border-radius:10px; width:100%; height:200px;"></canvas>
+                                                            <input type="hidden" name="signatureData"
+                                                                id="signatureData-{{ $upd->student_activity_id }}">
+                                                        </div>
+
+                                                        <!-- Signature Actions -->
+                                                        <div class="col-sm-12 mb-3 d-flex justify-content-between gap-3">
+                                                            <button type="button" class="btn btn-light w-100"
+                                                                data-clear="{{ $upd->student_activity_id }}">
+                                                                <i class="ti ti-eraser me-2"></i> Clear Signature
+                                                            </button>
+                                                        </div>
+
+                                                        <!-- Signature Notice -->
+                                                        <div class="col-sm-12 mb-3">
+                                                            <div class="d-flex align-items-center text-muted">
+                                                                <div
+                                                                    class="avtar avtar-s bg-light-primary flex-shrink-0 me-2">
+                                                                    <i class="fas fa-shield-alt text-primary f-20"></i>
+                                                                </div>
+                                                                <span class="text-sm">All signatures are securely stored
+                                                                    within the
+                                                                    system.</span>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </div> --}}
+
+                                            <!-- Approval Confirmation Modal -->
+                                            <div class="modal-body">
+
+                                                <!-- Header with icon -->
+                                                <div class="col-sm-12 mb-4 text-center">
+                                                    <i class="ti ti-circle-check text-success"
+                                                        style="font-size: 100px"></i>
+                                                </div>
+                                                <div class="text-center mb-4">
+                                                    <h4 class="fw-bold">Approve Submission Opening?</h4>
+                                                </div>
+
+                                                <!-- Main message -->
+                                                <div class="alert alert-success border-0">
+                                                    <div class="d-flex">
+                                                        <i class="fas fa-info-circle mt-1 me-2"></i>
+                                                        <div>
+                                                            <p class="mb-2 fw-semibold">By approving this activity:</p>
+                                                            <ul class="ps-3 mb-0">
+                                                                <li>The student <span class="fw-bold">must
+                                                                        submit</span> all required documents for this
+                                                                    activity</li>
+                                                                <li>The system will <span class="fw-bold">automatically
+                                                                        notify</span> the student and supervisors</li>
+                                                                <li>Submission deadline will be set based on activity
+                                                                    timeline</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Revert information -->
+                                                <div class="alert alert-light border mt-3">
+                                                    <div class="d-flex">
+                                                        <i class="fas fa-undo text-warning mt-1 me-2"></i>
+                                                        <div>
+                                                            <p class="mb-1"><span class="fw-semibold">Changed your
+                                                                    mind?</span></p>
+                                                            <p class="small mb-0">You can <span class="fw-bold">revert
+                                                                    this decision</span> anytime before the student
+                                                                confirms their submission. After confirmation, you'll
+                                                                need to contact the student directly.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <div class="d-flex justify-content-between gap-3 w-100">
+                                                    <button type="button" class="btn btn-light w-50"
+                                                        data-bs-dismiss="modal">Cancel</button>
+                                                    <a href="{{ route('submission-eligibility-approval-get', ['studentID' => Crypt::encrypt($upd->student_id), 'activityID' => Crypt::encrypt($upd->activity_id), 'opt' => 1]) }}"
+                                                        class="btn btn-success w-100">
+                                                        Confirm Approval
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- [ Approve Modal ] end -->
+
+                                <!-- [ Revert Modal ] Start -->
+                                <div class="modal fade" id="revertModal-{{ $upd->student_id . $upd->activity_id }}"
+                                    data-bs-keyboard="false" tabindex="-1" aria-hidden="true"
+                                    data-bs-backdrop="static">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-body">
+                                                <div class="row">
+
+                                                    <!-- Icon -->
+                                                    <div class="col-sm-12 mb-4">
+                                                        <div class="d-flex justify-content-center align-items-center mb-3">
+                                                            <i class="ti ti-refresh-alert text-warning"
+                                                                style="font-size: 100px"></i>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Title -->
+                                                    <div class="col-sm-12 mb-3">
+                                                        <div
+                                                            class="d-flex justify-content-center align-items-center text-center">
+                                                            <h2 class="f-18">Revert Student Submission?</h2>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Message -->
+                                                    <div class="col-sm-12 mb-3">
+                                                        <div class="d-flex justify-content-center align-items-center">
+                                                            <div class="alert alert-warning p-3 f-14">
+                                                                <p class="fw-semibold mb-2">This action will:</p>
+                                                                <ul class="list-unstyled ps-3">
+                                                                    <li class="mb-2">
+                                                                        <i class="fas fa-lock me-2"></i>
+                                                                        <strong>Lock</strong> the student's submission
+                                                                    </li>
+                                                                    <li class="mb-2">
+                                                                        <i class="fas fa-undo me-2"></i>
+                                                                        <strong>Reset</strong> all submission documents
+                                                                    </li>
+                                                                    <li class="mb-2">
+                                                                        <i class="fas fa-user-clock me-2"></i> Require
+                                                                        student to <strong>resubmit</strong> all
+                                                                        documents
+                                                                    </li>
+                                                                    <li>
+                                                                        <i class="fas fa-unlock-alt me-2"></i>
+                                                                        Committee must <strong>reapprove</strong>
+                                                                        for new submissions
+                                                                    </li>
+                                                                </ul>
+                                                                <p class="mt-2 mb-0 text-danger fw-semibold">
+                                                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                                                    Student cannot submit until committee reopens this
+                                                                    activity!
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Confirmation -->
+                                                    <div class="col-sm-12">
+                                                        <div class="d-flex justify-content-center align-items-center">
+                                                            <p class="f-14 text-muted text-center">
+                                                                Are you sure you want to proceed with this action?
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Action Buttons -->
+                                                    <div class="col-sm-12">
+                                                        <div
+                                                            class="d-flex justify-content-between gap-3 align-items-center">
+                                                            <button type="reset" class="btn btn-light w-50"
+                                                                data-bs-dismiss="modal">Cancel</button>
+                                                            <a href="{{ route('submission-eligibility-approval-get', ['studentID' => Crypt::encrypt($upd->student_id), 'activityID' => Crypt::encrypt($upd->activity_id), 'opt' => 2]) }}"
+                                                                class="btn btn-warning w-100">
+                                                                Confirm Revert
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- [ Revert Modal ] End -->
+                            @endforeach
 
                         </div>
                     </div>
@@ -273,14 +516,13 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('submission-approval') }}",
+                    url: "{{ route('submission-suggestion') }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id').val();
                         d.programme = $('#fil_programme_id').val();
-                        d.semester = $('#fil_semester_id').val();
                         d.activity = $('#fil_activity_id').val();
                         d.status = $('#fil_status').val();
-                        d.role = $('#fil_role').val();
+                        d.semester = $('#fil_semester_id').val();
                     }
                 },
                 columns: [{
@@ -294,16 +536,8 @@
                         name: 'student_photo'
                     },
                     {
-                        data: 'sa_final_submission',
-                        name: 'sa_final_submission'
-                    },
-                    {
-                        data: 'confirm_date',
-                        name: 'confirm_date'
-                    },
-                    {
-                        data: 'sa_status',
-                        name: 'sa_status'
+                        data: 'suggestion_status',
+                        name: 'suggestion_status'
                     },
                     {
                         data: 'activity_name',
@@ -354,16 +588,6 @@
                 $('#fil_programme_id').val('').change();
             });
 
-            // FILTER : SEMESTER
-            $('#fil_semester_id').on('change', function() {
-                $('.data-table').DataTable().ajax
-                    .reload();
-            });
-
-            $('#clearSemFilter').click(function() {
-                $('#fil_semester_id').val('').change();
-            });
-
             // FILTER : ACTIVITY
             $('#fil_activity_id').on('change', function() {
                 $('.data-table').DataTable().ajax
@@ -372,6 +596,16 @@
 
             $('#clearActivityFilter').click(function() {
                 $('#fil_activity_id').val('').change();
+            });
+
+            // FILTER : SEMESTER
+            $('#fil_semester_id').on('change', function() {
+                $('.data-table').DataTable().ajax
+                    .reload();
+            });
+
+            $('#clearSemFilter').click(function() {
+                $('#fil_semester_id').val('').change();
             });
 
             // FILTER : STATUS
@@ -383,10 +617,10 @@
             });
 
             $('#clearStatusFilter').click(function() {
-                $('#fil_status').val('').change();
+                $('#fil_status').val('1').change();
             });
 
-           
+
 
 
             /*********************************************************/
