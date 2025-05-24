@@ -318,6 +318,7 @@ class SubmissionController extends Controller
         }
     }
 
+    // ## SEND EMAIL - SV 
     public function confirmStudentSubmission($actID)
     {
         try {
@@ -406,6 +407,7 @@ class SubmissionController extends Controller
             $mergedPath =  $finalDocPath . '/' . $documentName;
             $pdf->Output($mergedPath, 'F');
 
+            // SEND EMAIL SECTION
 
             return back()->with('success', 'Submission has been confirmed successfully.');
         } catch (Exception $e) {
@@ -1795,13 +1797,13 @@ class SubmissionController extends Controller
 
                     if ($finalStatus == 3) {
                         //COMMENT FOR TESTING PURPOSE
-                        // DB::table('submissions as a')
-                        //     ->join('documents as b', 'a.document_id', '=', 'b.id')
-                        //     ->join('activities as c', 'b.activity_id', '=', 'c.id')
-                        //     ->where('a.student_id', $student->id)
-                        //     ->where('c.id', $studentActivity->activity_id)
-                        //     ->update(['a.submission_status' => 5]);
-                        // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                        DB::table('submissions as a')
+                            ->join('documents as b', 'a.document_id', '=', 'b.id')
+                            ->join('activities as c', 'b.activity_id', '=', 'c.id')
+                            ->where('a.student_id', $student->id)
+                            ->where('c.id', $studentActivity->activity_id)
+                            ->update(['a.submission_status' => 5]);
+                        $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
                     }
                 } else {
                     // Committee / Deputy Dean / Dean
@@ -1838,13 +1840,13 @@ class SubmissionController extends Controller
 
                     if ($finalStatus == 3) {
                         //COMMENT FOR TESTING PURPOSE
-                        // DB::table('submissions as a')
-                        //     ->join('documents as b', 'a.document_id', '=', 'b.id')
-                        //     ->join('activities as c', 'b.activity_id', '=', 'c.id')
-                        //     ->where('a.student_id', $student->id)
-                        //     ->where('c.id', $studentActivity->activity_id)
-                        //     ->update(['a.submission_status' => 5]);
-                        // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                        DB::table('submissions as a')
+                            ->join('documents as b', 'a.document_id', '=', 'b.id')
+                            ->join('activities as c', 'b.activity_id', '=', 'c.id')
+                            ->where('a.student_id', $student->id)
+                            ->where('c.id', $studentActivity->activity_id)
+                            ->update(['a.submission_status' => 5]);
+                        $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
                     }
                 }
 
@@ -2134,7 +2136,8 @@ class SubmissionController extends Controller
                         ) THEN 3
                         ELSE 1
                     END as suggestion_status'
-                )])
+                    )
+                ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
                     $join->on('s.id', '=', 'latest.student_id');
                 })
@@ -2276,6 +2279,7 @@ class SubmissionController extends Controller
         }
     }
 
+    // ## SEND EMAIL - SV & STUDENT
     public function studentSubmissionSuggestionApproval($studentID, $activityID, $option)
     {
         $studentID = Crypt::decrypt($studentID);
@@ -2316,6 +2320,8 @@ class SubmissionController extends Controller
                     $submission->save();
                 }
 
+                // SEND EMAIL SECTION
+
                 return back()->with('success', $student->student_name . ' has been approved for ' . $activity->act_name . ' submission. The submission is now open for this student.');
             } elseif ($option == 2) {
                 /* REVERT */
@@ -2331,6 +2337,85 @@ class SubmissionController extends Controller
             }
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error approving student submission opening: ' . $e->getMessage());
+        }
+    }
+
+    // ## SEND EMAIL - SV & STUDENT
+    public function multipleStudentSubmissionSuggestionApproval(Request $request)
+    {
+        $studentIDs = $request->input('selectedIds');
+        $activityID = $request->input('activityId');
+        $option = $request->input('option');
+
+        try {
+            $submissions = DB::table('students as a')
+                ->join('submissions as b', 'a.id', '=', 'b.student_id')
+                ->join('documents as c', 'b.document_id', '=', 'c.id')
+                ->join('student_semesters as d', 'a.id', '=', 'd.student_id')
+                ->join('semesters as e', 'd.semester_id', '=', 'e.id')
+                ->whereIn('a.id', $studentIDs)
+                ->where('c.activity_id', $activityID)
+                ->where('d.ss_status', 1)
+                ->select('a.id as student_id', 'a.student_name', 'a.programme_id', 'b.*', 'e.sem_startdate', 'e.sem_enddate')
+                ->get();
+
+            $activity = Activity::find($activityID);
+
+            if ($submissions->isEmpty()) {
+                return back()->with('error', 'No submission found for the selected students.');
+            }
+
+            $studentNames = [];
+
+            foreach ($submissions as $sub) {
+                $submission = Submission::find($sub->id);
+                $studentNames[] = $sub->student_name;
+
+                if ($option == 1) {
+                    // Approve
+                    $procedure = Procedure::where('programme_id', $sub->programme_id)
+                        ->where('activity_id', $activityID)
+                        ->where('init_status', 2)
+                        ->first();
+
+                    if ($procedure) {
+                        $dueDate = Carbon::parse($sub->sem_startdate)->addDays($procedure->timeline_week * 7);
+                        $submission->submission_duedate = $dueDate;
+                        $submission->submission_status = 1;
+                    }
+                    // SEND EMAIL SECTION 
+
+                } elseif ($option == 2) {
+                    // Revert
+                    $submission->submission_status = 2;
+                }
+
+                $submission->save();
+            }
+
+            $uniqueNames = implode(', ', array_unique($studentNames));
+
+            if ($option == 1) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Submission for {$uniqueNames} has been approved for {$activity->act_name}. The submission is now open."
+                ], 200);
+            } elseif ($option == 2) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Submission for {$uniqueNames} has been reverted for {$activity->act_name}. It is now hidden."
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid option selected.'
+                ], 400);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error approving student submission opening: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

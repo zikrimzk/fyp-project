@@ -135,6 +135,8 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     /* Submission Suggestion */
     Route::get('/submission-suggestion', [SubmissionController::class, 'submissionSuggestion'])->name('submission-suggestion');
     Route::get('/submission-eligibility-approval/{studentID}/{activityID}/{opt}', [SubmissionController::class, 'studentSubmissionSuggestionApproval'])->name('submission-eligibility-approval-get');
+    Route::post('/multiple-submission-eligibility-approval', [SubmissionController::class, 'multipleStudentSubmissionSuggestionApproval'])->name('multiple-submission-eligibility-approval-post');
+
 
 
     // Standard Operation Procedure (SOP)

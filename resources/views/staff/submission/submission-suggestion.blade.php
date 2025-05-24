@@ -77,11 +77,21 @@
                                     0 selected <i class="ti ti-x f-18"></i>
                                 </button>
                                 <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2 d-none mb-4"
-                                    id="downloadmultipleModalBtn" title="Download Document (.zip)">
-                                    <i class="ti ti-arrow-bar-to-down f-18"></i>
+                                    class="btn btn-outline-success d-flex align-items-center gap-2 d-none mb-4"
+                                    id="approveMultipleModalBtn" title="Approve" data-bs-toggle="modal"
+                                    data-bs-target="#approveMultipleModal">
+                                    <i class="ti ti-circle-check me-2"></i>
                                     <span class="d-none d-sm-inline me-2">
-                                        Download (.zip)
+                                        Approve
+                                    </span>
+                                </button>
+                                <button type="button"
+                                    class="btn btn-outline-warning d-flex align-items-center gap-2 d-none mb-4"
+                                    id="revertMultipleModalBtn" title="Revert" data-bs-toggle="modal"
+                                    data-bs-target="#revertMultipleModal">
+                                    <i class="ti ti-rotate me-2"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Revert
                                     </span>
                                 </button>
                             </div>
@@ -89,10 +99,102 @@
 
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-center mb-3">
+                                <div class="col-sm-12 actAlert">
+                                    <!-- Committee Submission Suggestions Guidelines -->
+                                    <div class="alert alert-light d-flex align-items-start gap-3 p-4 "
+                                        role="alert">
+                                        <i class="ti ti-info-circle fs-3"></i>
+                                        <div class="w-100">
+                                            <h4 class="mb-3 fw-semibold">Committee Guidelines</h4>
+
+                                            <div class="mb-3">
+                                                <h5 class="fw-semibold mb-2">Purpose</h5>
+                                                <p class="mb-0">This module automatically identifies students who meet
+                                                    institutional requirements to proceed to their next academic activity,
+                                                    facilitating efficient progression management.</p>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <h5 class="fw-semiboldmb-2">Eligibility Criteria</h5>
+                                                <ul class="mb-1 ps-3">
+                                                    <li class="mb-2">
+                                                        <strong>Active Enrollment Status:</strong>
+                                                        <ul class="mt-1">
+                                                            <li>Student must have an <span
+                                                                    class="text-decoration-underline">active system
+                                                                    account</span></li>
+                                                            <li>Student must be <span
+                                                                    class="text-decoration-underline">officially
+                                                                    enrolled</span> in the current semester</li>
+                                                        </ul>
+                                                    </li>
+                                                    <li class="mb-2">
+                                                        <strong>New Students (First Activity):</strong>
+                                                        <ul class="mt-1">
+                                                            <li>Must have reached the <span
+                                                                    class="text-decoration-underline">minimum semester
+                                                                    threshold</span> as defined in program procedures</li>
+                                                            <li>Must satisfy all <span
+                                                                    class="text-decoration-underline">prerequisite
+                                                                    requirements</span> for the initial activity</li>
+                                                        </ul>
+                                                    </li>
+                                                    <li class="mb-2">
+                                                        <strong>Continuing Students:</strong>
+                                                        <ul class="mt-1">
+                                                            <li>Must have <span
+                                                                    class="text-decoration-underline">successfully
+                                                                    completed</span> all components of their previous
+                                                                activity</li>
+                                                            <li>Must have received <span
+                                                                    class="text-decoration-underline">official
+                                                                    approval</span> for previous activity completion</li>
+                                                        </ul>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <h5 class="fw-semibold mb-2">Committee Responsibilities</h5>
+                                                <ol class="mb-1 ps-3">
+                                                    <li class="mb-2">Verify student eligibility against institutional
+                                                        records</li>
+                                                    <li class="mb-2">Confirm completion of all prerequisite requirements
+                                                    </li>
+                                                    <li class="mb-2">Ensure submission deadlines and academic calendars
+                                                        are respected</li>
+                                                    <li class="mb-2">Maintain submission accessibility by preventing
+                                                        premature archiving</li>
+                                                </ol>
+                                            </div>
+
+                                            <div class="alert alert-light bg-light border mt-3 p-3">
+                                                <h6 class="fw-semibold text-danger mb-2">Important Notes:</h6>
+                                                <ul class="mb-0 ps-3 small">
+                                                    <li class="mb-1">Archived submissions become inaccessible to open student submissions
+                                                        - verify status in <a href="#fil_status" class="fw-semibold" onclick="$('#fil_status').val('6').trigger('click')">Submission
+                                                            Archive</a></li>
+                                                    <li class="mb-1">Eligibility suggestions are system-generated based on student records.</li>
+                                                    <li class="mb-1">If a student is not listed, it may be due to missing prerequisites or other requirements.</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ALERT: Prompt to Select Activity -->
+                                    <div class="alert alert-warning d-flex align-items-center gap-2"
+                                        role="alert">
+                                        <i class="ti ti-alert-triangle"></i>
+                                        <div class="fw-normal">Please select an <a href="#fil_activity_id" class="fw-semibold link-dark">activity</a> to proceed with submission suggestions.</div>
+                                    </div>
+
+                                </div>
+
                                 <div class="col-sm-12 col-md-6">
+                                    <label for="fil_activity_id" class="form-label">Activity</label>
                                     <div class="input-group">
                                         <select id="fil_activity_id" class="form-select">
-                                            <option value="">-- Select Activity --</option>
+                                            <option value="-1000">-- Select Activity --</option>
                                             @foreach ($acts as $fil)
                                                 <option value="{{ $fil->id }}">{{ $fil->act_name }}</option>
                                             @endforeach
@@ -103,7 +205,10 @@
                                         </button>
                                     </div>
                                 </div>
+
                                 <div class="col-sm-12 col-md-6">
+                                    <label for="fil_status" class="form-label">Status</label>
+
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="1" selected>Eligible</option>
@@ -121,7 +226,7 @@
                                 </div>
                             </div>
 
-                            <div class="row g-3 align-items-center mb-3">
+                            <div class="row g-3 align-items-center mb-3 content d-none">
 
                                 <div class="col-sm-12 col-md-4">
                                     <div class="input-group">
@@ -141,7 +246,8 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearFacFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -153,7 +259,8 @@
                                             <option value="">-- Select Semester --</option>
                                             @foreach ($sems as $fil)
                                                 @if ($fil->sem_status == 1)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                    <option value="{{ $fil->id }}" class="bg-light-success"
+                                                        selected>
                                                         {{ $fil->sem_label }} [Current]
                                                     </option>
                                                 @elseif($fil->sem_status == 3)
@@ -195,7 +302,7 @@
                             </div>
                             <!-- [ Filter Section ] End -->
 
-                            <div class="dt-responsive table-responsive">
+                            <div class="dt-responsive table-responsive content d-none">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
                                         <tr>
@@ -208,6 +315,155 @@
                                     </thead>
                                 </table>
                             </div>
+
+                            <!-- [ Approve Multiple Modal ] Start -->
+                            <div class="modal fade" id="approveMultipleModal" data-bs-keyboard="false" tabindex="-1"
+                                aria-hidden="true" data-bs-backdrop="static">
+                                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                    <div class="modal-content">
+
+                                        <!-- Approval Confirmation Modal -->
+                                        <div class="modal-body">
+
+                                            <!-- Header with icon -->
+                                            <div class="col-sm-12 mb-4 text-center">
+                                                <i class="ti ti-circle-check text-success" style="font-size: 100px"></i>
+                                            </div>
+                                            <div class="text-center mb-4">
+                                                <h4 class="fw-bold">Approve Submission Opening?</h4>
+                                            </div>
+
+                                            <!-- Main message -->
+                                            <div class="alert alert-success border-0">
+                                                <div class="d-flex">
+                                                    <i class="fas fa-info-circle mt-1 me-2"></i>
+                                                    <div>
+                                                        <p class="mb-2 fw-semibold">By approving this activity:</p>
+                                                        <ul class="ps-3 mb-0">
+                                                            <li>The student <span class="fw-bold">must
+                                                                    submit</span> all required documents for this
+                                                                activity</li>
+                                                            <li>The system will <span class="fw-bold">automatically
+                                                                    notify</span> the student and supervisors</li>
+                                                            <li>Submission deadline will be set based on activity
+                                                                timeline</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Revert information -->
+                                            <div class="alert alert-light border mt-3">
+                                                <div class="d-flex">
+                                                    <i class="fas fa-undo text-warning mt-1 me-2"></i>
+                                                    <div>
+                                                        <p class="mb-1"><span class="fw-semibold">Changed your
+                                                                mind?</span></p>
+                                                        <p class="small mb-0">You can <span class="fw-bold">revert
+                                                                this decision</span> anytime before the student
+                                                            confirms their submission. After confirmation, you'll
+                                                            need to contact the student directly.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <div class="d-flex justify-content-between gap-3 w-100">
+                                                <button type="button" class="btn btn-light w-50"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <button type="button" class="btn btn-success w-100" id="approve-btn">
+                                                    Confirm Approval
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ Approve Multiple Modal ] end -->
+
+                            <!-- [ Revert Multiple Modal ] Start -->
+                            <div class="modal fade" id="revertMultipleModal" data-bs-keyboard="false" tabindex="-1"
+                                aria-hidden="true" data-bs-backdrop="static">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <div class="row">
+
+                                                <!-- Icon -->
+                                                <div class="col-sm-12 mb-4">
+                                                    <div class="d-flex justify-content-center align-items-center mb-3">
+                                                        <i class="ti ti-refresh-alert text-warning"
+                                                            style="font-size: 100px"></i>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Title -->
+                                                <div class="col-sm-12 mb-3">
+                                                    <div
+                                                        class="d-flex justify-content-center align-items-center text-center">
+                                                        <h2 class="f-18">Revert Student Submission?</h2>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Message -->
+                                                <div class="col-sm-12 mb-3">
+                                                    <div class="d-flex justify-content-center align-items-center">
+                                                        <div class="alert alert-warning p-3 f-14">
+                                                            <p class="fw-semibold mb-2">This action will:</p>
+                                                            <ul class="list-unstyled ps-3">
+                                                                <li class="mb-2">
+                                                                    <i class="fas fa-lock me-2"></i>
+                                                                    <strong>Lock</strong> the student's submission
+                                                                </li>
+                                                                <li class="mb-2">
+                                                                    <i class="fas fa-undo me-2"></i>
+                                                                    <strong>Reset</strong> all submission documents
+                                                                </li>
+                                                                <li class="mb-2">
+                                                                    <i class="fas fa-user-clock me-2"></i> Require
+                                                                    student to <strong>resubmit</strong> all
+                                                                    documents
+                                                                </li>
+                                                                <li>
+                                                                    <i class="fas fa-unlock-alt me-2"></i>
+                                                                    Committee must <strong>reapprove</strong>
+                                                                    for new submissions
+                                                                </li>
+                                                            </ul>
+                                                            <p class="mt-2 mb-0 text-danger fw-semibold">
+                                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                                Student cannot submit until committee reopens this
+                                                                activity!
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Confirmation -->
+                                                <div class="col-sm-12">
+                                                    <div class="d-flex justify-content-center align-items-center">
+                                                        <p class="f-14 text-muted text-center">
+                                                            Are you sure you want to proceed with this action?
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Action Buttons -->
+                                                <div class="col-sm-12">
+                                                    <div class="d-flex justify-content-between gap-3 align-items-center">
+                                                        <button type="reset" class="btn btn-light w-50"
+                                                            data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="button" id="revert-btn"
+                                                            class="btn btn-warning w-100">
+                                                            Confirm Revert
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ Revert Multiple Modal ] End -->
 
 
                             @foreach ($data as $upd)
@@ -355,7 +611,7 @@
                                                     <button type="button" class="btn btn-light w-50"
                                                         data-bs-dismiss="modal">Cancel</button>
                                                     <a href="{{ route('submission-eligibility-approval-get', ['studentID' => Crypt::encrypt($upd->student_id), 'activityID' => Crypt::encrypt($upd->activity_id), 'opt' => 1]) }}"
-                                                        class="btn btn-success w-100">
+                                                        class="btn btn-success w-100 confirm-btn">
                                                         Confirm Approval
                                                     </a>
                                                 </div>
@@ -439,7 +695,7 @@
                                                             <button type="reset" class="btn btn-light w-50"
                                                                 data-bs-dismiss="modal">Cancel</button>
                                                             <a href="{{ route('submission-eligibility-approval-get', ['studentID' => Crypt::encrypt($upd->student_id), 'activityID' => Crypt::encrypt($upd->activity_id), 'opt' => 2]) }}"
-                                                                class="btn btn-warning w-100">
+                                                                class="btn btn-warning w-100 confirm-btn">
                                                                 Confirm Revert
                                                             </a>
                                                         </div>
@@ -466,18 +722,21 @@
     <script></script>
 
     <script type="text/javascript">
-        /*********************************************************
-         ***************GLOBAL FUNCTION & VARIABLES***************
-         *********************************************************/
-        function showToast(type, message) {
-            const toastId = 'toast-' + Date.now();
-            const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle';
-            const bgClass = type === 'success' ? 'bg-light-success' : 'bg-light-danger';
-            const txtClass = type === 'success' ? 'text-success' : 'text-danger';
-            const colorClass = type === 'success' ? 'success' : 'danger';
-            const title = type === 'success' ? 'Success' : 'Error';
+        $(document).ready(function() {
 
-            const toastHtml = `
+            /*********************************************************
+             ***************GLOBAL FUNCTION & VARIABLES***************
+             *********************************************************/
+
+            function showToast(type, message) {
+                const toastId = 'toast-' + Date.now();
+                const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle';
+                const bgClass = type === 'success' ? 'bg-light-success' : 'bg-light-danger';
+                const txtClass = type === 'success' ? 'text-success' : 'text-danger';
+                const colorClass = type === 'success' ? 'success' : 'danger';
+                const title = type === 'success' ? 'Success' : 'Error';
+
+                const toastHtml = `
                     <div id="${toastId}" class="toast border-0 shadow-sm mb-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
                         <div class="toast-body text-white ${bgClass} rounded d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -491,24 +750,13 @@
                     </div>
                 `;
 
-            $('#toastContainer').append(toastHtml);
-            const toastEl = new bootstrap.Toast(document.getElementById(toastId));
-            toastEl.show();
-        }
-
-        var modalToShow = "{{ session('modal') }}";
-        if (modalToShow) {
-            var modalElement = $("#" + modalToShow);
-            if (modalElement.length) {
-                var modal = new bootstrap.Modal(modalElement[0]);
-                modal.show();
+                $('#toastContainer').append(toastHtml);
+                const toastEl = new bootstrap.Toast(document.getElementById(toastId));
+                toastEl.show();
             }
-        }
-
-        $(document).ready(function() {
 
             /*********************************************************/
-            /************DATATABLE : STUDENT ACTIVITIES***************/
+            /*********DATATABLE : SUBMISSION SUGGESTION***************/
             /*********************************************************/
             var table = $('.data-table').DataTable({
                 processing: true,
@@ -561,7 +809,6 @@
                                 '</span></td>');
                     }
                 }
-
             });
 
             /*********************************************************/
@@ -590,12 +837,19 @@
 
             // FILTER : ACTIVITY
             $('#fil_activity_id').on('change', function() {
-                $('.data-table').DataTable().ajax
-                    .reload();
+                if ($(this).val() == '-1000') {
+                    $('.content').addClass('d-none');
+                    $('.actAlert').removeClass('d-none m-0');
+                } else {
+                    $('.actAlert').addClass('d-none m-0');
+                    $('.data-table').DataTable().ajax.reload();
+                    $('.content').removeClass('d-none');
+                }
+                clearBtn.trigger('click');
             });
 
             $('#clearActivityFilter').click(function() {
-                $('#fil_activity_id').val('').change();
+                $('#fil_activity_id').val('-1000').change();
             });
 
             // FILTER : SEMESTER
@@ -627,7 +881,10 @@
             /**********SELECT : MULTIPLE STUDENT SELECT***************/
             /*********************************************************/
             const clearBtn = $("#clearSelectionBtn");
-            const downloadmultipleModalBtn = $('#downloadmultipleModalBtn');
+            const approveMultipleModalBtn = $('#approveMultipleModalBtn');
+            const revertMultipleModalBtn = $('#revertMultipleModalBtn');
+            const approveBtn = $('#approve-btn');
+            const revertBtn = $('#revert-btn');
 
             let selectedIds = new Set();
 
@@ -672,13 +929,40 @@
                 toggleSelectButton();
             });
 
+
             function toggleSelectButton() {
                 let selectedCount = selectedIds.size;
-                downloadmultipleModalBtn.toggleClass("d-none", selectedCount === 0);
+
+                let hasEligible = false;
+                let hasOpened = false;
+
+                // Reset visibility
+                approveMultipleModalBtn.addClass("d-none");
+                revertMultipleModalBtn.addClass("d-none");
 
                 if (selectedCount > 0) {
                     clearBtn.removeClass("d-none").html(
-                        `<i class="ti ti-x f-18"></i> ${selectedCount} selected`);
+                        `<i class="ti ti-x f-18"></i> ${selectedCount} selected`
+                    );
+
+                    selectedIds.forEach(function(id) {
+                        let checkbox = $(`.user-checkbox[value="${id}"]`);
+                        let row = checkbox.closest('tr');
+                        let status = row.find('td:eq(2)').text()
+                            .trim();
+
+                        if (status === "Eligible") {
+                            hasEligible = true;
+                        } else if (status === "Submission Opened") {
+                            hasOpened = true;
+                        }
+                    });
+
+                    if (hasEligible && !hasOpened) {
+                        approveMultipleModalBtn.removeClass("d-none");
+                    } else if (hasOpened && !hasEligible) {
+                        revertMultipleModalBtn.removeClass("d-none");
+                    }
                 } else {
                     clearBtn.addClass("d-none");
                 }
@@ -692,23 +976,103 @@
             });
 
             /*********************************************************/
-            /**********SELECT : DOWNLOAD STUDENT DOCUMENT*************/
+            /**********SELECT : APPROVAL & REVERT ********************/
             /*********************************************************/
 
-            downloadmultipleModalBtn.on('click', function() {
-                let selectedIds = $(".user-checkbox:checked").map(function() {
+            approveBtn.on('click', function() {
+                const $button = $(this);
+                let activityId = $('#fil_activity_id').val();
+                let selectedCheckboxes = $(".user-checkbox:checked");
+                let selectedIds = selectedCheckboxes.map(function() {
                     return $(this).val();
                 }).get();
 
-                if (selectedIds.length > 0) {
 
-                    let idsParam = encodeURIComponent(JSON.stringify(selectedIds));
-                    window.location.href = "{{ route('download-multiple-final-document-get') }}?ids=" +
-                        idsParam;
-                    clearBtn.trigger('click');
-                    $('.data-table').DataTable().ajax.reload();
+                if (selectedIds.length > 0) {
+                    $button.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-2"></span> Loading...'
+                    );
+
+                    $.ajax({
+                        url: "{{ route('multiple-submission-eligibility-approval-post') }}",
+                        type: "POST",
+                        data: {
+                            selectedIds: selectedIds,
+                            activityId: activityId,
+                            option: 1,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+
+                            if (response.success) {
+                                // Show success toast
+                                $('#approveMultipleModal').modal('hide');
+                                $('.data-table').DataTable().ajax.reload();
+                                clearBtn.trigger('click');
+                                showToast('success', response.message);
+                            } else {
+                                // Show error toast
+                                showToast('error', response.message);
+                            }
+                        },
+                        error: function(xhr) {
+                            showToast('error', xhr.responseText);
+                        },
+                        complete: function() {
+                            $button.prop('disabled', false).html('Confirm Approval');
+                        }
+                    });
                 } else {
-                    alert("No valid data selected for document download.");
+                    showToast('error', "No valid data selected for approval.");
+                }
+            });
+
+
+            revertBtn.on('click', function() {
+                const $button = $(this);
+                let activityId = $('#fil_activity_id').val();
+                let selectedCheckboxes = $(".user-checkbox:checked");
+                let selectedIds = selectedCheckboxes.map(function() {
+                    return $(this).val();
+                }).get();
+
+
+                if (selectedIds.length > 0) {
+                    $button.prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm me-2"></span> Loading...'
+                    );
+
+                    $.ajax({
+                        url: "{{ route('multiple-submission-eligibility-approval-post') }}",
+                        type: "POST",
+                        data: {
+                            selectedIds: selectedIds,
+                            activityId: activityId,
+                            option: 2,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+
+                            if (response.success) {
+                                // Show success toast
+                                $('#revertMultipleModal').modal('hide');
+                                $('.data-table').DataTable().ajax.reload();
+                                clearBtn.trigger('click');
+                                showToast('success', response.message);
+                            } else {
+                                // Show error toast
+                                showToast('error', response.message);
+                            }
+                        },
+                        error: function(xhr) {
+                            showToast('error', xhr.responseText);
+                        },
+                        complete: function() {
+                            $button.prop('disabled', false).html('Confirm Revert');
+                        }
+                    });
+                } else {
+                    showToast('error', "No valid data selected for revert.");
                 }
             });
 
@@ -718,7 +1082,7 @@
 
             $('.confirm-btn').on('click', function() {
                 const $btn = $(this);
-                $btn.prop('disabled', true);
+                $btn.addClass('disabled-a', true);
                 $btn.html(
                     '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...'
                 );
