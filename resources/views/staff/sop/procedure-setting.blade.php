@@ -59,8 +59,44 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
+
+                            <!-- [ Procedure Setup Guidelines ] start -->
+                            <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
+                                <i class="ti ti-info-circle fs-3"></i>
+                                <div class="w-100">
+                                    <h4 class="mb-3 fw-semibold">Procedure Setup Guidelines</h4>
+                                    <ul class="mb-0 ps-3 small">
+                                        <li class="mb-2">
+                                            Ensure procedures follow the programme structure. Avoid duplicate entries for
+                                            the same activity.
+                                        </li>
+                                        <li class="mb-2">
+                                            <strong>Sequence</strong> defines the activity order shown to students.
+                                        </li>
+                                        <li class="mb-2">
+                                            <strong>Timeline Semester</strong> is the earliest semester the activity will be
+                                            available to students.
+                                        </li>
+                                        <li class="mb-2">
+                                            <strong>Timeline Week</strong> sets the submission due date for the activity.
+                                        </li>
+                                        <li class="mb-2">
+                                            <strong>Initial Status:</strong>
+                                            <span class="text-dark">L</span> - Locked (requires committee approval to
+                                            appear),
+                                            <span class="text-dark">O</span> - Open (always visible).
+                                        </li>
+                                        <li class="mb-0">
+                                            <strong>Evaluation:</strong> Activities with evaluations complete after
+                                            evaluation; others complete after approvals.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- [ Procedure Setup Guidelines ] start -->
+
                             <!-- [ Option Section ] start -->
-                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                            <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
                                     data-bs-toggle="modal" data-bs-target="#addModal" title="Add Procedure"
                                     id="addStaffBtn">
@@ -75,14 +111,13 @@
                                         <tr>
                                             <th scope="col">#</th>
                                             <th scope="col">Activity</th>
-                                            <th scope="col">Programme</th>
-                                            <th scope="col">Mode</th>
                                             <th scope="col">Sequence</th>
                                             <th scope="col">Semester</th>
                                             <th scope="col">Week</th>
                                             <th scope="col">Evaluation</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Material</th>
+                                            <th scope="col">Programme</th>
                                             <th scope="col">Action</th>
                                         </tr>
                                     </thead>
@@ -98,7 +133,7 @@
                     <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModal" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
-                                <div class="modal-header">
+                                <div class="modal-header bg-light">
                                     <h5 class="modal-title" id="addModalLabel">Add Procedure</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
@@ -228,7 +263,7 @@
                                                     @if (old('is_haveEva') == 1)
                                                         <option value="1" selected>Yes</option>
                                                         <option value="0">No</option>
-                                                    @elseif(old('is_haveEva') == 2)
+                                                    @elseif(old('is_haveEva') == 0)
                                                         <option value="1">Yes</option>
                                                         <option value="0"selected>No</option>
                                                     @else
@@ -255,11 +290,12 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer justify-content-end">
+                                <div class="modal-footer bg-light justify-content-end">
                                     <div class="flex-grow-1 text-end">
                                         <div class="col-sm-12">
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="button" class="btn btn-light btn-pc-default w-100"
+                                                <button type="button"
+                                                    class="btn btn btn-outline-secondary btn-pc-default w-100"
                                                     data-bs-dismiss="modal">Cancel</button>
                                                 <button type="submit" class="btn btn-primary w-100"
                                                     id="addApplicationBtn">
@@ -286,7 +322,7 @@
                             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
 
-                                    <div class="modal-header">
+                                    <div class="modal-header bg-light">
                                         <h5 class="modal-title" id="updateModalLabel">Update Procedure</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
@@ -397,7 +433,8 @@
                                                         class="form-select @error('init_status_up') is-invalid @enderror"
                                                         required>
                                                         <option value="1"
-                                                            @if ($upd->init_status == 1) selected @endif>(O) Open Always
+                                                            @if ($upd->init_status == 1) selected @endif>(O) Open
+                                                            Always
                                                         </option>
                                                         <option value="2"
                                                             @if ($upd->init_status == 2) selected @endif>(L) Locked
@@ -449,11 +486,12 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="modal-footer justify-content-end">
+                                    <div class="modal-footer bg-light justify-content-end">
                                         <div class="flex-grow-1 text-end">
                                             <div class="col-sm-12">
                                                 <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                    <button type="button" class="btn btn-light btn-pc-default w-100"
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-pc-default w-100"
                                                         data-bs-dismiss="modal">Cancel</button>
                                                     <button type="submit" class="btn btn-primary w-100"
                                                         id="updateApplicationBtn">
@@ -469,37 +507,30 @@
                     </form>
                     <!-- [ Update Modal ] end -->
 
+
                     <!-- [ Delete Modal ] start -->
                     <div class="modal fade" id="deleteModal-{{ $upd->activity_id }}-{{ $upd->programme_id }}"
-                        data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                        data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                        aria-labelledby="deleteModalLabel-{{ $upd->activity_id }}-{{ $upd->programme_id }}"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-trash text-danger" style="font-size: 100px"></i>
-                                            </div>
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-body p-4">
+                                    <div class="text-center mb-3">
+                                        <i class="ti ti-trash text-danger" style="font-size: 80px;"></i>
+                                    </div>
+                                    <h4 class="text-center mb-2"
+                                        id="deleteModalLabel-{{ $upd->activity_id }}-{{ $upd->programme_id }}">Are you
+                                        sure?
+                                    </h4>
+                                    <p class="text-center text-muted mb-4">This action cannot be undone and may affect
+                                        related procedures.</p>
 
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Are you sure ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">This action cannot be undone.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-procedure-get', ['actID' => Crypt::encrypt($upd->activity_id), 'progID' => Crypt::encrypt($upd->programme_id)]) }}"
-                                                    class="btn btn-danger w-100">Delete Anyways</a>
-                                            </div>
-                                        </div>
+                                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                        <button type="button" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{{ route('delete-procedure-get', ['actID' => Crypt::encrypt($upd->activity_id), 'progID' => Crypt::encrypt($upd->programme_id)]) }}"
+                                            class="btn btn-danger w-100">Delete Anyway</a>
                                     </div>
                                 </div>
                             </div>
@@ -513,82 +544,122 @@
         </div>
     </div>
     <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            var modalToShow = "{{ session('modal') }}"; // Ambil modal yang perlu dibuka dari session
+        $(document).ready(function() {
+
+            /*********************************************************
+             ***************GLOBAL FUNCTION & VARIABLES***************
+             *********************************************************/
+
+            var modalToShow = "{{ session('modal') }}";
             if (modalToShow) {
-                var modalElement = document.getElementById(modalToShow);
-                if (modalElement) {
-                    var modal = new bootstrap.Modal(modalElement);
+                var modalElement = $("#" + modalToShow);
+                if (modalElement.length) {
+                    var modal = new bootstrap.Modal(modalElement[0]);
                     modal.show();
                 }
             }
-        });
 
-        $(document).ready(function() {
-
-            $(function() {
-
-                // DATATABLE : PROCEDURE
-                var table = $('.data-table').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    responsive: true,
-                    autoWidth: true,
-                    ajax: {
-                        url: "{{ route('procedure-setting') }}",
+            // DATATABLE : PROCEDURES
+            var table = $('.data-table').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                autoWidth: true,
+                ajax: {
+                    url: "{{ route('procedure-setting') }}",
+                },
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        searchable: false,
+                        className: "text-start"
                     },
-                    columns: [{
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            searchable: false,
-                            className: "text-start"
-                        },
-                        {
-                            data: 'act_name',
-                            name: 'act_name'
-                        },
-                        {
-                            data: 'prog_code',
-                            name: 'prog_code'
-                        },
-                        {
-                            data: 'prog_mode',
-                            name: 'prog_mode'
-                        },
-                        {
-                            data: 'act_seq',
-                            name: 'act_seq'
-                        },
-                        {
-                            data: 'timeline_sem',
-                            name: 'timeline_sem'
-                        },
-                        {
-                            data: 'timeline_week',
-                            name: 'timeline_week'
-                        },
-                        {
-                            data: 'is_haveEva',
-                            name: 'is_haveEva'
-                        },
-                        {
-                            data: 'init_status',
-                            name: 'init_status'
-                        },
-                        {
-                            data: 'material',
-                            name: 'material'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false
-                        }
-                    ]
+                    {
+                        data: 'act_name',
+                        name: 'act_name'
+                    },
+                    {
+                        data: 'act_seq',
+                        name: 'act_seq',
+                        orderable: false,
 
+                    },
+                    {
+                        data: 'timeline_sem',
+                        name: 'timeline_sem',
+                        orderable: false,
+
+                    },
+                    {
+                        data: 'timeline_week',
+                        name: 'timeline_week',
+                        orderable: false,
+
+                    },
+                    {
+                        data: 'is_haveEva',
+                        name: 'is_haveEva',
+                        orderable: false,
+
+                    },
+                    {
+                        data: 'init_status',
+                        name: 'init_status'
+                    },
+                    {
+                        data: 'material',
+                        name: 'material',
+                        orderable: false,
+
+                    },
+                    {
+                        data: 'prog_code_mode',
+                        name: 'prog_code_mode',
+                        visible: false,
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
+                ],
+                rowGroup: {
+                    dataSrc: 'prog_code_mode',
+                    startRender: function(rows, group) {
+                        return $('<tr class="group-header" style="cursor:pointer"/>')
+                            .attr('data-group', group)
+                            .append(
+                                '<td colspan="9" class="bg-light text-center">' +
+                                '<span class="fw-semibold text-uppercase me-2">' + group + '</span>' +
+                                ' <span class="badge bg-primary">' + rows.count() + '</span>' +
+                                ' <i class="ti ti-chevron-down float-end toggle-icon"></i>' +
+                                '</td>'
+                            );
+                    }
+                },
+
+            });
+
+            var collapsedGroups = {};
+
+            $('.data-table tbody').on('click', 'tr.group-header', function() {
+                var group = $(this).data('group');
+                collapsedGroups[group] = !collapsedGroups[group];
+
+                // Toggle icon
+                var icon = $(this).find('.toggle-icon');
+                if (collapsedGroups[group]) {
+                    icon.removeClass('ti-chevron-down').addClass('ti-chevron-right');
+                } else {
+                    icon.removeClass('ti-chevron-right').addClass('ti-chevron-down');
+                }
+
+                table.rows().every(function() {
+                    if (this.data().programme === group) {
+                        $(this.node()).toggle(!collapsedGroups[group]);
+                    }
                 });
-
             });
 
         });

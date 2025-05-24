@@ -271,9 +271,15 @@ class SOPController extends Controller
                     ->join('activities as b', 'b.id', '=', 'a.activity_id')
                     ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                     ->select('a.*', 'b.*', 'c.*')
+                    ->selectRaw('CONCAT(c.prog_code, " (", c.prog_mode, ")") as prog_code_mode')
+                    ->orderBy('prog_code_mode')
                     ->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('programme', function ($row) {
+                    return $row->prog_code . ' (' . $row->prog_mode . ')';
+                });
 
                 $table->addColumn('is_haveEva', function ($row) {
                     $status = '';
@@ -345,7 +351,7 @@ class SOPController extends Controller
                     return $buttonEdit . $buttonRemove;
                 });
 
-                $table->rawColumns(['is_haveEva', 'init_status', 'material', 'action']);
+                $table->rawColumns(['programme','is_haveEva', 'init_status', 'material', 'action']);
 
                 return $table->make(true);
             }

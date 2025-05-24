@@ -105,6 +105,10 @@
                     </div>
                 @endif
             </div>
+            
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                <div id="toastContainer"></div>
+            </div>
             <!-- [ Alert ] end -->
 
             <!-- [ Main Content ] start -->
@@ -510,6 +514,33 @@
                 $("#alert-container").html(alertHtml);
             }
 
+            function showToast(type, message) {
+                const toastId = 'toast-' + Date.now();
+                const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle';
+                const bgClass = type === 'success' ? 'bg-light-success' : 'bg-light-danger';
+                const txtClass = type === 'success' ? 'text-success' : 'text-danger';
+                const colorClass = type === 'success' ? 'success' : 'danger';
+                const title = type === 'success' ? 'Success' : 'Error';
+
+                const toastHtml = `
+                    <div id="${toastId}" class="toast border-0 shadow-sm mb-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                        <div class="toast-body text-white ${bgClass} rounded d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0 ${txtClass}">
+                                    <i class="${iconClass} me-2"></i> ${title}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                            <p class="mb-0 ${txtClass}">${message}</p>
+                        </div>
+                    </div>
+                `;
+
+                $('#toastContainer').append(toastHtml);
+                const toastEl = new bootstrap.Toast(document.getElementById(toastId));
+                toastEl.show();
+            }
+
             function displayValidationErrors(form, errors) {
                 clearValidationErrors(form);
                 $.each(errors, function(field, messages) {
@@ -535,19 +566,18 @@
                     contentType: false,
                     success: function(response) {
                         if (response.success) {
-                            showAlert("success", response.message);
+                            showToast("success", response.message);
                             getDocumentList(response.document['activity_id']);
                             form[0].reset();
                             $(modalId).modal("hide");
                             clearValidationErrors(form);
-
                         }
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
                             displayValidationErrors(form, xhr.responseJSON.errors);
                         } else {
-                            showAlert("danger", "An error occurred. Please try again.");
+                            showToast("danger", "An error occurred. Please try again.");
                         }
                     }
                 });
@@ -564,7 +594,7 @@
                     contentType: false,
                     success: function(response) {
                         if (response.success) {
-                            showAlert("success", response.message);
+                            showToast("success", response.message);
                             getActivityList();
                             $(modalId).modal("hide");
                             form[0].reset();
@@ -575,7 +605,7 @@
                         if (xhr.status === 422) {
                             displayValidationErrors(form, xhr.responseJSON.errors);
                         } else {
-                            showAlert("danger", "An error occurred. Please try again.");
+                            showToast("danger", "An error occurred. Please try again.");
                         }
                     }
                 });
@@ -656,7 +686,7 @@
                         $("#accordionFlushExample").html(accordionHtml);
                     },
                     error: function(xhr) {
-                        alert("Error fetching activities: " + xhr.responseText);
+                        showToast("danger", "Error fetching activities:" + xhr.responseText);
                     }
                 });
             }
@@ -695,13 +725,15 @@
                         success: function(response) {
                             if (response.success) {
                                 getActivityList();
-                                showAlert('success', response.message);
+                                showToast("success", response.message);
                             } else {
-                                alert(response.message);
+                                showToast("success", response.message);
                             }
                         },
                         error: function() {
-                            showAlert("danger", "An error occurred. Please check whether this activity has been set in procedure or not.");
+                            showToast("danger",
+                                "This activity cannot be deleted because it is already linked to a procedure or there are documents associated with it."
+                            );
                         },
                     });
                 }
@@ -828,17 +860,16 @@
                         type: "GET",
                         success: function(response) {
                             if (response.success) {
-                                showAlert('success', response.message);
+                                showToast("success", response.message);
                                 // $("#document-list-" + actId).find(
                                 //     `[data-id='${docId}']`).closest("li").remove();
                                 getDocumentList(actId);
-
                             } else {
-                                alert(response.message);
+                                showToast("success", response.message);
                             }
                         },
                         error: function() {
-                            showAlert("danger", "An error occurred. Please try again.");
+                            showToast("danger", "An error occurred. Please try again.");
                         },
                     });
                 }

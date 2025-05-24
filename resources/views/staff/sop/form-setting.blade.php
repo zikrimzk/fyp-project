@@ -93,7 +93,7 @@
                         aria-labelledby="addFormModal" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
-                                <div class="modal-header">
+                                <div class="modal-header bg-light">
                                     <h5 class="modal-title" id="addModalLabel">Add Form</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
@@ -140,11 +140,11 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer justify-content-end">
+                                <div class="modal-footer bg-light justify-content-end">
                                     <div class="flex-grow-1 text-end">
                                         <div class="col-sm-12">
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="button" class="btn btn-light btn-pc-default w-100"
+                                                <button type="button" class="btn btn-outline-secondary btn-pc-default w-100"
                                                     data-bs-dismiss="modal">Cancel</button>
                                                 <button type="button" id="addForm-submit-{{ $act->id }}"
                                                     class="btn btn-primary w-100 addForm-submit-btn"
@@ -163,36 +163,28 @@
 
                 @foreach ($actForms as $af)
                     <!-- [ Delete Modal ] start -->
-                    <div class="modal fade" id="deleteModal-{{ $af->id }}"
-                        data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="deleteModal-{{ $af->id }}" data-bs-backdrop="static"
+                        data-bs-keyboard="false" tabindex="-1"
+                        aria-labelledby="deleteModalLabel-{{ $af->id }}"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-trash text-danger" style="font-size: 100px"></i>
-                                            </div>
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-body p-4">
+                                    <div class="text-center mb-3">
+                                        <i class="ti ti-trash text-danger" style="font-size: 80px;"></i>
+                                    </div>
+                                    <h4 class="text-center mb-2"
+                                        id="deleteModalLabel-{{ $af->id }}">Are you
+                                        sure?
+                                    </h4>
+                                    <p class="text-center text-muted mb-4">This action will remove all the form
+                                        data and cannot be undone.</p>
 
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Are you sure ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">This action will remove all the form data and cannot be undone.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-form-activity-get', ['afID' => Crypt::encrypt($af->id)]) }}"
-                                                    class="btn btn-danger w-100">Delete Anyways</a>
-                                            </div>
-                                        </div>
+                                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                        <button type="button" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{{ route('delete-form-activity-get', ['afID' => Crypt::encrypt($af->id)]) }}"
+                                            class="btn btn-danger w-100">Delete Anyway</a>
                                     </div>
                                 </div>
                             </div>

@@ -100,92 +100,88 @@
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-center mb-3">
                                 <div class="col-sm-12 actAlert">
-                                    <!-- Committee Submission Suggestions Guidelines -->
-                                    <div class="alert alert-light d-flex align-items-start gap-3 p-4 "
-                                        role="alert">
+
+                                    <!-- System-Generated Eligibility Suggestions Explanation -->
+                                    <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
                                         <i class="ti ti-info-circle fs-3"></i>
                                         <div class="w-100">
-                                            <h4 class="mb-3 fw-semibold">Committee Guidelines</h4>
+                                            <h4 class="mb-3 fw-semibold">How Eligibility is Determined</h4>
+                                            <p class="mb-3">The system automatically suggests students who are eligible to
+                                                proceed with their next activity. Below is an overview of how this decision
+                                                is made based on student records:</p>
 
                                             <div class="mb-3">
-                                                <h5 class="fw-semibold mb-2">Purpose</h5>
-                                                <p class="mb-0">This module automatically identifies students who meet
-                                                    institutional requirements to proceed to their next academic activity,
-                                                    facilitating efficient progression management.</p>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <h5 class="fw-semiboldmb-2">Eligibility Criteria</h5>
+                                                <h5 class="fw-semibold mb-2">Eligibility Criteria</h5>
                                                 <ul class="mb-1 ps-3">
                                                     <li class="mb-2">
-                                                        <strong>Active Enrollment Status:</strong>
+                                                        <strong>Active Student Status</strong>
                                                         <ul class="mt-1">
                                                             <li>Student must have an <span
                                                                     class="text-decoration-underline">active system
                                                                     account</span></li>
                                                             <li>Student must be <span
-                                                                    class="text-decoration-underline">officially
-                                                                    enrolled</span> in the current semester</li>
+                                                                    class="text-decoration-underline">enrolled in the
+                                                                    current semester</span></li>
                                                         </ul>
                                                     </li>
                                                     <li class="mb-2">
-                                                        <strong>New Students (First Activity):</strong>
+                                                        <strong>First-Time Submission (New Students)</strong>
                                                         <ul class="mt-1">
                                                             <li>Must have reached the <span
                                                                     class="text-decoration-underline">minimum semester
-                                                                    threshold</span> as defined in program procedures</li>
-                                                            <li>Must satisfy all <span
+                                                                    requirement</span> set by the program</li>
+                                                            <li>Must fulfill all <span
                                                                     class="text-decoration-underline">prerequisite
-                                                                    requirements</span> for the initial activity</li>
+                                                                    requirements</span> for the first activity</li>
                                                         </ul>
                                                     </li>
                                                     <li class="mb-2">
-                                                        <strong>Continuing Students:</strong>
+                                                        <strong>Continuing Submission (Returning Students)</strong>
                                                         <ul class="mt-1">
-                                                            <li>Must have <span
-                                                                    class="text-decoration-underline">successfully
-                                                                    completed</span> all components of their previous
-                                                                activity</li>
+                                                            <li>Must have <span class="text-decoration-underline">completed
+                                                                    the previous activity</span> in full</li>
                                                             <li>Must have received <span
                                                                     class="text-decoration-underline">official
-                                                                    approval</span> for previous activity completion</li>
+                                                                    confirmation</span> of completion before proceeding</li>
                                                         </ul>
                                                     </li>
                                                 </ul>
                                             </div>
 
                                             <div class="mb-3">
-                                                <h5 class="fw-semibold mb-2">Committee Responsibilities</h5>
+                                                <h5 class="fw-semibold mb-2">Role of Committee</h5>
                                                 <ol class="mb-1 ps-3">
-                                                    <li class="mb-2">Verify student eligibility against institutional
-                                                        records</li>
-                                                    <li class="mb-2">Confirm completion of all prerequisite requirements
+                                                    <li class="mb-2">Review the list of suggested students</li>
+                                                    <li class="mb-2">Verify eligibility if necessary</li>
+                                                    <li class="mb-2">Approve eligible students to open their submission
                                                     </li>
-                                                    <li class="mb-2">Ensure submission deadlines and academic calendars
-                                                        are respected</li>
-                                                    <li class="mb-2">Maintain submission accessibility by preventing
-                                                        premature archiving</li>
                                                 </ol>
                                             </div>
 
                                             <div class="alert alert-light bg-light border mt-3 p-3">
                                                 <h6 class="fw-semibold text-danger mb-2">Important Notes:</h6>
                                                 <ul class="mb-0 ps-3 small">
-                                                    <li class="mb-1">Archived submissions become inaccessible to open student submissions
-                                                        - verify status in <a href="#fil_status" class="fw-semibold" onclick="$('#fil_status').val('6').trigger('click')">Submission
-                                                            Archive</a></li>
-                                                    <li class="mb-1">Eligibility suggestions are system-generated based on student records.</li>
-                                                    <li class="mb-1">If a student is not listed, it may be due to missing prerequisites or other requirements.</li>
+                                                    <li class="mb-1">If a student's previous submission is archived, they
+                                                        must be <strong>unarchived</strong> before being approved. Check the
+                                                        status in the <a href="#fil_status" class="fw-semibold"
+                                                            onclick="$('#fil_status').val('6').trigger('click')">Submission
+                                                            Archive</a>.</li>
+                                                    <li class="mb-1">Eligibility status is generated based on student
+                                                        submission records and approval confirmations.</li>
+                                                    <li class="mb-1">If a student does not appear in the suggestion list,
+                                                        it could be due to <strong>unmet requirements</strong> or
+                                                        <strong>incorrect procedure settings</strong>.</li>
                                                 </ul>
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- ALERT: Prompt to Select Activity -->
-                                    <div class="alert alert-warning d-flex align-items-center gap-2"
-                                        role="alert">
+                                    <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
                                         <i class="ti ti-alert-triangle"></i>
-                                        <div class="fw-normal">Please select an <a href="#fil_activity_id" class="fw-semibold link-dark">activity</a> to proceed with submission suggestions.</div>
+                                        <div class="fw-normal">Please select an <a href="#fil_activity_id"
+                                                class="fw-semibold link-dark">activity</a> to proceed with submission
+                                            suggestions.</div>
                                     </div>
 
                                 </div>
@@ -464,7 +460,6 @@
                                 </div>
                             </div>
                             <!-- [ Revert Multiple Modal ] End -->
-
 
                             @foreach ($data as $upd)
                                 <!-- [ Approve Modal ] Start -->

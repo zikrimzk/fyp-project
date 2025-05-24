@@ -70,6 +70,32 @@
                     <div class="card">
                         <div class="card-body">
 
+                            <!-- Supervisor Submission Approval Guidelines -->
+                            <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
+                                <i class="ti ti-info-circle fs-3"></i>
+                                <div class="w-100">
+                                    <h4 class="mb-3 fw-semibold">Submission Approval Guidelines</h4>
+                                    <ul class="mb-0 ps-3 small">
+                                        <li class="mb-2">
+                                            Supervisors must review and verify their students' documents before they proceed
+                                            to higher-level approvals.
+                                        </li>
+                                        <li class="mb-2">
+                                            If both <strong>Main</strong> and <strong>Co-Supervisor</strong> roles are
+                                            required, both must approve for the submission to move forward.
+                                        </li>
+                                        <li class="mb-2">
+                                            If no higher-level approval is required, supervisor approval will complete the
+                                            process.
+                                        </li>
+                                        <li class="mb-2">
+                                            Supervisors can <strong>revert</strong> the student submission if the documents
+                                            are incorrect or need revision.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
                             <!-- [ Option Section ] start -->
                             <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
@@ -204,7 +230,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                
+
                             </div>
                             <!-- [ Filter Section ] End -->
 
@@ -607,17 +633,17 @@
                                                 <textarea id="sr_comment-${review.review_id}" class="form-control mb-3" rows="3" ${isOwner ? '' : 'readonly'}>${review.sr_comment}</textarea>
 
                                                 ${isOwner ? `
-                                                                        <div class="d-flex gap-2">
-                                                                            <button class="btn btn-sm btn-light-danger w-50" onclick="deleteReview(${review.review_id}, ${review.student_activity_id})">
-                                                                                <i class="ti ti-trash me-2"></i>
-                                                                                <span class="me-2">Delete</span>
-                                                                            </button>
-                                                                            <button class="btn btn-sm btn-light-primary w-50" onclick="updateReview(${review.review_id})">
-                                                                                <i class="ti ti-edit-circle me-2"></i>
-                                                                                <span class="me-2">Update</span>
-                                                                            </button>
-                                                                        </div>
-                                                                    ` : ''}
+                                                                                <div class="d-flex gap-2">
+                                                                                    <button class="btn btn-sm btn-light-danger w-50" onclick="deleteReview(${review.review_id}, ${review.student_activity_id})">
+                                                                                        <i class="ti ti-trash me-2"></i>
+                                                                                        <span class="me-2">Delete</span>
+                                                                                    </button>
+                                                                                    <button class="btn btn-sm btn-light-primary w-50" onclick="updateReview(${review.review_id})">
+                                                                                        <i class="ti ti-edit-circle me-2"></i>
+                                                                                        <span class="me-2">Update</span>
+                                                                                    </button>
+                                                                                </div>
+                                                                            ` : ''}
                                             </div>
                                         </div>
                                     </div>

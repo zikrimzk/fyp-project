@@ -38,6 +38,7 @@ use setasign\Fpdi\PdfParser\StreamReader;
 class SubmissionController extends Controller
 {
     /* General Function [REQUIRE CHECKING] */
+    // EMAIL NOTOFICATION PART IS NOT YET IMPLEMENTED
     private function sendSubmissionNotification($data, $userType, $actName, $emailType, $approvalRole)
     {
         //USER TYPE 
@@ -2264,13 +2265,20 @@ class SubmissionController extends Controller
                 return $table->make(true);
             }
 
+            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
+                ->select('a.id', 'a.act_name')
+                ->where('b.init_status', 2)
+                ->orderBy('a.act_name')
+                ->distinct()
+                ->get();
+
             return view('staff.submission.submission-suggestion', [
                 'title' => 'Submission Suggestion',
                 'studs' => Student::all(),
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
-                'acts' => Activity::all(),
+                'acts' => $act,
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {

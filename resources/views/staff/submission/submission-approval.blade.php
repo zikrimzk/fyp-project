@@ -68,7 +68,44 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
+                            <!-- Submission Approval Guidelines -->
+                            <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
+                                <i class="ti ti-info-circle fs-3"></i>
+                                <div class="w-100">
+                                    <h4 class="mb-3 fw-semibold">Submission Approval Guidelines</h4>
+                                    <ul class="mb-0 ps-3 small">
+                                        <li class="mb-2">
+                                            Approval actions are only shown to roles configured in the <strong>Form Settings
+                                                signature flow</strong>.
+                                        </li>
+                                        <li class="mb-2">
+                                            Each role (Committee, Deputy Dean, Dean) can only approve submissions if their
+                                            signature is required.
+                                        </li>
+                                        <li class="mb-2">
+                                            <strong>Cross Approvals</strong>
+                                            <ul class="mb-0 ps-3">
+                                                <li>
+                                                    Committee/Deputy Dean/Dean can approve on
+                                                    behalf of the Supervisor.
+                                                    No signature is required—just use the signature pad to scramble a mark.
+                                                    This applies <strong>only to Supervisor approvals</strong>.
+                                                </li>
+                                                <li>
+                                                    For roles that are officially assigned to approve, <strong>cross
+                                                        approvals are
+                                                        ignored</strong>.
+                                                    The approval process will skip the cross approval and mark the activity
+                                                    as
+                                                    completed if the assigned role is the last required approver.
+                                                </li>
 
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
                             <!-- [ Option Section ] start -->
                             <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
@@ -536,17 +573,17 @@
                                                 <textarea id="sr_comment-${review.review_id}" class="form-control mb-3" rows="3" ${isOwner ? '' : 'readonly'}>${review.sr_comment}</textarea>
 
                                                 ${isOwner ? `
-                                                                        <div class="d-flex flex-column flex-md-row justify-content-end gap-2">
-                                                                            <button class="btn btn-sm btn-light-danger" onclick="deleteReview(${review.review_id}, ${review.student_activity_id})">
-                                                                                <i class="ti ti-trash me-2"></i>
-                                                                                <span class="me-2">Delete</span>
-                                                                            </button>
-                                                                            <button class="btn btn-sm btn-light-primary" onclick="updateReview(${review.review_id})">
-                                                                                <i class="ti ti-edit-circle me-2"></i>
-                                                                                <span class="me-2">Update</span>
-                                                                            </button>
-                                                                        </div>
-                                                                    ` : ''}
+                                                                                                    <div class="d-flex flex-column flex-md-row justify-content-end gap-2">
+                                                                                                        <button class="btn btn-sm btn-light-danger" onclick="deleteReview(${review.review_id}, ${review.student_activity_id})">
+                                                                                                            <i class="ti ti-trash me-2"></i>
+                                                                                                            <span class="me-2">Delete</span>
+                                                                                                        </button>
+                                                                                                        <button class="btn btn-sm btn-light-primary" onclick="updateReview(${review.review_id})">
+                                                                                                            <i class="ti ti-edit-circle me-2"></i>
+                                                                                                            <span class="me-2">Update</span>
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                ` : ''}
                                             </div>
                                         </div>
                                     </div>
