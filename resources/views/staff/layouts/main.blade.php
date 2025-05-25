@@ -50,6 +50,28 @@
     <!-- [Flatpickr Scripts] -->
     <script src="../assets/js/plugins/flatpickr.min.js"></script>
 
+    <script>
+        $.extend(true, $.fn.dataTable.defaults, {
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            language: {
+                emptyTable: "No data available",
+                zeroRecords: "No matching records found",
+                processing: "<span class='text-muted'>Loading data, please wait...</span>",
+                search: "",
+                searchPlaceholder: "Search records..."
+            },
+            order: [],
+            pageLength: 50,
+            lengthMenu: [5, 10, 25, 50, 100],
+            columnDefs: [{
+                targets: '_all',
+                defaultContent: '-'
+            }]
+        });
+    </script>
+
     <style>
         .data-table td {
             white-space: normal !important;
@@ -105,6 +127,16 @@
             height: 100%;
             object-fit: cover;
         }
+
+        table.dataTable thead th {
+            background-color: rgba(52, 58, 64, 255) !important;
+            color: white !important;
+        }
+
+        /* button,
+        .btn {
+            border-radius: 6px !important;
+        } */
 
         @media (max-width: 768px) {
             .nav-tabs.profile-tabs .nav-item {

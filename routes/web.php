@@ -35,6 +35,8 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
 
     /* Student Home */
     Route::get('/home', [AuthenticateController::class, 'studentHome'])->name('student-home');
+    Route::post('/student-update-title-of-research-{id}', [SupervisionController::class, 'updateTitleOfResearch'])->name('student-update-titleOfResearch-post');
+
 
     /* Student Profile */
     Route::get('/my-profile', [AuthenticateController::class, 'studentProfile'])->name('student-profile');

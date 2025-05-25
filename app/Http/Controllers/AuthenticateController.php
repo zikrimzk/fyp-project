@@ -382,8 +382,29 @@ class AuthenticateController extends Controller
     public function studentHome()
     {
         try {
+            $document = DB::table('procedures as a')
+                ->join('programmes as b', 'a.programme_id', '=', 'b.id')
+                ->join('activities as c', 'a.activity_id', '=', 'c.id')
+                ->join('documents as d', 'c.id', '=', 'd.activity_id')
+                ->join('submissions as e', 'd.id', '=', 'e.document_id')
+                ->where('b.id', auth()->user()->programme_id)
+                ->where('e.student_id', auth()->user()->id)
+                ->select(
+                    'c.id as activity_id',
+                    'c.act_name as activity_name',
+                    'd.doc_name as document_name',
+                    'd.isRequired',
+                    'e.id as submission_id',
+                    'e.submission_status',
+                    'e.submission_duedate',
+                    'e.submission_document',
+                    'e.submission_date',
+                )
+                ->get();
+
             return view('student.auth.student-home', [
-                'title' => 'Home',
+                'title' => 'Student Dashboard',
+                'documents' => $document,
             ]);
         } catch (Exception $e) {
             return abort(500);

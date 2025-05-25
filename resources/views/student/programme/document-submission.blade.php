@@ -41,8 +41,16 @@
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">{{ $doc->document_name }}</h2>
+                                <h2 class="mb-0 d-flex align-items-center">
+                                    <a href="{{ url()->previous() }}" class="btn me-2">
+                                        <span class="f-18">
+                                            <i class="ti ti-arrow-left"></i>
+                                        </span>
+                                    </a>
+                                    {{ $doc->document_name }}
+                                </h2>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -77,14 +85,6 @@
                 @endif
             </div>
             <!-- [ Alert ] end -->
-
-            <div class="d-flex justify-content-start align-items-center mb-3">
-                <a href="{{ route('student-programme-overview') }}"
-                    class="btn btn-sm btn-light-primary d-flex align-items-center justify-content-center me-2">
-                    <i class="ti ti-arrow-left me-2"></i>
-                    <span class="me-2">Back</span>
-                </a>
-            </div>
 
             <!-- [ Main Content ] start -->
             <div class="row">
@@ -332,10 +332,10 @@
                     alert('No file selected. Please upload your document before submitting.');
                     return;
                 }
-                
+
                 $btn.prop('disabled', true).html(
                     '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...'
-                    );
+                );
 
                 const file = uploadedFiles[0].data;
                 const formData = new FormData();
@@ -351,7 +351,7 @@
                     processData: false,
                     contentType: false,
                     success: function(response) {
-                        location.reload(); 
+                        location.reload();
                     },
                     error: function(xhr) {
                         if (xhr.status === 422) {
@@ -360,7 +360,7 @@
                         } else {
                             alert('Oops! Something went wrong. Please try again.');
                         }
-                        
+
                         $btn.prop('disabled', false).html('Save Changes');
                     }
                 });
