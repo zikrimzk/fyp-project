@@ -29,11 +29,11 @@
                         {{-- Lecturer --}}
                         <small>Lecturer</small>
                     @elseif(auth()->user()->staff_role == 3)
-                        {{-- TDP --}}
-                        <small>Timbalan Dekan Pendidikan</small>
+                        {{-- DD --}}
+                        <small>Deputy Dean</small>
                     @elseif(auth()->user()->staff_role == 4)
-                        {{-- Dekan --}}
-                        <small>Dekan</small>
+                        {{-- Dean --}}
+                        <small>Dean</small>
                     @else
                         {{-- N/A --}}
                         <small>N/A</small>

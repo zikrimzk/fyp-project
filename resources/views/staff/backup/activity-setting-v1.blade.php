@@ -629,3 +629,55 @@
 
 </html>
  --}}
+
+
+
+
+ {{-- // // DESIGN PART
+            // function appendFormField(label, datakey, order, ff_id = null) {
+            //     const id = ff_id ?? `temp_${fieldIdCounter++}`;
+            //     const shortLabel = truncateText(stripHTML(label), 10);
+            //     const item = `
+        //         <li class="list-group-item draggable-item" data-id="${id}">
+        //             <div class="d-flex align-items-center gap-2 mb-2">
+        //                 <span class="drag-handle text-secondary" title="Drag to reorder">
+        //                     <i class="ti ti-drag-drop fs-5"></i>
+        //                 </span>
+        //                 <div>
+        //                     <strong>${shortLabel}</strong>
+        //                     <div class="text-muted small">[${datakey ?? 'Others'}]</div>
+        //                 </div>
+        //             </div>
+        //             <div class="row g-1">
+
+        //                 <div class="col-2">
+        //                     <button class="btn btn-sm btn-outline-primary w-100 move-up-btn" data-id="${id}" title="Move Up">
+        //                         <i class="ti ti-chevron-up"></i>
+        //                     </button>
+        //                 </div>
+        //                 <div class="col-2">
+        //                     <button class="btn btn-sm btn-outline-primary w-100 move-down-btn" data-id="${id}" title="Move Down">
+        //                         <i class="ti ti-chevron-down"></i>
+        //                     </button>
+        //                 </div>
+        //                 <div class="col-2">
+        //                     <button class="btn btn-sm btn-outline-secondary w-100 update-field-btn" data-id="${id}" data-label="${label}" data-key="${datakey}">
+        //                         <i class="ti ti-edit-circle"></i>
+        //                     </button>
+        //                 </div>
+        //                 <div class="col-2">
+        //                     <button class="btn btn-sm btn-outline-secondary w-100 copy-field-btn" data-id="${id}" data-key="${datakey}">
+        //                         <i class="ti ti-copy"></i>
+        //                     </button>
+        //                 </div>
+        //                 <div class="col-4">
+        //                     <button class="btn btn-sm btn-outline-danger w-100 delete-field-btn" data-id="${id}">
+        //                         <i class="ti ti-trash"></i>
+        //                     </button>
+        //                 </div>
+
+        //             </div>
+        //         </li>
+        //     `;
+            //     $('#fieldList').append(item);
+            // } --}}

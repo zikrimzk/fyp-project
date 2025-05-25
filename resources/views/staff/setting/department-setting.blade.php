@@ -56,22 +56,23 @@
             <div class="row">
 
                 <!-- [ Department Setting ] start -->
-                <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-grid gap-2 gap-md-3 d-md-flex flex-wrap">
-                                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#addModal"><i class="ti ti-plus f-18"></i>
-                                    Add Department
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
+
+                            <!-- [ Option Section ] start -->
+                            <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    title="Add Department" id="addModalBtn" data-bs-toggle="modal" data-bs-target="#addModal">
+                                    <i class="ti ti-plus f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Add Department
+                                    </span>
+                                </button>
+                            </div>
+                            <!-- [ Option Section ] end -->
+
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -86,6 +87,7 @@
                                     </thead>
                                 </table>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -97,7 +99,7 @@
                         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
 
-                                <div class="modal-header">
+                                <div class="modal-header bg-light">
                                     <h5 class="modal-title" id="addModalLabel">Add Department</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
@@ -145,7 +147,7 @@
                                                 @error('fac_id') is-invalid @enderror"
                                                     required>
                                                     <option value="">- Select Faculty -</option>
-                                                    @foreach ($facs->where('fac_status', 1) as $fac)
+                                                    @foreach ($facs->whereIn('fac_status', [1, 3]) as $fac)
                                                         <option value="{{ $fac->id }}"
                                                             @if ($fac->id == old('fac_id')) selected @endif>
                                                             ({{ $fac->fac_code }})
@@ -180,11 +182,13 @@
 
                                     </div>
                                 </div>
-                                <div class="modal-footer justify-content-end">
+
+                                <div class="modal-footer bg-light justify-content-end">
                                     <div class="flex-grow-1 text-end">
                                         <div class="col-sm-12">
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="button" class="btn btn-light btn-pc-default w-100"
+                                                <button type="button"
+                                                    class="btn btn-outline-secondary btn-pc-default w-100"
                                                     data-bs-dismiss="modal">Cancel</button>
                                                 <button type="submit" class="btn btn-primary w-100"
                                                     id="addApplicationBtn">
@@ -209,7 +213,7 @@
                             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
 
-                                    <div class="modal-header">
+                                    <div class="modal-header bg-light">
                                         <h5 class="modal-title" id="updateModalLabel">Update Department</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
@@ -311,11 +315,13 @@
 
                                         </div>
                                     </div>
-                                    <div class="modal-footer justify-content-end">
+
+                                    <div class="modal-footer bg-light justify-content-end">
                                         <div class="flex-grow-1 text-end">
                                             <div class="col-sm-12">
                                                 <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                    <button type="button" class="btn btn-light btn-pc-default w-100"
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-pc-default w-100"
                                                         data-bs-dismiss="modal">Cancel</button>
                                                     <button type="submit" class="btn btn-primary w-100"
                                                         id="updateApplicationBtn">
@@ -325,6 +331,7 @@
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -332,36 +339,24 @@
                     <!-- [ Update Modal ] end -->
 
                     <!-- [ Delete Modal ] start -->
-                    <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-backdrop="static"
+                        data-bs-keyboard="false" tabindex="-1" aria-labelledby="deleteModalLabel-{{ $upd->id }}"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-trash text-danger" style="font-size: 100px"></i>
-                                            </div>
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-body p-4">
+                                    <div class="text-center mb-3">
+                                        <i class="ti ti-trash text-danger" style="font-size: 80px;"></i>
+                                    </div>
+                                    <h4 class="text-center mb-2" id="deleteModalLabel-{{ $upd->id }}">Are you sure?
+                                    </h4>
+                                    <p class="text-center text-muted mb-4">This action cannot be undone.</p>
 
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Are you sure ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">This action cannot be undone.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-department-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
-                                                    class="btn btn-danger w-100">Delete Anyways</a>
-                                            </div>
-                                        </div>
+                                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                        <button type="button" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{{ route('delete-department-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
+                                            class="btn btn-danger w-100">Delete Anyway</a>
                                     </div>
                                 </div>
                             </div>
@@ -370,40 +365,27 @@
                     <!-- [ Delete Modal ] end -->
 
                     <!-- [ Disable Modal ] start -->
-                    <div class="modal fade" id="disableModal-{{ $upd->id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="disableModal-{{ $upd->id }}" data-bs-backdrop="static"
+                        data-bs-keyboard="false" tabindex="-1" aria-labelledby="disableModalLabel-{{ $upd->id }}"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-alert-circle text-warning" style="font-size: 100px"></i>
-                                            </div>
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-body p-4">
+                                    <div class="text-center mb-3">
+                                        <i class="ti ti-alert-circle text-warning" style="font-size: 80px;"></i>
+                                    </div>
+                                    <h4 class="text-center mb-2" id="disableModalLabel-{{ $upd->id }}">Department
+                                        Inactivation</h4>
+                                    <p class="text-center text-muted mb-4">
+                                        Oops! You can't delete this department.<br>
+                                        However, you can inactivate them instead. Would you like to proceed?
+                                    </p>
 
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Data Deletion</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">
-                                                    Oops! You can't delete this data.
-                                                    However, you can disable it instead. Would you like to proceed with
-                                                    disabling this data?
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-faculty-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
-                                                    class="btn btn-warning w-100">Disable</a>
-                                            </div>
-                                        </div>
+                                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                        <button type="button" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{{ route('delete-department-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
+                                            class="btn btn-warning w-100">Inactivate</a>
                                     </div>
                                 </div>
                             </div>
@@ -419,6 +401,7 @@
     </div>
 
     <script type="text/javascript">
+
         document.addEventListener('DOMContentLoaded', function() {
             var modalToShow = "{{ session('modal') }}";
             if (modalToShow) {

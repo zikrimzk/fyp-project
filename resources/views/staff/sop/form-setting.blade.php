@@ -67,6 +67,34 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
+                            
+                            <!-- [ Form Setting Guidelines ] start -->
+                            <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
+                                <i class="ti ti-info-circle fs-3"></i>
+                                <div class="w-100">
+                                    <h4 class="mb-3 fw-semibold">Form Setting Guidelines</h4>
+                                    <ul class="mb-0 ps-3 small">
+                                        <li class="mb-2">
+                                            Ensure the form is <strong>active</strong> so students can confirm their
+                                            submission without issues.
+                                        </li>
+                                        <li class="mb-2">
+                                            Follow the <strong>Submission Target</strong>:
+                                            <ul class="mb-2 ps-4">
+                                                <li><strong>Submission:</strong> Visible to students after confirmation.
+                                                </li>
+                                                <li><strong>Others:</strong> Currently under development.</li>
+                                            </ul>
+                                        </li>
+                                        <li class="mb-0">
+                                            The system accepts <strong>one active form per target</strong>. Adding a new one
+                                            will replace the existing form.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- [ Form Setting Guidelines ] end -->
+
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -144,7 +172,8 @@
                                     <div class="flex-grow-1 text-end">
                                         <div class="col-sm-12">
                                             <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="button" class="btn btn-outline-secondary btn-pc-default w-100"
+                                                <button type="button"
+                                                    class="btn btn-outline-secondary btn-pc-default w-100"
                                                     data-bs-dismiss="modal">Cancel</button>
                                                 <button type="button" id="addForm-submit-{{ $act->id }}"
                                                     class="btn btn-primary w-100 addForm-submit-btn"
@@ -164,8 +193,7 @@
                 @foreach ($actForms as $af)
                     <!-- [ Delete Modal ] start -->
                     <div class="modal fade" id="deleteModal-{{ $af->id }}" data-bs-backdrop="static"
-                        data-bs-keyboard="false" tabindex="-1"
-                        aria-labelledby="deleteModalLabel-{{ $af->id }}"
+                        data-bs-keyboard="false" tabindex="-1" aria-labelledby="deleteModalLabel-{{ $af->id }}"
                         aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content border-0 shadow-lg rounded-4">
@@ -173,8 +201,7 @@
                                     <div class="text-center mb-3">
                                         <i class="ti ti-trash text-danger" style="font-size: 80px;"></i>
                                     </div>
-                                    <h4 class="text-center mb-2"
-                                        id="deleteModalLabel-{{ $af->id }}">Are you
+                                    <h4 class="text-center mb-2" id="deleteModalLabel-{{ $af->id }}">Are you
                                         sure?
                                     </h4>
                                     <p class="text-center text-muted mb-4">This action will remove all the form

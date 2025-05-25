@@ -86,7 +86,7 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- [ Option Section ] start -->
-                            <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                            <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
                                     class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
                                     id="clearSelectionBtn">
@@ -97,9 +97,9 @@
                                     <i class="ti ti-plus f-18"></i> <span class="d-none d-sm-inline me-2">Add Staff</span>
                                 </button>
                                 <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
-                                    data-bs-toggle="modal" data-bs-target="#importModal" id="importBtn" title="Import Data">
+                                    data-bs-toggle="modal" data-bs-target="#importModal" id="importBtn" title="Import Staff">
                                     <i class="ti ti-file-import f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">Import Data</span>
+                                    <span class="d-none d-sm-inline me-2">Import Staff</span>
                                 </button>
                                 <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2"
                                     id="excelExportBtn" title="Export Data">
@@ -132,7 +132,7 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearFacFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -144,15 +144,17 @@
                                             <option value="">-- Select Department --</option>
                                             @foreach ($deps as $fil)
                                                 @if ($fil->dep_status == 1)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->dep_name }}</option>
+                                                    <option value="{{ $fil->id }}">({{ $fil->dep_code }}) -
+                                                        {{ $fil->dep_name }}</option>
                                                 @elseif($fil->dep_status == 2)
                                                     <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->dep_name }} [Inactive]
+                                                        ({{ $fil->dep_code }})
+                                                        - {{ $fil->dep_name }} [Inactive]
                                                     </option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearDepFilter">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearDepFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
@@ -165,9 +167,9 @@
                                             <option value="1">Committee</option>
                                             <option value="2">Lecturer</option>
                                             <option value="3">Deputy Dean</option>
-                                            <option value="4">Dekan</option>
+                                            <option value="4">Dean</option>
                                         </select>
-                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearRoleFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
@@ -181,7 +183,7 @@
                                             <option value="1">Active</option>
                                             <option value="2">Inactive</option>
                                         </select>
-                                        <button type="button" class="btn  btn-outline-danger btn-sm"
+                                        <button type="button" class="btn  btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
                                             <i class="ti ti-x"></i>
                                         </button>
@@ -215,7 +217,7 @@
                     <div class="modal fade" id="addModal" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content">
-                                <div class="modal-header">
+                                <div class="modal-header bg-light">
                                     <h5 class="mb-0">Add Staff</h5>
                                     <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
                                         data-bs-dismiss="modal">
@@ -224,36 +226,36 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="row">
-                                        <!-- Photo Input -->
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="d-grid justify-content-center align-items-center mb-3">
-                                                <div class="user-upload avatar-s w-100">
-
+                                        <!-- Photo Upload -->
+                                        <div class="col-12">
+                                            <div class="d-flex flex-column align-items-center mb-3">
+                                                <div class="user-upload avatar-s text-center">
                                                     <img src="{{ asset('assets/images/user/default-profile-1.jpg') }}"
                                                         alt="Profile Photo" width="150" height="150"
                                                         class="previewImageAdd"
                                                         data-default="{{ asset('assets/images/user/default-profile-1.jpg') }}">
-
                                                     <label for="staff_photo" class="img-avtar-upload">
                                                         <i class="ti ti-camera f-24 mb-1"></i>
                                                         <span>Upload</span>
                                                     </label>
-
                                                     <input type="file" id="staff_photo" name="staff_photo"
                                                         class="d-none" accept="image/*" />
                                                 </div>
-                                                <label for="staff_photo" class="btn btn-sm btn-secondary mt-2 mb-2">
-                                                    Change Photo
-                                                </label>
-                                                <button type="button" id="resetPhoto"
-                                                    class="btn btn-sm btn-light-danger">
-                                                    Reset Photo
-                                                </button>
+                                                <div class="d-flex gap-2 mt-2">
+                                                    <label for="staff_photo" class="btn btn-sm btn-secondary">
+                                                        Change Photo
+                                                    </label>
+                                                    <button type="button" id="resetPhoto"
+                                                        class="btn btn-sm btn-light-danger">
+                                                        Reset Photo
+                                                    </button>
+                                                </div>
+                                                @error('staff_photo')
+                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                @enderror
                                             </div>
-                                            @error('staff_photo')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
                                         </div>
+
 
                                         <h5 class="mb-2">A. Personal Information</h5>
 
@@ -304,7 +306,7 @@
                                             </div>
                                         </div>
 
-                                        <h5 class="mb-2 mt-3">B. Work Information</h5>
+                                        <h5 class="mb-2 mt-3">B. Employment Information</h5>
 
                                         <!-- Staff ID Input -->
                                         <div class="col-sm-12 col-md-6 col-lg-6">
@@ -359,28 +361,28 @@
                                                     @if (old('staff_role') == 1)
                                                         <option value ="1" selected>Committee</option>
                                                         <option value ="2">Lecturer</option>
-                                                        <option value ="3">Timbalan Dekan Pendidikan</option>
-                                                        <option value ="4">Dekan</option>
+                                                        <option value ="3">Deputy Dean</option>
+                                                        <option value ="4">Dean</option>
                                                     @elseif(old('staff_role') == 2)
                                                         <option value ="1">Committee</option>
                                                         <option value ="2" selected>Lecturer</option>
-                                                        <option value ="3">Timbalan Dekan Pendidikan</option>
-                                                        <option value ="4">Dekan</option>
+                                                        <option value ="3">Deputy Dean</option>
+                                                        <option value ="4">Dean</option>
                                                     @elseif(old('staff_role') == 3)
                                                         <option value ="1">Committee</option>
                                                         <option value ="2">Lecturer</option>
-                                                        <option value ="3" selected>Timbalan Dekan Pendidikan</option>
-                                                        <option value ="4">Dekan</option>
+                                                        <option value ="3" selected>Deputy Dean</option>
+                                                        <option value ="4">Dean</option>
                                                     @elseif(old('staff_role') == 4)
                                                         <option value ="1">Committee</option>
                                                         <option value ="2">Lecturer</option>
-                                                        <option value ="3">Timbalan Dekan Pendidikan</option>
-                                                        <option value ="4" selected>Dekan</option>
+                                                        <option value ="3">Deputy Dean</option>
+                                                        <option value ="4" selected>Dean</option>
                                                     @else
                                                         <option value ="1">Committee</option>
                                                         <option value ="2">Lecturer</option>
-                                                        <option value ="3">Timbalan Dekan Pendidikan</option>
-                                                        <option value ="4">Dekan</option>
+                                                        <option value ="3">Deputy Dean</option>
+                                                        <option value ="4">Dean</option>
                                                     @endif
                                                 </select>
                                                 @error('staff_role')
@@ -415,11 +417,19 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer justify-content-end">
-                                    <div class="flex-grow-1 text-end">
-                                        <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                            data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Add Staff</button>
+                                <div class="modal-footer pt-2 bg-light">
+                                    <div class="row w-100 g-2">
+                                        <div class="col-12 col-md-6">
+                                            <button type="reset" class="btn btn-outline-secondary w-100"
+                                                data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                Add Staff
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -428,70 +438,75 @@
                 </form>
                 <!-- [ Add Modal ] end -->
 
-                <!-- [ Import Modal ] start -->
+                 <!-- [ Import Modal ] start -->
                 <form action="{{ route('import-staff-post') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal fade" id="importModal" data-bs-keyboard="false" tabindex="-1"
                         aria-hidden="true">
                         <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="mb-0">Import Data</h5>
-                                    <a href="#" class="avtar avtar-s btn-link-danger btn-pc-default ms-auto"
-                                        data-bs-dismiss="modal">
-                                        <i class="ti ti-x f-20"></i>
-                                    </a>
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-header bg-light">
+                                    <h5 class="mb-0"><i class="ti ti-upload me-2"></i> Import Staff (Excel)
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="row">
+                                    <div class="row g-3">
                                         <!-- File Input Section -->
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
-                                            <div class="mb-1">
-                                                <!-- Alert Note -->
-                                                <div class="alert alert-warning d-flex align-items-center" role="alert">
-                                                    <i class="ti ti-alert-circle me-2"></i>
-                                                    <div>
-                                                        <strong>Note:</strong> Please make sure to follow the template
-                                                        provided.
-                                                        <br> DO NOT CHANGE THE HEAD TITLE IN THE TEMPLATE.
-                                                    </div>
+                                        <div class="col-12">
+                                            <!-- Alert Note -->
+                                            <div class="alert alert-light d-flex align-items-start gap-2" role="alert">
+                                                <i class="ti ti-alert-circle mt-1"></i>
+                                                <div>
+                                                    <strong>Important:</strong>
+                                                    <ul class="mb-0 ps-3">
+                                                        <li>Please make sure to follow the template provided.</li>
+                                                        <li>Do not change the column headers in the template.</li>
+                                                        <li> Supported file formats are <strong>CSV (*.csv)</strong> and
+                                                            <strong>Excel (*.xlsx)</strong>.
+                                                        </li>
+                                                    </ul>
                                                 </div>
-                                                <div class="alert alert-info d-flex align-items-center" role="alert">
-                                                    <i class="ti ti-file-text me-2"></i>
-                                                    <div>
-                                                        The supported file formats are <strong>CSV (*.csv)</strong> or
-                                                        <strong>Excel (*.xlsx)</strong> only.
-                                                    </div>
-                                                </div>
+                                            </div>
 
-                                                <!-- Custom File Upload -->
-                                                <div class="mt-3">
-                                                    <div class="input-group">
-                                                        <input class="form-control d-none" type="file"
-                                                            name="staff_file" id="file" accept=".csv, .xlsx"
-                                                            required>
-                                                        <input type="text" class="form-control" id="file-name"
-                                                            placeholder="No file chosen" readonly>
-                                                        <button class="btn btn-primary" type="button" id="browse-btn">
-                                                            <i class="ti ti-upload"></i> Browse
-                                                        </button>
-                                                    </div>
-                                                    <div class="fw-normal mt-2 text-muted">Click <a
-                                                            href="{{ asset('assets/excel-template/e-PGS_STAFF_REGISTRATION_TEMPLATE.xlsx') }}"
-                                                            class="link-primary" target="_blank"
-                                                            download="e-PGS_STAFF_REGISTRATION_TEMPLATE.xlsx">here</a> to
-                                                        download the template</div>
+                                            <!-- Custom File Upload -->
+                                            <div class="mt-3">
+                                                <label for="file" class="form-label fw-semibold">Upload File</label>
+                                                <div class="input-group">
+                                                    <input type="file" class="form-control d-none" id="file"
+                                                        name="staff_file" accept=".csv, .xlsx" required>
+                                                    <input type="text" class="form-control" id="file-name"
+                                                        placeholder="No file chosen" readonly>
+                                                    <button class="btn btn-outline-primary" type="button"
+                                                        id="browse-btn">
+                                                        <i class="ti ti-folder-up"></i> Browse
+                                                    </button>
+                                                </div>
+                                                <div class="form-text mt-2">
+                                                    <a href="{{ asset('assets/excel-template/e-PGS_STAFF_REGISTRATION_TEMPLATE.xlsx') }}"
+                                                        class="link-primary" target="_blank" download>Download the
+                                                        template here</a>.
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer justify-content-end">
+
+                                <!-- Modal Footer -->
+                                <div class="modal-footer justify-content-end bg-light">
                                     <div class="flex-grow-1 text-end">
-                                        <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                            data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary" id="import-btn" disabled>Import
-                                            Data</button>
+                                        <div class="col-sm-12">
+                                            <div class="d-flex justify-content-between gap-3 align-items-center">
+                                                <button type="reset" class="btn btn-outline-secondary w-100"
+                                                    data-bs-dismiss="modal">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit" class="btn btn-primary w-100" id="import-btn"
+                                                    disabled>
+                                                    Import Staff
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -510,18 +525,19 @@
                             <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
 
-                                    <div class="modal-header">
+                                    <div class="modal-header bg-light">
                                         <h5 class="modal-title" id="updateModalLabel">Update Staff</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
                                         <div class="row">
-                                            <!-- Photo Input -->
+
+                                            <!-- Photo Upload -->
                                             <div class="col-sm-12 col-md-12 col-lg-12">
-                                                <div class="d-grid justify-content-center align-items-center mb-3 profile-container"
+                                                <div class="d-flex flex-column align-items-center mb-3 profile-container"
                                                     data-id="{{ $upd->id }}">
-                                                    <div class="user-upload avatar-s w-100">
+                                                    <div class="user-upload avatar-s text-center">
                                                         <img src="{{ empty($upd->staff_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $upd->staff_photo) }}"
                                                             alt="Profile Photo" width="150" height="150"
                                                             class="previewImage"
@@ -535,13 +551,16 @@
                                                             name="staff_photo_up" class="d-none staff_photo"
                                                             accept="image/*" />
                                                     </div>
-                                                    <label for="staff_photo_up_{{ $upd->id }}"
-                                                        class="btn btn-sm btn-secondary mt-2 mb-2">
-                                                        Change Photo
-                                                    </label>
-                                                    <button type="button" class="btn btn-sm btn-light-danger resetPhoto">
-                                                        Reset Photo
-                                                    </button>
+                                                    <div class="d-flex gap-2 mt-2">
+                                                        <label for="staff_photo_up_{{ $upd->id }}"
+                                                            class="btn btn-sm btn-secondary">
+                                                            Change Photo
+                                                        </label>
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-light-danger resetPhoto">
+                                                            Reset Photo
+                                                        </button>
+                                                    </div>
                                                     <input type="hidden" name="remove_photo" class="remove_photo"
                                                         value="0">
                                                 </div>
@@ -601,7 +620,7 @@
                                                 </div>
                                             </div>
 
-                                            <h5 class="mb-2 mt-3">B. Academic Information</h5>
+                                            <h5 class="mb-2 mt-3">B. Employment Information</h5>
 
                                             <!-- Staff ID Input -->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
@@ -662,29 +681,29 @@
                                                         @if ($upd->staff_role == 1)
                                                             <option value ="1" selected>Committee</option>
                                                             <option value ="2">Lecturer</option>
-                                                            <option value ="3">Timbalan Dekan Pendidikan</option>
-                                                            <option value ="4">Dekan</option>
+                                                            <option value ="3">Deputy Dean</option>
+                                                            <option value ="4">Dean</option>
                                                         @elseif($upd->staff_role == 2)
                                                             <option value ="1">Committee</option>
                                                             <option value ="2" selected>Lecturer</option>
-                                                            <option value ="3">Timbalan Dekan Pendidikan</option>
-                                                            <option value ="4">Dekan</option>
+                                                            <option value ="3">Deputy Dean</option>
+                                                            <option value ="4">Dean</option>
                                                         @elseif($upd->staff_role == 3)
                                                             <option value ="1">Committee</option>
                                                             <option value ="2">Lecturer</option>
-                                                            <option value ="3" selected>Timbalan Dekan Pendidikan
+                                                            <option value ="3" selected>Deputy Dean
                                                             </option>
-                                                            <option value ="4">Dekan</option>
+                                                            <option value ="4">Dean</option>
                                                         @elseif($upd->staff_role == 4)
                                                             <option value ="1">Committee</option>
                                                             <option value ="2">Lecturer</option>
-                                                            <option value ="3">Timbalan Dekan Pendidikan</option>
-                                                            <option value ="4" selected>Dekan</option>
+                                                            <option value ="3">Deputy Dean</option>
+                                                            <option value ="4" selected>Dean</option>
                                                         @else
                                                             <option value ="1">Committee</option>
                                                             <option value ="2">Lecturer</option>
-                                                            <option value ="3">Timbalan Dekan Pendidikan</option>
-                                                            <option value ="4">Dekan</option>
+                                                            <option value ="3">Deputy Dean</option>
+                                                            <option value ="4">Dean</option>
                                                         @endif
                                                     </select>
                                                     @error('staff_role_up')
@@ -721,11 +740,19 @@
 
                                         </div>
                                     </div>
-                                    <div class="modal-footer justify-content-end">
-                                        <div class="flex-grow-1 text-end">
-                                            <button type="reset" class="btn btn-link-danger btn-pc-default"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    <div class="modal-footer pt-2 bg-light">
+                                        <div class="row w-100 g-2">
+                                            <div class="col-12 col-md-6">
+                                                <button type="reset" class="btn btn-outline-secondary w-100"
+                                                    data-bs-dismiss="modal">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    Save Changes
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -735,36 +762,24 @@
                     <!-- [ Update Modal ] end -->
 
                     <!-- [ Delete Modal ] start -->
-                    <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="deleteModal-{{ $upd->id }}" data-bs-backdrop="static"
+                        data-bs-keyboard="false" tabindex="-1" aria-labelledby="deleteModalLabel-{{ $upd->id }}"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-trash text-danger" style="font-size: 100px"></i>
-                                            </div>
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-body p-4">
+                                    <div class="text-center mb-3">
+                                        <i class="ti ti-trash text-danger" style="font-size: 80px;"></i>
+                                    </div>
+                                    <h4 class="text-center mb-2" id="deleteModalLabel-{{ $upd->id }}">Are you sure?
+                                    </h4>
+                                    <p class="text-center text-muted mb-4">This action cannot be undone.</p>
 
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Are you sure ?</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">This action cannot be undone.</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
-                                                    class="btn btn-danger w-100">Delete Anyways</a>
-                                            </div>
-                                        </div>
+                                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                        <button type="button" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{{ route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
+                                            class="btn btn-danger w-100">Delete Anyway</a>
                                     </div>
                                 </div>
                             </div>
@@ -773,46 +788,34 @@
                     <!-- [ Delete Modal ] end -->
 
                     <!-- [ Disable Modal ] start -->
-                    <div class="modal fade" id="disableModal-{{ $upd->id }}" data-bs-keyboard="false"
-                        tabindex="-1" aria-hidden="true">
+                    <div class="modal fade" id="disableModal-{{ $upd->id }}" data-bs-backdrop="static"
+                        data-bs-keyboard="false" tabindex="-1" aria-labelledby="disableModalLabel-{{ $upd->id }}"
+                        aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12 mb-4">
-                                            <div class="d-flex justify-content-center align-items-center mb-3">
-                                                <i class="ti ti-alert-circle text-warning" style="font-size: 100px"></i>
-                                            </div>
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-body p-4">
+                                    <div class="text-center mb-3">
+                                        <i class="ti ti-alert-circle text-warning" style="font-size: 80px;"></i>
+                                    </div>
+                                    <h4 class="text-center mb-2" id="disableModalLabel-{{ $upd->id }}">Account
+                                        Inactivation</h4>
+                                    <p class="text-center text-muted mb-4">
+                                        Oops! You can't delete this staff.<br>
+                                        However, you can inactivate them instead. Would you like to proceed?
+                                    </p>
 
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <h2>Account Deletion</h2>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12 mb-3">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <p class="fw-normal f-18 text-center">
-                                                    Oops! You can't delete this staff.
-                                                    However, you can inactive it instead. Would you like to proceed with
-                                                    inactivating this staff?
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-12">
-                                            <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                                <a href="{{ route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
-                                                    class="btn btn-warning w-100">Inactive</a>
-                                            </div>
-                                        </div>
+                                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                        <button type="button" class="btn btn-outline-secondary w-100"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{{ route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
+                                            class="btn btn-warning w-100">Inactivate</a>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <!-- [ Disable Modal ] end -->
+
                 @endforeach
 
                 <!-- [ Staff Management ] end -->
@@ -1091,6 +1094,7 @@
                     url += "?ids=" + selectedIds.join(",");
                 }
                 window.location.href = url;
+                clearBtn.trigger('click');
             });
 
 

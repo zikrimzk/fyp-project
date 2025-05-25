@@ -138,14 +138,18 @@
                                         Update Semester Status
                                     </span>
                                 </button>
-                                <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-2 d-none"
-                                    data-bs-toggle="modal" data-bs-target="#deleteModal" id="deleteModalBtn"
-                                    title=" Delete Student">
-                                    <i class="ti ti-trash f-18"></i>
-                                    <span class="d-none d-sm-inline me-2">
-                                        Delete Student
-                                    </span>
-                                </button>
+
+                                @if ($sems->sem_status == 1)
+                                    <button type="button"
+                                        class="btn btn-outline-danger d-flex align-items-center gap-2 d-none"
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal" id="deleteModalBtn"
+                                        title=" Delete Student">
+                                        <i class="ti ti-trash f-18"></i>
+                                        <span class="d-none d-sm-inline me-2">
+                                            Delete Student
+                                        </span>
+                                    </button>
+                                @endif
                             </div>
                             <!-- [ Option Section ] end -->
 
@@ -838,7 +842,7 @@
                     return $(this).val();
                 }).get();
 
-                let url = "{{ route('export-student-get') }}";
+                let url = "{{ route('export-student-semester-enrollment-get') }}";
 
                 if (selectedIds.length > 0) {
                     url += "?ids=" + selectedIds.join(",");

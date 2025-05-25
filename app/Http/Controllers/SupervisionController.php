@@ -22,6 +22,7 @@ use App\Exports\SupervisionExport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Crypt;
+use App\Exports\StudentSemesterExport;
 use App\Imports\StudentSemesterImport;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
@@ -474,8 +475,7 @@ class SupervisionController extends Controller
     {
         try {
             $selectedIds = $req->query('ids');
-            $semesterId = $req->query('semester_id');
-            return Excel::download(new StudentExport($selectedIds, $semesterId), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
+            return Excel::download(new StudentExport($selectedIds), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
         }
@@ -565,9 +565,9 @@ class SupervisionController extends Controller
                     } elseif ($row->staff_role == 2) {
                         $role = '<span class="badge bg-light-info">' . 'Lecturer' . '</span>';
                     } elseif ($row->staff_role == 3) {
-                        $role = '<span class="badge bg-light-success">' . 'TDP' . '</span>';
+                        $role = '<span class="badge bg-light-success">' . 'Deputy Dean' . '</span>';
                     } elseif ($row->staff_role == 4) {
-                        $role = '<span class="badge bg-success">' . 'Dekan' . '</span>';
+                        $role = '<span class="badge bg-success">' . 'Dean' . '</span>';
                     } else {
                         $role = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
                     }
@@ -1341,7 +1341,7 @@ class SupervisionController extends Controller
                 ->join('student_semesters as b', 'b.student_id', '=', 'a.id')
                 ->join('semesters as c', 'c.id', '=', 'b.semester_id')
                 ->join('programmes as d', 'd.id', '=', 'a.programme_id')
-                ->select('a.id as student_id', 'a.*', 'c.sem_label', 'd.prog_code', 'd.prog_mode', 'b.ss_status')
+                ->select('a.id as student_id', 'a.*', 'c.sem_label', 'c.sem_status', 'd.prog_code', 'd.prog_mode', 'b.ss_status')
                 ->where('b.semester_id', $semID)
                 ->orderBy('a.student_name');
 
@@ -1424,7 +1424,16 @@ class SupervisionController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
-                    return '
+
+                    if ($row->sem_status != 1) {
+                        return '
+                            <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
+                                data-bs-target="#updateStatusModal-' . $row->student_id . '">
+                                <i class="ti ti-edit f-20"></i>
+                            </a>
+                        ';
+                    } else {
+                        return '
                             <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
                                 data-bs-target="#updateStatusModal-' . $row->student_id . '">
                                 <i class="ti ti-edit f-20"></i>
@@ -1434,12 +1443,14 @@ class SupervisionController extends Controller
                                 <i class="ti ti-trash f-20"></i>
                             </a>
                         ';
+                    }
                 });
 
                 $table->rawColumns(['checkbox', 'student_photo', 'student_programme', 'ss_status', 'action']);
 
                 return $table->make(true);
             }
+
             return view('staff.supervision.semester-student-list', [
                 'title' => 'Student List',
                 'studs' => $data->get(),
@@ -1475,6 +1486,23 @@ class SupervisionController extends Controller
             return $response;
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error importing student new semester data: ' . $e->getMessage());
+        }
+    }
+
+    public function exportStudentSemester(Request $req)
+    {
+        try {
+            $selectedIds = $req->query('ids');
+            $semesterId = $req->query('semester_id');
+
+            $semester = Semester::whereId($semesterId)->first();
+            if (!$semester) {
+                return back()->with('error', 'Oops! Semester not found.');
+            }
+
+            return Excel::download(new StudentSemesterExport($selectedIds, $semesterId), 'e-PGS_'.str_replace([' ', '/'], '_', $semester->sem_label).'_STUDENT_LIST_' . date('dMY') . '.xlsx');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
         }
     }
 
@@ -1692,5 +1720,4 @@ class SupervisionController extends Controller
             ], 500);
         }
     }
-
 }

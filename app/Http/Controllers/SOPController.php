@@ -731,7 +731,7 @@ class SOPController extends Controller
                 return abort(404, 'Activity not found.');
             }
 
-            return view('staff.sop.form-generator', [
+            return view('staff.sop.form-editor', [
                 'title' => 'Form Editor',
                 'formdata' => $formdata,
                 'acts' => $actdata,

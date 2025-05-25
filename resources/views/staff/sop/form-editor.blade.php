@@ -33,56 +33,105 @@
 
         .draggable-item {
             cursor: move;
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
             background-color: #ffffff;
-            padding: 10px;
+            padding: 12px 16px;
             border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
             user-select: none;
-            margin-bottom: 0.7rem;
-            outline: 1px dashed #000000;
-
+            margin-bottom: 0.75rem;
+            border: 1px solid #e9ecef;
+            position: relative;
+            overflow: hidden;
         }
 
         .draggable-item:hover {
-            background-color: #f1f3f5;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-            transform: scale(1.015);
+            background-color: #f8f9fa;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+            border-color: #dee2e6;
         }
 
         .draggable-item.ui-sortable-helper {
-            transform: scale(1.04);
-            box-shadow: 0 5px 14px rgba(0, 0, 0, 0.25);
+            transform: scale(1.02) translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
             z-index: 1000;
             cursor: grabbing;
+            border-color: #adb5bd;
+            background-color: #f8f9fa;
+        }
+
+        .draggable-item.ui-sortable-helper .drag-handle {
+            color: #495057;
         }
 
         .drag-handle {
             cursor: grab;
+            color: #adb5bd;
+            transition: color 0.2s ease;
+            padding: 8px;
+            margin: -8px;
+            border-radius: 4px;
+        }
+
+        .drag-handle:hover {
+            color: #495057;
+            background-color: rgba(0, 0, 0, 0.03);
         }
 
         .drag-handle:active {
             cursor: grabbing;
+            color: #212529;
         }
 
         .ui-state-highlight {
-            background-color: #ced4da !important;
-            border: 2px dashed #6c757d;
-            height: 3rem;
-            margin-bottom: 0.5rem;
-            border-radius: 6px;
-            transition: background-color 0.15s ease;
+            background-color: #e9ecef !important;
+            border: 2px dashed #adb5bd !important;
+            height: 60px;
+            margin-bottom: 0.75rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-shadow: none;
         }
 
-        /* Subtle pulse animation for the placeholder */
+        /* Button styles */
+        .draggable-item .btn {
+            transition: all 0.15s ease;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .draggable-item .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .draggable-item .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Pulse animation for placeholder */
         @keyframes pulseHighlight {
             0% {
-                background-color: #dee2e6;
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 0.8;
             }
 
             100% {
-                background-color: #ced4da;
+                opacity: 0.6;
             }
+        }
+
+        .ui-state-highlight {
+            animation: pulseHighlight 1.5s ease infinite;
+        }
+
+        /* Visual feedback during drag */
+        .draggable-item.dragging {
+            opacity: 0.8;
         }
 
         .ck-editor__editable_inline {
@@ -99,7 +148,15 @@
 
             .document-frame {
                 height: 80vh;
-                /* scale with screen height */
+            }
+
+            .draggable-item .btn {
+                padding: 0.25rem;
+                font-size: 0.75rem;
+            }
+
+            .draggable-item {
+                padding: 10px 12px;
             }
         }
     </style>
@@ -115,7 +172,7 @@
 
             <!-- [ Main Content ] start -->
             <div class="row">
-                <!-- [ Form Generator ] start -->
+                <!-- [ Form Editor ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-header" style="background-color: rgba(82,86,89,255); border:none;">
@@ -178,6 +235,13 @@
                                                             title="Add Field" id="addFormFieldBtn" disabled>
                                                             <i class="ti ti-plus f-18"></i> <span
                                                                 class="d-none d-sm-inline me-2">Add Field</span>
+                                                        </button>
+
+                                                        <button type="button"
+                                                            class="btn btn-light-primary btn-sm d-flex align-items-center gap-2"
+                                                            title="Update Preview" id="updatePreviewBtn">
+                                                            <i class="ti ti-eye f-18"></i> <span
+                                                                class="d-none d-sm-inline me-2">Update Preview</span>
                                                         </button>
                                                     </div>
 
@@ -270,14 +334,14 @@
                         </div>
                     </div>
                 </div>
-                <!-- [ Form Generator ] end -->
+                <!-- [ Form Editor ] end -->
 
                 <!-- [ Add & Update Form Field Modal ] start -->
                 <div class="modal fade" id="formFieldModal" tabindex="-1" aria-labelledby="formFieldModal"
                     aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                         <div class="modal-content">
-                            <div class="modal-header">
+                            <div class="modal-header bg-light">
                                 <h5 class="modal-title" id="formFieldModalLabel"></h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
@@ -446,11 +510,11 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="modal-footer justify-content-end">
+                            <div class="modal-footer bg-light justify-content-end">
                                 <div class="flex-grow-1 text-end">
                                     <div class="col-sm-12">
                                         <div class="d-flex justify-content-between gap-3 align-items-center">
-                                            <button type="button" class="btn btn-light btn-pc-default w-100"
+                                            <button type="button" class="btn btn-outline-secondary btn-pc-default w-100"
                                                 data-bs-dismiss="modal">Cancel</button>
                                             <button type="button" id="addFormFieldBtn-submit"
                                                 class="btn btn-primary w-100 d-block">
@@ -473,8 +537,7 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
-    <!-- Include PDF.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
     <!-- Ckeditor js -->
     <script src="../assets/js/plugins/ckeditor/classic/ckeditor.js"></script>
     <!-- jQuery UI (required for sortable) -->
@@ -655,26 +718,16 @@
             }
 
             /*********************************************************
-             ****************FORM SETTING FUNCTION********************
+             ******************UPDATE PREVIEW FUNCTION****************
              *********************************************************/
 
-            // UPDATE TITLE OF FORM
-            $('#txt_form_title').on('input', function() {
-                clearTimeout(debounceTimer);
-
-                debounceTimer = setTimeout(() => {
-                    const txtvalue = $(this).val();
-
-                    if (selectedOpt) {
-                        $('#documentContainer').attr('src',
-                            '{{ route('activity-document-preview-get') }}' +
-                            '?actid=' + encodeURIComponent(selectedOpt) +
-                            '&af_id=' + encodeURIComponent(af_id) +
-                            '&title=' + encodeURIComponent(txtvalue)
-                        );
-                    }
-                }, 300);
+            $('#updatePreviewBtn').click(function() {
+                getFormData();
             });
+
+            /*********************************************************
+             ****************FORM SETTING FUNCTION********************
+             *********************************************************/
 
             // SAVE FORM SETTING 
             $('#saveFormSetting').click(function() {
@@ -842,49 +895,39 @@
              ***************DRAG & DROP SECTION CONTROL***************
              *********************************************************/
 
-            // DESIGN PART
+            // DESIGN FORM FIELD APPEND FUNCTION
             function appendFormField(label, datakey, order, ff_id = null) {
                 const id = ff_id ?? `temp_${fieldIdCounter++}`;
-                const shortLabel = truncateText(stripHTML(label), 10);
+                const shortLabel = truncateText(stripHTML(label), 12);
                 const item = `
                     <li class="list-group-item draggable-item" data-id="${id}">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="drag-handle text-secondary" title="Drag to reorder">
-                                <i class="ti ti-drag-drop fs-5"></i>
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <span class="drag-handle text-muted" title="Drag to reorder">
+                                <i class="ti ti-grip-vertical fs-5"></i>
                             </span>
-                            <div>
-                                <strong>${shortLabel}</strong>
-                                <div class="text-muted small">[${datakey ?? 'Others'}]</div>
+                            <div class="flex-grow-1">
+                                <strong class="d-block">${shortLabel}</strong>
+                                <small class="text-muted text-truncate d-block" style="max-width: 180px">${datakey || 'Custom Field'}</small>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-icon btn-outline-primary move-up-btn" data-id="${id}" title="Move Up">
+                                    <i class="ti ti-arrow-up"></i>
+                                </button>
+                                <button class="btn btn-sm btn-icon btn-outline-primary move-down-btn" data-id="${id}" title="Move Down">
+                                    <i class="ti ti-arrow-down"></i>
+                                </button>
                             </div>
                         </div>
-                        <div class="row g-1">
-
-                            <div class="col-2">
-                                <button class="btn btn-sm btn-outline-primary w-100 move-up-btn" data-id="${id}" title="Move Up">
-                                    <i class="ti ti-chevron-up"></i>
-                                </button>
-                            </div>
-                            <div class="col-2">
-                                <button class="btn btn-sm btn-outline-primary w-100 move-down-btn" data-id="${id}" title="Move Down">
-                                    <i class="ti ti-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="col-2">
-                                <button class="btn btn-sm btn-outline-secondary w-100 update-field-btn" data-id="${id}" data-label="${label}" data-key="${datakey}">
-                                    <i class="ti ti-edit-circle"></i>
-                                </button>
-                            </div>
-                            <div class="col-2">
-                                <button class="btn btn-sm btn-outline-secondary w-100 copy-field-btn" data-id="${id}" data-key="${datakey}">
-                                    <i class="ti ti-copy"></i>
-                                </button>
-                            </div>
-                            <div class="col-4">
-                                <button class="btn btn-sm btn-outline-danger w-100 delete-field-btn" data-id="${id}">
-                                    <i class="ti ti-trash"></i>
-                                </button>
-                            </div>
-
+                        <div class="d-flex justify-content-between gap-2">
+                            <button class="btn btn-sm btn-outline-secondary flex-grow-1 update-field-btn" data-id="${id}" data-label="${label}" data-key="${datakey}">
+                                <i class="ti ti-edit me-1"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary flex-grow-1 copy-field-btn" data-id="${id}" data-key="${datakey}">
+                                <i class="ti ti-copy me-1"></i> Copy
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger flex-grow-1 delete-field-btn" data-id="${id}">
+                                <i class="ti ti-trash me-1"></i> Delete
+                            </button>
                         </div>
                     </li>
                 `;
@@ -932,9 +975,7 @@
                         fields: newOrder
                     },
                     success: function(response) {
-                        if (response.success) {
-                            getFormData(); // Or update order visually
-                        } else {
+                        if (response.success) {} else {
                             showToast('error', response.message);
                         }
                     },

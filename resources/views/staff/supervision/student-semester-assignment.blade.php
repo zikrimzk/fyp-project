@@ -59,6 +59,30 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
+                            <!-- [ Enrollment Guideline ] start -->
+                            <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
+                                <i class="ti ti-info-circle fs-3"></i>
+                                <div class="w-100">
+                                    <h4 class="mb-3 fw-semibold">Enrollment Guideline</h4>
+                                    <ul class="mb-0 ps-3 small">
+                                        <li class="mb-2">
+                                            The system only allows <strong>Enroll</strong> and <strong>Unenroll</strong>
+                                            actions for students in the <strong>current active semester</strong>.
+                                        </li>
+                                        <li class="mb-2">
+                                            For <strong>past semesters</strong>, Committee users can only update the
+                                            <strong>student's semester status</strong>. Enrollment actions are disabled.
+                                        </li>
+                                        <li class="mb-2">
+                                            Only students with an <strong>Active</strong> semester status will have their
+                                            semester counted. If the status is set to <strong>Inactive</strong> or
+                                            <strong>Barred</strong>, their semester count will be excluded.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!-- [ Enrollment Guideline ] end -->
+                            
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-end">
                                 <div class="col-sm-12 col-md-3 mb-3">
