@@ -58,7 +58,6 @@
             language: {
                 emptyTable: "No data available",
                 zeroRecords: "No matching records found",
-                processing: "<span class='text-muted'>Loading data, please wait...</span>",
                 search: "",
                 searchPlaceholder: "Search records..."
             },

@@ -1235,8 +1235,8 @@ class SupervisionController extends Controller
         }
     }
 
-    /* Student Semester Assignment */
-    public function studentSemesterAssignment(Request $req)
+    /* Semester Enrollment */
+    public function semesterEnrollment(Request $req)
     {
         try {
             $data = DB::table('semesters as a')
@@ -1324,8 +1324,8 @@ class SupervisionController extends Controller
 
                 return $table->make(true);
             }
-            return view('staff.supervision.student-semester-assignment', [
-                'title' => 'Student Semester Assignment',
+            return view('staff.supervision.student-semester-enrollment', [
+                'title' => 'Semester Enrollment',
             ]);
         } catch (Exception $e) {
             return abort(500, $e->getMessage());

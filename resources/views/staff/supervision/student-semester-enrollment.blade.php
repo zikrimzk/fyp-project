@@ -10,12 +10,13 @@
                         <div class="col-md-12">
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervision</a></li>
-                                <li class="breadcrumb-item" aria-current="page">Student Enrollment</li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Student</a></li>
+                                <li class="breadcrumb-item" aria-current="page">Semester Enrollment</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">Student Enrollment</h2>
+                                <h2 class="mb-0">Semester Enrollment</h2>
                             </div>
                         </div>
                     </div>
@@ -55,7 +56,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Student Semester Assignment ] start -->
+                <!-- [ Student Semester Enrollment ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
@@ -127,7 +128,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- [ Student Semester Assignment ] end -->
+                <!-- [ Student Semester Enrolment ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -142,7 +143,7 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('student-semester-assignment') }}",
+                    url: "{{ route('semester-enrollment') }}",
                     data: function(d) {
                         d.date_range = $('#dateRangeFilter')
                             .val();

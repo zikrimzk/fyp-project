@@ -122,15 +122,21 @@
                                     Supervision Arrangement
                                 </a>
                             </li>
-                            <li class="pc-item">
-                                <a class="pc-link" href="{{ route('student-semester-assignment') }}">
-                                    Student Enrollment
+                            <li class="pc-item pc-hasmenu">
+                                <a class="pc-link" href="javascript:void(0)">
+                                    <span class="pc-mtext">Student</span>
+                                    <span class="pc-arrow">
+                                        <i data-feather="chevron-right"></i>
+                                    </span>
                                 </a>
-                            </li>
-                            <li class="pc-item">
-                                <a class="pc-link" href="{{ route('student-management') }}">
-                                    Student Management
-                                </a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('student-management') }}">Student Management</a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('semester-enrollment') }}">Semester Enrollment</a>
+                                    </li>
+                                </ul>
                             </li>
                             <li class="pc-item">
                                 <a class="pc-link" href="{{ route('staff-management') }}">

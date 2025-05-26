@@ -15,15 +15,16 @@
                         <div class="col-md-12">
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervision</a></li>
-                                <li class="breadcrumb-item"><a href="{{ route('student-semester-assignment') }}">
-                                        Student Enrollment</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Student</a></li>
+                                <li class="breadcrumb-item"><a href="{{ route('semester-enrollment') }}">
+                                        Semester Enrollment</a></li>
                                 <li class="breadcrumb-item" aria-current="page">Student List ({{ $sems->sem_label }})</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
                                 <h3 class="mb-0 d-flex align-items-center ">
-                                    <a href="{{ route('student-semester-assignment') }}" class="btn me-2">
+                                    <a href="{{ route('semester-enrollment') }}" class="btn me-2">
                                         <span class="f-18">
                                             <i class="ti ti-arrow-left"></i>
                                         </span>
@@ -97,7 +98,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Student Management ] start -->
+                <!-- [ Semester Student List ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
@@ -603,7 +604,7 @@
                     <!-- [ Delete Modal ] end -->
                 @endforeach
 
-                <!-- [ Student Management ] end -->
+                <!-- [ Semester Student List ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
