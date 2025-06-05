@@ -320,7 +320,7 @@ class SubmissionController extends Controller
     }
 
     // ## SEND EMAIL - SV 
-    public function confirmStudentSubmission($actID)
+    public function confirmStudentSubmission(Request $req, $actID)
     {
         try {
             $actID = decrypt($actID);
@@ -347,7 +347,7 @@ class SubmissionController extends Controller
             //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
             //---------------------------------------------------------------------------//
 
-            $signatureData = request()->input('signatureData');
+            $signatureData = $req->input('signatureData');
 
             // 1 - Signature Role [Student]
             // 1 - Document Status [Pending]

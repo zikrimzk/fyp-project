@@ -252,7 +252,7 @@
 
                 @foreach ($subs as $upd)
                     <!-- [ Approve Modal ] Start -->
-                    <form method="GET"
+                    <form method="POST"
                         action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 1]) }}"
                         enctype="multipart/form-data">
                         @csrf
@@ -355,7 +355,7 @@
                     <!-- [ Approve Modal ] End -->
 
                     <!-- [ Reject Modal ] Start -->
-                    <form method="GET"
+                    <form method="POST"
                         action="{{ route('staff-submission-approval-post', ['stuActID' => Crypt::encrypt($upd->student_activity_id), 'option' => 2]) }}">
                         @csrf
                         <div class="modal fade" id="rejectModal-{{ $upd->student_activity_id }}"
@@ -420,7 +420,7 @@
 
                 <!-- [ Review Modal ] Start -->
                 <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+                    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
                         <div class="modal-content rounded-3 shadow-sm">
                             <div class="modal-header bg-light border-bottom">
                                 <h5 class="modal-title fw-semibold">Submission Review(s)</h5>

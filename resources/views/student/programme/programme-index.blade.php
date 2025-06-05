@@ -251,8 +251,8 @@
 
 
                         <!-- [ Confirm Submission Modal ] start -->
-                        <form method="GET"
-                            action="{{ route('student-confirm-submission-get', Crypt::encrypt($act->activity_id)) }}"
+                        <form method="POST"
+                            action="{{ route('student-confirm-submission-post', Crypt::encrypt($act->activity_id)) }}"
                             enctype="multipart/form-data">
                             @csrf
                             <div class="modal fade" id="confirmSubmissionModal-{{ $act->activity_id }}" tabindex="-1"

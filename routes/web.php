@@ -51,7 +51,7 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::get('/document-submission-{id}', [SubmissionController::class, 'documentSubmission'])->name('student-document-submission');
     Route::post('/submit-document', [SubmissionController::class, 'submitDocument'])->name('student-submit-document-post');
     Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->name('student-remove-document-get');
-    Route::get('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-get');
+    Route::post('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-post');
     Route::get('/view-final-document/{actID}/{filename}', [SubmissionController::class, 'viewFinalDocument'])->where('filename', '.*')->name('student-view-final-document-get');
 });
 
@@ -130,7 +130,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Submission Approval */
     Route::get('/submission-approval', [SubmissionController::class, 'submissionApproval'])->name('submission-approval');
-    Route::get('/student-submission-approval/{stuActID}-{option}', [SubmissionController::class, 'studentActivitySubmissionApproval'])->name('staff-submission-approval-post');
+    Route::post('/student-submission-approval/{stuActID}-{option}', [SubmissionController::class, 'studentActivitySubmissionApproval'])->name('staff-submission-approval-post');
     Route::get('/download-multiple-final-document', [SubmissionController::class, 'downloadMultipleFinalDocument'])->name('download-multiple-final-document-get');
     Route::post('/get-submission-review', [SubmissionController::class, 'getReview'])->name('get-review-data-post');
     Route::post('/update-review-activity', [SubmissionController::class, 'updateReview'])->name('update-review-post');
