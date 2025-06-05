@@ -2407,7 +2407,7 @@ class SubmissionController extends Controller
                         } else {
                             $sub_status = 1;
                         }
-                        $submission->submission_status = 1;
+                        $submission->submission_status =  $sub_status;
                     }
                     // SEND EMAIL SECTION 
 
