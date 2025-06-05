@@ -351,7 +351,7 @@ class SOPController extends Controller
                     return $buttonEdit . $buttonRemove;
                 });
 
-                $table->rawColumns(['programme','is_haveEva', 'init_status', 'material', 'action']);
+                $table->rawColumns(['programme', 'is_haveEva', 'init_status', 'material', 'action']);
 
                 return $table->make(true);
             }
@@ -556,8 +556,15 @@ class SOPController extends Controller
                 'a.id as activity_id',
                 DB::raw('COUNT(b.id) as form_count')
             )
-            ->groupBy('a.act_name', 'b.id', 'b.af_title', 'b.af_target', 'b.af_status', 'a.id')
-            ->orderByRaw('form_count IS NULL ASC, form_count DESC, a.act_name ASC');
+            ->groupBy(
+                'a.act_name',
+                'b.id',
+                'b.af_title',
+                'b.af_target',
+                'b.af_status',
+                'a.id'
+            )
+            ->orderByRaw('COUNT(b.id) IS NULL ASC, COUNT(b.id) DESC, a.act_name ASC');
 
         if ($req->ajax()) {
 

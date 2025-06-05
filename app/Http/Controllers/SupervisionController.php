@@ -904,7 +904,7 @@ class SupervisionController extends Controller
                         'ss.semester_id',
                         'b.sem_label'
                     )
-                    ->orderByRaw('supervision_count < 2 DESC');
+                    ->orderByRaw('COUNT(s.staff_id) < 2 DESC');
 
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
                     $data->where('fac_id', $req->input('faculty'));
@@ -920,9 +920,9 @@ class SupervisionController extends Controller
 
                 if ($req->has('status') && !empty($req->input('status'))) {
                     if ($req->input('status') == 1) {
-                        $data->having('supervision_count', '>=', 2);
+                        $data->havingRaw('COUNT(s.staff_id) >= 2');
                     } else {
-                        $data->having('supervision_count', '<=', 1);
+                        $data->havingRaw('COUNT(s.staff_id) <= 1');
                     }
                 }
 
@@ -1500,7 +1500,7 @@ class SupervisionController extends Controller
                 return back()->with('error', 'Oops! Semester not found.');
             }
 
-            return Excel::download(new StudentSemesterExport($selectedIds, $semesterId), 'e-PGS_'.str_replace([' ', '/'], '_', $semester->sem_label).'_STUDENT_LIST_' . date('dMY') . '.xlsx');
+            return Excel::download(new StudentSemesterExport($selectedIds, $semesterId), 'e-PGS_' . str_replace([' ', '/'], '_', $semester->sem_label) . '_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
         }
