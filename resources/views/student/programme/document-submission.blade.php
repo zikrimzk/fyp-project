@@ -42,7 +42,7 @@
                         <div class="col-md-12">
                             <div class="page-header-title">
                                 <h2 class="mb-0 d-flex align-items-center">
-                                    <a href="{{ url()->previous() }}" class="btn me-2">
+                                    <a href="{{ route('student-programme-overview') }}" class="btn me-2">
                                         <span class="f-18">
                                             <i class="ti ti-arrow-left"></i>
                                         </span>
