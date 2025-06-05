@@ -2324,7 +2324,16 @@ class SubmissionController extends Controller
                     $days = $procedures->timeline_week * 7;
                     $submissionDate = Carbon::parse($sub->sem_startdate)->addDays($days);
                     $submission->submission_duedate = $submissionDate;
-                    $submission->submission_status = 1;
+
+                    // DETERMINE SUBMISSION STATUS
+                    $sub_status = 1;
+                    if (Carbon::parse($submissionDate)->lessThan(now())) {
+                        $sub_status = 4;
+                    } else {
+                        $sub_status = 1;
+                    }
+
+                    $submission->submission_status = $sub_status;
                     $submission->save();
                 }
 
@@ -2336,6 +2345,7 @@ class SubmissionController extends Controller
                 foreach ($submissions as $sub) {
                     $submission = Submission::whereId($sub->id)->first();
                     $submission->submission_status = 2;
+                    $submission->submission_document = '-';
                     $submission->save();
                 }
 
@@ -2389,6 +2399,14 @@ class SubmissionController extends Controller
                     if ($procedure) {
                         $dueDate = Carbon::parse($sub->sem_startdate)->addDays($procedure->timeline_week * 7);
                         $submission->submission_duedate = $dueDate;
+
+                        // DETERMINE SUBMISSION STATUS
+                        $sub_status = 1;
+                        if (Carbon::parse($dueDate)->lessThan(now())) {
+                            $sub_status = 4;
+                        } else {
+                            $sub_status = 1;
+                        }
                         $submission->submission_status = 1;
                     }
                     // SEND EMAIL SECTION 
@@ -2396,6 +2414,7 @@ class SubmissionController extends Controller
                 } elseif ($option == 2) {
                     // Revert
                     $submission->submission_status = 2;
+                    $submission->submission_document = '-';
                 }
 
                 $submission->save();
