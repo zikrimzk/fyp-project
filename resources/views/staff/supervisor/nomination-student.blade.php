@@ -1,5 +1,8 @@
 @extends('staff.layouts.main')
 
+@php
+    $mode = 'Supervisors'; // 'Supervisors', 'Administrators', or 'All'
+@endphp
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
@@ -60,6 +63,9 @@
                     </div>
                 @endif
             </div>
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                <div id="toastContainer"></div>
+            </div>
             <!-- [ Alert ] end -->
 
             <!-- [ Main Content ] start -->
@@ -67,7 +73,9 @@
 
                 <!-- [ Nomination Student ] start -->
                 <div class="col-sm-12">
-                    <form action="" method="POST">
+                    <form action="{{ route('my-supervision-submit-nomination-post', Crypt::encrypt($data->id)) }}"
+                        method="POST" enctype="multipart/form-data">
+                        @csrf
                         <div class="card p-3">
                             <div class="card-body">
                                 <div class="container">
@@ -85,34 +93,213 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+
     <script type="text/javascript">
-        $(window).on("load", function() {
+        /*********************************************************
+         ***************GLOBAL FUNCTION & VARIABLES***************
+         *********************************************************/
+        function showToast(type, message) {
+            const toastId = 'toast-' + Date.now();
+            const iconClass = type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle';
+            const bgClass = type === 'success' ? 'bg-light-success' : 'bg-light-danger';
+            const txtClass = type === 'success' ? 'text-success' : 'text-danger';
+            const colorClass = type === 'success' ? 'success' : 'danger';
+            const title = type === 'success' ? 'Success' : 'Error';
 
-            function getNominationForm() {
-                $.ajax({
-                    url: "{{ route('view-nomination-form-get') }}",
-                    type: "GET",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        actid: "{{ $act->id }}",
-                        afid: "{{ $actform->id }}",
-                        studentid: "{{ $data->student_id }}"
-                    },
-                    success: function(response) {
-                        $('#formContainer').html(response.html);
-                    },
-                    error: function() {
-                        alert("Something went wrong! {{ $act->id }}");
-                    }
+            const toastHtml = `
+                    <div id="${toastId}" class="toast border-0 shadow-sm mb-3" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                        <div class="toast-body text-white ${bgClass} rounded d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0 ${txtClass}">
+                                    <i class="${iconClass} me-2"></i> ${title}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                            <p class="mb-0 ${txtClass}">${message}</p>
+                        </div>
+                    </div>
+                `;
+
+            $('#toastContainer').append(toastHtml);
+            const toastEl = new bootstrap.Toast(document.getElementById(toastId));
+            toastEl.show();
+        }
+
+        /*********************************************************/
+        /***************GLOBAL FUNCTION & VARIABLES***************/
+        /*********************************************************/
+
+        initSignaturePads();
+        getNominationForm();
+
+
+        /*********************************************************/
+        /***************SIGNATURE PADS FUNCTION*******************/
+        /*********************************************************/
+
+        const signaturePads = {};
+
+        function initSignaturePads() {
+            document.querySelectorAll('.signature-canvas').forEach(canvas => {
+                const sigId = canvas.getAttribute('data-id');
+
+                // Skip already initialized canvases
+                if (signaturePads[sigId]) return;
+
+                // High-DPI setup
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                const ctx = canvas.getContext('2d');
+                ctx.scale(ratio, ratio);
+                ctx.lineWidth = 2;
+
+                // Initialize signature pad
+                signaturePads[sigId] = new SignaturePad(canvas, {
+                    backgroundColor: 'rgba(255,255,255,1)',
+                    penColor: 'black',
+                    minWidth: 1,
+                    maxWidth: 3,
+                    throttle: 16
                 });
-            }
-            
-            getNominationForm();
 
+                console.log('Initialized signature pad:', sigId);
+            });
+        }
+
+        $(document).ajaxComplete(function() {
+            setTimeout(initSignaturePads, 100);
         });
 
-        $(document).ready(function() {
+        $(document).on('click', '.signature-clear-btn', function() {
+            const sigId = $(this).data('id');
+            if (signaturePads[sigId]) {
+                signaturePads[sigId].clear();
+                console.log('Cleared signature:', sigId);
+            }
+        });
 
+        /*********************************************************/
+        /**********************GETTERS FUNCTION*******************/
+        /*********************************************************/
+        function getNominationForm() {
+            $.ajax({
+                url: "{{ route('view-nomination-form-get') }}",
+                type: "GET",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    actid: "{{ $act->id }}",
+                    afid: "{{ $actform->id }}",
+                    studentid: "{{ $data->student_id }}",
+                    mode: "{{ $mode }}"
+                },
+                beforeSend: function() {
+                    $('#formContainer').html(
+                        '<div class="text-center py-4"><i class="ti ti-loader spin me-2"></i>Loading form...</div>'
+                    );
+                },
+                success: function(response) {
+                    $('#formContainer').html(response.html);
+                },
+                error: function() {
+                    $('#formContainer').html(
+                        '<div class="alert alert-danger">Error loading form</div>');
+                }
+            });
+        }
+
+        /*********************************************************/
+        /******************FORM SUBMIT FUNCTION*******************/
+        /*********************************************************/
+
+        $('form').on('submit', function(e) {
+            const mode = "{{ $mode }}"; // Get current mode from server
+            let isValid = true;
+            const errorMessages = [];
+            const errorFields = [];
+
+            // 1. Validate regular required fields
+            $('[required]').each(function() {
+                const $field = $(this);
+                const fieldType = $field.attr('type');
+                let isEmpty = false;
+
+                if (fieldType === 'checkbox') {
+                    // Checkbox group validation
+                    const groupName = $field.attr('name');
+                    const checkedCount = $(`input[name="${groupName}"]:checked`).length;
+                    isEmpty = checkedCount === 0;
+                } else {
+                    // Standard field validation
+                    isEmpty = !$field.val().trim();
+                }
+
+                if (isEmpty) {
+                    isValid = false;
+                    $field.addClass('error-field');
+                    const fieldLabel = $field.closest('tr').find('.label').text().replace('*', '').trim();
+                    errorFields.push(fieldLabel);
+                }
+            });
+
+            // 2. Validate signatures
+            $('.signature-canvas').each(function() {
+                const $canvas = $(this);
+                const sigId = $canvas.data('id');
+                const sigRole = $canvas.data('role');
+                const pad = signaturePads[sigId];
+                const $input = $('#signatureData-' + sigId);
+                let isSignatureRequired = false;
+
+                if (mode === "Supervisors" && (sigRole === "sv_signature" || sigRole ===
+                        "cosv_signature")) {
+                    isSignatureRequired = true;
+                } else if (mode === "Administrators" && (sigRole === "comm_dean_signature" || sigRole ===
+                        "deputy_dean_signature" || sigRole === "dean_signature")) {
+                    isSignatureRequired = true;
+                }
+
+                if (pad && !pad.isEmpty()) {
+                    // Save signature data
+                    $input.val(pad.toDataURL('image/png'));
+                } else if (isSignatureRequired) {
+                    // Signature is required but empty
+                    isValid = false;
+                    $canvas.css('border-color', 'red');
+                    const signatureLabel = $canvas.closest('.signature-cell').find('.signature-label-clean')
+                        .text().trim();
+                    errorMessages.push(`${signatureLabel} signature is required`);
+                }
+            });
+
+            // 3. Prevent submission if validation fails
+            if (!isValid) {
+                e.preventDefault();
+
+                // Build comprehensive error message
+                let fullMessage = '';
+
+                if (errorFields.length > 0) {
+                    fullMessage += 'Please complete these required fields:\n- ' + errorFields.join('\n- ');
+                }
+
+                if (errorMessages.length > 0) {
+                    if (fullMessage) fullMessage += '\n\n';
+                    fullMessage += 'Signature:\n- ' + errorMessages.join('\n- ');
+                }
+
+                // Show error notification
+                if (fullMessage) {
+                    if (typeof showToast === 'function') {
+                        showToast('danger', fullMessage);
+                    } else {
+                        alert(fullMessage);
+                    }
+                }
+            }
         });
     </script>
 @endsection

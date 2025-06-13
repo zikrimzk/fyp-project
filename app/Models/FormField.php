@@ -19,6 +19,7 @@ class FormField extends Model
         'ff_component_type',
         'ff_placeholder',
         'ff_component_required',
+        'ff_component_required_role',
         'ff_value_options',
 
         // OUTPUT ATTRIBUTES

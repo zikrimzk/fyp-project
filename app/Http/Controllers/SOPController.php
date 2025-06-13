@@ -864,6 +864,7 @@ class SOPController extends Controller
             'ff_component_type' => 'nullable|string',
             'ff_placeholder' => 'nullable|string',
             'ff_component_required' => 'nullable|in:1,2',
+            'ff_component_required_role' => 'nullable|in:0,1,2',
             'ff_value_options' => 'nullable|json',
             'ff_append_text' => 'nullable|string',
             'ff_table' => 'nullable|string',
@@ -879,6 +880,7 @@ class SOPController extends Controller
             'ff_component_type' => 'component type',
             'ff_placeholder' => 'placeholder',
             'ff_component_required' => 'required status',
+            'ff_component_required_role' => 'required role',
             'ff_value_options' => 'value options',
             'ff_append_text' => 'append text',
             'ff_table' => 'source table',
@@ -953,6 +955,7 @@ class SOPController extends Controller
                 'ff_component_type' => $validated['ff_component_type'],
                 'ff_placeholder' => $validated['ff_placeholder'] ?? null,
                 'ff_component_required' => $validated['ff_component_required'] ?? '2',
+                'ff_component_required_role' => $validated['ff_component_required_role'] ?? '0',
                 'ff_value_options' => $validated['ff_value_options'] ?? null,
                 'ff_append_text' => $validated['ff_append_text'] ?? null,
                 'ff_table' => $validated['ff_table'] ?? null,
@@ -986,6 +989,7 @@ class SOPController extends Controller
             'ff_component_type' => 'nullable|string',
             'ff_placeholder' => 'nullable|string',
             'ff_component_required' => 'nullable|in:1,2',
+            'ff_component_required_role' => 'nullable|in:0,1,2',
             'ff_value_options' => 'nullable|json',
             'ff_append_text' => 'nullable|string',
             'ff_table' => 'nullable|string',
@@ -999,6 +1003,7 @@ class SOPController extends Controller
             'ff_component_type' => 'component type',
             'ff_placeholder' => 'placeholder',
             'ff_component_required' => 'required status',
+            'ff_component_required_role' => 'required role',
             'ff_value_options' => 'value options',
             'ff_append_text' => 'append text',
             'ff_table' => 'source table',
@@ -1066,6 +1071,7 @@ class SOPController extends Controller
                 'ff_component_type' => $validated['ff_component_type'],
                 'ff_placeholder' => $validated['ff_placeholder'] ?? null,
                 'ff_component_required' => $validated['ff_component_required'] ?? '2',
+                'ff_component_required_role' => $validated['ff_component_required_role'] ?? '0',
                 'ff_value_options' => $validated['ff_value_options'] ?? null,
                 'ff_append_text' => $validated['ff_append_text'] ?? null,
                 'ff_table' => $validated['ff_table'] ?? null,
@@ -1206,17 +1212,17 @@ class SOPController extends Controller
                 return in_array($col, [
                     'student_name',
                     'staff_name',
-                    'student_email', 
-                    'staff_email', 
-                    'student_matricno', 
-                    'staff_id', 
+                    'student_email',
+                    'staff_email',
+                    'student_matricno',
+                    'staff_id',
                 ]);
             });
 
             return response()->json([
                 'success' => true,
                 'columns' => array_values($filteredColumns)
-            ],200);
+            ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

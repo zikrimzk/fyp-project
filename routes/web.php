@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SOPController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\NominationController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\SupervisionController;
@@ -141,6 +142,10 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/submission-eligibility-approval/{studentID}/{activityID}/{opt}', [SubmissionController::class, 'studentSubmissionSuggestionApproval'])->name('submission-eligibility-approval-get');
     Route::post('/multiple-submission-eligibility-approval', [SubmissionController::class, 'multipleStudentSubmissionSuggestionApproval'])->name('multiple-submission-eligibility-approval-post');
 
+    // Nomination
+    Route::get('/view-nomination-form', [NominationController::class, 'viewNominationForm'])->name('view-nomination-form-get');
+
+
     // Standard Operation Procedure (SOP)
 
     /* Activity + Document Setting */
@@ -226,9 +231,5 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     /* Nomination */
     Route::get('/mysupervision-nomination-{id}', [SupervisorController::class, 'mySupervisionNomination'])->name('my-supervision-nomination');
     Route::get('/mysupervision-student-nomination-{studentId}-{actId}', [SupervisorController::class, 'mySupervisionNominationStudent'])->name('my-supervision-nomination-student');
-    Route::get('/view-nomination-form', [SupervisorController::class, 'viewNominationForm'])->name('view-nomination-form-get');
-
-
-
-
+    Route::post('/mysupervision-submit-nomination-{studentId}', [NominationController::class, 'mysupervisionSubmitNomination'])->name('my-supervision-submit-nomination-post');
 });

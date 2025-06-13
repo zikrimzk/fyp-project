@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('ff_component_type')->nullable()->comment('text, textarea, select, checkbox, radio, date, time, datetime, file');
             $table->string('ff_placeholder')->nullable()->comment('Placeholder text for input fields');
             $table->integer('ff_component_required')->default(2)->comment('1 - required, 2 - optional');
+            $table->integer('ff_component_required_role')->nullable()->default(0)->comment('0- All, 1 - Supervisors, 2 - Admistrators');
             $table->json('ff_value_options')->nullable()->comment('For select, checkbox, and radio (JSON array)');
 
             // OUTPUT ATTRIBUTES
