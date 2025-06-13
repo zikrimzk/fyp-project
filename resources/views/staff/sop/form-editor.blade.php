@@ -415,6 +415,23 @@
                                         checkbox, radio)</label>
                                     <textarea class="form-control" id="ff_value_options" name="ff_value_options" rows="2"
                                         placeholder='e.g. ["Option 1", "Option 2"]'></textarea>
+
+                                    <div class="d-flex justify-content-center  align-items-center mt-2 mb-2">------ OR
+                                        ------</div>
+
+                                    <label for="ff_value_options_table" class="form-label">Value Options (Using
+                                        Table)</label>
+                                    <select name="ff_value_options_table" class="form-select"
+                                        id="ff_value_options_table">
+                                        <option value="" selected>-- Select Field Table --</option>
+                                        <option value="students">Student</option>
+                                        <option value="staff">Staff</option>
+                                    </select>
+
+                                    <select name="ff_value_options_column" class="form-select mt-2"
+                                        id="ff_value_options_column">
+                                        <option value="" selected>-- Select Column --</option>
+                                    </select>
                                 </div>
 
                                 <!-- Append Text -->
@@ -537,7 +554,7 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
-    
+
     <!-- Ckeditor js -->
     <script src="../assets/js/plugins/ckeditor/classic/ckeditor.js"></script>
     <!-- jQuery UI (required for sortable) -->
@@ -882,6 +899,81 @@
                 }
             });
 
+            // VALUE OPTIONS COLUMN CONTROL
+            function loadTableColumns(table, callback) {
+                if (table) {
+                    $.ajax({
+                        url: "{{ route('get-table-columns-get') }}",
+                        method: "GET",
+                        data: {
+                            table: table
+                        },
+                        success: function(response) {
+                            const columnSelect = $('#ff_value_options_column');
+                            columnSelect.empty().append(
+                                '<option value="">-- Select Column --</option>');
+
+                            response.columns.forEach(column => {
+                                columnSelect.append(
+                                    `<option value="${column}">${column}</option>`);
+                            });
+
+                            columnSelect.removeClass('d-none');
+
+                            if (callback) callback();
+                        }
+                    });
+                } else {
+                    $('#ff_value_options_column').addClass('d-none');
+                }
+            }
+
+            $('#ff_value_options_table').change(function() {
+                loadTableColumns($(this).val());
+            });
+
+            $('#ff_value_options_table').change(function() {
+                const table = $(this).val();
+                if (table) {
+                    $.ajax({
+                        url: "{{ route('get-table-columns-get') }}",
+                        method: "GET",
+                        data: {
+                            table: table
+                        },
+                        success: function(response) {
+                            if (response.columns && Array.isArray(response.columns)) {
+                                const columnSelect = $('#ff_value_options_column');
+                                columnSelect.empty().append(
+                                    '<option value="">-- Select Column --</option>');
+
+                                response.columns.forEach(column => {
+                                    columnSelect.append(
+                                        `<option value="${column}">${column}</option>`
+                                    );
+                                });
+
+                                columnSelect.removeClass('d-none');
+                            } else {
+                                console.error("Unexpected response:", response);
+                                alert(
+                                    "Failed to load column list. Please check the table name or try again."
+                                );
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('AJAX error:', status, error);
+                            console.log(xhr.responseText);
+                            alert('Error loading columns. Check console.');
+                        }
+                    });
+                } else {
+                    alert('Please select a table first.');
+                    $('#ff_value_options_column').addClass('d-none');
+                }
+            });
+
+
             // TABLE SETTINGS [UNUSED]
             $('#ff_is_table').on('change', function() {
                 if ($(this).prop('checked')) {
@@ -1011,10 +1103,13 @@
                     $('#ff_placeholder').val('');
                     $('#ff_component_required').val('1');
                     $('#ff_value_options').val('');
+                    $('#ff_value_options_table').val('');
+                    $('#ff_value_options_column').val('');
                     $('#ff_append_text').val('');
                     $('#ff_table').val('');
                     $('#ff_datakey').val('');
                     $('#ff_signature_role').val('');
+
                     resetFormSections();
                     resetExtraFields();
 
@@ -1111,7 +1206,20 @@
                 var rowType = $('#ff_component_type').val();
                 var rowPlaceholder = $('#ff_placeholder').val();
                 var rowRequired = $('#ff_component_required').val();
-                var rowValueOptions = $('#ff_value_options').val();
+                var manualOptions = $('#ff_value_options').val();
+                var table = $('#ff_value_options_table').val();
+                var column = $('#ff_value_options_column').val();
+
+                let valueOptions = '';
+
+                if (manualOptions) {
+                    valueOptions = manualOptions;
+                } else if (table && column) {
+                    valueOptions = JSON.stringify({
+                        table: table,
+                        column: column
+                    });
+                }
                 var rowAppendText = $('#ff_append_text').val();
                 var rowTable = $('#ff_table').val();
                 var rowDataKey = $('#ff_datakey').val();
@@ -1127,6 +1235,9 @@
                     return;
                 } else if (rowCategory == "6" && !rowSignatureRole) {
                     showToast('error', 'Please select signature by first before proceed.');
+                    return;
+                } else if (table && !column) {
+                    showToast('error', 'Please select the column first before proceed.');
                     return;
                 }
 
@@ -1148,7 +1259,7 @@
                     ff_component_type: rowType,
                     ff_placeholder: rowPlaceholder,
                     ff_component_required: rowRequired,
-                    ff_value_options: rowValueOptions,
+                    ff_value_options: valueOptions,
                     ff_append_text: rowAppendText,
                     ff_table: rowTable,
                     ff_datakey: rowDataKey,
@@ -1215,7 +1326,34 @@
                         $('#ff_component_type').val(response.fields.ff_component_type);
                         $('#ff_placeholder').val(response.fields.ff_placeholder);
                         $('#ff_component_required').val(response.fields.ff_component_required);
-                        $('#ff_value_options').val(response.fields.ff_value_options);
+
+                        // Handle value options - either manual or from table
+                        const valueOptions = response.fields.ff_value_options;
+                        try {
+                            const optionsJson = JSON.parse(valueOptions);
+                            if (optionsJson && optionsJson.table) {
+                                // Options are from table
+                                $('#ff_value_options').val('');
+                                $('#ff_value_options_table').val(optionsJson.table);
+
+                                // Load columns and then select the saved column
+                                loadTableColumns(optionsJson.table, function() {
+                                    $('#ff_value_options_column').val(optionsJson
+                                        .column);
+                                });
+                            } else {
+                                // Manual options
+                                $('#ff_value_options').val(valueOptions);
+                                $('#ff_value_options_table').val('');
+                                $('#ff_value_options_column').val('').addClass('d-none');
+                            }
+                        } catch (e) {
+                            // Not JSON - manual options
+                            $('#ff_value_options').val(valueOptions);
+                            $('#ff_value_options_table').val('');
+                            $('#ff_value_options_column').val('').addClass('d-none');
+                        }
+
                         $('#ff_repeatable').val(response.fields.ff_repeatable);
                         $('#ff_append_text').val(response.fields.ff_append_text);
                         $('#ff_table').val(response.fields.ff_table);
@@ -1233,8 +1371,6 @@
                         showToast('error', 'Failed to load the form field data.');
                     }
                 });
-
-
             });
 
             // UPDATE FORM FIELD FUNCTION
@@ -1251,7 +1387,20 @@
                 var rowType = $('#ff_component_type').val();
                 var rowPlaceholder = $('#ff_placeholder').val();
                 var rowRequired = $('#ff_component_required').val();
-                var rowValueOptions = $('#ff_value_options').val();
+                var manualOptions = $('#ff_value_options').val();
+                var table = $('#ff_value_options_table').val();
+                var column = $('#ff_value_options_column').val();
+
+                let valueOptions = '';
+
+                if (manualOptions) {
+                    valueOptions = manualOptions;
+                } else if (table && column) {
+                    valueOptions = JSON.stringify({
+                        table: table,
+                        column: column
+                    });
+                }
                 var rowAppendText = $('#ff_append_text').val();
                 var rowTable = $('#ff_table').val();
                 var rowDataKey = $('#ff_datakey').val();
@@ -1267,6 +1416,9 @@
                     return;
                 } else if (rowCategory == "6" && !rowSignatureRole) {
                     showToast('error', 'Please select signature by first before proceed.');
+                    return;
+                }else if (table && !column) {
+                    showToast('error', 'Please select the column first before proceed.');
                     return;
                 }
 
@@ -1288,7 +1440,7 @@
                     ff_component_type: rowType,
                     ff_placeholder: rowPlaceholder,
                     ff_component_required: rowRequired,
-                    ff_value_options: rowValueOptions,
+                    ff_value_options: valueOptions,
                     ff_append_text: rowAppendText,
                     ff_table: rowTable,
                     ff_datakey: rowDataKey,

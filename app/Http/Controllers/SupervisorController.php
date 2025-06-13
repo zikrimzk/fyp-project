@@ -9,11 +9,15 @@ use App\Models\Student;
 use App\Models\Activity;
 use App\Models\Document;
 use App\Models\Semester;
+use App\Models\FormField;
 use App\Models\Programme;
+use App\Models\ActivityForm;
 use Illuminate\Http\Request;
+use App\Models\StudentActivity;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 use Yajra\DataTables\Facades\DataTables;
 use App\Exports\MySupervisionStudentExport;
 
@@ -127,7 +131,7 @@ class SupervisorController extends Controller
                     return $status;
                 });
 
-                 $table->addColumn('supervision_role', function ($row) {
+                $table->addColumn('supervision_role', function ($row) {
                     $role = match ($row->supervision_role) {
                         1 => "Main Supervisor",
                         2 => "Co-Supervisor",
@@ -730,6 +734,489 @@ class SupervisorController extends Controller
             ]);
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
+        }
+    }
+
+    /* Supervisor - Nomination [ RND ] */
+    public function mySupervisionNomination(Request $req, $id)
+    {
+        try {
+            $id = decrypt($id);
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as s')
+                ->select([
+                    's.id as student_id',
+                    's.student_name',
+                    's.student_matricno',
+                    's.student_email',
+                    's.student_directory',
+                    's.student_photo',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'c.fac_id',
+                    's.student_semcount',
+                    'p.timeline_sem',
+                    'p.programme_id',
+                    'a.id as activity_id',
+                    'a.act_name as activity_name',
+                    'p.act_seq',
+                    'p.init_status',
+                    DB::raw(
+                        'CASE
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                            AND sa_current.sa_status = 3
+                        ) THEN 5
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status = 5
+                        ) THEN 6
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                        ) THEN 4
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status IN (1, 4)
+                        ) 
+                        AND NOT EXISTS (
+                            SELECT 1 FROM student_activities sa
+                            WHERE sa.student_id = s.id
+                            AND sa.activity_id = p.activity_id
+                        ) THEN 2
+                        WHEN EXISTS (
+                            SELECT 1 FROM procedures p_prev
+                            WHERE p_prev.programme_id = s.programme_id
+                            AND p_prev.act_seq < p.act_seq
+                            AND NOT EXISTS (
+                                SELECT 1 FROM student_activities sa_prev
+                                WHERE sa_prev.student_id = s.id
+                                AND sa_prev.activity_id = p_prev.activity_id
+                                AND sa_prev.sa_status = 3
+                            )
+                        ) THEN 3
+                        ELSE 1
+                    END as suggestion_status'
+                    )
+                ])
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('s.id', '=', 'latest.student_id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 's.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('procedures as p', function ($join) {
+                    $join->on('s.programme_id', '=', 'p.programme_id')
+                        ->whereRaw('s.student_semcount >= p.timeline_sem')
+                        ->where('p.init_status', '=', 2);
+                })
+                ->join('activities as a', 'p.activity_id', '=', 'a.id')
+                ->join('programmes as c', 'c.id', '=', 's.programme_id')
+                ->join('supervisions as d', 'd.student_id', '=', 's.id')
+                ->where('s.student_status', '=', 1)
+                ->where('d.staff_id', '=', auth()->user()->id)
+                ->where('a.id', '=', $id)
+                ->orderBy('s.student_matricno')
+                ->orderBy('p.act_seq');
+
+
+            if ($req->ajax()) {
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('c.fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('p.programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('semester_id', $req->input('semester'));
+                }
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    $data->where('status', $req->input('status'));
+                }
+
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('suggestion_status', function ($row) {
+                    $status = '';
+
+                    if ($row->suggestion_status == 1) {
+                        $status = '<span class="badge bg-light-warning">' . 'Pending' . '</span>';
+                    } elseif ($row->suggestion_status == 2) {
+                        $status = '<span class="badge bg-success">' . 'Submission Opened' . '</span>';
+                    } elseif ($row->suggestion_status == 3) {
+                        $status = '<span class="badge bg-light-warning">' . 'Prerequisite Pending' . '</span>';
+                    } elseif ($row->suggestion_status == 4) {
+                        $status = '<span class="badge bg-light-warning">' . 'Under Review' . '</span>';
+                    } elseif ($row->suggestion_status == 5) {
+                        $status = '<span class="badge bg-light-secondary">' . 'Completed' . '</span>';
+                    } elseif ($row->suggestion_status == 6) {
+                        $status = '<span class="badge bg-light-danger">' . 'Submission Archived' . '</span>';
+                    } else {
+                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                    }
+                    return $status;
+                });
+
+                $table->addColumn('action', function ($row) {
+                    $button = '';
+
+                    $button = '
+                            <a href="' . route('my-supervision-nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id)]) . '" class="avtar avtar-xs btn-light-primary">
+                                <i class="ti ti-user-plus f-20"></i>
+                            </a>
+                        ';;
+
+                    return $button;
+                });
+
+                $table->rawColumns(['student_photo', 'suggestion_status', 'action']);
+
+                return $table->make(true);
+            }
+
+            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
+                ->select('a.id', 'a.act_name')
+                ->where('a.id', '=', $id)
+                ->first();
+
+            if (!$act) {
+                abort(404, 'Activity not found');
+            }
+
+            return view('staff.supervisor.nomination-management', [
+                'title' => 'Submission Suggestion',
+                'studs' => Student::all(),
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'act' => $act,
+                'data' => $data->get(),
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    public function mySupervisionNominationStudent($studentId, $actId)
+    {
+        try {
+            $studentId = decrypt($studentId);
+            $actId = decrypt($actId);
+
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as a')
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('latest.student_id', '=', 'a.id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+                ->join('supervisions as d', 'd.student_id', '=', 'a.id')
+                ->select('a.*', 'a.id as student_id', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'ss.semester_id', 'd.supervision_role')
+                ->where('d.staff_id', auth()->user()->id)
+                ->where('a.id', $studentId)
+                ->first();
+
+            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
+                ->select('a.id', 'a.act_name')
+                ->where('a.id', '=', $actId)
+                ->first();
+
+            if (!$act) {
+                abort(404, 'Activity not found');
+            }
+
+            $actForm = ActivityForm::where('activity_id', $actId)
+                ->where('af_target', 3)
+                ->first();
+
+            return view('staff.supervisor.nomination-student', [
+                'title' => $data->student_name . 'Nomination',
+                'act' => $act,
+                'actform' => $actForm,
+                'data' => $data,
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    public function viewNominationForm(Request $req)
+    {
+        try {
+            $actID = $req->input('actid');
+            $student = Student::whereId($req->input('studentid'))->first();
+            $form = ActivityForm::whereId($req->input('afid'))->first();
+
+            $act = Activity::where('id', $actID)->first();
+
+            if (!$act) {
+                return back()->with('error', 'Activity not found.');
+            }
+
+            $formfields = FormField::where('af_id', $form->id)
+                ->orderBy('ff_order')
+                ->get();
+
+            $faculty = Faculty::where('fac_status', 3)->first();
+            $signatures = $formfields->where('ff_category', 6);
+
+            $signatureRecord = StudentActivity::where([
+                ['activity_id', $actID],
+                ['student_id', $student->id]
+            ])->select('sa_signature_data')->first();
+
+            $signatureData = $signatureRecord ? json_decode($signatureRecord->sa_signature_data) : null;
+
+            $userData = [];
+
+            $specialMappings = [
+                'prog_mode' => [
+                    'FT' => 'Full-Time',
+                    'PT' => 'Part-Time',
+                ],
+            ];
+
+            $joinMap = [
+                'students' => [
+                    'programmes' => [
+                        'alias' => 'b',
+                        'table' => 'programmes',
+                        'on' => ['a.programme_id', '=', 'b.id'],
+                    ],
+                    'semesters' => [
+                        'alias' => 'c',
+                        'table' => 'semesters',
+                        'on' => ['a.semester_id', '=', 'c.id'],
+                    ],
+                ],
+                'submissions' => [
+                    'documents' => [
+                        'alias' => 'b',
+                        'table' => 'documents',
+                        'on' => ['a.document_id', '=', 'b.id'],
+                    ],
+                ],
+                'documents' => [
+                    'submissions' => [
+                        'alias' => 'b',
+                        'table' => 'submissions',
+                        'on' => ['a.id', '=', 'b.document_id'],
+                    ],
+                ],
+                'staff' => [
+                    'supervisions' => [
+                        'alias' => 'b',
+                        'table' => 'supervisions',
+                        'on' => ['a.id', '=', 'b.staff_id'],
+                    ],
+                ],
+            ];
+
+            foreach ($formfields as $field) {
+                $baseTable = $field->ff_table;
+                $key = $field->ff_datakey;
+
+                if (empty($baseTable) || empty($key)) {
+                    $userData[str_replace(' ', '_', strtolower($field->ff_label))] = '-';
+                    continue;
+                }
+
+                $extraKey = $field->ff_extra_datakey;
+                $extraCondition = $field->ff_extra_condition;
+
+                $query = DB::table($baseTable . ' as a');
+
+                preg_match_all('/\w+/', $key, $matches);
+                $keys = $matches[0];
+                $fullKeys = [];
+                $joinedAliases = [];
+
+                foreach ($keys as $column) {
+                    $fullCol = 'a.' . $column;
+
+                    if (isset($joinMap[$baseTable])) {
+                        foreach ($joinMap[$baseTable] as $joinName => $joinData) {
+                            $columns = Schema::getColumnListing($joinData['table']);
+                            if (in_array($column, $columns)) {
+                                if (!in_array($joinData['alias'], $joinedAliases)) {
+                                    $query->join($joinData['table'] . ' as ' . $joinData['alias'], ...$joinData['on']);
+                                    $joinedAliases[] = $joinData['alias'];
+                                }
+                                $fullCol = $joinData['alias'] . '.' . $column;
+                                break;
+                            }
+                        }
+                    }
+
+                    $fullKeys[$column] = $fullCol;
+                }
+
+                if ($baseTable === 'students') {
+                    $query->where('a.id', $student->id);
+                }
+
+                if ($baseTable === 'semesters') {
+                    $query->where('a.sem_status', 1);
+                }
+
+                if ($baseTable === 'submissions') {
+                    if (!in_array('b', $joinedAliases)) {
+                        $joinData = $joinMap['submissions']['documents'];
+                        $query->join($joinData['table'] . ' as ' . $joinData['alias'], ...$joinData['on']);
+                        $joinedAliases[] = 'b';
+                    }
+                    $query->where('a.student_id', $student->id)
+                        ->where('a.submission_status', 3)
+                        ->where('b.activity_id', $act->id);
+                }
+
+                if ($baseTable === 'documents') {
+                    if (!in_array('b', $joinedAliases)) {
+                        $joinData = $joinMap['documents']['submissions'];
+                        $query->join($joinData['table'] . ' as ' . $joinData['alias'], ...$joinData['on']);
+                        $joinedAliases[] = 'b';
+                    }
+                    $query->where('b.student_id', $student->id)
+                        ->where('b.submission_status', 3)
+                        ->where('a.activity_id', $act->id)
+                        ->where('a.isShowDoc', 1);
+                }
+
+                if ($baseTable === 'staff') {
+                    if (!in_array('b', $joinedAliases)) {
+                        $joinData = $joinMap['staff']['supervisions'];
+                        $query->join($joinData['table'] . ' as ' . $joinData['alias'], ...$joinData['on']);
+                        $joinedAliases[] = 'b';
+                    }
+                    $query->where('b.student_id', $student->id);
+                }
+
+                if (!empty($extraKey) && !empty($extraCondition)) {
+                    $query->where($extraKey, $extraCondition);
+                }
+
+                $results = $query->get(array_values($fullKeys));
+
+                $finalValue = '-';
+
+                if (!$results->isEmpty()) {
+                    $tempLines = [];
+
+                    foreach ($results as $row) {
+                        $tempParts = [];
+
+                        foreach ($fullKeys as $col => $_alias) {
+                            $val = $row->$col ?? '';
+
+                            // Apply special value mapping if available
+                            if (isset($specialMappings[$col]) && isset($specialMappings[$col][$val])) {
+                                $val = $specialMappings[$col][$val];
+                            }
+
+                            // Format as date if valid
+                            if ($val && strtotime($val)) {
+                                $carbonDate = Carbon::parse($val);
+                                $val = $carbonDate->format('j F Y g:ia');
+                            }
+
+                            $tempParts[] = $val;
+                        }
+
+                        $tempLines[] = implode(' : ', $tempParts);
+                    }
+
+                    $finalValue = implode("<br>", $tempLines);
+                }
+
+                $userData[str_replace(' ', '_', strtolower($field->ff_label))] = $finalValue ?: '-';
+            }
+
+            $html = view('staff.sop.template.activity-document-dynamic', [
+               'title' => $act->act_name . " Document",
+                'act' => $act,
+                'form_title' => $form->af_title,
+                'formfields' => $formfields,
+                'userData' => $userData,
+                'faculty' => $faculty,
+                'signatures' => $signatures,
+                'signatureData' => $signatureData
+            ])->render();
+
+            return response()->json(['html' => $html]);
+
+            // $pdf = Pdf::loadView('student.programme.form-template.activity-document', [
+            //     'title' => $act->act_name . " Document",
+            //     'act' => $act,
+            //     'form_title' => $form->af_title,
+            //     'formfields' => $formfields,
+            //     'userData' => $userData,
+            //     'faculty' => $faculty,
+            //     'signatures' => $signatures,
+            //     'signatureData' => $signatureData
+            // ]);
+
+            // $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';
+            // $relativePath = $finalDocRelativePath . '/' . $fileName;
+
+            // Storage::disk('public')->put($relativePath, $pdf->output());
+
+            // return $pdf->stream($fileName . '.pdf');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error generating activity form: ' . $e->getMessage());
         }
     }
 }

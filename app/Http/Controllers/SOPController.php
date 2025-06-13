@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Exception;
 use App\Models\Faculty;
+use App\Models\Student;
 use App\Models\Activity;
 use App\Models\Document;
 use App\Models\FormField;
@@ -16,6 +17,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
@@ -773,14 +775,45 @@ class SOPController extends Controller
         }
     }
 
+    // public function previewActivityDocumentbyHTMLDynamic(Request $req)
+    // {
+    //     try {
+
+    //         $act = Activity::where('id', $req->actid)->first();
+    //         $actform = ActivityForm::where('id',  $req->af_id)->first();
+    //         $formfield = FormField::where('af_id',  $req->af_id)->orderby('ff_order')->get();
+    //         $signatures = $formfield->where('ff_category', 6);
+    //         $faculty = Faculty::where('fac_status', 3)->first();
+    //         $student = Student::where('id', $req->studentid)->first();
+
+    //         $html = view('staff.sop.template.activity-document-dynamic', [
+    //             'title' => $act->act_name . " Document",
+    //             'act' => $act,
+    //             'form_title' => $req->title,
+    //             'actform' => $actform,
+    //             'formfields' => $formfield,
+    //             'faculty' => $faculty,
+    //             'signatures' => $signatures,
+    //             'student' => $student
+    //         ])->render();
+
+    //         return response()->json(['html' => $html]);
+
+    //     } catch (Exception $e) {
+    //         return response()->json(['error' => $e->getMessage()]);
+    //     }
+    // }
+
     public function previewActivityDocumentbyHTML(Request $req)
     {
         try {
+
             $act = Activity::where('id', $req->actid)->first();
             $actform = ActivityForm::where('id',  $req->af_id)->first();
             $formfield = FormField::where('af_id',  $req->af_id)->orderby('ff_order')->get();
             $signatures = $formfield->where('ff_category', 6);
             $faculty = Faculty::where('fac_status', 3)->first();
+
             return view('staff.sop.template.activity-document', [
                 'title' => $act->act_name . " Document",
                 'act' => $act,
@@ -1154,6 +1187,36 @@ class SOPController extends Controller
                 'success' => true,
                 'fields' => $fields
             ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error getting the selected form field data: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getTableColumnData(Request $req)
+    {
+        try {
+            $table = $req->get('table');
+
+            $columns = Schema::getColumnListing($table);
+
+            $filteredColumns = array_filter($columns, function ($col) {
+                return in_array($col, [
+                    'student_name',
+                    'staff_name',
+                    'student_email', 
+                    'staff_email', 
+                    'student_matricno', 
+                    'staff_id', 
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'columns' => array_values($filteredColumns)
+            ],200);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

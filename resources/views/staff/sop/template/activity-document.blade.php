@@ -299,14 +299,20 @@
                     $value = old($key, $userData[$key] ?? '');
                     $placeholder = $ff->ff_placeholder ?? '';
                     $required = $ff->ff_component_required == 1 ? 'required' : '';
-                    $options = json_decode($ff->ff_value_options, true);
+                    $options = [];
 
-                    if (!is_array($options)) {
-                        $options = preg_split('/\r\n|\r|\n/', $ff->ff_value_options);
-                    }
-
-                    if (is_array($value)) {
-                        $value = implode(', ', $value);
+                    if (str_contains($ff->ff_value_options, '{"table":')) {
+                        $optionsData = json_decode($ff->ff_value_options, true);
+                        $options = DB::table($optionsData['table'])
+                            ->select($optionsData['column'])
+                            ->distinct()
+                            ->pluck($optionsData['column'])
+                            ->toArray();
+                    } else {
+                        $options = json_decode($ff->ff_value_options, true);
+                        if (!is_array($options)) {
+                            $options = preg_split('/\r\n|\r|\n/', $ff->ff_value_options);
+                        }
                     }
                 @endphp
                 <tr>

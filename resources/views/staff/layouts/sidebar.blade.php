@@ -64,6 +64,13 @@
                         ->whereIn('staff_role', [1, 3, 4])
                         ->exists();
 
+                    $nomination = DB::table('procedures as a')
+                        ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                        ->where('a.is_haveEva', 1)
+                        ->select('b.id as activity_id', 'b.act_name as activity_name')
+                        ->distinct()
+                        ->get();
+
                 @endphp
 
                 @if ($supervision)
@@ -101,6 +108,25 @@
                             </li>
                         </ul>
                     </li>
+
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-user-friends pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Nomination</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            @foreach ($nomination as $nom)
+                                <li class="pc-item">
+                                    <a class="pc-link" href="{{ route('my-supervision-nomination', Crypt::encrypt($nom->activity_id)) }}">
+                                        {{ $nom->activity_name }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
                 @endif
 
                 @if ($higherUps)
@@ -131,10 +157,12 @@
                                 </a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('student-management') }}">Student Management</a>
+                                        <a class="pc-link" href="{{ route('student-management') }}">Student
+                                            Management</a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('semester-enrollment') }}">Semester Enrollment</a>
+                                        <a class="pc-link" href="{{ route('semester-enrollment') }}">Semester
+                                            Enrollment</a>
                                     </li>
                                 </ul>
                             </li>

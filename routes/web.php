@@ -177,6 +177,8 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/delete-form-field', [SOPController::class, 'deleteFormField'])->name('delete-form-field-post');
     Route::get('/get-form-field-data', [SOPController::class, 'getFormFieldData'])->name('get-form-field-data-get');
     Route::get('/get-single-form-field-data', [SOPController::class, 'getSingleFormFieldData'])->name('get-single-form-field-data-get');
+    Route::get('/get-table-columns', [SOPController::class, 'getTableColumnData'])->name('get-table-columns-get');
+
 
     // Setting 
 
@@ -220,4 +222,13 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Submission Approval */
     Route::get('/mysupervision-submission-approval', [SupervisorController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
+
+    /* Nomination */
+    Route::get('/mysupervision-nomination-{id}', [SupervisorController::class, 'mySupervisionNomination'])->name('my-supervision-nomination');
+    Route::get('/mysupervision-student-nomination-{studentId}-{actId}', [SupervisorController::class, 'mySupervisionNominationStudent'])->name('my-supervision-nomination-student');
+    Route::get('/view-nomination-form', [SupervisorController::class, 'viewNominationForm'])->name('view-nomination-form-get');
+
+
+
+
 });
