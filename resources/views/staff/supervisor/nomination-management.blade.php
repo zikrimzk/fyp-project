@@ -161,6 +161,8 @@
                                         <tr>
                                             <th>#</th>
                                             <th scope="col">Student</th>
+                                            <th scope="col">Nomination</th>
+                                            <th scope="col">Date</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>
                                         </tr>
@@ -208,6 +210,14 @@
                     {
                         data: 'student_photo',
                         name: 'student_photo',
+                    },
+                    {
+                        data: 'nom_document',
+                        name: 'nom_document'
+                    },
+                    {
+                        data: 'nom_date',
+                        name: 'nom_date'
                     },
                     {
                         data: 'nom_status',

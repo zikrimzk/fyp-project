@@ -829,6 +829,33 @@ class SupervisorController extends Controller
                     ';
                 });
 
+                $table->addColumn('nom_document', function ($row) {
+                    // STUDENT SUBMISSION DIRECTORY
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination';
+
+                    if (empty($row->nom_document)) {
+                        return '-';
+                    }
+
+                    $final_doc =
+                        '
+                        <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->nom_document)]) . '" 
+                            target="_blank" class="link-dark d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                            <span class="fw-semibold">View Document</span>
+                        </a>
+                    ';
+                    return $final_doc;
+                });
+
+                $table->addColumn('nom_date', function ($row) {
+                    if (empty($row->nom_date)) {
+                        return '-';
+                    } else {
+                        return Carbon::parse($row->nom_date)->format('d M Y h:i A');
+                    }
+                });
+
                 $table->addColumn('nom_status', function ($row) {
                     $status = '';
 
@@ -865,7 +892,7 @@ class SupervisorController extends Controller
                     return $button;
                 });
 
-                $table->rawColumns(['student_photo', 'nom_status', 'action']);
+                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'action']);
 
                 return $table->make(true);
             }

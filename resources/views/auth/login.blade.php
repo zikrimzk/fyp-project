@@ -660,7 +660,7 @@
             <div class="footer-info">
                 <p>
                     <strong>University Teknikal Malaysia Melaka</strong><br>
-                    For technical support, contact IT Services at support@utem.edu.my
+                    For technical support, contact b032320063@student.utem.edu.my
                 </p>
             </div>
         </div>
