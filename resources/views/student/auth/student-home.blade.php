@@ -398,7 +398,7 @@
 
                         <!-- Card Body -->
                         <div class="card-body p-2">
-                            <div class="fst-italic text-muted text-center">Comming soon..</div>
+                            <div class="fst-italic text-muted text-center">Coming soon..</div>
                         </div>
                     </div>
                     <!-- [ TBS ] end -->

@@ -78,6 +78,7 @@
                         @csrf
                         <div class="card p-3">
                             <div class="card-body">
+                                <input type="hidden" name="activity_id" value="{{ $act->id }}">
                                 <div class="container">
                                     <div id="formContainer"></div>
                                 </div>

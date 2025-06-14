@@ -4,14 +4,18 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Carbon\Carbon;
+use App\Models\Staff;
 use App\Models\Faculty;
 use App\Models\Student;
 use App\Models\Activity;
+use App\Models\Evaluator;
 use App\Models\FormField;
+use App\Models\Nomination;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
 use App\Models\StudentActivity;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 
 class NominationController extends Controller
@@ -38,12 +42,12 @@ class NominationController extends Controller
             $faculty = Faculty::where('fac_status', 3)->first();
             $signatures = $formfields->where('ff_category', 6);
 
-            $signatureRecord = StudentActivity::where([
+            $nominationRecord = Nomination::where([
                 ['activity_id', $actID],
                 ['student_id', $student->id]
-            ])->select('sa_signature_data')->first();
+            ])->first();
 
-            $signatureData = $signatureRecord ? json_decode($signatureRecord->sa_signature_data) : null;
+            $signatureData = $nominationRecord ? json_decode($nominationRecord->nom_signature_data) : null;
 
             $userData = [];
 
@@ -209,7 +213,39 @@ class NominationController extends Controller
                 $userData[str_replace(' ', '_', strtolower($field->ff_label))] = $finalValue ?: '-';
             }
 
-            $html = view('staff.sop.template.activity-document-dynamic', [
+            if ($nominationRecord) {
+                $evaluators = Evaluator::where('nom_id', $nominationRecord->id)
+                    ->join('staff', 'staff.id', '=', 'evaluators.staff_id')
+                    ->select('evaluators.*', 'staff.staff_name', 'evaluators.eva_meta')
+                    ->get();
+
+                foreach ($evaluators as $evaluator) {
+                    $meta = json_decode($evaluator->eva_meta, true);
+                    $fieldLabel = $meta['field_label'] ?? null;
+
+                    if ($fieldLabel) {
+                        $key = str_replace(' ', '_', strtolower($fieldLabel));
+
+                        // Find the corresponding form field
+                        $field = $formfields->firstWhere('ff_label', $fieldLabel);
+
+                        if ($field) {
+                            if ($field->ff_component_type === 'checkbox') {
+                                // For checkboxes - append to existing values
+                                $existing = isset($userData[$key]) ? (array)$userData[$key] : [];
+                                $existing[] = $evaluator->staff_name;
+                                $userData[$key] = implode(', ', $existing);
+                            } else {
+                                // For other field types - overwrite with staff name
+                                $userData[$key] = $evaluator->staff_name;
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            $html = view('staff.sop.template.nomination-form', [
                 'title' => $act->act_name . " Document",
                 'act' => $act,
                 'form_title' => $form->af_title,
@@ -249,13 +285,262 @@ class NominationController extends Controller
     {
         try {
             $studentId = decrypt($studentId);
+
+            /* GET STUDENT DATA */
             $student = Student::where('id', $studentId)->first();
 
             if (!$student) {
                 return back()->with('error', 'Oops! Student not found');
             }
 
-            dd($student, $req->all());
+            /* GET FORM FIELD DATA */
+            $actID = $req->input('activity_id');
+            $form = ActivityForm::where('activity_id', $actID)->where('af_target', 3)->first();
+
+            if (!$form) {
+                return back()->with('error', 'Oops! Form not found');
+            }
+
+            /* GET NOMINATION DATA */
+            $nomination = Nomination::where('student_id', $studentId)->where('activity_id', $actID)->first();
+
+            if (!$nomination) {
+                return back()->with('error', 'Oops! Nomination not found');
+            }
+
+            /* PROCESS EVALUATOR DATA */
+            $evaluatorFields = $this->getEvaluatorFields($form);
+            $this->processEvaluators($req, $evaluatorFields, $nomination);
+
+            /* PROCESS SIGNATURE DATA */
+            $signatureData = $req->input('signatureData', []);
+            if (!empty($signatureData)) {
+                $this->storeNominationSignature($student, $form, $signatureData, $nomination, 2, auth()->user());
+            }
+
+            /* UPDATE NOMINATION DATA */
+            $nomination->nom_status = 2;
+            $nomination->save();
+
+            return redirect()->route('my-supervision-nomination', Crypt::encrypt($actID))->with('success', 'Nomination submitted successfully!');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error submitting nomination: ' . $e->getMessage());
+        }
+    }
+
+    protected function getEvaluatorFields($form)
+    {
+        $field = FormField::where('af_id', $form->id)
+            ->where('ff_category', 1)
+            ->where(function ($query) {
+                $query->where('ff_label', 'like', '%examiner%')
+                    ->orWhere('ff_label', 'like', '%panel%')
+                    ->orWhere('ff_label', 'like', '%chair%');
+            })
+            ->get();
+
+        return $field;
+    }
+
+    protected function processEvaluators($req, $evaluatorFields, $nomination)
+    {
+        /* DELETE EXISTING NOMINATION [IF ANY] */
+        Evaluator::where('nom_id', $nomination->id)->delete();
+
+        foreach ($evaluatorFields as $field) {
+
+            /* GET STAFF NAME */
+            $fieldKey = str_replace(' ', '_', strtolower($field->ff_label));
+            $staffName = $req->input($fieldKey);
+
+            if (!$staffName) continue;
+
+            /* DETERMINE EVALUATOR ROLE */
+            $role = $this->determineEvaluatorRole($field->ff_label);
+
+            /* FIND STAFF USING FUZZY MATCH */
+            $staff = $this->findStaffByName($staffName);
+
+            if ($staff) {
+                Evaluator::create([
+                    'eva_role' => $role,
+                    'staff_id' => $staff->id,
+                    'nom_id' => $nomination->id,
+                    'eva_meta' => json_encode([
+                        'field_id' => $field->id,
+                        'field_label' => $field->ff_label,
+                        'input_value' => $staffName
+                    ])
+                ]);
+            }
+        }
+    }
+
+    public function storeNominationSignature($student, $form, $signatureData, $nomination, $signatureRole, $userData)
+    {
+        try {
+            // Check if signature data exists and is an array
+            if ($signatureData && is_array($signatureData)) {
+                $signatureField = FormField::where([
+                    ['af_id', $form->id],
+                    ['ff_category', 6],
+                    ['ff_signature_role', $signatureRole]
+                ])->first();
+
+                $existingSignatureData = [];
+                if ($nomination->nom_signature_data) {
+                    $existingSignatureData = json_decode($nomination->nom_signature_data, true);
+                }
+
+                $isCrossApproval = false;
+
+                if (!$signatureField) {
+                    $allSignatureFields = FormField::where([
+                        ['af_id', $form->id],
+                        ['ff_category', 6],
+                    ])->get();
+
+                    foreach ($allSignatureFields as $field) {
+                        $key = $field->ff_signature_key;
+
+                        if (in_array($field->ff_signature_role, [2, 3]) && empty($existingSignatureData[$key])) {
+                            $signatureField = $field;
+                            $isCrossApproval = true;
+                        }
+                    }
+                }
+
+                if ($signatureField) {
+                    $signatureKey = $signatureField->ff_signature_key;
+                    $dateKey = $signatureField->ff_signature_date_key;
+
+                    // Extract the actual signature string from the input data
+                    $signatureString = $signatureData[$signatureKey] ?? null;
+
+                    if ($signatureString) {
+                        if ($signatureRole == 1) {
+                            $newSignatureData = [
+                                $signatureKey => $signatureString,
+                                $dateKey => now()->format('d M Y'),
+                                $signatureKey . '_name' => $student->student_name,
+                                $signatureKey . '_role' => 'Student',
+                                $signatureKey . '_is_cross_approval' => $isCrossApproval
+                            ];
+                        } else {
+                            $role = match ($userData->staff_role) {
+                                1 => "Committee",
+                                2 => "Lecturer",
+                                3 => "Deputy Dean",
+                                4 => "Dean",
+                                default => "N/A",
+                            };
+
+                            $newSignatureData = [
+                                $signatureKey => $signatureString,
+                                $dateKey => now()->format('d M Y'),
+                                $signatureKey . '_name' => $userData->staff_name,
+                                $signatureKey . '_role' => $role,
+                                $signatureKey . '_is_cross_approval' => $isCrossApproval
+                            ];
+                        }
+
+                        // Merge and save
+                        $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
+                        $nomination->nom_signature_data = json_encode($mergedSignatureData);
+                        $nomination->save();
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error storing signature: ' . $e->getMessage());
+        }
+    }
+
+    protected function determineEvaluatorRole($fieldLabel)
+    {
+        $fieldLabel = strtolower($fieldLabel);
+
+        if (str_contains($fieldLabel, 'examiner')) {
+            return 1; // Examiner
+        } elseif (str_contains($fieldLabel, 'panel')) {
+            return 2; // Panel member
+        } elseif (str_contains($fieldLabel, 'chair')) {
+            return 3; // Chairman
+        }
+
+        return 1;
+    }
+
+    protected function findStaffByName($name)
+    {
+        // Handle array input by taking the first name
+        if (is_array($name)) {
+            $name = $name[0] ?? '';
+        }
+
+        /* CLEAN NAME */
+        $cleanName = preg_replace('/^(Prof|Prof\.|Dr|Dr\.|Mr|Mr\.|Ms|Ms\.|Mrs|Mrs\.)\s*/i', '', $name);
+        $cleanName = trim(preg_replace('/\s+/', ' ', $cleanName));
+
+        /* SPLIT NAME INTO FIRST NAME AND LAST NAME */
+        $nameParts = explode(' ', $cleanName);
+        $firstName = array_shift($nameParts);
+        $lastName = implode(' ', $nameParts);
+
+        /* FIND STAFF USING FUZZY MATCH */
+        $staff = Staff::where('staff_name', 'LIKE', "%$cleanName%")
+            ->orWhere(function ($query) use ($firstName, $lastName) {
+                $query->where('staff_name', 'LIKE', "%$firstName%")
+                    ->where('staff_name', 'LIKE', "%$lastName%");
+            })
+            ->first();
+
+        return $staff;
+    }
+
+    public function mysupervisionSubmitNominatddion(Request $req, $studentId)
+    {
+        try {
+            $studentId = decrypt($studentId);
+            $student = Student::where('id', $studentId)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Oops! Student not found');
+            }
+
+            // Get activity and form information
+            $actID = $req->input('activity_id');
+            // $afid = $req->input('afid');
+            // $activity = Activity::findOrFail($actID);
+            $form = ActivityForm::where('activity_id', $actID)->where('af_target', 3)->first();
+
+            // Create or update nomination record
+            $nomination = Nomination::updateOrCreate(
+                [
+                    'student_id' => $student->id,
+                    'activity_id' => $actID
+                ],
+                [
+                    'nom_status' => 2, // Nominated => SV
+                    'nom_date' => now(),
+                ]
+            );
+
+            // Process signature data
+            $signatureData = $req->input('signatureData', []);
+            if (!empty($signatureData)) {
+                $this->storeNominationSignatures($nomination, $signatureData, $form);
+            }
+
+            // Process evaluator nominations
+            $evaluatorFields = $this->getEvaluatorFields($form);
+            $this->processEvaluators($req, $evaluatorFields, $nomination);
+
+            // Generate and store PDF document
+            // $documentPath = $this->generateNominationDocument($student, $activity, $form, $req);
+            // $nomination->update(['nom_document' => $documentPath]);
+
+            return back()->with('success', 'Nomination submitted successfully!');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error submitting nomination: ' . $e->getMessage());
         }

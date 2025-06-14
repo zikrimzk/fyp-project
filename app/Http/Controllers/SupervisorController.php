@@ -737,7 +737,7 @@ class SupervisorController extends Controller
         }
     }
 
-    /* Supervisor - Nomination [ RND ] */
+    /* Supervisor - Nomination */
     public function mySupervisionNomination(Request $req, $id)
     {
         try {
@@ -758,59 +758,13 @@ class SupervisorController extends Controller
                     'c.prog_code',
                     'c.prog_mode',
                     'c.fac_id',
-                    's.student_semcount',
-                    'p.timeline_sem',
-                    'p.programme_id',
+                    's.programme_id',
                     'a.id as activity_id',
                     'a.act_name as activity_name',
-                    'p.act_seq',
-                    'p.init_status',
-                    DB::raw(
-                        'CASE
-                        WHEN EXISTS (
-                            SELECT 1 FROM student_activities sa_current
-                            WHERE sa_current.student_id = s.id
-                            AND sa_current.activity_id = p.activity_id
-                            AND sa_current.sa_status = 3
-                        ) THEN 5
-                        WHEN EXISTS (
-                            SELECT 1 FROM documents d
-                            JOIN submissions sub ON sub.document_id = d.id
-                            WHERE d.activity_id = p.activity_id
-                            AND sub.student_id = s.id
-                            AND sub.submission_status = 5
-                        ) THEN 6
-                        WHEN EXISTS (
-                            SELECT 1 FROM student_activities sa_current
-                            WHERE sa_current.student_id = s.id
-                            AND sa_current.activity_id = p.activity_id
-                        ) THEN 4
-                        WHEN EXISTS (
-                            SELECT 1 FROM documents d
-                            JOIN submissions sub ON sub.document_id = d.id
-                            WHERE d.activity_id = p.activity_id
-                            AND sub.student_id = s.id
-                            AND sub.submission_status IN (1, 4)
-                        ) 
-                        AND NOT EXISTS (
-                            SELECT 1 FROM student_activities sa
-                            WHERE sa.student_id = s.id
-                            AND sa.activity_id = p.activity_id
-                        ) THEN 2
-                        WHEN EXISTS (
-                            SELECT 1 FROM procedures p_prev
-                            WHERE p_prev.programme_id = s.programme_id
-                            AND p_prev.act_seq < p.act_seq
-                            AND NOT EXISTS (
-                                SELECT 1 FROM student_activities sa_prev
-                                WHERE sa_prev.student_id = s.id
-                                AND sa_prev.activity_id = p_prev.activity_id
-                                AND sa_prev.sa_status = 3
-                            )
-                        ) THEN 3
-                        ELSE 1
-                    END as suggestion_status'
-                    )
+                    'n.id as nomination_id',
+                    'n.nom_status',
+                    'n.nom_date',
+                    'n.nom_document',
                 ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
                     $join->on('s.id', '=', 'latest.student_id');
@@ -820,20 +774,14 @@ class SupervisorController extends Controller
                         ->on('ss.semester_id', '=', 'latest.latest_semester_id');
                 })
                 ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
-                ->join('procedures as p', function ($join) {
-                    $join->on('s.programme_id', '=', 'p.programme_id')
-                        ->whereRaw('s.student_semcount >= p.timeline_sem')
-                        ->where('p.init_status', '=', 2);
-                })
-                ->join('activities as a', 'p.activity_id', '=', 'a.id')
+                ->join('nominations as n', 'n.student_id', '=', 's.id')
+                ->join('activities as a', 'n.activity_id', '=', 'a.id')
                 ->join('programmes as c', 'c.id', '=', 's.programme_id')
                 ->join('supervisions as d', 'd.student_id', '=', 's.id')
                 ->where('s.student_status', '=', 1)
                 ->where('d.staff_id', '=', auth()->user()->id)
                 ->where('a.id', '=', $id)
-                ->orderBy('s.student_matricno')
-                ->orderBy('p.act_seq');
-
+                ->orderBy('s.student_matricno');
 
             if ($req->ajax()) {
 
@@ -841,13 +789,13 @@ class SupervisorController extends Controller
                     $data->where('c.fac_id', $req->input('faculty'));
                 }
                 if ($req->has('programme') && !empty($req->input('programme'))) {
-                    $data->where('p.programme_id', $req->input('programme'));
+                    $data->where('s.programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
                     $data->where('semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
-                    $data->where('status', $req->input('status'));
+                    $data->where('nom_status', $req->input('status'));
                 }
 
 
@@ -881,40 +829,43 @@ class SupervisorController extends Controller
                     ';
                 });
 
-                $table->addColumn('suggestion_status', function ($row) {
+                $table->addColumn('nom_status', function ($row) {
                     $status = '';
 
-                    if ($row->suggestion_status == 1) {
+                    if ($row->nom_status == 1) {
                         $status = '<span class="badge bg-light-warning">' . 'Pending' . '</span>';
-                    } elseif ($row->suggestion_status == 2) {
-                        $status = '<span class="badge bg-success">' . 'Submission Opened' . '</span>';
-                    } elseif ($row->suggestion_status == 3) {
-                        $status = '<span class="badge bg-light-warning">' . 'Prerequisite Pending' . '</span>';
-                    } elseif ($row->suggestion_status == 4) {
-                        $status = '<span class="badge bg-light-warning">' . 'Under Review' . '</span>';
-                    } elseif ($row->suggestion_status == 5) {
-                        $status = '<span class="badge bg-light-secondary">' . 'Completed' . '</span>';
-                    } elseif ($row->suggestion_status == 6) {
-                        $status = '<span class="badge bg-light-danger">' . 'Submission Archived' . '</span>';
+                    } elseif ($row->nom_status == 2) {
+                        $status = '<span class="badge bg-light-success">' . 'Nominated - SV' . '</span>';
+                    } elseif ($row->nom_status == 3) {
+                        $status = '<span class="badge bg-light-success">' . 'Reviewed - Committee' . '</span>';
+                    } elseif ($row->nom_status == 4) {
+                        $status = '<span class="badge bg-success">' . 'Approved' . '</span>';
+                    } elseif ($row->nom_status == 5) {
+                        $status = '<span class="badge bg-light-danger">' . 'Rejected' . '</span>';
                     } else {
                         $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
                     }
+
                     return $status;
                 });
 
                 $table->addColumn('action', function ($row) {
                     $button = '';
 
-                    $button = '
+                    if ($row->nom_status == 1 || $row->nom_status == 5) {
+                        $button = '
                             <a href="' . route('my-supervision-nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id)]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-user-plus f-20"></i>
                             </a>
-                        ';;
+                        ';
+                    } else {
+                        $button = '<div class="fst-italic text-muted">No action required</div>';
+                    }
 
                     return $button;
                 });
 
-                $table->rawColumns(['student_photo', 'suggestion_status', 'action']);
+                $table->rawColumns(['student_photo', 'nom_status', 'action']);
 
                 return $table->make(true);
             }
@@ -993,5 +944,4 @@ class SupervisorController extends Controller
             return abort(500, $e->getMessage());
         }
     }
-
 }

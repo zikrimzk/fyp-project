@@ -229,6 +229,27 @@
         font-size: 0.85rem;
     }
 
+    .disabled-signature {
+        opacity: 0.7;
+    }
+
+    .disabled-signature canvas {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .disabled-signature .signature-clear-btn {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .signature-disabled-note {
+        font-size: 0.85rem;
+        text-align: center;
+        margin-top: 5px;
+    }
+
     @media only screen and (max-width: 768px) {
 
         .header-table,
@@ -464,7 +485,7 @@
                                     @foreach ($options as $opt)
                                         <label class="{{ $shouldDisable ? 'disabled-option' : '' }}">
                                             <input type="checkbox" name="{{ $key }}[]" value="{{ e($opt) }}"
-                                                @checked(in_array($opt, $checkedValues)) {{ $disabledAttr }}>
+                                                @checked(in_array(trim($opt), $checkedValues)) {{ $disabledAttr }}>
                                             {{ e($opt) }}
                                         </label>
                                     @endforeach
@@ -510,7 +531,7 @@
             <tr>
                 <td class="label">{{ $ff->ff_label }}</td>
                 <td class="colon">:</td>
-                <td class="value">{!! $value !!}</td>
+                <td class="value">{!! nl2br(e($value)) !!}</td>
             </tr>
             @php $i++; @endphp
         @elseif($ff->ff_category == 3)
@@ -532,6 +553,119 @@
         @elseif ($ff->ff_category == 6)
             <!-- Signature Table Display -->
             @php
+                $signatureGroup = collect();
+                while ($i < $total && $formfields[$i]->ff_category == 6) {
+                    $signatureGroup->push($formfields[$i]);
+                    $i++;
+                }
+                $signatureChunks = $signatureGroup->chunk(3);
+            @endphp
+
+            @foreach ($signatureChunks as $chunk)
+                <tr>
+                    <td colspan="3">
+                        <table class="signature-table clean-signature">
+                            <tr>
+                                @foreach ($chunk as $sig)
+                                    @php
+                                        $sigId = $sig->id;
+                                        $sigKey = $sig->ff_signature_key;
+                                        $sigDateKey = $sig->ff_signature_date_key;
+                                        $isApproved =
+                                            $signatureData &&
+                                            $sigKey &&
+                                            isset($signatureData->{$sigKey . '_is_cross_approval'}) &&
+                                            $signatureData->{$sigKey . '_is_cross_approval'};
+
+                                        // Determine if signature should be disabled based on mode and key
+                                        $shouldDisableSig = false;
+                                        if (
+                                            $mode === 'Supervisors' &&
+                                            ($sigKey === 'sv_signature' || $sigKey === 'cosv_signature')
+                                        ) {
+                                            // Supervisor mode - these signatures are enabled
+                                        } elseif (
+                                            $mode === 'Administrators' &&
+                                            ($sigKey === 'comm_dean_signature' ||
+                                                $sigKey === 'deputy_dean_signature' ||
+                                                $sigKey === 'dean_signature')
+                                        ) {
+                                            // Administrator mode - these signatures are enabled
+                                        } else {
+                                            // Disable if not matching the current mode's signature types
+                                            $shouldDisableSig = true;
+                                        }
+                                    @endphp
+                                    <td
+                                        class="signature-cell @if ($shouldDisableSig) disabled-signature @endif">
+                                        @if ($isApproved)
+                                            <div class="signature-box-clean-text">
+                                                Approved by {{ $signatureData->{$sigKey . '_role'} ?? '-' }}
+                                            </div>
+                                            <div class="signature-label-clean">{{ $sig->ff_label }}</div>
+                                            <div class="signature-date-clean">
+                                                <span
+                                                    class="name-label">{{ $signatureData->{$sigKey . '_name'} ?? '( NAME_OF_APPROVER )' }}</span>
+                                                <span
+                                                    class="date-label">{{ $signatureData->{$sigDateKey} ?? '( DATE_OF_APPROVAL )' }}</span>
+                                            </div>
+                                        @else
+                                            <div class="signature-canvas-container">
+                                                @if ($signatureData && $sigKey && isset($signatureData->{$sigKey}))
+                                                    <div class="signature-box-clean">
+                                                        <img src="{{ $signatureData->{$sigKey} }}"
+                                                            class="signature-img-clean">
+                                                    </div>
+                                                @else
+                                                    <div class="signature-canvas-wrapper">
+                                                        <canvas class="signature-canvas"
+                                                            style="border:1px solid #000000; border-radius:10px; width:100%; height:200px;"
+                                                            data-id="{{ $sigId }}"
+                                                            data-role="{{ $sigKey }}"
+                                                            @if ($shouldDisableSig) disabled @endif>
+                                                        </canvas>
+                                                        <input type="hidden" name="signatureData[{{ $sigKey }}]"
+                                                            id="signatureData-{{ $sigId }}"
+                                                            @if ($shouldDisableSig) disabled @endif>
+                                                    </div>
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-light mt-2 w-100 signature-clear-btn"
+                                                        data-id="{{ $sigId }}"
+                                                        @if ($shouldDisableSig) disabled @endif>
+                                                        <i class="ti ti-eraser me-2"></i> Clear Signature
+                                                    </button>
+                                                @endif
+                                            </div>
+                                            <div class="signature-label-clean">{{ $sig->ff_label }}</div>
+                                            <div class="signature-date-clean">
+                                                <span
+                                                    class="name-label">{{ $signatureData->{$sigKey . '_name'} ?? '( NAME_OF_APPROVER )' }}</span>
+                                                <span
+                                                    class="date-label">{{ $signatureData->{$sigDateKey} ?? '( DATE_OF_APPROVAL )' }}</span>
+                                            </div>
+                                            @if ($shouldDisableSig)
+                                                <div class="signature-disabled-note mt-1">
+                                                    <small class="text-muted">
+                                                        <i class="ti ti-lock me-1"></i>
+                                                        This signature can only be provided by
+                                                        {{ $mode === 'Supervisors' ? 'Administrators' : 'Supervisors' }}
+                                                    </small>
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            @endforeach
+        @endif
+    @endwhile
+</table>
+
+
+{{-- @php
                 $signatureGroup = collect();
                 while ($i < $total && $formfields[$i]->ff_category == 6) {
                     $signatureGroup->push($formfields[$i]);
@@ -605,7 +739,4 @@
                         </table>
                     </td>
                 </tr>
-            @endforeach
-        @endif
-    @endwhile
-</table>
+            @endforeach --}}

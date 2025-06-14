@@ -99,6 +99,42 @@
 
                             <!-- [ Filter Section ] Start -->
                             <div class="row g-3 align-items-center mb-3">
+
+                                <div class="col-sm-12 col-md-6 mb-3">
+                                    <label for="fil_activity_id" class="form-label">Activity</label>
+                                    <div class="input-group">
+                                        <select id="fil_activity_id" class="form-select">
+                                            <option value="-1000">-- Select Activity --</option>
+                                            @foreach ($acts as $fil)
+                                                <option value="{{ $fil->id }}">{{ $fil->act_name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearActivityFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12 col-md-6 mb-3">
+                                    <label for="fil_status" class="form-label">Status</label>
+
+                                    <div class="input-group">
+                                        <select id="fil_status" class="form-select">
+                                            <option value="1" selected>Eligible</option>
+                                            <option value="2">Submission Opened</option>
+                                            <option value="3">Prerequisite Pending</option>
+                                            <option value="4">Under Review</option>
+                                            <option value="5">Completed</option>
+                                            <option value="6">Submission Archived</option>
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            id="clearStatusFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div class="col-sm-12 actAlert">
 
                                     <!-- System-Generated Eligibility Suggestions Explanation -->
@@ -170,55 +206,13 @@
                                                         submission records and approval confirmations.</li>
                                                     <li class="mb-1">If a student does not appear in the suggestion list,
                                                         it could be due to <strong>unmet requirements</strong> or
-                                                        <strong>incorrect procedure settings</strong>.</li>
+                                                        <strong>incorrect procedure settings</strong>.
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- ALERT: Prompt to Select Activity -->
-                                    <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
-                                        <i class="ti ti-alert-triangle"></i>
-                                        <div class="fw-normal">Please select an <a href="#fil_activity_id"
-                                                class="fw-semibold link-dark">activity</a> to proceed with submission
-                                            suggestions.</div>
-                                    </div>
-
-                                </div>
-
-                                <div class="col-sm-12 col-md-6">
-                                    <label for="fil_activity_id" class="form-label">Activity</label>
-                                    <div class="input-group">
-                                        <select id="fil_activity_id" class="form-select">
-                                            <option value="-1000">-- Select Activity --</option>
-                                            @foreach ($acts as $fil)
-                                                <option value="{{ $fil->id }}">{{ $fil->act_name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearActivityFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-6">
-                                    <label for="fil_status" class="form-label">Status</label>
-
-                                    <div class="input-group">
-                                        <select id="fil_status" class="form-select">
-                                            <option value="1" selected>Eligible</option>
-                                            <option value="2">Submission Opened</option>
-                                            <option value="3">Prerequisite Pending</option>
-                                            <option value="4">Under Review</option>
-                                            <option value="5">Completed</option>
-                                            <option value="6">Submission Archived</option>
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearStatusFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
 

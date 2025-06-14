@@ -14,6 +14,7 @@ use App\Models\Semester;
 use App\Models\FormField;
 use App\Models\Procedure;
 use App\Models\Programme;
+use App\Models\Nomination;
 use App\Models\Submission;
 use App\Models\Supervision;
 use Illuminate\Support\Str;
@@ -2337,11 +2338,29 @@ class SubmissionController extends Controller
                     $submission->save();
                 }
 
+                /* NOMINATION OPENING */
+                $nom_message = "";
+                $procedure = DB::table('procedures as a')
+                    ->where('a.programme_id', $student->programme_id)
+                    ->where('a.activity_id', $activityID)
+                    ->where('a.is_haveEva', 1)
+                    ->exists();
+
+                if ($procedure) {
+                    Nomination::create([
+                        'nom_status' => 1,
+                        'student_id' => $studentID,
+                        'activity_id' => $activityID
+                    ]);
+
+                    $nom_message = "Take note that nomination is now open for " . $student->student_name . ".";
+                }
+
                 // SEND EMAIL SECTION
 
-                return back()->with('success', $student->student_name . ' has been approved for ' . $activity->act_name . ' submission. The submission is now open for this student.');
+                return back()->with('success', $student->student_name . ' has been approved for ' . $activity->act_name . ' submission. The submission is now open for this student. ' . $nom_message);
             } elseif ($option == 2) {
-                /* REVERT */
+                /* REVERT SUBMISSION */
                 foreach ($submissions as $sub) {
                     $submission = Submission::whereId($sub->id)->first();
                     $submission->submission_status = 2;
@@ -2349,7 +2368,21 @@ class SubmissionController extends Controller
                     $submission->save();
                 }
 
-                return back()->with('success', $student->student_name . ' submission for ' . $activity->act_name . ' has been reverted. The submission is now hidden for this student.');
+                /* REVERT NOMINATION */
+                $nom_message = "";
+                $procedure = DB::table('procedures as a')
+                    ->where('a.programme_id', $student->programme_id)
+                    ->where('a.activity_id', $activityID)
+                    ->where('a.is_haveEva', 1)
+                    ->exists();
+
+                if ($procedure) {
+                    Nomination::where('student_id', $studentID)->where('activity_id', $activityID)->delete();
+
+                    $nom_message = "Take note that nomination is now closed for " . $student->student_name . ".";
+                }
+
+                return back()->with('success', $student->student_name . ' submission for ' . $activity->act_name . ' has been reverted. The submission is now hidden for this student. ' . $nom_message);
             } else {
                 return back()->with('error', 'Oops! Invalid option. Please try again.');
             }
@@ -2388,9 +2421,10 @@ class SubmissionController extends Controller
             foreach ($submissions as $sub) {
                 $submission = Submission::find($sub->id);
                 $studentNames[] = $sub->student_name;
+                $nom_message = "";
 
                 if ($option == 1) {
-                    // Approve
+                    /* APPROVE OPENNING */
                     $procedure = Procedure::where('programme_id', $sub->programme_id)
                         ->where('activity_id', $activityID)
                         ->where('init_status', 2)
@@ -2409,12 +2443,49 @@ class SubmissionController extends Controller
                         }
                         $submission->submission_status =  $sub_status;
                     }
+
+                    /* NOMINATION OPENING */
+                    $procedureEva = DB::table('procedures as a')
+                        ->where('a.programme_id', $sub->programme_id)
+                        ->where('a.activity_id', $activityID)
+                        ->where('a.is_haveEva', 1)
+                        ->exists();
+
+                    if ($procedureEva) {
+
+                        $checkExists = Nomination::where('student_id', $sub->student_id)
+                            ->where('activity_id', $activityID)
+                            ->exists();
+
+                        if (!$checkExists) {
+                            Nomination::create([
+                                'nom_status' => 1,
+                                'student_id' => $sub->student_id,
+                                'activity_id' => $activityID
+                            ]);
+                        }
+
+                        $nom_message = "Take note that nomination is now open for this student.";
+                    }
                     // SEND EMAIL SECTION 
 
                 } elseif ($option == 2) {
-                    // Revert
+                    /* REVERT SUBMISSION */
                     $submission->submission_status = 2;
                     $submission->submission_document = '-';
+
+                    /* REVERT NOMINATION */
+                    $procedure = DB::table('procedures as a')
+                        ->where('a.programme_id', $sub->programme_id)
+                        ->where('a.activity_id', $activityID)
+                        ->where('a.is_haveEva', 1)
+                        ->exists();
+
+                    if ($procedure) {
+                        Nomination::where('student_id', $sub->student_id)->where('activity_id', $activityID)->delete();
+
+                        $nom_message = "Take note that nomination is now closed for this student.";
+                    }
                 }
 
                 $submission->save();
@@ -2425,12 +2496,12 @@ class SubmissionController extends Controller
             if ($option == 1) {
                 return response()->json([
                     'success' => true,
-                    'message' => "Submission for {$uniqueNames} has been approved for {$activity->act_name}. The submission is now open."
+                    'message' => "Submission for {$uniqueNames} has been approved for {$activity->act_name}. The submission is now open. " . $nom_message
                 ], 200);
             } elseif ($option == 2) {
                 return response()->json([
                     'success' => true,
-                    'message' => "Submission for {$uniqueNames} has been reverted for {$activity->act_name}. It is now hidden."
+                    'message' => "Submission for {$uniqueNames} has been reverted for {$activity->act_name}. It is now hidden. " . $nom_message
                 ], 200);
             } else {
                 return response()->json([

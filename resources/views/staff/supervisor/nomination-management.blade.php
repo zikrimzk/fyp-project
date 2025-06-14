@@ -140,8 +140,10 @@
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
                                             <option value="1">Pending</option>
-                                            <option value="2">Nominated</option>
-                                            <option value="3">Approved</option>
+                                            <option value="2">Nominated - SV</option>
+                                            <option value="3">Reviewed - Committee</option>
+                                            <option value="4">Approved</option>
+                                            <option value="5">Rejected</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
@@ -208,8 +210,8 @@
                         name: 'student_photo',
                     },
                     {
-                        data: 'suggestion_status',
-                        name: 'suggestion_status'
+                        data: 'nom_status',
+                        name: 'nom_status'
                     },
                     {
                         data: 'action',
