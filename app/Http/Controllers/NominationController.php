@@ -8,20 +8,283 @@ use App\Models\Staff;
 use App\Models\Faculty;
 use App\Models\Student;
 use App\Models\Activity;
+use App\Models\Semester;
 use App\Models\Evaluator;
 use App\Models\FormField;
+use App\Models\Programme;
 use App\Models\Nomination;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Yajra\DataTables\Facades\DataTables;
 
 class NominationController extends Controller
 {
+
+    /* Committee - Nomination */
+    public function committeeNomination(Request $req, $name)
+    {
+        try {
+
+            $id = Activity::all()
+                ->first(function ($activity) use ($name) {
+                    return strtolower(str_replace(' ', '-', $activity->act_name)) === $name;
+                })?->id;
+
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as s')
+                ->select([
+                    's.id as student_id',
+                    's.student_name',
+                    's.student_matricno',
+                    's.student_email',
+                    's.student_directory',
+                    's.student_photo',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'c.fac_id',
+                    's.programme_id',
+                    'a.id as activity_id',
+                    'a.act_name as activity_name',
+                    'n.id as nomination_id',
+                    'n.nom_status',
+                    'n.nom_date',
+                    'n.nom_document',
+                ])
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('s.id', '=', 'latest.student_id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 's.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('nominations as n', 'n.student_id', '=', 's.id')
+                ->join('activities as a', 'n.activity_id', '=', 'a.id')
+                ->join('programmes as c', 'c.id', '=', 's.programme_id')
+                ->where('s.student_status', '=', 1)
+                ->where('a.id', '=', $id)
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('supervisions as e')
+                        ->whereColumn('e.student_id', 's.id')
+                        ->where('e.staff_id', auth()->user()->id);
+                })
+                ->orderBy('s.student_matricno');
+
+            if ($req->ajax()) {
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('c.fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('s.programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('semester_id', $req->input('semester'));
+                }
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    $data->where('nom_status', $req->input('status'));
+                }
+
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('nom_document', function ($row) {
+                    // STUDENT SUBMISSION DIRECTORY
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination';
+
+                    if (empty($row->nom_document)) {
+                        return '-';
+                    }
+
+                    $final_doc =
+                        '
+                        <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->nom_document)]) . '" 
+                            target="_blank" class="link-dark d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                            <span class="fw-semibold">View Document</span>
+                        </a>
+                    ';
+                    return $final_doc;
+                });
+
+                $table->addColumn('nom_date', function ($row) {
+                    if (empty($row->nom_date)) {
+                        return '-';
+                    } else {
+                        return Carbon::parse($row->nom_date)->format('d M Y h:i A');
+                    }
+                });
+
+                $table->addColumn('nom_status', function ($row) {
+                    $status = '';
+
+                    if ($row->nom_status == 1) {
+                        $status = '<span class="badge bg-light-warning">' . 'Pending' . '</span>';
+                    } elseif ($row->nom_status == 2) {
+                        $status = '<span class="badge bg-light-success">' . 'Nominated - SV' . '</span>';
+                    } elseif ($row->nom_status == 3) {
+                        $status = '<span class="badge bg-light-success">' . 'Reviewed - Committee' . '</span>';
+                    } elseif ($row->nom_status == 4) {
+                        $status = '<span class="badge bg-success">' . 'Approved' . '</span>';
+                    } elseif ($row->nom_status == 5) {
+                        $status = '<span class="badge bg-light-danger">' . 'Rejected' . '</span>';
+                    } else {
+                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                    }
+
+                    return $status;
+                });
+
+                $table->addColumn('action', function ($row) {
+                    $button = '';
+
+                    if ($row->nom_status == 2) {
+                        $button = '
+                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 2]) . '" class="avtar avtar-xs btn-light-primary">
+                                <i class="ti ti-user-plus f-20"></i>
+                            </a>
+                        ';
+                    } else {
+                        $button = '<div class="fst-italic text-muted">No action required</div>';
+                    }
+
+                    return $button;
+                });
+
+                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'action']);
+
+                return $table->make(true);
+            }
+
+            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
+                ->select('a.id', 'a.act_name')
+                ->where('a.id', '=', $id)
+                ->first();
+
+            if (!$act) {
+                abort(404, 'Activity not found');
+            }
+
+            return view('staff.nomination.nomination-management', [
+                'title' => 'Submission Suggestion',
+                'studs' => Student::all(),
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'act' => $act,
+                'data' => $data->get(),
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    public function nominationStudent($studentId, $actId, $mode)
+    {
+        try {
+            $studentId = decrypt($studentId);
+            $actId = decrypt($actId);
+
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as a')
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('latest.student_id', '=', 'a.id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+                ->select('a.*', 'a.id as student_id', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'ss.semester_id')
+                ->where('a.id', $studentId)
+                ->first();
+
+            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
+                ->select('a.id', 'a.act_name')
+                ->where('a.id', '=', $actId)
+                ->first();
+
+            if (!$act) {
+                abort(404, 'Activity not found');
+            }
+
+            $actForm = ActivityForm::where('activity_id', $actId)
+                ->where('af_target', 3)
+                ->first();
+
+            if (!$actForm) {
+                return back()->with('error', 'Oops! Form for this activity were not found. Please add the form first at the Form Setting page.');
+            }
+
+            $page = '';
+            $link = '';
+
+            if ($mode == 1) {
+                $page = 'My Supervision';
+                $link =  route('my-supervision-nomination', strtolower(str_replace(' ', '-', $act->act_name)));
+            } else if ($mode == 2) {
+                $page = 'Committee';
+                $link =  route('committee-nomination', strtolower(str_replace(' ', '-', $act->act_name)));
+            }
+
+            return view('staff.nomination.nomination-student', [
+                'title' => $data->student_name . 'Nomination',
+                'act' => $act,
+                'actform' => $actForm,
+                'data' => $data,
+                'mode' => $mode,
+                'page' => $page,
+                'link' => $link
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500, $e->getMessage());
+        }
+    }
 
     public function viewNominationForm(Request $req)
     {
@@ -260,30 +523,12 @@ class NominationController extends Controller
             ])->render();
 
             return response()->json(['html' => $html]);
-
-            // $pdf = Pdf::loadView('student.programme.form-template.activity-document', [
-            //     'title' => $act->act_name . " Document",
-            //     'act' => $act,
-            //     'form_title' => $form->af_title,
-            //     'formfields' => $formfields,
-            //     'userData' => $userData,
-            //     'faculty' => $faculty,
-            //     'signatures' => $signatures,
-            //     'signatureData' => $signatureData
-            // ]);
-
-            // $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';
-            // $relativePath = $finalDocRelativePath . '/' . $fileName;
-
-            // Storage::disk('public')->put($relativePath, $pdf->output());
-
-            // return $pdf->stream($fileName . '.pdf');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error generating activity form: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error fetching nomination form: ' . $e->getMessage());
         }
     }
 
-    public function mysupervisionSubmitNomination(Request $req, $studentId)
+    public function submitNomination(Request $req, $studentId, $mode)
     {
         try {
             $studentId = decrypt($studentId);
@@ -318,7 +563,7 @@ class NominationController extends Controller
 
             /* PROCESS EVALUATOR DATA */
             $evaluatorFields = $this->getEvaluatorFields($form);
-            $this->processEvaluators($req, $evaluatorFields, $nomination);
+            $this->processEvaluators($req, $evaluatorFields, $nomination, $mode);
 
             /* PROCESS SIGNATURE DATA */
             $signatureData = $req->input('signatureData', []);
@@ -327,7 +572,13 @@ class NominationController extends Controller
             }
 
             /* UPDATE NOMINATION DATA */
-            $nomination->nom_status = 2;
+            if ($mode == 1) {
+                $nomination->nom_status = 2;
+            } else if ($mode == 2) {
+                $nomination->nom_status = 3;
+            } else {
+                $nomination->nom_status = 1;
+            }
 
             /* GENERATE NOMINATION FORM */
             $progcode = strtoupper($student->programmes->prog_code);
@@ -345,7 +596,13 @@ class NominationController extends Controller
             $nomination->nom_date = Carbon::now();
             $nomination->save();
 
-            return redirect()->route('my-supervision-nomination', Crypt::encrypt($actID))->with('success', 'Nomination submitted successfully!');
+            if ($mode == 1) {
+                return redirect()->route('my-supervision-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination submitted successfully!');
+            } else if ($mode == 2) {
+                return redirect()->route('committee-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination submitted successfully!');
+            } else {
+                return abort(404);
+            }
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error submitting nomination: ' . $e->getMessage());
         }
@@ -365,10 +622,18 @@ class NominationController extends Controller
         return $field;
     }
 
-    protected function processEvaluators($req, $evaluatorFields, $nomination)
+    protected function processEvaluators($req, $evaluatorFields, $nomination, $mode)
     {
         /* DELETE EXISTING NOMINATION [IF ANY] */
-        Evaluator::where('nom_id', $nomination->id)->delete();
+        $status = 1;
+        if ($mode == 1) {
+            Evaluator::where('nom_id', $nomination->id)->where('eva_status', 1)->delete();
+
+            $status = 1;
+        } else if ($mode == 2) {
+            Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->delete();
+            $status = 2;
+        }
 
         foreach ($evaluatorFields as $field) {
 
@@ -387,6 +652,7 @@ class NominationController extends Controller
             if ($staff) {
                 Evaluator::create([
                     'eva_role' => $role,
+                    'eva_status' => $status,
                     'staff_id' => $staff->id,
                     'nom_id' => $nomination->id,
                     'eva_meta' => json_encode([
@@ -716,7 +982,6 @@ class NominationController extends Controller
 
             // Return PDF for streaming
             return $path;
-
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error generating nomination form: ' . $e->getMessage());
         }

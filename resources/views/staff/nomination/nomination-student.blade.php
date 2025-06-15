@@ -1,29 +1,25 @@
 @extends('staff.layouts.main')
 
-@php
-    $mode = 'Supervisors'; // 'Supervisors', 'Administrators', or 'All'
-@endphp
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
+
             <!-- [ breadcrumb ] start -->
             <div class="page-header">
                 <div class="page-block">
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">My Supervision</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">{{ $page }}</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Nomination</a></li>
-                                <li class="breadcrumb-item"><a
-                                        href="{{ route('my-supervision-nomination', Crypt::encrypt($act->id)) }}">{{ $act->act_name }}</a>
+                                <li class="breadcrumb-item"><a href="{{ $link }}">{{ $act->act_name }}</a>
                                 </li>
                                 <li class="breadcrumb-item" aria-current="page">{{ $data->student_name }}</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <a href="{{ route('my-supervision-nomination', Crypt::encrypt($act->id)) }}"
-                                    class="btn me-2 d-flex align-items-center">
+                                <a href="{{ $link }}" class="btn me-2 d-flex align-items-center">
                                     <span class="f-18">
                                         <i class="ti ti-arrow-left me-2"></i>
                                     </span>
@@ -73,7 +69,8 @@
 
                 <!-- [ Nomination Student ] start -->
                 <div class="col-sm-12">
-                    <form action="{{ route('my-supervision-submit-nomination-post', Crypt::encrypt($data->id)) }}"
+                    <form
+                        action="{{ route('submit-nomination-post', ['studentId' => Crypt::encrypt($data->id), 'mode' => $mode]) }}"
                         method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="card p-3">
@@ -94,6 +91,18 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
+    @php
+        if ($mode == 1) {
+            $mode = 'Supervisors';
+        } elseif ($mode == 2) {
+            $mode = 'Administrators';
+        } elseif ($mode == 3) {
+            $mode = 'All';
+        } else {
+            $mode = 'Supervisors';
+        }
+    @endphp
 
 
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>

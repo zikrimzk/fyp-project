@@ -738,10 +738,15 @@ class SupervisorController extends Controller
     }
 
     /* Supervisor - Nomination */
-    public function mySupervisionNomination(Request $req, $id)
+    public function mySupervisionNomination(Request $req, $name)
     {
         try {
-            $id = decrypt($id);
+
+            $id = Activity::all()
+                ->first(function ($activity) use ($name) {
+                    return strtolower(str_replace(' ', '-', $activity->act_name)) === $name;
+                })?->id;
+
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
                 ->groupBy('student_id');
@@ -780,6 +785,7 @@ class SupervisorController extends Controller
                 ->join('supervisions as d', 'd.student_id', '=', 's.id')
                 ->where('s.student_status', '=', 1)
                 ->where('d.staff_id', '=', auth()->user()->id)
+                ->where('d.supervision_role', '=', 1)
                 ->where('a.id', '=', $id)
                 ->orderBy('s.student_matricno');
 
@@ -881,7 +887,7 @@ class SupervisorController extends Controller
 
                     if ($row->nom_status == 1 || $row->nom_status == 5) {
                         $button = '
-                            <a href="' . route('my-supervision-nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id)]) . '" class="avtar avtar-xs btn-light-primary">
+                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 1]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-user-plus f-20"></i>
                             </a>
                         ';
@@ -921,54 +927,4 @@ class SupervisorController extends Controller
         }
     }
 
-    public function mySupervisionNominationStudent($studentId, $actId)
-    {
-        try {
-            $studentId = decrypt($studentId);
-            $actId = decrypt($actId);
-
-            $latestSemesterSub = DB::table('student_semesters')
-                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
-                ->groupBy('student_id');
-
-            $data = DB::table('students as a')
-                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
-                    $join->on('latest.student_id', '=', 'a.id');
-                })
-                ->leftJoin('student_semesters as ss', function ($join) {
-                    $join->on('ss.student_id', '=', 'a.id')
-                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
-                })
-                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
-                ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-                ->join('supervisions as d', 'd.student_id', '=', 'a.id')
-                ->select('a.*', 'a.id as student_id', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'ss.semester_id', 'd.supervision_role')
-                ->where('d.staff_id', auth()->user()->id)
-                ->where('a.id', $studentId)
-                ->first();
-
-            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
-                ->select('a.id', 'a.act_name')
-                ->where('a.id', '=', $actId)
-                ->first();
-
-            if (!$act) {
-                abort(404, 'Activity not found');
-            }
-
-            $actForm = ActivityForm::where('activity_id', $actId)
-                ->where('af_target', 3)
-                ->first();
-
-            return view('staff.supervisor.nomination-student', [
-                'title' => $data->student_name . 'Nomination',
-                'act' => $act,
-                'actform' => $actForm,
-                'data' => $data,
-            ]);
-        } catch (Exception $e) {
-            dd($e->getMessage());
-            return abort(500, $e->getMessage());
-        }
-    }
 }

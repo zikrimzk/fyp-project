@@ -12,7 +12,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">My Supervision</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Committee</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Nomination</a></li>
                                 <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }}</li>
                             </ul>
@@ -139,8 +139,8 @@
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
-                                            <option value="1" selected>Pending</option>
-                                            <option value="2">Nominated - SV</option>
+                                            <option value="1">Pending</option>
+                                            <option value="2" selected>Nominated - SV</option>
                                             <option value="3">Reviewed - Committee</option>
                                             <option value="4">Approved</option>
                                             <option value="5">Rejected</option>
@@ -189,7 +189,7 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('my-supervision-nomination', strtolower(str_replace(' ', '-', $act->act_name))) }}",
+                    url: "{{ route('committee-nomination', strtolower(str_replace(' ', '-', $act->act_name))) }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id')
                             .val();

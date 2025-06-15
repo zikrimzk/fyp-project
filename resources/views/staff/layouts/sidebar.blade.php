@@ -59,6 +59,8 @@
                         ->where('staff_id', auth()->user()->id)
                         ->exists();
 
+                    $committee = auth()->user()->staff_role == 1;
+
                     $higherUps = DB::table('staff')
                         ->where('id', auth()->user()->id)
                         ->whereIn('staff_role', [1, 3, 4])
@@ -120,7 +122,33 @@
                         <ul class="pc-submenu">
                             @foreach ($nomination as $nom)
                                 <li class="pc-item">
-                                    <a class="pc-link" href="{{ route('my-supervision-nomination', Crypt::encrypt($nom->activity_id)) }}">
+                                    <a class="pc-link"
+                                        href="{{ route('my-supervision-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
+                                        {{ $nom->activity_name }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @endif
+
+                @if ($committee)
+                    <li class="pc-item pc-caption">
+                        <label>Committee</label>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-user-friends pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Nomination</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            @foreach ($nomination as $nom)
+                                <li class="pc-item">
+                                    <a class="pc-link"
+                                        href="{{ route('committee-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
                                         {{ $nom->activity_name }}
                                     </a>
                                 </li>

@@ -11,6 +11,7 @@ class Evaluator extends Model
 
     protected $fillable = [
         'eva_role',
+        'eva_status',
         'eva_meta',
         'staff_id',
         'nom_id'
