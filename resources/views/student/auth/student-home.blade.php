@@ -271,7 +271,7 @@
                                                     <div class="flex-grow-1 ms-3">
                                                         <p class="text-muted mb-0">
                                                             <i class="fas fa-info-circle me-1"></i>
-                                                            No upcoming submissions
+                                                            No upcoming submissions.
                                                         </p>
                                                     </div>
                                                 </div>
@@ -346,7 +346,7 @@
                                                     <div class="flex-grow-1 ms-3">
                                                         <p class="text-muted mb-0">
                                                             <i class="fas fa-info-circle me-1"></i>
-                                                            No overdue submissions
+                                                            No overdue submissions.
                                                         </p>
                                                     </div>
                                                 </div>
@@ -385,6 +385,92 @@
                     </div>
                     <!-- [ Reminder ] end -->
 
+                    <!-- [ Nomination Details ] start -->
+                    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                        <!-- Card Header -->
+                        <div class="card-header bg-white border-bottom px-4 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-users me-2"></i>Nomination Details
+                                </h5>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+
+                                @php
+                                    $examiner = DB::table('nominations as a')
+                                        ->join('evaluators as b', 'a.id', '=', 'b.nom_id')
+                                        ->join('staff as c', 'b.staff_id', '=', 'c.id')
+                                        ->join('activities as e', 'a.activity_id', '=', 'e.id')
+                                        ->where('b.eva_status', 3)
+                                        ->whereNotExists(function ($query) {
+                                            $query
+                                                ->select(DB::raw(1))
+                                                ->from('student_activities as d')
+                                                ->whereColumn('d.activity_id', 'a.activity_id')
+                                                ->where('d.sa_status', 3);
+                                        })
+                                        ->select('c.staff_name', 'c.staff_email', 'b.eva_role', 'e.act_name')
+                                        ->get()
+                                        ->groupBy('act_name');
+                                @endphp
+
+                                @forelse ($examiner as $activityName => $examiners)
+                                    <!-- Activity Header -->
+                                    <div class="list-group-item bg-light-primary px-4 py-3 border-top">
+                                        <h6 class="mb-0 text-primary fw-semibold">
+                                            <i class="fas fa-book me-2"></i>{{ $activityName }}
+                                        </h6>
+                                    </div>
+
+                                    @foreach ($examiners as $e)
+                                        @php
+                                            $role = match ($e->eva_role) {
+                                                1 => 'Examiner',
+                                                2 => 'Panel Member',
+                                                3 => 'Chairman',
+                                                default => 'N/A',
+                                            };
+                                        @endphp
+
+                                        <!-- Examiner Entry -->
+                                        <div class="list-group-item px-4 py-3">
+                                            <div
+                                                class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                                                <div class="mb-2 mb-md-0">
+                                                    <h6 class="text-muted mb-1">
+                                                        <i
+                                                            class="fas fa-user-tie text-secondary me-1"></i>{{ $role }}
+                                                    </h6>
+                                                    <p class="fw-semibold mb-0">{{ $e->staff_name ?? 'N/A' }}</p>
+                                                    <small class="text-muted d-block">
+                                                        <a href="mailto:{{ $e->staff_email }}"
+                                                            class="text-decoration-none text-primary">
+                                                            <i class="fas fa-envelope me-1"></i>{{ $e->staff_email }}
+                                                        </a>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+
+                                @empty
+                                    <!-- No Data Message -->
+                                    <div class="list-group-item px-4 py-4 text-center text-muted">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No nomination details available — the activity may be completed or examiners are not
+                                        yet assigned.
+                                    </div>
+                                @endforelse
+
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ Nomination Details ] end -->
+
                     <!-- [ TBS ] start -->
                     <div class="card border-0 shadow-sm">
                         <!-- Card Header -->
@@ -397,7 +483,7 @@
                         </div>
 
                         <!-- Card Body -->
-                        <div class="card-body p-2">
+                        <div class="card-body p-2 m-5">
                             <div class="fst-italic text-muted text-center">Coming soon..</div>
                         </div>
                     </div>
