@@ -885,7 +885,7 @@ class SupervisorController extends Controller
                 $table->addColumn('action', function ($row) {
                     $button = '';
 
-                    if ($row->nom_status == 1 || $row->nom_status == 5) {
+                    if ($row->nom_status == 1) {
                         $button = '
                             <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 1]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-user-plus f-20"></i>

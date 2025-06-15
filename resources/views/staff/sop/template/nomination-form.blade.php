@@ -2,7 +2,7 @@
     use Carbon\Carbon;
     use Illuminate\Support\Facades\Crypt;
 
-    $currentMode = strtolower($mode);
+    $currentMode = $mode;
 @endphp
 
 <title>{{ $title }}</title>
@@ -390,22 +390,26 @@
                 $value = old($key, $userData[$key] ?? '');
                 $placeholder = $ff->ff_placeholder ?? '';
 
-                // Determine required role
-                $requiredRole =
-                    $ff->ff_component_required_role == 1
-                        ? 'supervisors'
-                        : ($ff->ff_component_required_role == 2
-                            ? 'administrators'
-                            : 'all');
+                // Get required role as integer
+                $requiredRole = $ff->ff_component_required_role;
 
                 // Check if field is required for current mode
-                $isRequired =
-                    $ff->ff_component_required == 1 && ($requiredRole === 'all' || $requiredRole === $currentMode);
+                $isRequired = $ff->ff_component_required == 1 && ($requiredRole == 0 || $requiredRole == $currentMode);
 
                 // Determine if field should be disabled
-                $shouldDisable = $requiredRole !== 'all' && $requiredRole !== $currentMode;
+                $shouldDisable = $requiredRole != 0 && $requiredRole != $currentMode;
                 $disabledAttr = $shouldDisable ? 'disabled' : '';
                 $requiredAttr = $isRequired && !$shouldDisable ? 'required' : '';
+                // dd($shouldDisable, $disabledAttr, $isRequired, $requiredAttr);
+
+                // Role names for display
+                $roleNames = [
+                    0 => 'all',
+                    1 => 'supervisors',
+                    2 => 'committee',
+                    3 => 'deputy dean',
+                    4 => 'dean',
+                ];
 
                 $options = [];
 
@@ -515,7 +519,7 @@
                         <div class="field-disabled-note mt-1">
                             <small class="text-muted">
                                 <i class="ti ti-lock me-1"></i>
-                                This field can only be filled by {{ $requiredRole }}
+                                This field can only be filled by {{ $roleNames[$requiredRole] }}
                             </small>
                         </div>
                     @endif
@@ -578,23 +582,29 @@
                                             $signatureData->{$sigKey . '_is_cross_approval'};
 
                                         // Determine if signature should be disabled based on mode and key
-                                        $shouldDisableSig = false;
+                                        $shouldDisableSig = true;
+                                        $role = 0;
+
                                         if (
-                                            $mode === 'Supervisors' &&
-                                            ($sigKey === 'sv_signature' || $sigKey === 'cosv_signature')
+                                            $currentMode == 1 &&
+                                            in_array($sigKey, ['sv_signature', 'cosv_signature'])
                                         ) {
-                                            // Supervisor mode - these signatures are enabled
-                                        } elseif (
-                                            $mode === 'Administrators' &&
-                                            ($sigKey === 'comm_dean_signature' ||
-                                                $sigKey === 'deputy_dean_signature' ||
-                                                $sigKey === 'dean_signature')
-                                        ) {
-                                            // Administrator mode - these signatures are enabled
-                                        } else {
-                                            // Disable if not matching the current mode's signature types
-                                            $shouldDisableSig = true;
+                                            $shouldDisableSig = false;
+                                        } elseif ($currentMode == 2 && $sigKey == 'comm_signature') {
+                                            $shouldDisableSig = false;
+                                        } elseif ($currentMode == 3 && $sigKey == 'deputy_dean_signature') {
+                                            $shouldDisableSig = false;
+                                        } elseif ($currentMode == 4 && $sigKey == 'dean_signature') {
+                                            $shouldDisableSig = false;
                                         }
+
+                                        $sigRoleNames = [
+                                            'sv_signature' => 'Supervisors',
+                                            'cosv_signature' => 'Supervisors',
+                                            'comm_signature' => 'Committee',
+                                            'deputy_dean_signature' => 'Deputy Dean',
+                                            'dean_signature' => 'Dean',
+                                        ];
                                     @endphp
                                     <td
                                         class="signature-cell @if ($shouldDisableSig) disabled-signature @endif">
@@ -648,7 +658,7 @@
                                                     <small class="text-muted">
                                                         <i class="ti ti-lock me-1"></i>
                                                         This signature can only be provided by
-                                                        {{ $mode === 'Supervisors' ? 'Administrators' : 'Supervisors' }}
+                                                        {{ $sigRoleNames[$sigKey] ?? 'authorized role' }}
                                                     </small>
                                                 </div>
                                             @endif

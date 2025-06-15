@@ -177,7 +177,7 @@ class NominationController extends Controller
                 $table->addColumn('action', function ($row) {
                     $button = '';
 
-                    if ($row->nom_status == 2) {
+                    if ($row->nom_status == 2 || $row->nom_status == 5) {
                         $button = '
                             <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 2]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-user-plus f-20"></i>
@@ -204,8 +204,394 @@ class NominationController extends Controller
                 abort(404, 'Activity not found');
             }
 
-            return view('staff.nomination.nomination-management', [
+            return view('staff.nomination.committee-nomination-management', [
                 'title' => 'Submission Suggestion',
+                'studs' => Student::all(),
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'act' => $act,
+                'data' => $data->get(),
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    /* Deputy Dean - Nomination */
+    public function deputydeanNomination(Request $req, $name)
+    {
+        try {
+
+            $id = Activity::all()
+                ->first(function ($activity) use ($name) {
+                    return strtolower(str_replace(' ', '-', $activity->act_name)) === $name;
+                })?->id;
+
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as s')
+                ->select([
+                    's.id as student_id',
+                    's.student_name',
+                    's.student_matricno',
+                    's.student_email',
+                    's.student_directory',
+                    's.student_photo',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'c.fac_id',
+                    's.programme_id',
+                    'a.id as activity_id',
+                    'a.act_name as activity_name',
+                    'n.id as nomination_id',
+                    'n.nom_status',
+                    'n.nom_date',
+                    'n.nom_document',
+                ])
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('s.id', '=', 'latest.student_id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 's.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('nominations as n', 'n.student_id', '=', 's.id')
+                ->join('activities as a', 'n.activity_id', '=', 'a.id')
+                ->join('programmes as c', 'c.id', '=', 's.programme_id')
+                ->where('s.student_status', '=', 1)
+                ->where('a.id', '=', $id)
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('supervisions as e')
+                        ->whereColumn('e.student_id', 's.id')
+                        ->where('e.staff_id', auth()->user()->id);
+                })
+                ->orderBy('s.student_matricno');
+
+            if ($req->ajax()) {
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('c.fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('s.programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('semester_id', $req->input('semester'));
+                }
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    $data->where('nom_status', $req->input('status'));
+                }
+
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('nom_document', function ($row) {
+                    // STUDENT SUBMISSION DIRECTORY
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination';
+
+                    if (empty($row->nom_document)) {
+                        return '-';
+                    }
+
+                    $final_doc =
+                        '
+                        <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->nom_document)]) . '" 
+                            target="_blank" class="link-dark d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                            <span class="fw-semibold">View Document</span>
+                        </a>
+                    ';
+                    return $final_doc;
+                });
+
+                $table->addColumn('nom_date', function ($row) {
+                    if (empty($row->nom_date)) {
+                        return '-';
+                    } else {
+                        return Carbon::parse($row->nom_date)->format('d M Y h:i A');
+                    }
+                });
+
+                $table->addColumn('nom_status', function ($row) {
+                    $status = '';
+
+                    if ($row->nom_status == 1) {
+                        $status = '<span class="badge bg-light-warning">' . 'Pending' . '</span>';
+                    } elseif ($row->nom_status == 2) {
+                        $status = '<span class="badge bg-light-success">' . 'Nominated - SV' . '</span>';
+                    } elseif ($row->nom_status == 3) {
+                        $status = '<span class="badge bg-light-success">' . 'Reviewed - Committee' . '</span>';
+                    } elseif ($row->nom_status == 4) {
+                        $status = '<span class="badge bg-success">' . 'Approved' . '</span>';
+                    } elseif ($row->nom_status == 5) {
+                        $status = '<span class="badge bg-light-danger">' . 'Rejected' . '</span>';
+                    } else {
+                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                    }
+
+                    return $status;
+                });
+
+                $table->addColumn('action', function ($row) {
+                    $button = '';
+
+                    if ($row->nom_status == 3) {
+                        $button = '
+                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 3]) . '" class="avtar avtar-xs btn-light-primary">
+                                <i class="ti ti-user-plus f-20"></i>
+                            </a>
+                        ';
+                    } else {
+                        $button = '<div class="fst-italic text-muted">No action required</div>';
+                    }
+
+                    return $button;
+                });
+
+                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'action']);
+
+                return $table->make(true);
+            }
+
+            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
+                ->select('a.id', 'a.act_name')
+                ->where('a.id', '=', $id)
+                ->first();
+
+            if (!$act) {
+                abort(404, 'Activity not found');
+            }
+
+            return view('staff.nomination.deputydean-nomination-management', [
+                'title' => 'Submission Suggestion',
+                'studs' => Student::all(),
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'act' => $act,
+                'data' => $data->get(),
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    /* Dean - Nomination */
+    public function deanNomination(Request $req, $name)
+    {
+        try {
+
+            $id = Activity::all()
+                ->first(function ($activity) use ($name) {
+                    return strtolower(str_replace(' ', '-', $activity->act_name)) === $name;
+                })?->id;
+
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as s')
+                ->select([
+                    's.id as student_id',
+                    's.student_name',
+                    's.student_matricno',
+                    's.student_email',
+                    's.student_directory',
+                    's.student_photo',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'c.fac_id',
+                    's.programme_id',
+                    'a.id as activity_id',
+                    'a.act_name as activity_name',
+                    'n.id as nomination_id',
+                    'n.nom_status',
+                    'n.nom_date',
+                    'n.nom_document',
+                ])
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('s.id', '=', 'latest.student_id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 's.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('nominations as n', 'n.student_id', '=', 's.id')
+                ->join('activities as a', 'n.activity_id', '=', 'a.id')
+                ->join('programmes as c', 'c.id', '=', 's.programme_id')
+                ->where('s.student_status', '=', 1)
+                ->where('a.id', '=', $id)
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('supervisions as e')
+                        ->whereColumn('e.student_id', 's.id')
+                        ->where('e.staff_id', auth()->user()->id);
+                })
+                ->orderBy('s.student_matricno');
+
+            if ($req->ajax()) {
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('c.fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('s.programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('semester_id', $req->input('semester'));
+                }
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    $data->where('nom_status', $req->input('status'));
+                }
+
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('nom_document', function ($row) {
+                    // STUDENT SUBMISSION DIRECTORY
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination';
+
+                    if (empty($row->nom_document)) {
+                        return '-';
+                    }
+
+                    $final_doc =
+                        '
+                        <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->nom_document)]) . '" 
+                            target="_blank" class="link-dark d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                            <span class="fw-semibold">View Document</span>
+                        </a>
+                    ';
+                    return $final_doc;
+                });
+
+                $table->addColumn('nom_date', function ($row) {
+                    if (empty($row->nom_date)) {
+                        return '-';
+                    } else {
+                        return Carbon::parse($row->nom_date)->format('d M Y h:i A');
+                    }
+                });
+
+                $table->addColumn('nom_status', function ($row) {
+                    $status = '';
+
+                    if ($row->nom_status == 1) {
+                        $status = '<span class="badge bg-light-warning">' . 'Pending' . '</span>';
+                    } elseif ($row->nom_status == 2) {
+                        $status = '<span class="badge bg-light-success">' . 'Nominated - SV' . '</span>';
+                    } elseif ($row->nom_status == 3) {
+                        $status = '<span class="badge bg-light-success">' . 'Reviewed - Committee' . '</span>';
+                    } elseif ($row->nom_status == 4) {
+                        $status = '<span class="badge bg-success">' . 'Approved' . '</span>';
+                    } elseif ($row->nom_status == 5) {
+                        $status = '<span class="badge bg-light-danger">' . 'Rejected' . '</span>';
+                    } else {
+                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                    }
+
+                    return $status;
+                });
+
+                $table->addColumn('action', function ($row) {
+                    $button = '';
+
+                    if ($row->nom_status == 3) {
+                        $button = '
+                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 4]) . '" class="avtar avtar-xs btn-light-primary">
+                                <i class="ti ti-user-plus f-20"></i>
+                            </a>
+                        ';
+                    } else {
+                        $button = '<div class="fst-italic text-muted">No action required</div>';
+                    }
+
+                    return $button;
+                });
+
+                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'action']);
+
+                return $table->make(true);
+            }
+
+            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
+                ->select('a.id', 'a.act_name')
+                ->where('a.id', '=', $id)
+                ->first();
+
+            if (!$act) {
+                abort(404, 'Activity not found');
+            }
+
+            return view('staff.nomination.dean-nomination-management', [
+                'title' => 'Dean -Nomination',
                 'studs' => Student::all(),
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
@@ -269,6 +655,12 @@ class NominationController extends Controller
             } else if ($mode == 2) {
                 $page = 'Committee';
                 $link =  route('committee-nomination', strtolower(str_replace(' ', '-', $act->act_name)));
+            } else if ($mode == 3) {
+                $page = 'Deputy Dean';
+                $link =  route('deputydean-nomination', strtolower(str_replace(' ', '-', $act->act_name)));
+            } else if ($mode == 4) {
+                $page = 'Dean';
+                $link =  route('dean-nomination', strtolower(str_replace(' ', '-', $act->act_name)));
             }
 
             return view('staff.nomination.nomination-student', [
@@ -528,9 +920,12 @@ class NominationController extends Controller
         }
     }
 
+    ## SEND EMAIL - SV
     public function submitNomination(Request $req, $studentId, $mode)
     {
         try {
+
+            $option = $req->input('opt');
             $studentId = decrypt($studentId);
 
             /* GET STUDENT DATA */
@@ -561,47 +956,72 @@ class NominationController extends Controller
                 return back()->with('error', 'Oops! Nomination not found');
             }
 
-            /* PROCESS EVALUATOR DATA */
-            $evaluatorFields = $this->getEvaluatorFields($form);
-            $this->processEvaluators($req, $evaluatorFields, $nomination, $mode);
+            if ($option == 1) {
 
-            /* PROCESS SIGNATURE DATA */
-            $signatureData = $req->input('signatureData', []);
-            if (!empty($signatureData)) {
-                $this->storeNominationSignature($student, $form, $signatureData, $nomination, 2, auth()->user());
-            }
+                /* PROCESS EVALUATOR DATA */
+                $evaluatorFields = $this->getEvaluatorFields($form);
+                $this->processEvaluators($req, $evaluatorFields, $nomination, $mode);
 
-            /* UPDATE NOMINATION DATA */
-            if ($mode == 1) {
-                $nomination->nom_status = 2;
-            } else if ($mode == 2) {
-                $nomination->nom_status = 3;
-            } else {
-                $nomination->nom_status = 1;
-            }
+                /* PROCESS SIGNATURE DATA */
+                $signatureData = $req->input('signatureData', []);
+                if (!empty($signatureData)) {
+                    if ($mode == 1) {
+                        $this->storeNominationSignature($student, $form, $signatureData, $nomination, 2, auth()->user());
+                    } else if ($mode == 3) {
+                        $this->storeNominationSignature($student, $form, $signatureData, $nomination, 5, auth()->user());
+                    } else if ($mode == 4) {
+                        $this->storeNominationSignature($student, $form, $signatureData, $nomination, 6, auth()->user());
+                    }
+                }
 
-            /* GENERATE NOMINATION FORM */
-            $progcode = strtoupper($student->programmes->prog_code);
-            $relativeDir = "{$student->student_directory}/{$progcode}/{$activity}/Nomination";
-            $fullPath = storage_path("app/public/{$relativeDir}");
+                /* UPDATE NOMINATION DATA */
+                if ($mode == 1) {
+                    $nomination->nom_status = 2;
+                } else if ($mode == 2) {
+                    $nomination->nom_status = 3;
+                } else if ($mode == 3 || $mode == 4) {
+                    $nomination->nom_status = 4;
+                } else {
+                    $nomination->nom_status = 1;
+                }
 
-            if (!File::exists($fullPath)) {
-                File::makeDirectory($fullPath, 0755, true);
-            }
+                /* GENERATE NOMINATION FORM */
+                $progcode = strtoupper($student->programmes->prog_code);
+                $relativeDir = "{$student->student_directory}/{$progcode}/{$activity}/Nomination";
+                $fullPath = storage_path("app/public/{$relativeDir}");
 
-            $fileName = 'Nomination_Form_' . $student->student_matricno . '.pdf';
-            $this->generateNominationForm($actID, $student, $form, "Supervisors", $relativeDir, $fileName);
+                if (!File::exists($fullPath)) {
+                    File::makeDirectory($fullPath, 0755, true);
+                }
 
-            $nomination->nom_document = $fileName;
-            $nomination->nom_date = Carbon::now();
-            $nomination->save();
+                $fileName = 'Nomination_Form_' . $student->student_matricno . '.pdf';
+                $this->generateNominationForm($actID, $student, $form, "Supervisors", $relativeDir, $fileName);
 
-            if ($mode == 1) {
-                return redirect()->route('my-supervision-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination submitted successfully!');
-            } else if ($mode == 2) {
-                return redirect()->route('committee-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination submitted successfully!');
-            } else {
-                return abort(404);
+                $nomination->nom_document = $fileName;
+                $nomination->nom_date = Carbon::now();
+                $nomination->save();
+
+                if ($mode == 1) {
+                    return redirect()->route('my-supervision-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination submitted successfully!');
+                } else if ($mode == 2) {
+                    return redirect()->route('committee-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination submitted successfully!');
+                } else if ($mode == 3) {
+                    return redirect()->route('deputydean-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination approved successfully!');
+                } else if ($mode == 4) {
+                    return redirect()->route('dean-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination approved successfully!');
+                } else {
+                    return abort(404);
+                }
+            } elseif ($option == 2) {
+                $nomination->nom_status = 5;
+                $nomination->save();
+                if ($mode == 3) {
+                    return redirect()->route('deputydean-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination rejected successfully!');
+                } else if ($mode == 4) {
+                    return redirect()->route('dean-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination rejected successfully!');
+                } else {
+                    return abort(404);
+                }
             }
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error submitting nomination: ' . $e->getMessage());
@@ -625,14 +1045,15 @@ class NominationController extends Controller
     protected function processEvaluators($req, $evaluatorFields, $nomination, $mode)
     {
         /* DELETE EXISTING NOMINATION [IF ANY] */
-        $status = 1;
         if ($mode == 1) {
             Evaluator::where('nom_id', $nomination->id)->where('eva_status', 1)->delete();
-
             $status = 1;
         } else if ($mode == 2) {
             Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->delete();
             $status = 2;
+        } else if ($mode == 3 || $mode == 4) {
+            Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->update(['eva_status' => 3]);
+            $status = 3;
         }
 
         foreach ($evaluatorFields as $field) {

@@ -252,7 +252,7 @@
 
         .login-container {
             width: 100%;
-            max-width: 480px;
+            max-width: 440px;
         }
 
         .login-card {
@@ -266,9 +266,8 @@
         .login-header {
             background: var(--white);
             /* padding: 1.5rem 1rem 1rem; */
-    
             text-align: center;
-            border-bottom: 1px solid var(--gray-200);
+            /* border-bottom: 1px solid var(--gray-200); */
         }
 
         .university-logo {
@@ -301,7 +300,7 @@
         }
 
         .welcome-section {
-            margin-bottom: 2rem;
+            /* margin-bottom: 1rem; */
             text-align: center;
         }
 
@@ -314,7 +313,7 @@
 
         .welcome-section p {
             color: var(--gray-600);
-            font-size: 0.95rem;
+            font-size: 0.75rem;
             line-height: 1.5;
         }
 
@@ -422,7 +421,7 @@
             padding: 1rem;
             border-radius: 6px;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             transition: background-color 0.2s ease, transform 0.1s ease;
         }
@@ -587,15 +586,16 @@
                 <div class="university-logo">
                     <img src="../assets/images/logo-utem.PNG" alt="University Teknikal Malaysia Melaka" />
                 </div>
+
+                 <div class="welcome-section">
+                    <h2>e-PostGrad System</h2>
+                    <p>Please sign in to your account to access the system.</p>
+                </div>
+
             </div>
 
             <!-- Body -->
             <div class="login-body">
-                <div class="welcome-section">
-                    <h2>e-PostGrad</h2>
-                    <p>Please log in to your account to access the system.</p>
-                </div>
-
                 <!-- Alerts -->
                 <div id="alert-container">
                     @if (session()->has('success'))
@@ -651,7 +651,7 @@
                     </div>
 
                     <button type="submit" class="login-button" id="login-btn">
-                        Log In
+                        Sign in
                     </button>
                 </form>
             </div>

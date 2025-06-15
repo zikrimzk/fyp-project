@@ -74,6 +74,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-profile', [AuthenticateController::class, 'updateStaffProfile'])->name('update-staff-profile');
     Route::post('/update-password', [AuthenticateController::class, 'updateStaffPassword'])->name('update-staff-password');
 
+
     // ---------------------------------------------------------------------------------------------------------------------//
     // ---------------------------------------------COMMITTEE / DD / DEAN---------------------------------------------------//
     // ---------------------------------------------------------------------------------------------------------------------//
@@ -143,11 +144,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/multiple-submission-eligibility-approval', [SubmissionController::class, 'multipleStudentSubmissionSuggestionApproval'])->name('multiple-submission-eligibility-approval-post');
 
     // Nomination
-    Route::get('/committee-nomination-{name}', [NominationController::class, 'committeeNomination'])->name('committee-nomination');
     Route::get('/nomination-{studentId}-{actId}-{mode}', [NominationController::class, 'nominationStudent'])->name('nomination-student');
     Route::get('/view-nomination-form', [NominationController::class, 'viewNominationForm'])->name('view-nomination-form-get');
     Route::post('/submit-nomination-{studentId}-{mode}', [NominationController::class, 'submitNomination'])->name('submit-nomination-post');
-
 
     // Standard Operation Procedure (SOP)
 
@@ -215,6 +214,30 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-semester/{id}', [SettingController::class, 'updateSemester'])->name('update-semester-post');
     Route::get('/delete-semester-{id}-{opt}', [SettingController::class, 'deleteSemester'])->name('delete-semester-get');
     Route::post('/change-current-semester', [SettingController::class, 'changeCurrentSemester'])->name('change-semester-post');
+
+
+    // ---------------------------------------------------------------------------------------------------------------------//
+    // -------------------------------------------------- COMMITTEE --------------------------------------------------------//
+    // ---------------------------------------------------------------------------------------------------------------------//
+
+    // Nomination
+    Route::get('/committee-nomination-{name}', [NominationController::class, 'committeeNomination'])->name('committee-nomination');
+
+
+    // ---------------------------------------------------------------------------------------------------------------------//
+    // ------------------------------------------------ DEPUTY DEAN --------------------------------------------------------//
+    // ---------------------------------------------------------------------------------------------------------------------//
+
+    // Nomination
+    Route::get('/deputydean-nomination-{name}', [NominationController::class, 'deputydeanNomination'])->name('deputydean-nomination');
+
+
+    // ---------------------------------------------------------------------------------------------------------------------//
+    // ----------------------------------------------------- DEAN ----------------------------------------------------------//
+    // ---------------------------------------------------------------------------------------------------------------------//
+
+    // Nomination
+    Route::get('/dean-nomination-{name}', [NominationController::class, 'deanNomination'])->name('dean-nomination');
 
 
     // ---------------------------------------------------------------------------------------------------------------------//

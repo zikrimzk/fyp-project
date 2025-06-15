@@ -417,7 +417,9 @@
                                         name="ff_component_required_role">
                                         <option value="0">-- No specific role --</option>
                                         <option value="1">Supervisors [Main/Co]</option>
-                                        <option value="2">Administrators [Committee / Deputy Dean / Dean]</option>
+                                        <option value="2">Committee</option>
+                                        <option value="3">Deputy Dean</option>
+                                        <option value="4">Dean</option>
                                     </select>
                                 </div>
 
@@ -1138,12 +1140,13 @@
                         $('#ff_component_type').val(response.fields.ff_component_type);
                         $('#ff_placeholder').val(response.fields.ff_placeholder);
                         $('#ff_component_required').val(response.fields.ff_component_required);
-                        $('#ff_component_required_role').val(response.fields.ff_component_required_role);
+                        $('#ff_component_required_role').val(response.fields
+                            .ff_component_required_role);
                         const valueOptions = response.fields.ff_value_options;
                         try {
                             const optionsJson = JSON.parse(valueOptions);
                             if (optionsJson && optionsJson.table) {
-                                
+
                                 $('#ff_value_options').val('');
                                 $('#ff_value_options_table').val(optionsJson.table);
 
@@ -1319,7 +1322,8 @@
                         $('#ff_component_type').val(response.fields.ff_component_type);
                         $('#ff_placeholder').val(response.fields.ff_placeholder);
                         $('#ff_component_required').val(response.fields.ff_component_required);
-                        $('#ff_component_required_role').val(response.fields.ff_component_required_role);
+                        $('#ff_component_required_role').val(response.fields
+                            .ff_component_required_role);
                         const valueOptions = response.fields.ff_value_options;
                         try {
                             const optionsJson = JSON.parse(valueOptions);

@@ -76,12 +76,18 @@
                         <div class="card p-3">
                             <div class="card-body">
                                 <input type="hidden" name="activity_id" value="{{ $act->id }}">
+                                <input type="hidden" name="opt" id="opt-hidden">
+                                <!-- [1] - FOR SUBMIT OR APPROVE [2] REJECT -->
                                 <div class="container">
                                     <div id="formContainer"></div>
                                 </div>
                             </div>
                             <div class="card-footer text-end">
-                                <button type="submit" class="btn btn-primary">Confirm & Submit Nomination</button>
+                                @if ($mode == 3 || $mode == 4)
+                                    <button type="submit" id="rejectBtn" class="btn btn-danger">Reject Nomination</button>
+                                @endif
+                                <button type="submit" id= "submitBtn" class="btn btn-primary">Confirm & Submit
+                                    Nomination</button>
                             </div>
                         </div>
                     </form>
@@ -91,18 +97,6 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
-
-    @php
-        if ($mode == 1) {
-            $mode = 'Supervisors';
-        } elseif ($mode == 2) {
-            $mode = 'Administrators';
-        } elseif ($mode == 3) {
-            $mode = 'All';
-        } else {
-            $mode = 'Supervisors';
-        }
-    @endphp
 
 
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
@@ -225,6 +219,18 @@
         /******************FORM SUBMIT FUNCTION*******************/
         /*********************************************************/
 
+        $('#submitBtn').on('click', function(e) {
+            e.preventDefault();
+            $('#opt-hidden').val(1);
+            $('form').submit();
+        });
+
+        $('#rejectBtn').on('click', function(e) {
+            e.preventDefault();
+            $('#opt-hidden').val(2);
+            $('form').submit();
+        });
+
         $('form').on('submit', function(e) {
             const mode = "{{ $mode }}"; // Get current mode from server
             let isValid = true;
@@ -264,11 +270,14 @@
                 const $input = $('#signatureData-' + sigId);
                 let isSignatureRequired = false;
 
-                if (mode === "Supervisors" && (sigRole === "sv_signature" || sigRole ===
+                if (mode == 1 && (sigRole == "sv_signature" || sigRole ==
                         "cosv_signature")) {
                     isSignatureRequired = true;
-                } else if (mode === "Administrators" && (sigRole === "comm_dean_signature" || sigRole ===
-                        "deputy_dean_signature" || sigRole === "dean_signature")) {
+                } else if (mode == 2 && sigRole == "comm_signature") {
+                    isSignatureRequired = true;
+                } else if (mode == 3 && sigRole == "deputy_dean_signature") {
+                    isSignatureRequired = true;
+                } else if (mode == 4 && sigRole == "dean_signature") {
                     isSignatureRequired = true;
                 }
 

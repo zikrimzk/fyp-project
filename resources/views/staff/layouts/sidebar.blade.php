@@ -59,12 +59,45 @@
                         ->where('staff_id', auth()->user()->id)
                         ->exists();
 
-                    $committee = auth()->user()->staff_role == 1;
+                    $iscommittee = auth()->user()->staff_role == 1;
 
-                    $higherUps = DB::table('staff')
-                        ->where('id', auth()->user()->id)
-                        ->whereIn('staff_role', [1, 3, 4])
-                        ->exists();
+                    $showDeputyDeanNomination = false;
+                    $deputyDeanNominations = collect();
+
+                    if (auth()->user()->staff_role == 3) {
+                        $deputyDeanNominations = DB::table('activity_forms as af')
+                            ->join('form_fields as ff', 'af.id', '=', 'ff.af_id')
+                            ->join('procedures as p', 'af.activity_id', '=', 'p.activity_id')
+                            ->join('activities as a', 'p.activity_id', '=', 'a.id')
+                            ->where('af.af_target', 3)
+                            ->where('ff.ff_category', 6)
+                            ->where('ff.ff_signature_role', 5)
+                            ->where('p.is_haveEva', 1)
+                            ->select('a.id as activity_id', 'a.act_name as activity_name')
+                            ->distinct()
+                            ->get();
+
+                        $showDeputyDeanNomination = $deputyDeanNominations->isNotEmpty();
+                    }
+
+                    $showDeanNomination = false;
+                    $deanNominations = collect();
+
+                    if (auth()->user()->staff_role == 4) {
+                        $deanNominations = DB::table('activity_forms as af')
+                            ->join('form_fields as ff', 'af.id', '=', 'ff.af_id')
+                            ->join('procedures as p', 'af.activity_id', '=', 'p.activity_id')
+                            ->join('activities as a', 'p.activity_id', '=', 'a.id')
+                            ->where('af.af_target', 3)
+                            ->where('ff.ff_category', 6)
+                            ->where('ff.ff_signature_role', 6)
+                            ->where('p.is_haveEva', 1)
+                            ->select('a.id as activity_id', 'a.act_name as activity_name')
+                            ->distinct()
+                            ->get();
+
+                        $showDeanNomination = $deanNominations->isNotEmpty();
+                    }
 
                     $nomination = DB::table('procedures as a')
                         ->join('activities as b', 'a.activity_id', '=', 'b.id')
@@ -72,6 +105,11 @@
                         ->select('b.id as activity_id', 'b.act_name as activity_name')
                         ->distinct()
                         ->get();
+
+                    $higherUps = DB::table('staff')
+                        ->where('id', auth()->user()->id)
+                        ->whereIn('staff_role', [1, 3, 4])
+                        ->exists();
 
                 @endphp
 
@@ -132,7 +170,7 @@
                     </li>
                 @endif
 
-                @if ($committee)
+                @if ($iscommittee)
                     <li class="pc-item pc-caption">
                         <label>Committee</label>
                     </li>
@@ -149,6 +187,48 @@
                                 <li class="pc-item">
                                     <a class="pc-link"
                                         href="{{ route('committee-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
+                                        {{ $nom->activity_name }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @endif
+
+                @if ($showDeputyDeanNomination)
+                    <li class="pc-item pc-caption"><label>Deputy Dean</label></li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon"><i class="fas fa-user-friends pc-icon"></i></span>
+                            <span class="pc-mtext">Nomination</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            @foreach ($deputyDeanNominations as $nom)
+                                <li class="pc-item">
+                                    <a class="pc-link"
+                                        href="{{ route('deputydean-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
+                                        {{ $nom->activity_name }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @endif
+
+                @if ($showDeanNomination)
+                    <li class="pc-item pc-caption"><label>Dean</label></li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon"><i class="fas fa-user-friends pc-icon"></i></span>
+                            <span class="pc-mtext">Nomination</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            @foreach ($deanNominations as $nom)
+                                <li class="pc-item">
+                                    <a class="pc-link"
+                                        href="{{ route('dean-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
                                         {{ $nom->activity_name }}
                                     </a>
                                 </li>
@@ -284,3 +364,4 @@
         </div>
     </div>
 </nav>
+
