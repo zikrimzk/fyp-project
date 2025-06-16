@@ -82,7 +82,8 @@
                                     <div id="formContainer"></div>
                                 </div>
                             </div>
-                            <div class="card-footer text-end">
+                            <div class="card-footer d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="reset" class="btn btn-light-danger">Reset</button>
                                 @if ($mode == 3 || $mode == 4)
                                     <button type="submit" id="rejectBtn" class="btn btn-danger">Reject Nomination</button>
                                 @endif
@@ -232,24 +233,28 @@
         });
 
         $('form').on('submit', function(e) {
-            const mode = "{{ $mode }}"; // Get current mode from server
+            const mode = "{{ $mode }}";
             let isValid = true;
             const errorMessages = [];
             const errorFields = [];
 
-            // 1. Validate regular required fields
+            // ==============================================
+            // 1. Validate regular required fields (UPDATED)
+            // ==============================================
             $('[required]').each(function() {
                 const $field = $(this);
                 const fieldType = $field.attr('type');
                 let isEmpty = false;
 
                 if (fieldType === 'checkbox') {
-                    // Checkbox group validation
+                    const groupName = $field.attr('name');
+                    const checkedCount = $(`input[name="${groupName}"]:checked`).length;
+                    isEmpty = checkedCount === 0;
+                } else if (fieldType === 'radio') {
                     const groupName = $field.attr('name');
                     const checkedCount = $(`input[name="${groupName}"]:checked`).length;
                     isEmpty = checkedCount === 0;
                 } else {
-                    // Standard field validation
                     isEmpty = !$field.val().trim();
                 }
 
@@ -257,11 +262,19 @@
                     isValid = false;
                     $field.addClass('error-field');
                     const fieldLabel = $field.closest('tr').find('.label').text().replace('*', '').trim();
-                    errorFields.push(fieldLabel);
+                    if (fieldType === 'radio') {
+                        if (!errorFields.some(f => f.includes(fieldLabel))) {
+                            errorFields.push(fieldLabel);
+                        }
+                    } else {
+                        errorFields.push(fieldLabel);
+                    }
                 }
             });
 
-            // 2. Validate signatures
+            // ==============================================
+            // 2. Validate signatures (unchanged)
+            // ==============================================
             $('.signature-canvas').each(function() {
                 const $canvas = $(this);
                 const sigId = $canvas.data('id');
@@ -270,8 +283,7 @@
                 const $input = $('#signatureData-' + sigId);
                 let isSignatureRequired = false;
 
-                if (mode == 1 && (sigRole == "sv_signature" || sigRole ==
-                        "cosv_signature")) {
+                if (mode == 1 && (sigRole == "sv_signature" || sigRole == "cosv_signature")) {
                     isSignatureRequired = true;
                 } else if (mode == 2 && sigRole == "comm_signature") {
                     isSignatureRequired = true;
@@ -282,10 +294,8 @@
                 }
 
                 if (pad && !pad.isEmpty()) {
-                    // Save signature data
                     $input.val(pad.toDataURL('image/png'));
                 } else if (isSignatureRequired) {
-                    // Signature is required but empty
                     isValid = false;
                     $canvas.css('border-color', 'red');
                     const signatureLabel = $canvas.closest('.signature-cell').find('.signature-label-clean')
@@ -294,11 +304,12 @@
                 }
             });
 
+            // ==============================================
             // 3. Prevent submission if validation fails
+            // ==============================================
             if (!isValid) {
                 e.preventDefault();
 
-                // Build comprehensive error message
                 let fullMessage = '';
 
                 if (errorFields.length > 0) {
@@ -309,16 +320,26 @@
                     if (fullMessage) fullMessage += '\n\n';
                     fullMessage += 'Signature:\n- ' + errorMessages.join('\n- ');
                 }
-
-                // Show error notification
+                
                 if (fullMessage) {
                     if (typeof showToast === 'function') {
-                        showToast('danger', fullMessage);
+                        showToast('danger', fullMessage, {
+                            duration: 10000, 
+                            position: 'top-right'
+                        });
+
+                        $('html, body').animate({
+                            scrollTop: $('.error-field').first().offset().top - 100
+                        }, 500);
                     } else {
                         alert(fullMessage);
                     }
                 }
             }
+
+            $(document).on('change', '.error-field', function() {
+                $(this).removeClass('error-field');
+            });
         });
     </script>
 @endsection

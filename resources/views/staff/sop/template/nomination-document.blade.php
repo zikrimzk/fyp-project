@@ -2,7 +2,7 @@
     use Carbon\Carbon;
     use Illuminate\Support\Facades\Crypt;
 
-    $currentMode = strtolower($mode);
+    $currentMode = $mode;
 @endphp
 
 <!DOCTYPE html>
@@ -322,22 +322,27 @@
                     $value = old($key, $userData[$key] ?? '');
                     $placeholder = $ff->ff_placeholder ?? '';
 
-                    // Determine required role
-                    $requiredRole =
-                        $ff->ff_component_required_role == 1
-                            ? 'supervisors'
-                            : ($ff->ff_component_required_role == 2
-                                ? 'administrators'
-                                : 'all');
+                    // Get required role as integer
+                    $requiredRole = $ff->ff_component_required_role;
 
                     // Check if field is required for current mode
                     $isRequired =
-                        $ff->ff_component_required == 1 && ($requiredRole === 'all' || $requiredRole === $currentMode);
+                        $ff->ff_component_required == 1 && ($requiredRole == 0 || $requiredRole == $currentMode);
 
                     // Determine if field should be disabled
-                    $shouldDisable = $requiredRole !== 'all' && $requiredRole !== $currentMode;
+                    $shouldDisable = $requiredRole != 0 && $requiredRole != $currentMode;
                     $disabledAttr = $shouldDisable ? 'disabled' : '';
                     $requiredAttr = $isRequired && !$shouldDisable ? 'required' : '';
+                    // dd($shouldDisable, $disabledAttr, $isRequired, $requiredAttr);
+
+                    // Role names for display
+                    $roleNames = [
+                        0 => 'all',
+                        1 => 'supervisors',
+                        2 => 'committee',
+                        3 => 'deputy dean',
+                        4 => 'dean',
+                    ];
 
                     $options = [];
 

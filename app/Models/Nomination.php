@@ -14,6 +14,7 @@ class Nomination extends Model
         'nom_date',
         'nom_signature_data',
         'nom_document',
+        'nom_extra_data',
         'student_id',
         'activity_id'
     ];

@@ -901,6 +901,16 @@ class NominationController extends Controller
                 }
             }
 
+            if ($nominationRecord && $nominationRecord->nom_extra_data) {
+                $extraData = json_decode($nominationRecord->nom_extra_data, true);
+
+                if (is_array($extraData)) {
+                    foreach ($extraData as $key => $value) {
+                        $normalizedKey = str_replace(' ', '_', strtolower($key));
+                        $userData[$normalizedKey] = $value ?? '-';
+                    }
+                }
+            }
 
             $html = view('staff.sop.template.nomination-form', [
                 'title' => $act->act_name . " Document",
@@ -974,6 +984,20 @@ class NominationController extends Controller
                     }
                 }
 
+                /* STORE UNHANDLED FIELDS IN nom_extra_data */
+                $unhandledFields = $this->getUnhandledFields($req, $form);
+                if (!empty($unhandledFields)) {
+                    // Merge with existing data if needed
+                    $existingExtraData = $nomination->nom_extra_data
+                        ? json_decode($nomination->nom_extra_data, true)
+                        : [];
+
+                    $nomination->nom_extra_data = json_encode(array_merge(
+                        $existingExtraData,
+                        $unhandledFields
+                    ));
+                }
+
                 /* UPDATE NOMINATION DATA */
                 if ($mode == 1) {
                     $nomination->nom_status = 2;
@@ -985,6 +1009,11 @@ class NominationController extends Controller
                     $nomination->nom_status = 1;
                 }
 
+                $fileName = 'Nomination_Form_' . $student->student_matricno . '.pdf';
+                $nomination->nom_document = $fileName;
+                $nomination->nom_date = Carbon::now();
+                $nomination->save();
+
                 /* GENERATE NOMINATION FORM */
                 $progcode = strtoupper($student->programmes->prog_code);
                 $relativeDir = "{$student->student_directory}/{$progcode}/{$activity}/Nomination";
@@ -994,12 +1023,8 @@ class NominationController extends Controller
                     File::makeDirectory($fullPath, 0755, true);
                 }
 
-                $fileName = 'Nomination_Form_' . $student->student_matricno . '.pdf';
                 $this->generateNominationForm($actID, $student, $form, "Supervisors", $relativeDir, $fileName);
-
-                $nomination->nom_document = $fileName;
-                $nomination->nom_date = Carbon::now();
-                $nomination->save();
+                
 
                 if ($mode == 1) {
                     return redirect()->route('my-supervision-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination submitted successfully!');
@@ -1084,6 +1109,41 @@ class NominationController extends Controller
                 ]);
             }
         }
+    }
+
+    protected function getUnhandledFields(Request $request, $form)
+    {
+        // Fields that are already handled by the system
+        $handledKeys = [
+            '_token',
+            'activity_id',
+            'opt',
+            'signatureData'
+        ];
+
+        // Add evaluator fields to handled keys
+        $evaluatorFields = $this->getEvaluatorFields($form);
+        foreach ($evaluatorFields as $field) {
+            $handledKeys[] = str_replace(' ', '_', strtolower($field->ff_label));
+        }
+
+        // Add signature fields to handled keys
+        $signatureFields = FormField::where('af_id', $form->id)
+            ->where('ff_category', 6)
+            ->pluck('ff_signature_key')
+            ->toArray();
+
+        $handledKeys = array_merge($handledKeys, $signatureFields);
+
+        // Collect all request keys
+        $allKeys = array_keys($request->all());
+
+        // Return unhandled fields as key-value pairs
+        return collect($request->all())
+            ->reject(function ($value, $key) use ($handledKeys) {
+                return in_array($key, $handledKeys);
+            })
+            ->toArray();
     }
 
     public function storeNominationSignature($student, $form, $signatureData, $nomination, $signatureRole, $userData)
@@ -1380,6 +1440,17 @@ class NominationController extends Controller
                                 $userData[$key] = $evaluator->staff_name;
                             }
                         }
+                    }
+                }
+            }
+
+            if ($nominationRecord && $nominationRecord->nom_extra_data) {
+                $extraData = json_decode($nominationRecord->nom_extra_data, true);
+
+                if (is_array($extraData)) {
+                    foreach ($extraData as $key => $value) {
+                        $normalizedKey = str_replace(' ', '_', strtolower($key));
+                        $userData[$normalizedKey] = $value ?? '-';
                     }
                 }
             }
