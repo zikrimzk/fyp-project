@@ -922,7 +922,6 @@ class SupervisorController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }

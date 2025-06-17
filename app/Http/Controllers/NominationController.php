@@ -214,7 +214,6 @@ class NominationController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
@@ -407,7 +406,6 @@ class NominationController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
@@ -600,14 +598,16 @@ class NominationController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
 
+    /* Nomination Student */
     public function nominationStudent($studentId, $actId, $mode)
     {
         try {
+
+            /* GET ID'S */
             $studentId = decrypt($studentId);
             $actId = decrypt($actId);
 
@@ -629,6 +629,7 @@ class NominationController extends Controller
                 ->where('a.id', $studentId)
                 ->first();
 
+            /* GET ACTIVITY DATA */
             $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
                 ->select('a.id', 'a.act_name')
                 ->where('a.id', '=', $actId)
@@ -638,6 +639,7 @@ class NominationController extends Controller
                 abort(404, 'Activity not found');
             }
 
+            /* GET ACTIVITY FORM */
             $actForm = ActivityForm::where('activity_id', $actId)
                 ->where('af_target', 3)
                 ->first();
@@ -646,6 +648,7 @@ class NominationController extends Controller
                 return back()->with('error', 'Oops! Form for this activity were not found. Please add the form first at the Form Setting page.');
             }
 
+            /* LINK ASSIGNMENT */
             $page = '';
             $link = '';
 
@@ -673,32 +676,55 @@ class NominationController extends Controller
                 'link' => $link
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
 
+    /* View Nomination Form */
     public function viewNominationForm(Request $req)
     {
         try {
-            $actID = $req->input('actid');
-            $student = Student::whereId($req->input('studentid'))->first();
-            $form = ActivityForm::whereId($req->input('afid'))->first();
+
             $mode = $req->input('mode');
 
+            /* GET STUDENT DATA */
+            $student = Student::whereId($req->input('studentid'))->first();
+
+            if (!$student) {
+                return back()->with('error', 'Student not found.');
+            }
+
+            /* GET ACTIVITY FORM DATA */
+            $form = ActivityForm::whereId($req->input('afid'))->first();
+
+            if (!$form) {
+                return back()->with('error', 'Form not found.');
+            }
+
+            /* GET ACTIVITY DATA */
+            $actID = $req->input('actid');
             $act = Activity::where('id', $actID)->first();
 
             if (!$act) {
                 return back()->with('error', 'Activity not found.');
             }
 
+            /* GET FACULTY DATA */
+            $faculty = Faculty::where('fac_status', 3)->first();
+
+            if (!$faculty) {
+                return back()->with('error', 'Faculty not found.');
+            }
+
+            /* FETCH - FORM FIELD */
             $formfields = FormField::where('af_id', $form->id)
                 ->orderBy('ff_order')
                 ->get();
 
-            $faculty = Faculty::where('fac_status', 3)->first();
+            /* FETCH - SIGNATURE */
             $signatures = $formfields->where('ff_category', 6);
 
+            /* FETCH - NOMINATION */
             $nominationRecord = Nomination::where([
                 ['activity_id', $actID],
                 ['student_id', $student->id]
@@ -706,6 +732,7 @@ class NominationController extends Controller
 
             $signatureData = $nominationRecord ? json_decode($nominationRecord->nom_signature_data) : null;
 
+            /* MAPPING PROCESS - SUBSTITUTE DATA */
             $userData = [];
 
             $specialMappings = [
@@ -870,6 +897,7 @@ class NominationController extends Controller
                 $userData[str_replace(' ', '_', strtolower($field->ff_label))] = $finalValue ?: '-';
             }
 
+            /* FETCH [NOMINATION] - CHAIR / EXAMINER / PANEL MEMBERS */
             if ($nominationRecord) {
                 $evaluators = Evaluator::where('nom_id', $nominationRecord->id)
                     ->join('staff', 'staff.id', '=', 'evaluators.staff_id')
@@ -901,6 +929,7 @@ class NominationController extends Controller
                 }
             }
 
+            /* FETCH [NOMINATION] - EXTRA META DATA */
             if ($nominationRecord && $nominationRecord->nom_extra_data) {
                 $extraData = json_decode($nominationRecord->nom_extra_data, true);
 
@@ -931,6 +960,7 @@ class NominationController extends Controller
     }
 
     ## SEND EMAIL - SV
+    /* Submit Nomination Form */
     public function submitNomination(Request $req, $studentId, $mode)
     {
         try {
@@ -987,7 +1017,6 @@ class NominationController extends Controller
                 /* STORE UNHANDLED FIELDS IN nom_extra_data */
                 $unhandledFields = $this->getUnhandledFields($req, $form);
                 if (!empty($unhandledFields)) {
-                    // Merge with existing data if needed
                     $existingExtraData = $nomination->nom_extra_data
                         ? json_decode($nomination->nom_extra_data, true)
                         : [];
@@ -1023,8 +1052,8 @@ class NominationController extends Controller
                     File::makeDirectory($fullPath, 0755, true);
                 }
 
-                $this->generateNominationForm($actID, $student, $form, "Supervisors", $relativeDir, $fileName);
-                
+                $this->generateNominationForm($actID, $student, $form, $mode, $relativeDir, $fileName);
+
 
                 if ($mode == 1) {
                     return redirect()->route('my-supervision-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination submitted successfully!');
@@ -1035,7 +1064,7 @@ class NominationController extends Controller
                 } else if ($mode == 4) {
                     return redirect()->route('dean-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination approved successfully!');
                 } else {
-                    return abort(404);
+                    return back()->with('error', 'Oops! Error submitting nomination');
                 }
             } elseif ($option == 2) {
                 $nomination->nom_status = 5;
@@ -1045,7 +1074,7 @@ class NominationController extends Controller
                 } else if ($mode == 4) {
                     return redirect()->route('dean-nomination', strtolower(str_replace(' ', '-',  $activity)))->with('success', 'Nomination rejected successfully!');
                 } else {
-                    return abort(404);
+                    return back()->with('error', 'Oops! Error submitting nomination');
                 }
             }
         } catch (Exception $e) {
@@ -1053,6 +1082,7 @@ class NominationController extends Controller
         }
     }
 
+    /* Get Evaluator Fields */
     protected function getEvaluatorFields($form)
     {
         $field = FormField::where('af_id', $form->id)
@@ -1067,6 +1097,7 @@ class NominationController extends Controller
         return $field;
     }
 
+    /* Process Evaluator - Fuzzy Match */
     protected function processEvaluators($req, $evaluatorFields, $nomination, $mode)
     {
         /* DELETE EXISTING NOMINATION [IF ANY] */
@@ -1111,9 +1142,10 @@ class NominationController extends Controller
         }
     }
 
+    /* Process Extra Meta Data */
     protected function getUnhandledFields(Request $request, $form)
     {
-        // Fields that are already handled by the system
+        /* IDENTIFY EVALUATOR FIELDS TO HANDLED KEYS */
         $handledKeys = [
             '_token',
             'activity_id',
@@ -1121,13 +1153,12 @@ class NominationController extends Controller
             'signatureData'
         ];
 
-        // Add evaluator fields to handled keys
         $evaluatorFields = $this->getEvaluatorFields($form);
         foreach ($evaluatorFields as $field) {
             $handledKeys[] = str_replace(' ', '_', strtolower($field->ff_label));
         }
 
-        // Add signature fields to handled keys
+        /* ADD SIGNATURE FIELDS TO HANDLED KEYS */
         $signatureFields = FormField::where('af_id', $form->id)
             ->where('ff_category', 6)
             ->pluck('ff_signature_key')
@@ -1135,10 +1166,9 @@ class NominationController extends Controller
 
         $handledKeys = array_merge($handledKeys, $signatureFields);
 
-        // Collect all request keys
+        /* GET ALL REQUEST KEYS */
         $allKeys = array_keys($request->all());
 
-        // Return unhandled fields as key-value pairs
         return collect($request->all())
             ->reject(function ($value, $key) use ($handledKeys) {
                 return in_array($key, $handledKeys);
@@ -1146,11 +1176,13 @@ class NominationController extends Controller
             ->toArray();
     }
 
+    /* Handle Nomination Signature */
     public function storeNominationSignature($student, $form, $signatureData, $nomination, $signatureRole, $userData)
     {
         try {
-            // Check if signature data exists and is an array
             if ($signatureData && is_array($signatureData)) {
+
+                /* CHECK IF SIGNATURE DATA EXISTS */
                 $signatureField = FormField::where([
                     ['af_id', $form->id],
                     ['ff_category', 6],
@@ -1164,6 +1196,7 @@ class NominationController extends Controller
 
                 $isCrossApproval = false;
 
+                /* CROSS APPROVAL LOGIC */
                 if (!$signatureField) {
                     $allSignatureFields = FormField::where([
                         ['af_id', $form->id],
@@ -1180,11 +1213,11 @@ class NominationController extends Controller
                     }
                 }
 
+                /* STORE SIGNATURE LOGIC */
                 if ($signatureField) {
                     $signatureKey = $signatureField->ff_signature_key;
                     $dateKey = $signatureField->ff_signature_date_key;
 
-                    // Extract the actual signature string from the input data
                     $signatureString = $signatureData[$signatureKey] ?? null;
 
                     if ($signatureString) {
@@ -1214,7 +1247,7 @@ class NominationController extends Controller
                             ];
                         }
 
-                        // Merge and save
+                        /* MERGE & SAVE SIGNATURE */
                         $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
                         $nomination->nom_signature_data = json_encode($mergedSignatureData);
                         $nomination->save();
@@ -1226,22 +1259,34 @@ class NominationController extends Controller
         }
     }
 
+    /* Generate Nomination Document */
     public function generateNominationForm($actID, $student, $form, $mode, $finalDocRelativePath, $fileName)
     {
         try {
+
+            /* GET ACTIVITY FORM DATA */
             $act = Activity::where('id', $actID)->first();
 
             if (!$act) {
                 return back()->with('error', 'Activity not found.');
             }
 
+            /* FETCH - FORM FIELD */
             $formfields = FormField::where('af_id', $form->id)
                 ->orderBy('ff_order')
                 ->get();
 
+            /* GET FACULTY DATA */
             $faculty = Faculty::where('fac_status', 3)->first();
+
+            if (!$faculty) {
+                return back()->with('error', 'Faculty not found.');
+            }
+
+            /* FETCH - SIGNATURE */
             $signatures = $formfields->where('ff_category', 6);
 
+            /* FETCH - NOMINATION */
             $nominationRecord = Nomination::where([
                 ['activity_id', $actID],
                 ['student_id', $student->id]
@@ -1249,6 +1294,7 @@ class NominationController extends Controller
 
             $signatureData = $nominationRecord ? json_decode($nominationRecord->nom_signature_data) : null;
 
+            /* MAPPING PROCESS - SUBSTITUTE DATA */
             $userData = [];
 
             $specialMappings = [
@@ -1413,6 +1459,7 @@ class NominationController extends Controller
                 $userData[str_replace(' ', '_', strtolower($field->ff_label))] = $finalValue ?: '-';
             }
 
+            /* FETCH [NOMINATION] - CHAIR / EXAMINER / PANEL MEMBERS */
             if ($nominationRecord) {
                 $evaluators = Evaluator::where('nom_id', $nominationRecord->id)
                     ->join('staff', 'staff.id', '=', 'evaluators.staff_id')
@@ -1444,6 +1491,7 @@ class NominationController extends Controller
                 }
             }
 
+            /* FETCH [NOMINATION] - EXTRA META DATA */
             if ($nominationRecord && $nominationRecord->nom_extra_data) {
                 $extraData = json_decode($nominationRecord->nom_extra_data, true);
 
@@ -1467,18 +1515,17 @@ class NominationController extends Controller
                 'mode' => $mode
             ]);
 
+            /* RETURN PATH */
             $path = "app/public/{$finalDocRelativePath}/{$fileName}";
-
-            // Save PDF to storage
             $pdf->save(storage_path($path));
-
-            // Return PDF for streaming
             return $path;
+
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error generating nomination form: ' . $e->getMessage());
         }
     }
 
+    /* Determine Evaluator Role by keywords */
     protected function determineEvaluatorRole($fieldLabel)
     {
         $fieldLabel = strtolower($fieldLabel);
@@ -1494,9 +1541,10 @@ class NominationController extends Controller
         return 1;
     }
 
+    /* Find Staff - Fuzzy Match */
     protected function findStaffByName($name)
     {
-        // Handle array input by taking the first name
+        /* HANDLE MULTIPLE NAMES */
         if (is_array($name)) {
             $name = $name[0] ?? '';
         }
