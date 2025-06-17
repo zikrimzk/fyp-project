@@ -160,6 +160,7 @@
             }
         }
     </style>
+    
 
     <div class="pc-container">
         <div class="pc-content">
@@ -368,7 +369,7 @@
                                 <!-- Label/Title -->
                                 <div class="mb-3">
                                     <label for="ff_label" class="form-label">Label / Title</label>
-                                    <textarea class="form-control" id="ff_label" name="ff_label" rows="2"></textarea>
+                                    <textarea class="form-control" id="ff_label" name="ff_label" rows="2" placeholder="Enter label / title"></textarea>
                                 </div>
 
                                 <!-- Label/Title [CKEDITOR] -->
@@ -393,14 +394,14 @@
                                 </div>
 
                                 <!-- Placeholder -->
-                                <div class="mb-3 input-field-group">
+                                <div class="mb-3 input-field-group placeholder-option">
                                     <label for="ff_placeholder" class="form-label">Placeholder</label>
-                                    <input type="text" class="form-control" id="ff_placeholder"
-                                        name="ff_placeholder">
+                                    <input type="text" class="form-control" id="ff_placeholder" name="ff_placeholder"
+                                        placeholder="Enter input placeholder">
                                 </div>
 
                                 <!-- Required -->
-                                <div class="mb-3 input-field-group">
+                                <div class="mb-3 input-field-group required-option">
                                     <label for="ff_component_required" class="form-label">Is this field
                                         required?</label>
                                     <select class="form-select" id="ff_component_required" name="ff_component_required">
@@ -410,7 +411,7 @@
                                 </div>
 
                                 <!-- Required Role -->
-                                <div class="mb-3 input-field-group">
+                                <div class="mb-3 input-field-group required-option">
                                     <label for="ff_component_required_role" class="form-label">Is this field
                                         required for specific role?</label>
                                     <select class="form-select" id="ff_component_required_role"
@@ -424,7 +425,7 @@
                                 </div>
 
                                 <!-- Value Options -->
-                                <div class="mb-3 input-field-group">
+                                <div class="mb-3 input-field-group value-options">
                                     <label for="ff_value_options" class="form-label">Value Options (for select,
                                         checkbox, radio)</label>
                                     <textarea class="form-control" id="ff_value_options" name="ff_value_options" rows="2"
@@ -449,9 +450,10 @@
                                 </div>
 
                                 <!-- Append Text -->
-                                <div class="mb-3 input-field-group">
+                                <div class="mb-3 input-field-group append-text">
                                     <label for="ff_append_text" class="form-label">Append Text (after label)</label>
-                                    <textarea class="form-control" id="ff_append_text" name="ff_append_text" rows="2"></textarea>
+                                    <textarea class="form-control" id="ff_append_text" name="ff_append_text" rows="2"
+                                        placeholder="Enter append text"></textarea>
                                 </div>
 
                                 <!-- Field Table -->
@@ -819,6 +821,7 @@
                     $('.input-field-group').show();
                     $('#ff_label').parent().show();
                     $('#ff_label-ckeditor').parent().hide();
+                    $('#ff_component_type').trigger('change');
                 }
                 if (category == 2) {
                     $('.output-field-group').show();
@@ -910,6 +913,42 @@
                     $('#ff_extra_condition').prop('disabled', false).show();
                 } else {
                     $('#ff_extra_condition').val('').prop('disabled', true).hide();
+                }
+            });
+
+            $('#ff_component_type').on('change', function() {
+                const type = $(this).val();
+
+                if (type == '') {
+                    $('.required-option').hide();
+                    $('.placeholder-option').hide();
+                    $('.value-options').hide();
+                    $('.append-text').hide();
+                } else if (type == 'select' || type == 'checkbox' || type == 'radio') {
+                    $('.value-options').show();
+                    $('.placeholder-option').hide();
+                    $('.required-option').show();
+                    $('.append-text').show();
+                } else if (type == 'date' || type == 'datetime-local') {
+                    $('.value-options').hide();
+                    $('.placeholder-option').hide();
+                    $('.required-option').show();
+                    $('.append-text').show();
+                } else {
+                    $('.value-options').hide();
+                    $('.placeholder-option').show();
+                    $('.required-option').show();
+                    $('.append-text').show();
+                }
+
+            });
+
+            $('#ff_component_required').on('change', function() {
+                const required = $(this).val();
+                if (required == 1) {
+                    $('#ff_component_required_role').prop('disabled', false);
+                } else {
+                    $('#ff_component_required_role').prop('disabled', true);
                 }
             });
 
@@ -1138,8 +1177,10 @@
                         $('#ff_category').trigger('change');
                         $('#ff_category').prop('disabled', true);
                         $('#ff_component_type').val(response.fields.ff_component_type);
+                        $('#ff_component_type').trigger('change');
                         $('#ff_placeholder').val(response.fields.ff_placeholder);
                         $('#ff_component_required').val(response.fields.ff_component_required);
+                        $('#ff_component_required').trigger('change');
                         $('#ff_component_required_role').val(response.fields
                             .ff_component_required_role);
                         const valueOptions = response.fields.ff_value_options;
@@ -1158,13 +1199,13 @@
                                 // Manual options
                                 $('#ff_value_options').val(valueOptions);
                                 $('#ff_value_options_table').val('');
-                                $('#ff_value_options_column').val('').addClass('d-none');
+                                $('#ff_value_options_column').val('');
                             }
                         } catch (e) {
                             // Not JSON - manual options
                             $('#ff_value_options').val(valueOptions);
                             $('#ff_value_options_table').val('');
-                            $('#ff_value_options_column').val('').addClass('d-none');
+                            $('#ff_value_options_column').val('');
                         }
                         $('#ff_append_text').val(response.fields.ff_append_text);
                         $('#ff_table').val(response.fields.ff_table);
@@ -1320,8 +1361,10 @@
                         $('#ff_label').val(label);
                         ckLabelEditor.setData(label);
                         $('#ff_component_type').val(response.fields.ff_component_type);
+                        $('#ff_component_type').trigger('change');
                         $('#ff_placeholder').val(response.fields.ff_placeholder);
                         $('#ff_component_required').val(response.fields.ff_component_required);
+                        $('#ff_component_required').trigger('change');
                         $('#ff_component_required_role').val(response.fields
                             .ff_component_required_role);
                         const valueOptions = response.fields.ff_value_options;
@@ -1341,13 +1384,13 @@
                                 // Manual options
                                 $('#ff_value_options').val(valueOptions);
                                 $('#ff_value_options_table').val('');
-                                $('#ff_value_options_column').val('').addClass('d-none');
+                                $('#ff_value_options_column').val('');
                             }
                         } catch (e) {
                             // Not JSON - manual options
                             $('#ff_value_options').val(valueOptions);
                             $('#ff_value_options_table').val('');
-                            $('#ff_value_options_column').val('').addClass('d-none');
+                            $('#ff_value_options_column').val('');
                         }
                         $('#ff_append_text').val(response.fields.ff_append_text);
                         $('#ff_table').val(response.fields.ff_table);

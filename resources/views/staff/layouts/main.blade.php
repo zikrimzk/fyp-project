@@ -190,7 +190,7 @@
     <!-- [ Pre-loader ] End -->
 
     <!-- [ Sidebar Menu ] start -->
-    @include('staff.layouts.sidebar')
+    @include('staff.layouts.sidebar-new')
     <!-- [ Sidebar Menu ] end -->
 
     <!-- [ Header Topbar ] start -->

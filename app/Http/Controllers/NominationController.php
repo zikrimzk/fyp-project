@@ -29,6 +29,10 @@ class NominationController extends Controller
     /* Committee - Nomination */
     public function committeeNomination(Request $req, $name)
     {
+        if (auth()->user()->staff_role != 1) {
+            return abort(401, 'Unauthorized');
+        }
+
         try {
 
             $id = Activity::all()
@@ -221,6 +225,11 @@ class NominationController extends Controller
     /* Deputy Dean - Nomination */
     public function deputydeanNomination(Request $req, $name)
     {
+
+        if (auth()->user()->staff_role != 3) {
+            return abort(401, 'Unauthorized');
+        }
+
         try {
 
             $id = Activity::all()
@@ -413,6 +422,11 @@ class NominationController extends Controller
     /* Dean - Nomination */
     public function deanNomination(Request $req, $name)
     {
+
+        if (auth()->user()->staff_role != 4) {
+            return abort(401, 'Unauthorized');
+        }
+
         try {
 
             $id = Activity::all()
@@ -1519,7 +1533,6 @@ class NominationController extends Controller
             $path = "app/public/{$finalDocRelativePath}/{$fileName}";
             $pdf->save(storage_path($path));
             return $path;
-
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error generating nomination form: ' . $e->getMessage());
         }

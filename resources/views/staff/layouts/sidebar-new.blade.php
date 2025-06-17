@@ -4,15 +4,16 @@
 <style>
     /* Enhanced Sidebar Styles */
     .pc-sidebar {
-
         border-right: 1px solid #dee2e6;
         box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
     }
 
     .navbar-wrapper {
         height: 100vh;
-        overflow-y: auto;
+        overflow-y: hidden;
         overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     .navbar-wrapper::-webkit-scrollbar {
@@ -36,6 +37,7 @@
         background: var(--bs-light-secondary, #f8f9fa);
         border-bottom: 2px solid #dee2e6;
         padding: 1rem;
+        flex-shrink: 0;
     }
 
     .sidebar-header .b-brand {
@@ -51,6 +53,7 @@
         border-bottom: 1px solid #dee2e6;
         margin-bottom: 0;
         padding: 0.75rem 1rem;
+        flex-shrink: 0;
     }
 
     .semester-info h6 {
@@ -62,8 +65,8 @@
 
     .navbar-content {
         background: var(--bs-light-secondary, #f8f9fa);
-        padding: 1rem 0;
-        min-height: calc(100vh - 140px);
+        flex: 1;
+        overflow-y:unset;
         padding-bottom: 2rem;
     }
 
@@ -109,7 +112,7 @@
     }
 
     .pc-navbar {
-        padding: 0;
+        padding: 0 0 14rem 0; /* Added bottom padding for proper spacing */
         margin: 0;
         list-style: none;
     }
@@ -249,7 +252,7 @@
     <div class="navbar-wrapper">
         <!-- Header Section -->
         <div class="sidebar-header">
-            <a href="../dashboard/index.html" class="b-brand text-primary d-flex justify-content-center">
+            <a href="https://utem.edu.my" target="_blank" class="b-brand text-primary d-flex justify-content-center">
                 <img src="../assets/images/logo-utem.PNG" alt="UTEM Logo" width="100" />
             </a>
         </div>
@@ -625,9 +628,6 @@
                     </li>
                 @endif
             </ul>
-
-            <br /> <br /> <br /> <br />
-            <br /> <br /> <br /> <br />
         </div>
     </div>
 </nav>
