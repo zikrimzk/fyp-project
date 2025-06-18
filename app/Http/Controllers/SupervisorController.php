@@ -913,7 +913,7 @@ class SupervisorController extends Controller
             }
 
             return view('staff.supervisor.nomination-management', [
-                'title' => 'Submission Suggestion',
+                'title' => 'Supervisors - Nomination Management',
                 'studs' => Student::all(),
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),

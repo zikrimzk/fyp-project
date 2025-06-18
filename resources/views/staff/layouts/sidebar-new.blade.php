@@ -66,7 +66,7 @@
     .navbar-content {
         background: var(--bs-light-secondary, #f8f9fa);
         flex: 1;
-        overflow-y:unset;
+        overflow-y: unset;
         padding-bottom: 2rem;
     }
 
@@ -112,7 +112,8 @@
     }
 
     .pc-navbar {
-        padding: 0 0 14rem 0; /* Added bottom padding for proper spacing */
+        padding: 0 0 14rem 0;
+        /* Added bottom padding for proper spacing */
         margin: 0;
         list-style: none;
     }
@@ -337,6 +338,30 @@
                     ->distinct()
                     ->get();
 
+                // Examiner/Panel Activities
+                $examinerpanelActivity = DB::table('evaluators as a')
+                    ->join('staff as b', 'a.staff_id', '=', 'b.id')
+                    ->join('nominations as c', 'a.nom_id', '=', 'c.id')
+                    ->join('activities as d', 'c.activity_id', '=', 'd.id')
+                    ->where('b.id', auth()->user()->id)
+                    ->where('a.eva_status', 3)
+                    ->where('a.eva_role', 1)
+                    ->select('d.id as activity_id', 'd.act_name as activity_name')
+                    ->distinct()
+                    ->get();
+
+                // Chairman Activities
+                $chairmanActivity = DB::table('evaluators as a')
+                    ->join('staff as b', 'a.staff_id', '=', 'b.id')
+                    ->join('nominations as c', 'a.nom_id', '=', 'c.id')
+                    ->join('activities as d', 'c.activity_id', '=', 'd.id')
+                    ->where('b.id', auth()->user()->id)
+                    ->where('a.eva_status', 3)
+                    ->where('a.eva_role', 2)
+                    ->select('d.id as activity_id', 'd.act_name as activity_name')
+                    ->distinct()
+                    ->get();
+
                 $higherUps = DB::table('staff')
                     ->where('id', auth()->user()->id)
                     ->whereIn('staff_role', [1, 3, 4])
@@ -486,6 +511,58 @@
                                     <a class="pc-link"
                                         href="{{ route('dean-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
                                         {{ $nom->activity_name }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @endif
+
+                @if ($chairmanActivity->isNotEmpty())
+                    <!-- Chairman Section -->
+                    <li class="pc-item pc-caption">
+                        <label>Chairman</label>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-pen pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Evaluations</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            @foreach ($chairmanActivity as $eval)
+                                <li class="pc-item">
+                                    <a class="pc-link"
+                                        href="{{ route('chairman-evaluation', strtolower(str_replace(' ', '-', $eval->activity_name))) }}">
+                                        {{ $eval->activity_name }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @endif
+
+                @if ($examinerpanelActivity->isNotEmpty())
+                    <!-- Examiner Section -->
+                    <li class="pc-item pc-caption">
+                        <label>Examiner / Panel</label>
+                    </li>
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-pen pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Evaluations</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            @foreach ($examinerpanelActivity as $eval)
+                                <li class="pc-item">
+                                    <a class="pc-link"
+                                        href="{{ route('examiner-panel-evaluation', strtolower(str_replace(' ', '-', $eval->activity_name))) }}">
+                                        {{ $eval->activity_name }}
                                     </a>
                                 </li>
                             @endforeach

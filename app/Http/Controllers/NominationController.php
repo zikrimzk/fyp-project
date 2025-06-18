@@ -12,6 +12,7 @@ use App\Models\Semester;
 use App\Models\Evaluator;
 use App\Models\FormField;
 use App\Models\Programme;
+use App\Models\Evaluation;
 use App\Models\Nomination;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
@@ -209,7 +210,7 @@ class NominationController extends Controller
             }
 
             return view('staff.nomination.committee-nomination-management', [
-                'title' => 'Submission Suggestion',
+                'title' => 'Committee Nomination Management',
                 'studs' => Student::all(),
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
@@ -406,7 +407,7 @@ class NominationController extends Controller
             }
 
             return view('staff.nomination.deputydean-nomination-management', [
-                'title' => 'Submission Suggestion',
+                'title' => 'Deputy Dean - Nomination Management',
                 'studs' => Student::all(),
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
@@ -603,7 +604,7 @@ class NominationController extends Controller
             }
 
             return view('staff.nomination.dean-nomination-management', [
-                'title' => 'Dean -Nomination',
+                'title' => 'Dean - Nomination Management',
                 'studs' => Student::all(),
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
@@ -1048,6 +1049,12 @@ class NominationController extends Controller
                     $nomination->nom_status = 3;
                 } else if ($mode == 3 || $mode == 4) {
                     $nomination->nom_status = 4;
+                    /* ADD RECORD FOR EVALUATION PHASE */
+                    $evaluation = new Evaluation();
+                    $evaluation->student_id = $studentId;
+                    $evaluation->activity_id = $actID;
+                    $evaluation->evaluation_status = 1;
+                    $evaluation->save();
                 } else {
                     $nomination->nom_status = 1;
                 }
@@ -1543,12 +1550,10 @@ class NominationController extends Controller
     {
         $fieldLabel = strtolower($fieldLabel);
 
-        if (str_contains($fieldLabel, 'examiner')) {
-            return 1; // Examiner
-        } elseif (str_contains($fieldLabel, 'panel')) {
-            return 2; // Panel member
+        if (str_contains($fieldLabel, 'examiner') || str_contains($fieldLabel, 'panel')) {
+            return 1; // Examiner 
         } elseif (str_contains($fieldLabel, 'chair')) {
-            return 3; // Chairman
+            return 2; // Chairman
         }
 
         return 1;

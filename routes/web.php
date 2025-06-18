@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SOPController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\NominationController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\SupervisorController;
@@ -256,4 +257,21 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Nomination */
     Route::get('/mysupervision-nomination-{name}', [SupervisorController::class, 'mySupervisionNomination'])->name('my-supervision-nomination');
+
+    
+    // ---------------------------------------------------------------------------------------------------------------------//
+    // ---------------------------------------------- EXAMINER / PANEL -----------------------------------------------------//
+    // ---------------------------------------------------------------------------------------------------------------------//
+
+    // Evaluation
+    Route::get('/examiner-panel-evaluation-{name}', [EvaluationController::class, 'examinerPanelEvaluation'])->name('examiner-panel-evaluation');
+
+
+    // ---------------------------------------------------------------------------------------------------------------------//
+    // -------------------------------------------------- CHAIRMAN ---------------------------------------------------------//
+    // ---------------------------------------------------------------------------------------------------------------------//
+
+    // Evaluation
+    Route::get('/chairman-evaluation-{name}', [EvaluationController::class, 'chairmanEvaluation'])->name('chairman-evaluation');
+
 });

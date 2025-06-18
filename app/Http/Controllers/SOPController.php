@@ -582,11 +582,13 @@ class SOPController extends Controller
 
                 if ($row->form_target == 1) {
                     $target = '<span class="badge bg-yellow-900">' . 'Submission' . '</span>';
-                } elseif ($row->form_target == 2) {
-                    $target = '<span class="badge bg-yellow-600">' . 'Evaluation' . '</span>';
                 } elseif ($row->form_target == 3) {
                     $target = '<span class="badge bg-yellow-300">' . 'Nomination' . '</span>';
-                } else {
+                } elseif ($row->form_target == 4) {
+                    $target = '<span class="badge bg-yellow-600">' . 'Evaluation - Chairman' . '</span>';
+                } elseif ($row->form_target == 5) {
+                    $target = '<span class="badge bg-yellow-500">' . 'Evaluation - Examiner/Panel' . '</span>';
+                }else {
                     $target = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
                 }
 
@@ -651,7 +653,7 @@ class SOPController extends Controller
         $validator = Validator::make($req->all(), [
             'actid' => 'required|integer|exists:activities,id',
             'formTitle'  => 'required',
-            'formTarget' => 'required|in:1,2,3',
+            'formTarget' => 'required|in:1,2,3,4,5',
             'formStatus' => 'required',
         ], [], [
             'actid' => 'activity',

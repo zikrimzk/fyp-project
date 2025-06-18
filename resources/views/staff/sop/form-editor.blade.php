@@ -160,7 +160,7 @@
             }
         }
     </style>
-    
+
 
     <div class="pc-container">
         <div class="pc-content">
@@ -281,8 +281,9 @@
                                                         <select name="select_form_target" class="form-select"
                                                             id="select_form_target" disabled>
                                                             <option value="1">Submission</option>
-                                                            <option value="2">Evaluation</option>
                                                             <option value="3">Nomination</option>
+                                                            <option value="4">Evaluation - Chairman </option>
+                                                            <option value="5">Evaluation - Examiner / Panel</option>
                                                         </select>
                                                         <input type="hidden" id="select_form_target_hidden"
                                                             name="formTarget">
