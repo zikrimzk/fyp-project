@@ -330,7 +330,6 @@
                                     </div>
                                 </div>
                                 <!-- [ Form Preview ] end -->
-
                             </div>
 
                         </div>
@@ -386,6 +385,7 @@
                                         <option value="">-- Select Component --</option>
                                         <option value="text">Text</option>
                                         <option value="textarea">Textarea</option>
+                                        <option value="longtextarea">Long Textarea</option>
                                         <option value="select">Select</option>
                                         <option value="checkbox">Checkbox</option>
                                         <option value="radio">Radio</option>
@@ -422,6 +422,8 @@
                                         <option value="2">Committee</option>
                                         <option value="3">Deputy Dean</option>
                                         <option value="4">Dean</option>
+                                        <option value="5">Examiner / Panel</option>
+                                        <option value="6">Chairman</option>
                                     </select>
                                 </div>
 
@@ -540,7 +542,8 @@
                                         <option value="4">Committee Member</option>
                                         <option value="5">Deputy Dean</option>
                                         <option value="6">Dean</option>
-                                        <option value="7">Committee Member / Deputy Dean / Dean</option>
+                                        <option value="7">Chairman</option>
+                                        <option value="8">Examiner / Panel</option>
                                     </select>
                                 </div>
                             </div>
@@ -935,13 +938,17 @@
                     $('.placeholder-option').hide();
                     $('.required-option').show();
                     $('.append-text').show();
+                } else if (type == 'longtextarea') {
+                    $('.value-options').hide();
+                    $('.placeholder-option').show();
+                    $('.required-option').show();
+                    $('.append-text').show();
                 } else {
                     $('.value-options').hide();
                     $('.placeholder-option').show();
                     $('.required-option').show();
                     $('.append-text').show();
                 }
-
             });
 
             $('#ff_component_required').on('change', function() {

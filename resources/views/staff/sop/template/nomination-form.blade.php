@@ -201,7 +201,6 @@
         margin: 0;
     }
 
-    /* Add to your stylesheet */
     .disabled-field {
         opacity: 0.7;
         background-color: #f9f9f9;
@@ -248,6 +247,69 @@
         font-size: 0.85rem;
         text-align: center;
         margin-top: 5px;
+    }
+
+    .special-label {
+        font-size: 12pt;
+        text-transform: capitalize;
+    }
+
+    .notebook-textarea-container {
+        width: 100%;
+        position: relative;
+        margin-top: 10px;
+    }
+
+    .notebook-textarea {
+        width: 100%;
+        min-height: 1000px;
+        padding: 10px 0px;
+        border: none !important;
+        font-family: Arial, sans-serif;
+        font-size: 12pt;
+        line-height: 2.5;
+        resize: auto;
+        background-color: #fff;
+        box-sizing: border-box;
+        white-space: pre-wrap;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        background-image: repeating-linear-gradient(to bottom,
+                transparent,
+                transparent 39px,
+                /* Matches line-height */
+                rgb(0, 0, 0) 39px,
+                /* Darker lines */
+                rgb(0, 0, 0) 40px
+                /* Line thickness */
+            );
+        background-attachment: scroll !important;
+        background-size: 100% 40px;
+    }
+
+    .notebook-textarea:focus {
+        outline: none;
+        /* Slightly darker lines when focused */
+        background-image: repeating-linear-gradient(to bottom,
+                transparent,
+                transparent 39px,
+                rgb(0, 0, 0) 39px,
+                rgb(0, 0, 0) 40px);
+    }
+
+    .notebook-textarea[required], {
+        border-left: 1px solid #ff6b6b !important;
+    }
+
+    /* Disabled state styling */
+    .notebook-textarea:disabled {
+        background-color: #f8f9fa;
+        background-image: repeating-linear-gradient(to bottom,
+                transparent,
+                transparent 39px,
+                rgba(0, 0, 0, 0.1) 39px,
+                rgba(0, 0, 0, 0.1) 40px);
+        color: #6c757d;
     }
 
     @media only screen and (max-width: 768px) {
@@ -346,6 +408,22 @@
             display: inline-block;
             margin-left: 3px;
         }
+
+        .notebook-textarea {
+            min-height: 300px;
+            /* Smaller minimum height on mobile */
+            font-size: 11pt;
+            line-height: 2.2;
+            background-image: repeating-linear-gradient(to bottom,
+                    transparent,
+                    transparent 35px,
+                    rgba(0, 0, 0, 0.2) 35px,
+                    rgba(0, 0, 0, 0.2) 36px);
+            background-size: 100% 36px;
+            padding-left: 15px;
+        }
+
+
     }
 </style>
 
@@ -382,7 +460,7 @@
         @php
             $ff = $formfields[$i];
         @endphp
-        @if ($ff->ff_category == 1)
+        @if ($ff->ff_category == 1 && $ff->ff_component_type == 'longtextarea')
             <!-- CATEGORY : INPUT -->
             @php
                 $component = strtolower($ff->ff_component_type);
@@ -409,6 +487,66 @@
                     2 => 'committee',
                     3 => 'deputy dean',
                     4 => 'dean',
+                    5 => 'examiner/panel',
+                    6 => 'chairman',
+                ];
+
+            @endphp
+            <tr data-required-role="{{ $ff->ff_component_required_role }}"
+                class="{{ $shouldDisable ? 'disabled-field' : '' }}">
+                <td colspan="3">
+                    <div class="long-textarea-field special-label">
+                        <label for="{{ $key }}" style="">
+                            {{ $ff->ff_label }}
+                            <span class="isrequired">{{ $ff->ff_component_required == 1 ? '*' : '' }}</span>
+                            <small class="append-text">{{ $ff->ff_append_text ?? '' }}</small>
+                        </label>
+                        <div class="notebook-textarea-container">
+                            <textarea id="{{ $key }}" name="{{ $key }}" class="notebook-textarea"
+                                placeholder="{{ $placeholder }}" {{ $requiredAttr }} {{ $disabledAttr }}>{{ e($value) }}</textarea>
+                        </div>
+                        @if ($shouldDisable)
+                            <div class="field-disabled-note mt-1">
+                                <small class="text-muted">
+                                    <i class="ti ti-lock me-1"></i>
+                                    This field can only be filled by
+                                    {{ $roleNames[$ff->ff_component_required_role] ?? 'authorized role' }}
+                                </small>
+                            </div>
+                        @endif
+                    </div>
+                </td>
+            </tr>
+            @php $i++; @endphp
+        @elseif ($ff->ff_category == 1)
+            <!-- CATEGORY : INPUT -->
+            @php
+                $component = strtolower($ff->ff_component_type);
+                $key = str_replace(' ', '_', strtolower($ff->ff_label));
+                $value = old($key, $userData[$key] ?? '');
+                $placeholder = $ff->ff_placeholder ?? '';
+
+                // Get required role as integer
+                $requiredRole = $ff->ff_component_required_role;
+
+                // Check if field is required for current mode
+                $isRequired = $ff->ff_component_required == 1 && ($requiredRole == 0 || $requiredRole == $currentMode);
+
+                // Determine if field should be disabled
+                $shouldDisable = $requiredRole != 0 && $requiredRole != $currentMode;
+                $disabledAttr = $shouldDisable ? 'disabled' : '';
+                $requiredAttr = $isRequired && !$shouldDisable ? 'required' : '';
+                // dd($shouldDisable, $disabledAttr, $isRequired, $requiredAttr);
+
+                // Role names for display
+                $roleNames = [
+                    0 => 'all',
+                    1 => 'supervisors',
+                    2 => 'committee',
+                    3 => 'deputy dean',
+                    4 => 'dean',
+                    5 => 'examiner/panel',
+                    6 => 'chairman',
                 ];
 
                 $options = [];
@@ -596,6 +734,8 @@
                                             $shouldDisableSig = false;
                                         } elseif ($currentMode == 4 && $sigKey == 'dean_signature') {
                                             $shouldDisableSig = false;
+                                        } elseif ($currentMode == 6) {
+                                            $shouldDisableSig = false;
                                         }
 
                                         $sigRoleNames = [
@@ -604,6 +744,7 @@
                                             'comm_signature' => 'Committee',
                                             'deputy_dean_signature' => 'Deputy Dean',
                                             'dean_signature' => 'Dean',
+                                            'chairman_signature' => 'chairman',
                                         ];
                                     @endphp
                                     <td
@@ -634,7 +775,8 @@
                                                             data-role="{{ $sigKey }}"
                                                             @if ($shouldDisableSig) disabled @endif>
                                                         </canvas>
-                                                        <input type="hidden" name="signatureData[{{ $sigKey }}]"
+                                                        <input type="hidden"
+                                                            name="signatureData[{{ $sigKey }}]"
                                                             id="signatureData-{{ $sigId }}"
                                                             @if ($shouldDisableSig) disabled @endif>
                                                     </div>
@@ -673,6 +815,10 @@
         @endif
     @endwhile
 </table>
+
+<script>
+    
+</script>
 
 
 {{-- @php

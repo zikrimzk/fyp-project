@@ -149,6 +149,12 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/view-nomination-form', [NominationController::class, 'viewNominationForm'])->name('view-nomination-form-get');
     Route::post('/submit-nomination-{studentId}-{mode}', [NominationController::class, 'submitNomination'])->name('submit-nomination-post');
 
+    // Evaluation
+    Route::get('/evaluation-{studentId}-{actId}-{mode}', [EvaluationController::class, 'evaluationStudent'])->name('evaluation-student');
+    Route::get('/view-evaluation-form', [EvaluationController::class, 'viewEvaluationForm'])->name('view-evaluation-form-get');
+    Route::post('/submit-evaluation-{studentId}-{mode}', [EvaluationController::class, 'submitEvaluation'])->name('submit-evaluation-post');
+
+
     // Standard Operation Procedure (SOP)
 
     /* Activity + Document Setting */

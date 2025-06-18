@@ -213,6 +213,36 @@
         p {
             margin: 0;
         }
+
+        .long-textarea-notebook {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 20px;
+            border: 1px solid #999;
+            padding: 10px;
+            background-color: #fff;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 60px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .long-textarea-notebook::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(to bottom, transparent, transparent 23px, #151313 24px);
+            z-index: 0;
+        }
+
+        .long-textarea-notebook {
+            position: relative;
+            z-index: 1;
+        }
     </style>
 </head>
 
@@ -241,7 +271,7 @@
     </div>
 
     <!-- Student Info [ Dynamic Field Here ] -->
-    <table class="info-table">
+    <table class="info-table" style="page-break-inside:unset; page-break-after: unset;">
         @php
             $i = 0;
             $total = count($formfields);
@@ -291,6 +321,25 @@
                         </td>
                     </tr>
                 @endforeach
+            @elseif ($ff->ff_category == 1 && $ff->ff_component_type == 'longtextarea')
+                @php
+                    $key = str_replace(' ', '_', strtolower($ff->ff_label));
+                    $value = old($key, $userData[$key] ?? '');
+                    $required = $ff->ff_component_required == 1 ? 'required' : '';
+                @endphp
+                <tr>
+                    <td colspan="3">
+                        <div class="long-textarea-field">
+                            <label for="{{ $key }}">
+                                {{ $ff->ff_label }}
+                                <span class="isrequired">{{ $ff->ff_component_required == 1 ? '*' : '' }}</span>
+                                <small class="append-text">{{ $ff->ff_append_text ?? '' }}</small>
+                            </label>
+                            <pre class="long-textarea-notebook">{{ $value }}</pre>
+                        </div>
+                    </td>
+                </tr>
+                @php $i++; @endphp
             @elseif ($ff->ff_category == 1)
                 <!-- CATEGORY : INPUT -->
                 @php
@@ -428,10 +477,6 @@
                 @php $i++; @endphp
             @endif
         @endwhile
-
-
-
-
     </table>
 
 

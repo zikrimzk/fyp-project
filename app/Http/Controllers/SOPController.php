@@ -588,7 +588,7 @@ class SOPController extends Controller
                     $target = '<span class="badge bg-yellow-600">' . 'Evaluation - Chairman' . '</span>';
                 } elseif ($row->form_target == 5) {
                     $target = '<span class="badge bg-yellow-500">' . 'Evaluation - Examiner/Panel' . '</span>';
-                }else {
+                } else {
                     $target = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
                 }
 
@@ -771,6 +771,11 @@ class SOPController extends Controller
 
             ]);
 
+            $pdf->set_option('isPhpEnabled', true);
+            $pdf->set_option('isHtml5ParserEnabled', true);
+            $pdf->set_option('isFontSubsettingEnabled', true);
+            $pdf->setPaper('A4', 'portrait');
+
             return $pdf->stream(strtoupper(str_replace(' ', '_', $actform->af_title)) . '.pdf');
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()]);
@@ -944,8 +949,12 @@ class SOPController extends Controller
                     $signature_key = 'dean_signature';
                     $signature_date_key = 'dean_signature_date';
                 } else if ($userRole == 7) {
-                    $signature_key = 'higherUps_signature';
-                    $signature_date_key = 'higherUps_signature_date';
+                    $signature_key = 'chairman_signature';
+                    $signature_date_key = 'chairman_signature_date';
+                } else if ($userRole == 8) {
+                    $name = strtolower(str_replace(' ', '_', $validated['ff_label']));
+                    $signature_key =  $name . '_signature';
+                    $signature_date_key = $name . '_signature_date';
                 }
             }
 
@@ -1063,8 +1072,12 @@ class SOPController extends Controller
                     $signature_key = 'dean_signature';
                     $signature_date_key = 'dean_signature_date';
                 } else if ($userRole == 7) {
-                    $signature_key = 'higherUps_signature';
-                    $signature_date_key = 'higherUps_signature_date';
+                    $signature_key = 'chairman_signature';
+                    $signature_date_key = 'chairman_signature_date';
+                } else if ($userRole == 8) {
+                    $name = strtolower(str_replace(' ', '_', $validated['ff_label']));
+                    $signature_key =  $name . '_signature';
+                    $signature_date_key = $name . '_signature_date';
                 }
             }
 
