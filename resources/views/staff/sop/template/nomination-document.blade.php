@@ -69,7 +69,6 @@
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 30px 0 20px;
         }
 
         .info-table td {
@@ -276,6 +275,33 @@
         .signature-disabled-note {
             display: none !important;
         }
+
+        .special-label {
+            font-size: 12pt;
+
+        }
+
+        .long-textarea-block {
+            page-break-inside: auto;
+            break-inside: auto;
+            -webkit-column-break-inside: auto;
+            margin-bottom: 0;
+            margin-top: 10px;
+        }
+
+        .notebook-textarea-container {
+            border: none;
+            padding: 0;
+            min-height: 10px;
+        }
+
+        .report-text {
+            white-space:pre-line;
+            word-wrap: break-word;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            line-height: 1.5;
+        }
     </style>
 </head>
 
@@ -314,244 +340,229 @@
             @php
                 $ff = $formfields[$i];
             @endphp
-            @if ($ff->ff_category == 1)
-                <!-- CATEGORY : INPUT -->
+            @if ($ff->ff_category == 1 && $ff->ff_component_type == 'longtextarea')
                 @php
-                    $component = strtolower($ff->ff_component_type);
-                    $key = str_replace(' ', '_', strtolower($ff->ff_label));
+                    $key = Str::slug($ff->ff_label, '_');
                     $value = old($key, $userData[$key] ?? '');
-                    $placeholder = $ff->ff_placeholder ?? '';
-
-                    // Get required role as integer
-                    $requiredRole = $ff->ff_component_required_role;
-
-                    // Check if field is required for current mode
-                    $isRequired =
-                        $ff->ff_component_required == 1 && ($requiredRole == 0 || $requiredRole == $currentMode);
-
-                    // Determine if field should be disabled
-                    $shouldDisable = $requiredRole != 0 && $requiredRole != $currentMode;
-                    $disabledAttr = $shouldDisable ? 'disabled' : '';
-                    $requiredAttr = $isRequired && !$shouldDisable ? 'required' : '';
-                    // dd($shouldDisable, $disabledAttr, $isRequired, $requiredAttr);
-
-                    // Role names for display
-                    $roleNames = [
-                        0 => 'all',
-                        1 => 'supervisors',
-                        2 => 'committee',
-                        3 => 'deputy dean',
-                        4 => 'dean',
-                    ];
-
-                    $options = [];
-
-                    if (str_contains($ff->ff_value_options, '{"table":')) {
-                        $optionsData = json_decode($ff->ff_value_options, true);
-                        $options = DB::table($optionsData['table'])
-                            ->select($optionsData['column'])
-                            ->distinct()
-                            ->pluck($optionsData['column'])
-                            ->toArray();
-                    } else {
-                        $options = json_decode($ff->ff_value_options, true);
-                        if (!is_array($options)) {
-                            $options = preg_split('/\r\n|\r|\n/', $ff->ff_value_options);
-                        }
-                    }
                 @endphp
-                <tr data-required-role="{{ $requiredRole }}" class="{{ $shouldDisable ? 'disabled-field' : '' }}">
-                    <td class="label">
-                        {{ $ff->ff_label }}
-                        <span class="isrequired">{{ $isRequired && !$shouldDisable ? '*' : '' }}</span>
-                        <small class="append-text">{{ $ff->ff_append_text ?? '' }}</small>
-                    </td>
-                    <td class="colon">:</td>
-                    <td class="value-input">
-                        @switch($component)
-                            @case('text')
-                                <input type="text" id="{{ $key }}" name="{{ $key }}"
-                                    value="{{ e($value) }}" placeholder="{{ $placeholder }}" {{ $requiredAttr }}
-                                    {{ $disabledAttr }}>
-                            @break
+    </table>
+    <div class="long-textarea-block">
+        <div class="long-textarea-field special-label">
+            <label for="{{ $key }}">
+                {{ $ff->ff_label }}
+                <small class="append-text">{{ $ff->ff_append_text ?? '' }}</small>
+            </label>
 
-                            @case('textarea')
-                                <textarea id="{{ $key }}" name="{{ $key }}" placeholder="{{ $placeholder }}" {{ $requiredAttr }}
-                                    {{ $disabledAttr }}>{{ e($value) }}</textarea>
-                            @break
+            <div class="notebook-textarea-container">
+                <div id="{{ $key }}" class="report-text">
+                    {!! $value !!}
+                </div>
+            </div>
+        </div>
+    </div>
 
-                            @case('select')
-                                @if ($options && count($options) > 0)
-                                    <select id="{{ $key }}" name="{{ $key }}" {{ $requiredAttr }}
-                                        {{ $disabledAttr }}>
-                                        <option value="">-- Select --</option>
-                                        @foreach ($options as $opt)
-                                            <option value="{{ e($opt) }}" @selected($opt == $value)>
-                                                {{ e($opt) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                @else
-                                    <p>No options available</p>
-                                @endif
-                            @break
+    <table class="info-table">
+        @php $i++; @endphp
+    @elseif ($ff->ff_category == 1)
+        <!-- CATEGORY : INPUT -->
+        @php
+            $component = strtolower($ff->ff_component_type);
+            $key = str_replace(' ', '_', strtolower($ff->ff_label));
+            $value = old($key, $userData[$key] ?? '');
+            $placeholder = $ff->ff_placeholder ?? '';
 
-                            @case('radio')
-                                @if ($options && count($options) > 0)
-                                    <div class="option-group">
-                                        @foreach ($options as $opt)
-                                            <label class="{{ $shouldDisable ? 'disabled-option' : '' }}">
-                                                <input type="radio" name="{{ $key }}" value="{{ e($opt) }}"
-                                                    @checked($opt == $value) {{ $requiredAttr }} {{ $disabledAttr }}>
-                                                {{ e($opt) }}
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <p>No options available</p>
-                                @endif
-                            @break
+            $options = [];
 
-                            @case('checkbox')
-                                @php
-                                    $checkedValues = is_array($value) ? $value : explode(', ', $value);
-                                @endphp
-                                @if ($options && count($options) > 0)
-                                    <div class="option-group"
-                                        data-required-group="{{ $isRequired && !$shouldDisable ? 'true' : 'false' }}">
-                                        @foreach ($options as $opt)
-                                            <label class="{{ $shouldDisable ? 'disabled-option' : '' }}">
-                                                <input type="checkbox" name="{{ $key }}[]"
-                                                    value="{{ e($opt) }}" @checked(in_array(trim($opt), $checkedValues))
-                                                    {{ $disabledAttr }}>
-                                                {{ e($opt) }}
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <p>No options available</p>
-                                @endif
-                            @break
+            if (str_contains($ff->ff_value_options, '{"table":')) {
+                $optionsData = json_decode($ff->ff_value_options, true);
+                $options = DB::table($optionsData['table'])
+                    ->select($optionsData['column'])
+                    ->distinct()
+                    ->pluck($optionsData['column'])
+                    ->toArray();
+            } else {
+                $options = json_decode($ff->ff_value_options, true);
+                if (!is_array($options)) {
+                    $options = preg_split('/\r\n|\r|\n/', $ff->ff_value_options);
+                }
+            }
+        @endphp
+        <tr>
+            <td class="label">
+                {{ $ff->ff_label }}
+                <small class="append-text">{{ $ff->ff_append_text ?? '' }}</small>
+            </td>
+            <td class="colon">:</td>
+            <td class="value-input">
+                @switch($component)
+                    @case('text')
+                        <input type="text" id="{{ $key }}" name="{{ $key }}" value="{{ e($value) }}"
+                            placeholder="{{ $placeholder }}">
+                    @break
 
-                            @case('date')
-                                <input type="date" id="{{ $key }}" name="{{ $key }}"
-                                    value="{{ e($value) }}" {{ $requiredAttr }} {{ $disabledAttr }}>
-                            @break
+                    @case('textarea')
+                        <textarea id="{{ $key }}" name="{{ $key }}" placeholder="{{ $placeholder }}">{{ e($value) }}</textarea>
+                    @break
 
-                            @case('datetime-local')
-                                <input type="datetime-local" id="{{ $key }}" name="{{ $key }}"
-                                    value="{{ e($value) }}" {{ $requiredAttr }} {{ $disabledAttr }}>
-                            @break
-
-                            @default
-                                <input type="text" id="{{ $key }}" name="{{ $key }}"
-                                    value="{{ e($value) }}" placeholder="{{ $placeholder }}" {{ $requiredAttr }}
-                                    {{ $disabledAttr }}>
-                        @endswitch
-
-                        @if ($shouldDisable)
-                            <div class="field-disabled-note mt-1">
-                                <small class="text-muted">
-                                    <i class="ti ti-lock me-1"></i>
-                                    This field can only be filled by {{ $requiredRole }}
-                                </small>
-                            </div>
+                    @case('select')
+                        @if ($options && count($options) > 0)
+                            <select id="{{ $key }}" name="{{ $key }}">
+                                <option value="">-- Select --</option>
+                                @foreach ($options as $opt)
+                                    <option value="{{ e($opt) }}" @selected($opt == $value)>
+                                        {{ e($opt) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            <p>No options available</p>
                         @endif
-                    </td>
-                </tr>
-                @php $i++; @endphp
-            @elseif($ff->ff_category == 2)
-                <!-- CATEGORY : OUTPUT -->
-                @php
-                    $key = str_replace(' ', '_', strtolower($ff->ff_label));
-                    $value = $userData[$key] ?? '-';
-                @endphp
-                <tr>
-                    <td class="label">{{ $ff->ff_label }}</td>
-                    <td class="colon">:</td>
-                    <td class="value">{!! $value !!}</td>
-                </tr>
-                @php $i++; @endphp
-            @elseif($ff->ff_category == 3)
-                <!-- CATEGORY : SECTION -->
-                <tr>
-                    <td colspan ="3">
-                        <div class="section-header">{{ $ff->ff_label }}</div>
-                    </td>
-                </tr>
-                @php $i++; @endphp
-            @elseif($ff->ff_category == 4)
-                <!-- CATEGORY : TEXT -->
-                <tr>
-                    <td colspan ="3">
-                        {!! $ff->ff_label !!}
-                    </td>
-                </tr>
-                @php $i++; @endphp
-            @elseif ($ff->ff_category == 6)
-                @php
-                    $signatureGroup = collect();
-                    while ($i < $total && $formfields[$i]->ff_category == 6) {
-                        $signatureGroup->push($formfields[$i]);
-                        $i++;
-                    }
-                    $signatureChunks = $signatureGroup->chunk(3);
-                @endphp
+                    @break
 
-                @foreach ($signatureChunks as $chunk)
-                    <tr>
-                        <td colspan="3">
-                            <table class="signature-table clean-signature">
-                                <tr>
-                                    @foreach ($chunk as $sig)
-                                        @if (
-                                            $signatureData &&
-                                                $sig->ff_signature_key &&
-                                                isset($signatureData->{$sig->ff_signature_key . '_is_cross_approval'}) &&
-                                                $signatureData->{$sig->ff_signature_key . '_is_cross_approval'})
-                                            <td class="signature-cell">
-                                                <div class="signature-box-clean-text">
-                                                    Approved by
-                                                    {{ $signatureData->{$sig->ff_signature_key . '_role'} ?? '-' }}
-                                                </div>
-                                                <div class="signature-label-clean">
-                                                    {{ $sig->ff_label }}
-                                                </div>
-                                                <div class="signature-date-clean">
-                                                    <span class="name-label">
-                                                        {{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key . '_name'}) ? $signatureData->{$sig->ff_signature_key . '_name'} : '( NAME_OF_APPROVER )' }}
-                                                    </span>
-                                                    <span class="date-label">
-                                                        {{ $signatureData && $sig->ff_signature_date_key && isset($signatureData->{$sig->ff_signature_date_key}) ? $signatureData->{$sig->ff_signature_date_key} : '( DATE_OF_APPROVAL )' }}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        @else
-                                            <td class="signature-cell">
-                                                <div class="signature-box-clean">
-                                                    <img src="{{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key}) ? $signatureData->{$sig->ff_signature_key} : '' }}"
-                                                        class="signature-img-clean">
-                                                </div>
-                                                <div class="signature-label-clean">
-                                                    {{ $sig->ff_label }}
-                                                </div>
-                                                <div class="signature-date-clean">
-                                                    <span class="name-label">
-                                                        {{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key . '_name'}) ? $signatureData->{$sig->ff_signature_key . '_name'} : '( NAME_OF_APPROVER )' }}
-                                                    </span>
-                                                    <span class="date-label">
-                                                        {{ $signatureData && $sig->ff_signature_date_key && isset($signatureData->{$sig->ff_signature_date_key}) ? $signatureData->{$sig->ff_signature_date_key} : '( DATE_OF_APPROVAL )' }}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        @endif
-                                    @endforeach
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                @endforeach
-            @endif
+                    @case('radio')
+                        @if ($options && count($options) > 0)
+                            <div class="option-group">
+                                @foreach ($options as $opt)
+                                    <label>
+                                        <input type="radio" name="{{ $key }}" value="{{ e($opt) }}"
+                                            @checked($opt == $value)>
+                                        {{ e($opt) }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        @else
+                            <p>No options available</p>
+                        @endif
+                    @break
+
+                    @case('checkbox')
+                        @php
+                            $checkedValues = is_array($value) ? $value : explode(', ', $value);
+                        @endphp
+                        @if ($options && count($options) > 0)
+                            <div class="option-group">
+                                @foreach ($options as $opt)
+                                    <label>
+                                        <input type="checkbox" name="{{ $key }}[]" value="{{ e($opt) }}"
+                                            @checked(in_array(trim($opt), $checkedValues))>
+                                        {{ e($opt) }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        @else
+                            <p>No options available</p>
+                        @endif
+                    @break
+
+                    @case('date')
+                        <input type="date" id="{{ $key }}" name="{{ $key }}"
+                            value="{{ e($value) }}">
+                    @break
+
+                    @case('datetime-local')
+                        <input type="datetime-local" id="{{ $key }}" name="{{ $key }}"
+                            value="{{ e($value) }}">
+                    @break
+
+                    @default
+                        <input type="text" id="{{ $key }}" name="{{ $key }}" value="{{ e($value) }}"
+                            placeholder="{{ $placeholder }}">
+                @endswitch
+            </td>
+        </tr>
+        @php $i++; @endphp
+    @elseif($ff->ff_category == 2)
+        <!-- CATEGORY : OUTPUT -->
+        @php
+            $key = str_replace(' ', '_', strtolower($ff->ff_label));
+            $value = $userData[$key] ?? '-';
+        @endphp
+        <tr>
+            <td class="label">{{ $ff->ff_label }}</td>
+            <td class="colon">:</td>
+            <td class="value">{!! $value !!}</td>
+        </tr>
+        @php $i++; @endphp
+    @elseif($ff->ff_category == 3)
+        <!-- CATEGORY : SECTION -->
+        <tr>
+            <td colspan ="3">
+                <div class="section-header">{{ $ff->ff_label }}</div>
+            </td>
+        </tr>
+        @php $i++; @endphp
+    @elseif($ff->ff_category == 4)
+        <!-- CATEGORY : TEXT -->
+        <tr>
+            <td colspan ="3">
+                {!! $ff->ff_label !!}
+            </td>
+        </tr>
+        @php $i++; @endphp
+    @elseif ($ff->ff_category == 6)
+        @php
+            $signatureGroup = collect();
+            while ($i < $total && $formfields[$i]->ff_category == 6) {
+                $signatureGroup->push($formfields[$i]);
+                $i++;
+            }
+            $signatureChunks = $signatureGroup->chunk(3);
+        @endphp
+
+        @foreach ($signatureChunks as $chunk)
+            <tr>
+                <td colspan="3">
+                    <table class="signature-table clean-signature">
+                        <tr>
+                            @foreach ($chunk as $sig)
+                                @if (
+                                    $signatureData &&
+                                        $sig->ff_signature_key &&
+                                        isset($signatureData->{$sig->ff_signature_key . '_is_cross_approval'}) &&
+                                        $signatureData->{$sig->ff_signature_key . '_is_cross_approval'})
+                                    <td class="signature-cell">
+                                        <div class="signature-box-clean-text">
+                                            Approved by
+                                            {{ $signatureData->{$sig->ff_signature_key . '_role'} ?? '-' }}
+                                        </div>
+                                        <div class="signature-label-clean">
+                                            {{ $sig->ff_label }}
+                                        </div>
+                                        <div class="signature-date-clean">
+                                            <span class="name-label">
+                                                {{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key . '_name'}) ? $signatureData->{$sig->ff_signature_key . '_name'} : '( NAME_OF_APPROVER )' }}
+                                            </span>
+                                            <span class="date-label">
+                                                {{ $signatureData && $sig->ff_signature_date_key && isset($signatureData->{$sig->ff_signature_date_key}) ? $signatureData->{$sig->ff_signature_date_key} : '( DATE_OF_APPROVAL )' }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                @else
+                                    <td class="signature-cell">
+                                        <div class="signature-box-clean">
+                                            <img src="{{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key}) ? $signatureData->{$sig->ff_signature_key} : '' }}"
+                                                class="signature-img-clean">
+                                        </div>
+                                        <div class="signature-label-clean">
+                                            {{ $sig->ff_label }}
+                                        </div>
+                                        <div class="signature-date-clean">
+                                            <span class="name-label">
+                                                {{ $signatureData && $sig->ff_signature_key && isset($signatureData->{$sig->ff_signature_key . '_name'}) ? $signatureData->{$sig->ff_signature_key . '_name'} : '( NAME_OF_APPROVER )' }}
+                                            </span>
+                                            <span class="date-label">
+                                                {{ $signatureData && $sig->ff_signature_date_key && isset($signatureData->{$sig->ff_signature_date_key}) ? $signatureData->{$sig->ff_signature_date_key} : '( DATE_OF_APPROVAL )' }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                @endif
+                            @endforeach
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        @endforeach
+        @endif
         @endwhile
     </table>
 

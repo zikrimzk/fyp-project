@@ -232,6 +232,38 @@
             $('form').submit();
         });
 
+        $('.notebook-container').each(function() {
+            const container = $(this);
+            const linesContainer = container.find('.notebook-lines');
+            const textarea = container.find('.notebook-textarea');
+
+            function generateLines() {
+                const lineHeight = parseInt(textarea.css('line-height'));
+                const containerHeight = container.height();
+                const lineCount = Math.ceil(containerHeight / lineHeight) + 20; // extra lines
+                linesContainer.empty();
+                for (let i = 0; i < lineCount; i++) {
+                    $('<div>')
+                        .css({
+                            'border-bottom': '1px solid #000',
+                            'height': (lineHeight - 1) + 'px'
+                        })
+                        .appendTo(linesContainer);
+                }
+            }
+
+            // Initial render
+            generateLines();
+
+            // Regenerate on window resize
+            $(window).on('resize', generateLines);
+
+            // Sync scroll
+            container.on('scroll', function() {
+                linesContainer.css('transform', `translateY(-${container.scrollTop()}px)`);
+            });
+        });
+
         $('form').on('submit', function(e) {
             const mode = "{{ $mode }}";
             let isValid = true;
@@ -320,11 +352,11 @@
                     if (fullMessage) fullMessage += '\n\n';
                     fullMessage += 'Signature:\n- ' + errorMessages.join('\n- ');
                 }
-                
+
                 if (fullMessage) {
                     if (typeof showToast === 'function') {
                         showToast('danger', fullMessage, {
-                            duration: 10000, 
+                            duration: 10000,
                             position: 'top-right'
                         });
 

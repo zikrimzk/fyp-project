@@ -16,4 +16,9 @@ class Evaluator extends Model
         'staff_id',
         'nom_id'
     ];
+
+    public function staff()
+    {
+        return $this->belongsTo(Staff::class, 'staff_id');
+    }
 }

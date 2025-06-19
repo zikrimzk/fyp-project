@@ -251,66 +251,51 @@
     }
 
     .special-label {
+        display: block;
         font-size: 12pt;
-        text-transform: capitalize;
     }
 
-    .notebook-textarea-container {
-        width: 100%;
+    .special-label label {
+        margin-bottom: 10px;
+    }
+
+
+    .notebook-container {
         position: relative;
-        margin-top: 10px;
+        width: 100%;
+        height: 600px;
+        border: 1px solid #ccc;
+        overflow: auto;
+        background-color: #fff;
+    }
+
+    .notebook-lines {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        pointer-events: none;
     }
 
     .notebook-textarea {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
-        min-height: 1000px;
-        padding: 10px 0px;
-        border: none !important;
+        height: 100%;
+        padding: 10px;
+        border: none;
+        background: transparent;
         font-family: Arial, sans-serif;
         font-size: 12pt;
-        line-height: 2.5;
-        resize: auto;
-        background-color: #fff;
-        box-sizing: border-box;
-        white-space: pre-wrap;
-        overflow-y: scroll;
-        overflow-x: hidden;
-        background-image: repeating-linear-gradient(to bottom,
-                transparent,
-                transparent 39px,
-                /* Matches line-height */
-                rgb(0, 0, 0) 39px,
-                /* Darker lines */
-                rgb(0, 0, 0) 40px
-                /* Line thickness */
-            );
-        background-attachment: scroll !important;
-        background-size: 100% 40px;
+        line-height: 40px;
+        resize: none;
+        overflow: auto;
     }
 
     .notebook-textarea:focus {
         outline: none;
-        /* Slightly darker lines when focused */
-        background-image: repeating-linear-gradient(to bottom,
-                transparent,
-                transparent 39px,
-                rgb(0, 0, 0) 39px,
-                rgb(0, 0, 0) 40px);
-    }
-
-    .notebook-textarea[required] {
-        border-left: 1px solid #ff6b6b !important;
-    }
-
-    /* Disabled state styling */
-    .notebook-textarea:disabled {
-        background-color: #f8f9fa;
-        background-image: repeating-linear-gradient(to bottom,
-                transparent,
-                transparent 39px,
-                rgba(0, 0, 0, 0.1) 39px,
-                rgba(0, 0, 0, 0.1) 40px);
-        color: #6c757d;
     }
 
     @media only screen and (max-width: 768px) {
@@ -410,21 +395,62 @@
             margin-left: 3px;
         }
 
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="date"],
+        input[type="datetime-local"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            font-size: 11pt;
+            padding: 10px;
+        }
+
+        .value-input input,
+        .value-input textarea,
+        .value-input select {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* For radio and checkbox - make tap-friendly */
+        input[type="radio"],
+        input[type="checkbox"] {
+            display: inline-block;
+            margin: 0;
+        }
+
+        .option-group label {
+            font-size: 11pt;
+            margin: 4px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* For labels before inputs */
+        label {
+            font-size: 11pt;
+            margin-bottom: 5px;
+        }
+
+        /* Specific for signature canvas */
+        .signature-canvas {
+            width: 100% !important;
+            height: 150px !important;
+        }
+
+        /* Notebook textarea mobile adjustments */
         .notebook-textarea {
             min-height: 300px;
-            /* Smaller minimum height on mobile */
             font-size: 11pt;
             line-height: 2.2;
-            background-image: repeating-linear-gradient(to bottom,
-                    transparent,
-                    transparent 35px,
-                    rgba(0, 0, 0, 0.2) 35px,
-                    rgba(0, 0, 0, 0.2) 36px);
             background-size: 100% 36px;
             padding-left: 15px;
         }
-
-
     }
 </style>
 
@@ -496,13 +522,14 @@
                 class="{{ $shouldDisable ? 'disabled-field' : '' }}">
                 <td colspan="3">
                     <div class="long-textarea-field special-label">
-                        <label for="{{ $key }}" style="">
+                        <label for="{{ $key }}">
                             {{ $ff->ff_label }}
                             <span class="isrequired">{{ $ff->ff_component_required == 1 ? '*' : '' }}</span>
                             <small class="append-text">{{ $ff->ff_append_text ?? '' }}</small>
                         </label>
-                        <div class="notebook-textarea-container">
-                            <textarea id="{{ $key }}" name="{{ $key }}" class="notebook-textarea"
+                        <div class="notebook-container">
+                            <div class="notebook-lines"></div>
+                            <textarea class="notebook-textarea" id="{{ $key }}" name="{{ $key }}"
                                 placeholder="{{ $placeholder }}" {{ $requiredAttr }} {{ $disabledAttr }}>{{ e($value) }}</textarea>
                         </div>
                         @if ($shouldDisable)
