@@ -1049,12 +1049,18 @@ class NominationController extends Controller
                     $nomination->nom_status = 3;
                 } else if ($mode == 3 || $mode == 4) {
                     $nomination->nom_status = 4;
+
+                    $evaluator = Evaluator::where('nom_id', $nomination->id)->where('eva_status', 3)->get();
+                    
                     /* ADD RECORD FOR EVALUATION PHASE */
-                    $evaluation = new Evaluation();
-                    $evaluation->student_id = $studentId;
-                    $evaluation->activity_id = $actID;
-                    $evaluation->evaluation_status = 1;
-                    $evaluation->save();
+                    foreach ($evaluator as $eva) {
+                        $evaluation = new Evaluation();
+                        $evaluation->student_id = $studentId;
+                        $evaluation->staff_id = $eva->staff_id;
+                        $evaluation->activity_id = $actID;
+                        $evaluation->evaluation_status = 1;
+                        $evaluation->save();
+                    }
                 } else {
                     $nomination->nom_status = 1;
                 }

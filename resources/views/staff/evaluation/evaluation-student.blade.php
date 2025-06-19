@@ -87,8 +87,7 @@
                                 @if ($mode == 3 || $mode == 4)
                                     <button type="submit" id="rejectBtn" class="btn btn-danger">Reject Nomination</button>
                                 @endif
-                                <button type="submit" id= "submitBtn" class="btn btn-primary">Confirm & Submit
-                                    Nomination</button>
+                                <button type="submit" id= "submitBtn" class="btn btn-primary">Submit Evaluation</button>
                             </div>
                         </div>
                     </form>
@@ -193,7 +192,7 @@
         /*********************************************************/
         function getNominationForm() {
             $.ajax({
-                url: "{{ route('view-nomination-form-get') }}",
+                url: "{{ route('view-evaluation-form-get') }}",
                 type: "GET",
                 data: {
                     _token: "{{ csrf_token() }}",
@@ -273,6 +272,8 @@
                 }
             });
 
+             const examinerSignatureKeys = @json($examinerSign->pluck('ff_signature_key')->toArray());
+
             // ==============================================
             // 2. Validate signatures (unchanged)
             // ==============================================
@@ -292,7 +293,9 @@
                     isSignatureRequired = true;
                 } else if (mode == 4 && sigRole == "dean_signature") {
                     isSignatureRequired = true;
-                } else if (mode == 5 || mode == 6) {
+                } else if (mode == 5 && examinerSignatureKeys.includes(sigRole)) {
+                    isSignatureRequired = true;
+                } else if (mode == 6) {
                     isSignatureRequired = true;
                 }
 

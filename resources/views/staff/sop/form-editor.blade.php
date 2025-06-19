@@ -362,7 +362,6 @@
                                         <option value="4">Text</option>
                                         <option value="5" disabled>Table</option>
                                         <option value="6">Signature</option>
-
                                     </select>
                                 </div>
 

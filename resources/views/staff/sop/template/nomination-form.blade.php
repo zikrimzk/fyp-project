@@ -3,6 +3,7 @@
     use Illuminate\Support\Facades\Crypt;
 
     $currentMode = $mode;
+    $examinerKeys = $formfields->where('ff_signature_role', 8)->pluck('ff_signature_key')->toArray() ?? [];
 @endphp
 
 <title>{{ $title }}</title>
@@ -297,7 +298,7 @@
                 rgb(0, 0, 0) 40px);
     }
 
-    .notebook-textarea[required], {
+    .notebook-textarea[required] {
         border-left: 1px solid #ff6b6b !important;
     }
 
@@ -478,7 +479,6 @@
                 $shouldDisable = $requiredRole != 0 && $requiredRole != $currentMode;
                 $disabledAttr = $shouldDisable ? 'disabled' : '';
                 $requiredAttr = $isRequired && !$shouldDisable ? 'required' : '';
-                // dd($shouldDisable, $disabledAttr, $isRequired, $requiredAttr);
 
                 // Role names for display
                 $roleNames = [
@@ -734,6 +734,8 @@
                                             $shouldDisableSig = false;
                                         } elseif ($currentMode == 4 && $sigKey == 'dean_signature') {
                                             $shouldDisableSig = false;
+                                        } elseif ($currentMode == 5 && in_array($sigKey, $examinerKeys)) {
+                                            $shouldDisableSig = false;
                                         } elseif ($currentMode == 6) {
                                             $shouldDisableSig = false;
                                         }
@@ -744,8 +746,12 @@
                                             'comm_signature' => 'Committee',
                                             'deputy_dean_signature' => 'Deputy Dean',
                                             'dean_signature' => 'Dean',
-                                            'chairman_signature' => 'chairman',
+                                            'chairman_signature' => 'Chairman',
                                         ];
+
+                                        if (!isset($sigRoleNames[$sigKey]) && in_array($sigKey, $examinerKeys)) {
+                                            $sigRoleNames[$sigKey] = 'Examiner / Panel';
+                                        }
                                     @endphp
                                     <td
                                         class="signature-cell @if ($shouldDisableSig) disabled-signature @endif">
@@ -816,9 +822,7 @@
     @endwhile
 </table>
 
-<script>
-    
-</script>
+<script></script>
 
 
 {{-- @php

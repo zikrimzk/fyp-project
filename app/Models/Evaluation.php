@@ -16,6 +16,7 @@ class Evaluation extends Model
         'evaluation_meta_data',
         'evaluation_document',
         'student_id',
+        'staff_id',
         'activity_id'
     ];
 }

@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('evaluations', function (Blueprint $table) {
             $table->id();
-            $table->integer('evaluation_status')->default(1)->comment('1- Pending | 2- Passed | 3 - Failed');
+            $table->integer('evaluation_status')->default(1);
             $table->dateTime('evaluation_date')->nullable();
             $table->json('evaluation_signature_data')->nullable()->comment('will store the respected signature_key: signature_data , signature_date:Date');
             $table->json('evaluation_meta_data')->nullable()->comment('will store other data in the form if needed');
             $table->string('evaluation_document')->nullable();
             $table->foreignId('student_id')->constrained('students');
+            $table->foreignId('staff_id')->constrained('staff');
             $table->foreignId('activity_id')->constrained('activities');
             $table->timestamps();
         });
