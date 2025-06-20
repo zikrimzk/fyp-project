@@ -15,6 +15,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Submission</a></li>
                                 <li class="breadcrumb-item" aria-current="page">Submission Approval</li>
                             </ul>
@@ -216,6 +217,7 @@
                                             <option value="">-- Select Status --</option>
                                             <option value="1">Pending Approval: Supervisor</option>
                                             <option value="2" selected>Pending Approval: (Comm/DD/Dean)</option>
+                                            <option value="7">Pending: Evaluation</option>
                                             <option value="3">Approved & Completed</option>
                                             <option value="4">Rejected: Supervisor</option>
                                             <option value="5">Rejected: (Comm/DD/Dean)</option>

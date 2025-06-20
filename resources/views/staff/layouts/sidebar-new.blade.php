@@ -670,7 +670,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-project-diagram pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">SOP Management</span>
+                            <span class="pc-mtext">SOP</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">

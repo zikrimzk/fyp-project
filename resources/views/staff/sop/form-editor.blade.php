@@ -183,6 +183,8 @@
                                     <div class="row align-items-center">
                                         <div class="col-md-12">
                                             <ul class="breadcrumb text-white">
+                                                <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a>
+                                                </li>
                                                 <li class="breadcrumb-item">SOP</li>
                                                 <li class="breadcrumb-item"><a href="{{ route('form-setting') }}"
                                                         class="text-white">Form Setting</a></li>

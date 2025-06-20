@@ -472,7 +472,7 @@
                     <!-- [ Nomination Details ] end -->
 
                     <!-- [ TBS ] start -->
-                    <div class="card border-0 shadow-sm">
+                    {{-- <div class="card border-0 shadow-sm">
                         <!-- Card Header -->
                         <div class="card-header bg-white border-bottom-0 pb-0">
                             <div class="d-flex align-items-center justify-content-between">
@@ -486,7 +486,7 @@
                         <div class="card-body p-2 m-5">
                             <div class="fst-italic text-muted text-center">Coming soon..</div>
                         </div>
-                    </div>
+                    </div> --}}
                     <!-- [ TBS ] end -->
 
                 </div>

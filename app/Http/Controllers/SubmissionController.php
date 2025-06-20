@@ -1481,6 +1481,7 @@ class SubmissionController extends Controller
                         3 => "<span class='badge bg-success d-block mb-1'>Approved & Completed</span>",
                         4 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> Supervisor</span>",
                         5 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> (Comm/DD/Dean)</span>",
+                        7 => "<span class='badge bg-light-warning d-block mb-1'>Pending: <br> Evaluation</span>",
                         default => "N/A",
                     };
 
@@ -1706,22 +1707,242 @@ class SubmissionController extends Controller
         };
     }
 
+    private function finalizeSubmission($student, $activityId, $activityName)
+    {
+        DB::table('submissions as a')
+            ->join('documents as b', 'a.document_id', '=', 'b.id')
+            ->join('activities as c', 'b.activity_id', '=', 'c.id')
+            ->where('a.student_id', $student->id)
+            ->where('c.id', $activityId)
+            ->update(['a.submission_status' => 5]);
+    }
+
+    // public function studentActivitySubmissionApproval(Request $request, $stuActID, $option)
+    // {
+    //     $stuActID = Crypt::decrypt($stuActID);
+
+    //     try {
+    //         $studentActivity = StudentActivity::findOrFail($stuActID);
+    //         $actID = Crypt::encrypt($studentActivity->activity_id);
+    //         $student = Student::findOrFail($studentActivity->student_id);
+    //         $activity = Activity::whereId($studentActivity->activity_id)->first();
+
+    //         $authUser = auth()->user();
+    //         $supervision = Supervision::where('student_id', $student->id)
+    //             ->where('staff_id', $authUser->id)
+    //             ->first();
+
+    //         // Check if SV and CoSV signatures are required
+    //         $hasSvfield = DB::table('activity_forms as a')
+    //             ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+    //             ->where('a.activity_id', $studentActivity->activity_id)
+    //             ->where('b.ff_category', 6)
+    //             ->where('b.ff_signature_role', 2)
+    //             ->exists();
+
+    //         $hasCoSvfield = DB::table('activity_forms as a')
+    //             ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+    //             ->where('a.activity_id', $studentActivity->activity_id)
+    //             ->where('b.ff_category', 6)
+    //             ->where('b.ff_signature_role', 3)
+    //             ->exists();
+
+    //         $hasCoSv = $hasSvfield && $hasCoSvfield;
+
+    //         $signatureData = !empty($studentActivity->sa_signature_data)
+    //             ? json_decode($studentActivity->sa_signature_data, true)
+    //             : [];
+
+    //         $hasSvSignature = isset($signatureData['sv_signature']);
+    //         $hasCoSvSignature = isset($signatureData['cosv_signature']);
+
+    //         if ($option == 1) {
+    //             // === APPROVE === //
+    //             [$role, $status] = $this->determineApprovalRoleStatus($supervision, $authUser->staff_role);
+
+    //             // Step 1: Merge signature
+    //             $this->mergeStudentSubmission($actID, $student, $request->input('signatureData'), $role, $authUser, $status);
+
+    //             // Step 2: Save review comment if present
+    //             if ($request->filled('comment')) {
+    //                 SubmissionReview::create([
+    //                     'student_activity_id' => $stuActID,
+    //                     'sr_comment' => $request->input('comment'),
+    //                     'sr_date' => now()->toDateString(),
+    //                     'staff_id' => $authUser->id
+    //                 ]);
+    //             }
+
+    //             // Step 3: Refresh activity and recheck signature
+    //             $updatedActivity = StudentActivity::findOrFail($stuActID);
+    //             $updatedSignatureData = !empty($updatedActivity->sa_signature_data)
+    //                 ? json_decode($updatedActivity->sa_signature_data, true)
+    //                 : [];
+
+    //             $hasSvSignature = isset($updatedSignatureData['sv_signature']);
+    //             $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
+
+    //             // Step 4: Final Status
+    //             if (in_array($role, [2, 3])) {
+    //                 $formFields = DB::table('activity_forms as a')
+    //                     ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+    //                     ->where('a.activity_id', $studentActivity->activity_id)
+    //                     ->where('b.ff_category', 6)
+    //                     ->pluck('b.ff_signature_role')
+    //                     ->toArray();
+
+    //                 $requiredRoles = collect($formFields)->unique()->values()->toArray();
+
+    //                 // Check if higher roles (4, 5, 6) are present
+    //                 $hasHigherRoles = collect($requiredRoles)->intersect([4, 5, 6])->isNotEmpty();
+
+    //                 if ($hasCoSv) {
+    //                     $finalStatus = ($hasSvSignature && $hasCoSvSignature)
+    //                         ? ($hasHigherRoles ? 2 : 3)
+    //                         : 1;
+    //                 } else {
+    //                     $finalStatus = $hasSvSignature
+    //                         ? ($hasHigherRoles ? 2 : 3)
+    //                         : 1;
+    //                 }
+
+    //                 $updatedActivity->update(['sa_status' => $finalStatus]);
+
+    //                 if ($finalStatus == 3) {
+    //                     //COMMENT FOR TESTING PURPOSE
+    //                     DB::table('submissions as a')
+    //                         ->join('documents as b', 'a.document_id', '=', 'b.id')
+    //                         ->join('activities as c', 'b.activity_id', '=', 'c.id')
+    //                         ->where('a.student_id', $student->id)
+    //                         ->where('c.id', $studentActivity->activity_id)
+    //                         ->update(['a.submission_status' => 5]);
+    //                     $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+    //                 }
+    //             } else {
+    //                 // Committee / Deputy Dean / Dean
+    //                 $formFields = DB::table('activity_forms as a')
+    //                     ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+    //                     ->where('a.activity_id', $studentActivity->activity_id)
+    //                     ->where('b.ff_category', 6)
+    //                     ->pluck('b.ff_signature_role')
+    //                     ->toArray();
+
+    //                 $requiredRoles = collect($formFields)->unique()->values()->toArray();
+
+    //                 $hasCommfield = in_array(4, $requiredRoles);
+    //                 $hasDeputyDeanfield = in_array(5, $requiredRoles);
+    //                 $hasDeanfield = in_array(6, $requiredRoles);
+
+    //                 // Use updated signature data
+    //                 $hasCommSignature = isset($updatedSignatureData['comm_signature_date']);
+    //                 $hasDeputyDeanSignature = isset($updatedSignatureData['deputy_dean_signature_date']);
+    //                 $hasDeanSignature = isset($updatedSignatureData['dean_signature_date']);
+
+    //                 $roleSignatures = [
+    //                     4 => $hasCommfield ? $hasCommSignature : true,
+    //                     5 => $hasDeputyDeanfield ? $hasDeputyDeanSignature : true,
+    //                     6 => $hasDeanfield ? $hasDeanSignature : true,
+    //                 ];
+
+    //                 // Final status: 3 if all required roles signed, else 2
+    //                 $finalStatus = collect($roleSignatures)
+    //                     ->only($requiredRoles)
+    //                     ->every(fn($signed) => $signed) ? 3 : 2;
+
+    //                 $updatedActivity->update(['sa_status' => $finalStatus]);
+
+    //                 if ($finalStatus == 3) {
+    //                     //COMMENT FOR TESTING PURPOSE
+    //                     DB::table('submissions as a')
+    //                         ->join('documents as b', 'a.document_id', '=', 'b.id')
+    //                         ->join('activities as c', 'b.activity_id', '=', 'c.id')
+    //                         ->where('a.student_id', $student->id)
+    //                         ->where('c.id', $studentActivity->activity_id)
+    //                         ->update(['a.submission_status' => 5]);
+    //                     $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+    //                 }
+    //             }
+
+    //             $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
+    //             return back()->with('success', 'Submission has been approved successfully.');
+    //         } elseif ($option == 2) {
+    //             // === REJECT === //
+    //             [$role, $status] = $this->determineRejectionRoleStatus($supervision, $authUser->staff_role);
+
+    //             $signatureData = json_decode($studentActivity->sa_signature_data ?? '[]', true);
+
+    //             // List of keys to remove
+    //             $keysToRemove = [
+    //                 'sv_signature',
+    //                 'sv_signature_date',
+    //                 'cosv_signature',
+    //                 'cosv_signature_date',
+    //                 'comm_signature',
+    //                 'comm_signature_date',
+    //                 'deputy_dean_signature',
+    //                 'deputy_dean_signature_date',
+    //                 'dean_signature',
+    //                 'dean_signature_date',
+    //             ];
+
+    //             // Remove the keys
+    //             foreach ($keysToRemove as $key) {
+    //                 unset($signatureData[$key]);
+    //             }
+
+    //             StudentActivity::whereId($stuActID)->update(['sa_status' => $status, 'sa_signature_data' => json_encode($signatureData)]);
+
+    //             if ($request->filled('comment')) {
+    //                 SubmissionReview::create([
+    //                     'student_activity_id' => $stuActID,
+    //                     'sr_comment' => $request->input('comment'),
+    //                     'sr_date' => now()->toDateString(),
+    //                     'staff_id' => $authUser->id
+    //                 ]);
+    //             }
+
+    //             $this->sendSubmissionNotification($student, 1, $activity->act_name, 4, $role);
+
+    //             return back()->with('success', 'Submission has been rejected successfully.');
+    //         } elseif ($option == 3) {
+    //             // === REVERT === //
+    //             SubmissionReview::where('student_activity_id', $stuActID)->delete();
+    //             StudentActivity::whereId($stuActID)->delete();
+
+    //             $this->sendSubmissionNotification($student, 1, $activity->act_name, 5, 0);
+
+    //             return back()->with('success', 'The student submission has been successfully reverted. Please notify the student to reconfirm their submission.');
+    //         }
+
+    //         return back()->with('error', 'Oops! Invalid option. Please try again.');
+    //     } catch (Exception $e) {
+    //         return back()->with('error', 'Oops! Error occurred: ' . $e->getMessage());
+    //     }
+    // }
+
     public function studentActivitySubmissionApproval(Request $request, $stuActID, $option)
     {
         $stuActID = Crypt::decrypt($stuActID);
 
         try {
+            // Load core data
             $studentActivity = StudentActivity::findOrFail($stuActID);
             $actID = Crypt::encrypt($studentActivity->activity_id);
             $student = Student::findOrFail($studentActivity->student_id);
             $activity = Activity::whereId($studentActivity->activity_id)->first();
-
             $authUser = auth()->user();
-            $supervision = Supervision::where('student_id', $student->id)
-                ->where('staff_id', $authUser->id)
-                ->first();
 
-            // Check if SV and CoSV signatures are required
+            // Check supervision role (SV or CoSV)
+            $supervision = Supervision::where('student_id', $student->id)
+                ->where('staff_id', $authUser->id)->first();
+
+            // Check procedure for is_haveEva
+            $procedure = Procedure::where('activity_id', $activity->id)
+                ->where('programme_id', $student->programme_id)
+                ->first();
+            $isHaveEvaluation = $procedure?->is_haveEva == 1;
+
+            // Check if CoSV required in form
             $hasSvfield = DB::table('activity_forms as a')
                 ->join('form_fields as b', 'a.id', '=', 'b.af_id')
                 ->where('a.activity_id', $studentActivity->activity_id)
@@ -1738,21 +1959,19 @@ class SubmissionController extends Controller
 
             $hasCoSv = $hasSvfield && $hasCoSvfield;
 
-            $signatureData = !empty($studentActivity->sa_signature_data)
-                ? json_decode($studentActivity->sa_signature_data, true)
-                : [];
+            // Decode current signature data
+            $signatureData = json_decode($studentActivity->sa_signature_data ?? '[]', true);
 
-            $hasSvSignature = isset($signatureData['sv_signature']);
-            $hasCoSvSignature = isset($signatureData['cosv_signature']);
-
+            // === APPROVAL === //
             if ($option == 1) {
-                // === APPROVE === //
+
+                // Determine role and status code
                 [$role, $status] = $this->determineApprovalRoleStatus($supervision, $authUser->staff_role);
 
-                // Step 1: Merge signature
+                // Merge signature
                 $this->mergeStudentSubmission($actID, $student, $request->input('signatureData'), $role, $authUser, $status);
 
-                // Step 2: Save review comment if present
+                // Save review comment if present
                 if ($request->filled('comment')) {
                     SubmissionReview::create([
                         'student_activity_id' => $stuActID,
@@ -1762,105 +1981,83 @@ class SubmissionController extends Controller
                     ]);
                 }
 
-                // Step 3: Refresh activity and recheck signature
+                // Reload latest updated data
                 $updatedActivity = StudentActivity::findOrFail($stuActID);
-                $updatedSignatureData = !empty($updatedActivity->sa_signature_data)
-                    ? json_decode($updatedActivity->sa_signature_data, true)
-                    : [];
+                $updatedSignatureData = json_decode($updatedActivity->sa_signature_data ?? '[]', true);
 
-                $hasSvSignature = isset($updatedSignatureData['sv_signature']);
-                $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
-
-                // Step 4: Final Status
+                // Handle SV / CoSV logic
                 if (in_array($role, [2, 3])) {
-                    $formFields = DB::table('activity_forms as a')
+
+                    // Fetch all signature roles defined in form
+                    $formRoles = DB::table('activity_forms as a')
                         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
                         ->where('a.activity_id', $studentActivity->activity_id)
                         ->where('b.ff_category', 6)
                         ->pluck('b.ff_signature_role')
-                        ->toArray();
+                        ->unique()->toArray();
 
-                    $requiredRoles = collect($formFields)->unique()->values()->toArray();
+                    $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
 
-                    // Check if higher roles (4, 5, 6) are present
-                    $hasHigherRoles = collect($requiredRoles)->intersect([4, 5, 6])->isNotEmpty();
+                    $hasSvSignature = isset($updatedSignatureData['sv_signature']);
+                    $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
 
                     if ($hasCoSv) {
-                        $finalStatus = ($hasSvSignature && $hasCoSvSignature)
-                            ? ($hasHigherRoles ? 2 : 3)
-                            : 1;
+                        $allSigned = $hasSvSignature && $hasCoSvSignature;
                     } else {
-                        $finalStatus = $hasSvSignature
-                            ? ($hasHigherRoles ? 2 : 3)
-                            : 1;
+                        $allSigned = $hasSvSignature;
+                    }
+
+                    if ($allSigned) {
+                        $finalStatus = $hasHigherRoles ? 2 : ($isHaveEvaluation ? 7 : 3);
+                    } else {
+                        $finalStatus = 1;
                     }
 
                     $updatedActivity->update(['sa_status' => $finalStatus]);
 
+                    // When fully completed
                     if ($finalStatus == 3) {
-                        //COMMENT FOR TESTING PURPOSE
-                        DB::table('submissions as a')
-                            ->join('documents as b', 'a.document_id', '=', 'b.id')
-                            ->join('activities as c', 'b.activity_id', '=', 'c.id')
-                            ->where('a.student_id', $student->id)
-                            ->where('c.id', $studentActivity->activity_id)
-                            ->update(['a.submission_status' => 5]);
+                        $this->finalizeSubmission($student, $studentActivity->activity_id, $activity->act_name);
                         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
                     }
-                } else {
-                    // Committee / Deputy Dean / Dean
-                    $formFields = DB::table('activity_forms as a')
+                }
+
+                // Handle Committee / Deputy Dean / Dean logic
+                else {
+
+                    $formRoles = DB::table('activity_forms as a')
                         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
                         ->where('a.activity_id', $studentActivity->activity_id)
                         ->where('b.ff_category', 6)
                         ->pluck('b.ff_signature_role')
-                        ->toArray();
-
-                    $requiredRoles = collect($formFields)->unique()->values()->toArray();
-
-                    $hasCommfield = in_array(4, $requiredRoles);
-                    $hasDeputyDeanfield = in_array(5, $requiredRoles);
-                    $hasDeanfield = in_array(6, $requiredRoles);
-
-                    // Use updated signature data
-                    $hasCommSignature = isset($updatedSignatureData['comm_signature_date']);
-                    $hasDeputyDeanSignature = isset($updatedSignatureData['deputy_dean_signature_date']);
-                    $hasDeanSignature = isset($updatedSignatureData['dean_signature_date']);
+                        ->unique()->toArray();
 
                     $roleSignatures = [
-                        4 => $hasCommfield ? $hasCommSignature : true,
-                        5 => $hasDeputyDeanfield ? $hasDeputyDeanSignature : true,
-                        6 => $hasDeanfield ? $hasDeanSignature : true,
+                        4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
+                        5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
+                        6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
                     ];
 
-                    // Final status: 3 if all required roles signed, else 2
-                    $finalStatus = collect($roleSignatures)
-                        ->only($requiredRoles)
-                        ->every(fn($signed) => $signed) ? 3 : 2;
+                    $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
 
+                    $finalStatus = $allSigned ? ($isHaveEvaluation ? 7 : 3) : 2;
                     $updatedActivity->update(['sa_status' => $finalStatus]);
 
                     if ($finalStatus == 3) {
-                        //COMMENT FOR TESTING PURPOSE
-                        DB::table('submissions as a')
-                            ->join('documents as b', 'a.document_id', '=', 'b.id')
-                            ->join('activities as c', 'b.activity_id', '=', 'c.id')
-                            ->where('a.student_id', $student->id)
-                            ->where('c.id', $studentActivity->activity_id)
-                            ->update(['a.submission_status' => 5]);
+                        $this->finalizeSubmission($student, $studentActivity->activity_id, $activity->act_name);
                         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
                     }
                 }
 
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
                 return back()->with('success', 'Submission has been approved successfully.');
-            } elseif ($option == 2) {
-                // === REJECT === //
+            }
+
+            // === REJECTION === //
+            elseif ($option == 2) {
                 [$role, $status] = $this->determineRejectionRoleStatus($supervision, $authUser->staff_role);
 
                 $signatureData = json_decode($studentActivity->sa_signature_data ?? '[]', true);
-
-                // List of keys to remove
                 $keysToRemove = [
                     'sv_signature',
                     'sv_signature_date',
@@ -1873,13 +2070,14 @@ class SubmissionController extends Controller
                     'dean_signature',
                     'dean_signature_date',
                 ];
-
-                // Remove the keys
                 foreach ($keysToRemove as $key) {
                     unset($signatureData[$key]);
                 }
 
-                StudentActivity::whereId($stuActID)->update(['sa_status' => $status, 'sa_signature_data' => json_encode($signatureData)]);
+                StudentActivity::whereId($stuActID)->update([
+                    'sa_status' => $status,
+                    'sa_signature_data' => json_encode($signatureData)
+                ]);
 
                 if ($request->filled('comment')) {
                     SubmissionReview::create([
@@ -1891,21 +2089,21 @@ class SubmissionController extends Controller
                 }
 
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 4, $role);
-
                 return back()->with('success', 'Submission has been rejected successfully.');
-            } elseif ($option == 3) {
-                // === REVERT === //
+            }
+
+            // === REVERT === //
+            elseif ($option == 3) {
                 SubmissionReview::where('student_activity_id', $stuActID)->delete();
                 StudentActivity::whereId($stuActID)->delete();
 
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 5, 0);
-
-                return back()->with('success', 'The student submission has been successfully reverted. Please notify the student to reconfirm their submission.');
+                return back()->with('success', 'The student submission has been successfully reverted.');
             }
 
-            return back()->with('error', 'Oops! Invalid option. Please try again.');
+            return back()->with('error', 'Oops! Invalid option.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error occurred: ' . $e->getMessage());
+            return back()->with('error', 'Error occurred: ' . $e->getMessage());
         }
     }
 

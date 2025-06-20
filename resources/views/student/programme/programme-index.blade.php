@@ -83,6 +83,8 @@
                                         @elseif($act->init_status == 5)
                                             <span class="badge bg-light-danger">Rejected : Committee / Deputy Dean /
                                                 Dean</span>
+                                        @elseif($act->init_status == 7)
+                                            <span class="badge bg-light-warning">Pending : Evaluation</span>
                                         @elseif ($act->init_status == 10)
                                             <span class="badge bg-success badge-flash">Open for Submission</span>
                                         @elseif($act->init_status == 11)
@@ -233,7 +235,7 @@
                             @if (
                                 ($act->required_document > 0 &&
                                     $act->submitted_required_document == $act->required_document &&
-                                    !in_array($act->init_status, [1, 2, 3])) ||
+                                    !in_array($act->init_status, [1, 2, 3, 7])) ||
                                     ($act->required_document == 0 &&
                                         $act->optional_document > 0 &&
                                         $act->submitted_optional_document >= 1 &&

@@ -19,6 +19,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Setting</a></li>
                                 <li class="breadcrumb-item" aria-current="page">Faculty Setting</li>
                             </ul>
