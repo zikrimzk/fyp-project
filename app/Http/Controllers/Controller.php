@@ -836,4 +836,110 @@ class Controller extends BaseController
             //     ->where('s.student_status', '=', 1)
             //     ->orderBy('s.student_matricno')
             //     ->orderBy('p.act_seq');
+
+
+            
+    // public function storeEvaluationSignature($student, $form, $signatureData, $evaluation, $signatureRole, $userData, $nomination)
+    // {
+    //     try {
+    //         if (!$signatureData || !is_array($signatureData)) {
+    //             throw new Exception('Invalid signature data');
+    //         }
+
+    //         // Get all signature fields for this form
+    //         $signatureFields = FormField::where('af_id', $form->id)
+    //             ->where('ff_category', 6) // Signature fields
+    //             ->get();
+
+    //         // Prepare existing signature data
+    //         $existingData = $evaluation->evaluation_signature_data
+    //             ? json_decode($evaluation->evaluation_signature_data, true)
+    //             : [];
+
+    //         foreach ($signatureFields as $signatureField) {
+    //             $signatureKey = $signatureField->ff_signature_key;
+    //             $dateKey = $signatureField->ff_signature_date_key;
+
+    //             // Skip if no signature data for this field
+    //             if (!isset($signatureData[$signatureKey])) {
+    //                 continue;
+    //             }
+
+    //             // Skip if signature is empty
+    //             if (empty($signatureData[$signatureKey])) {
+    //                 continue;
+    //             }
+
+    //             // Determine role based on field properties
+    //             $role = $this->determineSignatureRole(
+    //                 $signatureField,
+    //                 $userData,
+    //                 $nomination
+    //             );
+
+    //             // Skip if role could not be determined
+    //             if ($role === null) {
+    //                 continue;
+    //             }
+    //             // Prepare new signature data
+    //             $newSignatureData = [
+    //                 $signatureKey => $signatureData[$signatureKey],
+    //                 $dateKey => now()->format('d M Y'),
+    //                 $signatureKey . '_is_cross_approval' => false,
+    //                 $signatureKey . '_name' => $role === 'Student'
+    //                     ? $student->student_name
+    //                     : $userData->staff_name,
+    //                 $signatureKey . '_role' => $role
+    //             ];
+
+    //             // Merge with existing data
+    //             $existingData = array_merge($existingData, $newSignatureData);
+    //         }
+
+    //         // Save all signatures
+    //         $evaluation->evaluation_signature_data = json_encode($existingData);
+    //         $evaluation->save();
+    //     } catch (Exception $e) {
+    //         throw new Exception('Signature storage error: ' . $e->getMessage());
+    //     }
+    // }
+
+    // protected function determineSignatureRole($signatureField, $userData, $nomination)
+    // {
+    //     // Student signature
+    //     if ($signatureField->ff_signature_role == 1) {
+    //         return 'Student';
+    //     }
+
+    //     // Try to determine from field label first
+    //     $label = strtolower($signatureField->ff_label);
+
+    //     // Check for chairman
+    //     if (str_contains($label, 'chair') || str_contains($label, 'coordinator')) {
+    //         return 'Chairman';
+    //     }
+
+    //     // Check for examiner with number (Examiner 1, Panel Member 2, etc.)
+    //     if (preg_match('/(examiner|panel|reviewer)\s*(\d+)/i', $label, $matches)) {
+    //         return ucfirst($matches[1]) . ' ' . $matches[2];
+    //     }
+
+    //     // Check for generic examiner
+    //     if (str_contains($label, 'examiner') || str_contains($label, 'panel') || str_contains($label, 'reviewer')) {
+    //         return 'Examiner';
+    //     }
+
+    //     // Fallback to evaluator table if label doesn't indicate role
+    //     $evaluator = Evaluator::where('staff_id', $userData->id)
+    //         ->where('nom_id', $nomination->id)
+    //         ->first();
+
+    //     if ($evaluator) {
+    //         return $evaluator->eva_role == 1 ? 'Examiner' : 'Chairman';
+    //     }
+
+    //     // Default fallback
+    //     return 'Evaluator';
+    // }
+
 }

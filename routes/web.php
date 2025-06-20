@@ -230,6 +230,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     // Nomination
     Route::get('/committee-nomination-{name}', [NominationController::class, 'committeeNomination'])->name('committee-nomination');
 
+    // Evaluation
+    Route::get('/committee-evaluation-{name}', [EvaluationController::class, 'committeeEvaluation'])->name('committee-evaluation');
+
 
     // ---------------------------------------------------------------------------------------------------------------------//
     // ------------------------------------------------ DEPUTY DEAN --------------------------------------------------------//

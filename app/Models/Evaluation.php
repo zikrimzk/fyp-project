@@ -15,6 +15,7 @@ class Evaluation extends Model
         'evaluation_signature_data',
         'evaluation_meta_data',
         'evaluation_document',
+        'evaluation_isFinal',
         'student_id',
         'staff_id',
         'activity_id'

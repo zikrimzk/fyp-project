@@ -94,6 +94,7 @@
                     </form>
                 </div>
                 <!-- [ Nomination Student ] end -->
+                
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -187,6 +188,7 @@
             }
         });
 
+
         /*********************************************************/
         /**********************GETTERS FUNCTION*******************/
         /*********************************************************/
@@ -271,7 +273,7 @@
             const errorFields = [];
 
             // ==============================================
-            // 1. Validate regular required fields (UPDATED)
+            // 1. Validate regular required fields
             // ==============================================
             $('[required]').each(function() {
                 const $field = $(this);
@@ -305,7 +307,7 @@
             });
 
             // ==============================================
-            // 2. Validate signatures (unchanged)
+            // 2. Validate signatures
             // ==============================================
             $('.signature-canvas').each(function() {
                 const $canvas = $(this);
@@ -337,7 +339,36 @@
             });
 
             // ==============================================
-            // 3. Prevent submission if validation fails
+            // 3. Uniqueness Validation 
+            // ==============================================
+
+            const valueMap = {};
+            $('[name]').each(function() {
+                const $field = $(this);
+                if ($field.is(':disabled') || $field.attr('type') === 'hidden') {
+                    return;
+                }
+
+                let value = $field.val().trim();
+                if (!value) return;
+
+                if (valueMap[value]) {
+                    valueMap[value].push($field);
+                } else {
+                    valueMap[value] = [$field];
+                }
+            });
+
+            Object.entries(valueMap).forEach(([val, fields]) => {
+                if (fields.length > 1) {
+                    isValid = false;
+                    fields.forEach($f => $f.addClass('error-field'));
+                    errorMessages.push(`Duplicate value detected: "${val}"`);
+                }
+            });
+
+            // ==============================================
+            // 4. Prevent submission if validation fails
             // ==============================================
             if (!isValid) {
                 e.preventDefault();
@@ -350,7 +381,7 @@
 
                 if (errorMessages.length > 0) {
                     if (fullMessage) fullMessage += '\n\n';
-                    fullMessage += 'Signature:\n- ' + errorMessages.join('\n- ');
+                    fullMessage += errorMessages.join('\n');
                 }
 
                 if (fullMessage) {
@@ -373,5 +404,6 @@
                 $(this).removeClass('error-field');
             });
         });
+
     </script>
 @endsection

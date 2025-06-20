@@ -12,9 +12,10 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">Examiner / Panel</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Commiitee</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluations</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management</li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management
+                                </li>
                             </ul>
                         </div>
                         <div class="col-md-12">
@@ -59,7 +60,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Examiner-Panel Evaluation Management ] start -->
+                <!-- [ Committee Evaluation Management ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
@@ -140,8 +141,12 @@
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
                                             <option value="1">Pending</option>
-                                            <option value="7">Submitted [Draft]</option>
-                                            <option value="10">Final & Confirmed</option>
+                                            <option value="2">Passed</option>
+                                            <option value="3">Passed (Minor Changes)</option>
+                                            <option value="4">Passed (Major Changes)</option>
+                                            <option value="5">Resubmit/Represent</option>
+                                            <option value="6">Failed</option>
+                                            <option value="8">Confirmed [Examiner/Panel]</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
@@ -160,9 +165,9 @@
                                             <th>#</th>
                                             <th scope="col">Student</th>
                                             <th scope="col">Evaluation</th>
+                                            <th scope="col">Confirmed By</th>
                                             <th scope="col">Date</th>
                                             <th scope="col">Status</th>
-                                            <th scope="col">Action</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -171,7 +176,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- [ Examiner-Panel Evaluation Management ] end -->
+                <!-- [ Committee Evaluation Management  ] end -->
 
             </div>
             <!-- [ Main Content ] end -->
@@ -188,7 +193,7 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('examiner-panel-evaluation', strtolower(str_replace(' ', '-', $act->act_name))) }}",
+                    url: "{{ route('committee-evaluation', strtolower(str_replace(' ', '-', $act->act_name))) }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id')
                             .val();
@@ -215,21 +220,19 @@
                         name: 'evaluation_document'
                     },
                     {
+                        data: 'confirmed_by',
+                        name: 'confirmed_by',
+                    }, 
+                    {
                         data: 'evaluation_date',
                         name: 'evaluation_date'
                     },
                     {
                         data: 'evaluation_status',
                         name: 'evaluation_status'
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
                     }
                 ],
-                
+
 
             });
 
@@ -276,4 +279,3 @@
         });
     </script>
 @endsection
-

@@ -14,7 +14,8 @@
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Chairman</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluations</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management</li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management
+                                </li>
                             </ul>
                         </div>
                         <div class="col-md-12">
@@ -59,7 +60,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Activity Nomination ] start -->
+                <!-- [ Chairman Evaluation Management ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
@@ -140,8 +141,8 @@
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
                                             <option value="1">Pending</option>
-                                            <option value="2">Passed</option>
-                                            <option value="3">Failed</option>
+                                            <option value="7">Submitted [Draft]</option>
+                                            <option value="10">Final & Confirmed</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
@@ -171,12 +172,13 @@
                         </div>
                     </div>
                 </div>
-                <!-- [ Activity Nomination ] end -->
+                <!-- [ Chairman Evaluation Management ] end -->
 
             </div>
             <!-- [ Main Content ] end -->
         </div>
     </div>
+    
     <script type="text/javascript">
         $(document).ready(function() {
 

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->json('evaluation_signature_data')->nullable()->comment('will store the respected signature_key: signature_data , signature_date:Date');
             $table->json('evaluation_meta_data')->nullable()->comment('will store other data in the form if needed');
             $table->string('evaluation_document')->nullable();
+            $table->integer('evaluation_isFinal')->default(0)->comment('1-Yes 0-No');
             $table->foreignId('student_id')->constrained('students');
             $table->foreignId('staff_id')->constrained('staff');
             $table->foreignId('activity_id')->constrained('activities');

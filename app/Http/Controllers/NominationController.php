@@ -956,7 +956,7 @@ class NominationController extends Controller
                 }
             }
 
-            $html = view('staff.sop.template.nomination-form', [
+            $html = view('staff.sop.template.input-form', [
                 'title' => $act->act_name . " Document",
                 'act' => $act,
                 'form_title' => $form->af_title,
@@ -1530,7 +1530,7 @@ class NominationController extends Controller
                 }
             }
 
-            $pdf = Pdf::loadView('staff.sop.template.nomination-document', [
+            $pdf = Pdf::loadView('staff.sop.template.input-document', [
                 'title' => $act->act_name . " Document",
                 'act' => $act,
                 'form_title' => $form->af_title,

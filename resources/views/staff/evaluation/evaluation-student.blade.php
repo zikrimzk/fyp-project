@@ -67,7 +67,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Nomination Student ] start -->
+                <!-- [ Evaluation Student ] start -->
                 <div class="col-sm-12">
                     <form
                         action="{{ route('submit-evaluation-post', ['studentId' => Crypt::encrypt($data->id), 'mode' => $mode]) }}"
@@ -77,22 +77,72 @@
                             <div class="card-body">
                                 <input type="hidden" name="activity_id" value="{{ $act->id }}">
                                 <input type="hidden" name="opt" id="opt-hidden">
-                                <!-- [1] - FOR SUBMIT OR APPROVE [2] REJECT -->
+                                <!-- [1] - FOR SAVE DRAFT [2] CONFIRMED DRAFT -->
                                 <div class="container">
                                     <div id="formContainer"></div>
                                 </div>
                             </div>
                             <div class="card-footer d-grid gap-2 d-md-flex justify-content-md-end">
                                 <button type="reset" class="btn btn-light-danger">Reset</button>
-                                @if ($mode == 3 || $mode == 4)
-                                    <button type="submit" id="rejectBtn" class="btn btn-danger">Reject Nomination</button>
-                                @endif
-                                <button type="submit" id= "submitBtn" class="btn btn-primary">Submit Evaluation</button>
+                                <button type="button" data-bs-toggle="modal" data-bs-target="#confirmEvaluationModal"
+                                    class="btn btn-danger">Confirmed & Submit
+                                    Evaluation</button>
+                                <button type="submit" id= "submitBtn" class="btn btn-primary">Save Changes (Draft)</button>
                             </div>
                         </div>
                     </form>
                 </div>
-                <!-- [ Nomination Student ] end -->
+                <!-- [ Evaluation Student ] end -->
+
+                <!-- [ Evaluation Confirmation Modal ] start -->
+                <div class="modal fade" id="confirmEvaluationModal" data-bs-backdrop="static" data-bs-keyboard="false"
+                    tabindex="-1" aria-labelledby="confirmEvaluationLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-body p-4">
+                                <div class="text-center mb-3">
+                                    <div class="bg-danger bg-opacity-10 rounded-circle d-flex justify-content-center align-items-center mx-auto"
+                                        style="width: 120px; height: 120px;">
+                                        <i class="ti ti-shield-check text-danger" style="font-size: 60px;"></i>
+                                    </div>
+                                </div>
+
+                                <h4 class="text-center mb-3 text-danger fw-bold" id="confirmEvaluationLabel">
+                                    Confirm Evaluation Submission
+                                </h4>
+
+                                <p class="text-center text-muted mb-4 fs-6">
+                                    You are about to <b>finalize and submit</b> this student evaluation.
+                                </p>
+
+                                <div class="border rounded p-3 mb-4 bg-light">
+                                    <ul class="mb-0 small text-muted">
+                                        <li>Ensure all <b>Scores & Marks</b> are correctly entered.</li>
+                                        <li>Verify all <b>Comments & Feedback</b>.</li>
+                                        <li>Check all <b>Signature Fields</b> are properly signed.</li>
+                                        <li>Confirm any other required information is complete.</li>
+                                    </ul>
+                                </div>
+
+                                <p class="text-center text-danger mb-4 fw-semibold">
+                                    <i class="ti ti-alert-triangle me-1"></i>
+                                    This action <u>cannot be undone</u>. Please double-check everything before confirming.
+                                </p>
+
+                                <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                                    <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                    <a href="javascript:void(0)" class="btn btn-danger w-100" id="confirmedBtn">
+                                        <i class="ti ti-check me-1"></i> Confirm & Submit
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Evaluation Confirmation Modal ] end -->
+
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -215,6 +265,7 @@
                 }
             });
         }
+        
 
         /*********************************************************/
         /******************FORM SUBMIT FUNCTION*******************/
@@ -226,7 +277,7 @@
             $('form').submit();
         });
 
-        $('#rejectBtn').on('click', function(e) {
+        $('#confirmedBtn').on('click', function(e) {
             e.preventDefault();
             $('#opt-hidden').val(2);
             $('form').submit();
@@ -379,5 +430,6 @@
                 $(this).removeClass('error-field');
             });
         });
+
     </script>
 @endsection

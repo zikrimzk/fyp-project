@@ -464,6 +464,26 @@
                             @endforeach
                         </ul>
                     </li>
+
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-pen pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Evaluation</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            @foreach ($nomination as $nom)
+                                <li class="pc-item">
+                                    <a class="pc-link"
+                                        href="{{ route('committee-evaluation', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
+                                        {{ $nom->activity_name }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
                 @endif
 
                 @if ($showDeputyDeanNomination)
