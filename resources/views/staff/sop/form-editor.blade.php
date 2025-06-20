@@ -139,6 +139,41 @@
             max-height: 500px;
         }
 
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .list-description {
+            font-size: 1rem;
+            /* Increase font size for better readability */
+            color: #333 !important;
+            /* Darker text for better contrast */
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @media (max-width: 768px) {
             .preview-wrapper {
                 min-height: 320px;
@@ -173,6 +208,7 @@
 
             <!-- [ Main Content ] start -->
             <div class="row">
+
                 <!-- [ Form Editor ] start -->
                 <div class="col-sm-12">
                     <div class="card">
@@ -183,7 +219,7 @@
                                     <div class="row align-items-center">
                                         <div class="col-md-12">
                                             <ul class="breadcrumb text-white">
-                                                <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a>
+                                                <li class="breadcrumb-item"><a href="javascript: void(0)" class="text-white">Administrator</a>
                                                 </li>
                                                 <li class="breadcrumb-item">SOP</li>
                                                 <li class="breadcrumb-item"><a href="{{ route('form-setting') }}"
@@ -571,6 +607,82 @@
                 </div>
                 <!-- [ Add & Update Form Field Modal ] end -->
 
+
+                <div class="modal fade" id="formStartupModal" data-bs-backdrop="static" data-bs-keyboard="false"
+                    tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content border-0 shadow rounded-4">
+                            <form id="formStartupForm" action="{{ route('form-get-started-post') }}" method="post">
+                                @csrf
+                                <div class="modal-body p-5">
+
+                                    <!-- Header -->
+                                    <div class="text-center mb-4">
+                                        <h3 class="fw-bold text-primary mb-3">Welcome to e-PostGrad Form Builder</h3>
+                                        <p class="fs-5 text-muted">Quick setup before you begin building your form.</p>
+                                    </div>
+
+                                    <!-- General Guidelines -->
+                                    <div class="mb-4">
+                                        <h5 class="fw-semibold text-dark mb-3">Form Field Categories</h5>
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <div class="p-3 border rounded-3 bg-light">
+                                                    <strong>Input*</strong><br>
+                                                    Interactive fields (text, select, radio etc.)
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="p-3 border rounded-3 bg-light">
+                                                    <strong>Output</strong><br>
+                                                    Read-only system fields.
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="p-3 border rounded-3 bg-light">
+                                                    <strong>Section</strong><br>
+                                                    Form logical headings.
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="p-3 border rounded-3 bg-light">
+                                                    <strong>Text</strong><br>
+                                                    Static information blocks.
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="p-3 border rounded-3 bg-light">
+                                                    <strong>Signature</strong><br>
+                                                    Approval signatures.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="mt-3 small text-muted"><strong>*</strong> Input fields are not allowed
+                                            for Submission form.</p>
+                                    </div>
+
+                                    <!-- Specific Instructions -->
+                                    <div id="specificGuideline" class="p-4 bg-light border rounded-3 mb-4">
+                                        <!-- This content will be injected dynamically -->
+                                    </div>
+
+                                    <!-- Hidden Fields -->
+                                    <input type="hidden" id="startup_form_target" name="form_target" value="">
+                                    <input type="hidden" id="startup_af_id" name="af_id" value="">
+
+                                    <!-- Footer -->
+                                    <div class="text-center">
+                                        <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
+                                            <i class="ti ti-rocket me-2"></i> Get Started
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -662,6 +774,77 @@
              *******************GETTERS FUNCTIONS*********************
              *********************************************************/
 
+            function showFormStartupModal(formTarget, af_id) {
+                // Set form target hidden field
+                $('#startup_form_target').val(formTarget);
+                $('#startup_af_id').val(af_id);
+
+                let content = '';
+
+                if (formTarget == 1) {
+                    content = `
+                    <h5 class="fw-semibold mb-3 text-primary">Submission Form</h5>
+                    <p class="text-muted">
+                        In this submission form, you can only add the output-related fields since there is no user interaction required in the system. The <b>signature field IS A MUST</b> for this form.
+                    </p>
+                    <p class="text-muted">
+                        <b>Important:</b> The system will generate all required fields for you. <span class="text-danger">Do not modify or remove system-generated fields</span> or the submission process may fail.
+                    </p>
+                `;
+                } else if (formTarget == 3) {
+                    content = `
+                    <h5 class="fw-semibold mb-3 text-primary">Nomination Form</h5>
+                    <p class="text-muted">
+                        For nomination forms, you must use the keywords <b>"Examiner"</b>, <b>"Panel"</b>, and <b>"Chairman"</b> inside the field labels to allow the system to correctly map staff during nomination.
+                    </p>
+                    <p class="text-muted">
+                        The system will generate all required fields for you. You may freely add or adjust custom fields, but <span class="text-danger">do not modify system-generated fields</span>. If you accidentally modify them, you must re-add correctly.
+                    </p>
+                `;
+                } else if (formTarget == 4 || formTarget == 5) {
+                    content = `
+                        <h5 class="fw-semibold mb-3 text-primary">Evaluation Form (${formTarget == 4 ? 'Chairman' : 'Examiner/Panel'})</h5>
+                        <p class="text-muted">
+                            In evaluation forms, you must include the keywords <b>"Status"</b> or <b>"Decision"</b> for evaluation results.
+                        </p>
+                        <ul class="text-muted mb-2">
+                            <li>For Pass: use keywords <b>"Pass" / "Passed"</b></li>
+                            <li>For Pass (Minor Changes): include <b>"Minor" / "Small"</b></li>
+                            <li>For Pass (Major Changes): include <b>"Major" / "Many"</b></li>
+                            <li>For Resubmit: include <b>"Represent" / "Resubmit"</b></li>
+                            <li>For Fail: include <b>"Fail" / "Failed"</b></li>
+                        </ul>
+
+                        <p class="text-muted mb-2">
+                            For score fields, use keywords <b>"Score"</b> or <b>"Mark"</b> in label (e.g. <i>Examiner 1 Score</i>).
+                        </p>
+
+                        <p class="text-muted mb-2">
+                            For signature fields, always use <b>"Chairman"</b>, <b>"Examiner"</b>, or <b>"Panel"</b>. For multiple examiners, use labels like <b>"Examiner 1"</b>, <b>"Panel 1"</b> etc.
+                        </p>
+
+                        <p class="text-muted">
+                            The system will generate all required fields for you. Custom fields may be added but <span class="text-danger">system-generated fields must not be modified</span>.
+                        </p>
+                    `;
+
+                    // Extra note for Examiner (formTarget == 5)
+                    if (formTarget == 5) {
+                        content += `
+                        <p class="text-muted mt-3">
+                            For Examiner Evaluation, additional generated fields for <b>Criteria</b> and <b>Evaluation Level</b> will be provided. Please modify or add more as required.
+                        </p>
+                    `;
+                    }
+                }
+
+                // Inject into modal content
+                $('#specificGuideline').html(content);
+
+                // Finally show modal
+                $('#formStartupModal').modal('show');
+            }
+
             function getFormData() {
                 const addFFBtn = $('#addFormFieldBtn');
                 $.ajax({
@@ -726,6 +909,7 @@
 
                         if (response.success && Array.isArray(response.fields)) {
                             if (response.fields.length === 0) {
+                                showFormStartupModal($('#select_form_target_hidden').val(), af_id);
                                 $fieldList.append(`
                                     <li class="list-group-item text-center text-muted" id="noFieldMsg">
                                         This form doesn’t have any fields. Add one to get started!

@@ -727,6 +727,415 @@ class SOPController extends Controller
     }
 
     /* Form Editor [Checked : 9/5/2025] [Notes : Require Enhancement and Update] */
+    public function formGetStarted(Request $req)
+    {
+        try {
+            $af_id = $req->af_id;
+            $form_target = $req->form_target;
+
+            // ================================
+            // Submission Form (form_target == 1)
+            // ================================
+            if ($form_target == 1) {
+                $fields = [
+                    [
+                        'ff_category' => 3,
+                        'ff_label' => 'Section A : Student Details',
+                        'ff_order' => 1
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Student Name',
+                        'ff_order' => 2,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_name'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Matric No.',
+                        'ff_order' => 3,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_matricno'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Programme Of Study',
+                        'ff_order' => 4,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'prog_code [prog_mode]'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Title Of Research',
+                        'ff_order' => 5,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_titleOfResearch'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Main Supervisor',
+                        'ff_order' => 6,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'staff',
+                        'ff_datakey' => 'staff_name',
+                        'ff_extra_datakey' => 'supervision_role',
+                        'ff_extra_condition' => '1'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Co Supervisor',
+                        'ff_order' => 7,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'staff',
+                        'ff_datakey' => 'staff_name',
+                        'ff_extra_datakey' => 'supervision_role',
+                        'ff_extra_condition' => '2'
+                    ],
+                    [
+                        'ff_category' => 3,
+                        'ff_label' => 'Section B : Approvals',
+                        'ff_order' => 9
+                    ],
+                    [
+                        'ff_category' => 6,
+                        'ff_label' => 'Student Signature',
+                        'ff_order' => 10,
+                        'ff_component_required' => 1,
+                        'ff_signature_role' => 1,
+                        'ff_signature_key' => 'student_signature',
+                        'ff_signature_date_key' => 'student_signature_date'
+                    ],
+                    [
+                        'ff_category' => 6,
+                        'ff_label' => 'Supervisor Signature',
+                        'ff_order' => 11,
+                        'ff_component_required' => 1,
+                        'ff_signature_role' => 2,
+                        'ff_signature_key' => 'sv_signature',
+                        'ff_signature_date_key' => 'sv_signature_date'
+                    ]
+                ];
+            }
+
+            // ================================
+            // Nomination Form (form_target == 3)
+            // ================================
+            elseif ($form_target == 3) {
+                $fields = [
+                    [
+                        'ff_category' => 3,
+                        'ff_label' => 'Section 2: Nomination Details',
+                        'ff_order' => 7
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Examiner 1',
+                        'ff_order' => 8,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_component_required_role' => 1,
+                        'ff_value_options' => json_encode(['table' => 'staff', 'column' => 'staff_name'])
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Examiner 2',
+                        'ff_order' => 9,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_component_required_role' => 1,
+                        'ff_value_options' => json_encode(['table' => 'staff', 'column' => 'staff_name'])
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Examiner 3',
+                        'ff_order' => 10,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_component_required_role' => 1,
+                        'ff_value_options' => json_encode(['table' => 'staff', 'column' => 'staff_name'])
+                    ],
+                    [
+                        'ff_category' => 3,
+                        'ff_label' => 'Section 3: Result JKPPS - Committee Use',
+                        'ff_order' => 11
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Chairman',
+                        'ff_order' => 12,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_component_required_role' => 2,
+                        'ff_value_options' => json_encode(['table' => 'staff', 'column' => 'staff_name'])
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Final Examiner 1',
+                        'ff_order' => 13,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_component_required_role' => 2,
+                        'ff_value_options' => json_encode(['table' => 'staff', 'column' => 'staff_name'])
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Final Examiner 2',
+                        'ff_order' => 14,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_component_required_role' => 2,
+                        'ff_value_options' => json_encode(['table' => 'staff', 'column' => 'staff_name'])
+                    ],
+                    [
+                        'ff_category' => 6,
+                        'ff_label' => 'Main Supervisor Signature',
+                        'ff_order' => 15,
+                        'ff_component_required' => 1,
+                        'ff_signature_role' => 2,
+                        'ff_signature_key' => 'sv_signature',
+                        'ff_signature_date_key' => 'sv_signature_date'
+                    ]
+                ];
+            }
+
+            // =================================
+            // Evaluation Chairman (form_target == 4)
+            // =================================
+            elseif ($form_target == 4) {
+                $fields = [
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Decision',
+                        'ff_order' => 8,
+                        'ff_component_type' => 'radio',
+                        'ff_component_required' => 1,
+                        'ff_value_options' => json_encode([
+                            "Pass",
+                            "Pass with minor correction",
+                            "Pass with major correction",
+                            "Resubmit / Represent",
+                            "Fail"
+                        ])
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Maximum Duration for Proposal Defence Corrections',
+                        'ff_order' => 9,
+                        'ff_component_type' => 'radio',
+                        'ff_component_required' => 2,
+                        'ff_value_options' => json_encode(["Within 3 month", "Within 6 month"])
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Details Of Amendments Of The Research Proposal',
+                        'ff_order' => 10,
+                        'ff_component_type' => 'longtextarea',
+                        'ff_component_required' => 2
+                    ],
+                    [
+                        'ff_category' => 4,
+                        'ff_label' => '<h4>Score</h4>',
+                        'ff_order' => 11,
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Examiner 1 Score',
+                        'ff_order' => 12,
+                        'ff_component_type' => 'text',
+                        'ff_component_required' => 1
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Examiner 2 Score',
+                        'ff_order' => 13,
+                        'ff_component_type' => 'text',
+                        'ff_component_required' => 1
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'Average Score',
+                        'ff_order' => 14,
+                        'ff_component_type' => 'text',
+                        'ff_component_required' => 1
+                    ],
+                    [
+                        'ff_category' => 4,
+                        'ff_label' => '<h4>Student</h4>',
+                        'ff_order' => 15,
+                    ],
+                    [
+                        'ff_category' => 6,
+                        'ff_label' => 'Student Signature',
+                        'ff_order' => 16,
+                        'ff_component_required' => 1,
+                        'ff_signature_role' => 1,
+                        'ff_signature_key' => 'student_signature',
+                        'ff_signature_date_key' => 'student_signature_date'
+                    ],
+                    [
+                        'ff_category' => 4,
+                        'ff_label' => '<h4>Chairman & Examiner Member</h4>',
+                        'ff_order' => 17,
+                    ],
+                    [
+                        'ff_category' => 6,
+                        'ff_label' => 'Chairman',
+                        'ff_order' => 18,
+                        'ff_component_required' => 1,
+                        'ff_signature_role' => 7,
+                        'ff_signature_key' => 'chairman_signature',
+                        'ff_signature_date_key' => 'chairman_signature_date'
+                    ],
+                    [
+                        'ff_category' => 6,
+                        'ff_label' => 'Examiner 1',
+                        'ff_order' => 19,
+                        'ff_component_required' => 1,
+                        'ff_signature_role' => 8,
+                        'ff_signature_key' => 'examiner_1_signature',
+                        'ff_signature_date_key' => 'examiner_1_signature_date'
+                    ],
+                    [
+                        'ff_category' => 6,
+                        'ff_label' => 'Examiner 2',
+                        'ff_order' => 20,
+                        'ff_component_required' => 1,
+                        'ff_signature_role' => 8,
+                        'ff_signature_key' => 'examiner_2_signature',
+                        'ff_signature_date_key' => 'examiner_2_signature_date'
+                    ],
+                ];
+            }
+
+            // ===================================
+            // Evaluation Examiner/Panel (form_target == 5)
+            // ===================================
+            elseif ($form_target == 5) {
+                $fields = [
+                    [
+                        'ff_category' => 4,
+                        'ff_label' => '<h4>C1: Student demonstrates ability to state problem statements and research objectives clearly and well-conceptualized.</h4><ul><li><strong>Poor [0-2]:</strong> Demonstrates no or little ability to describe research objective and problem.</li><li><strong>Fair [3-5]:</strong> Demonstrates a fair ability describe research objective and problem.</li><li><strong>Good [6-7]:</strong> Demonstrates a good ability to describe research objective and problem</li><li><strong>Excellent [8-10]:</strong> Demonstrates an excellent ability describe research objective and problem.</li></ul>',
+                        'ff_order' => 9,
+                        'ff_component_required' => 1,
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'C1 : Evaluation Score',
+                        'ff_order' => 10,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_value_options' => json_encode(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
+                        'ff_append_text' => '[EL] Evaluation Level - 0 to 10'
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'C1: Marks (EL x W)',
+                        'ff_order' => 11,
+                        'ff_component_type' => 'text',
+                        'ff_component_required' => 1,
+                        'ff_append_text' => '[W] Weightage = 2'
+                    ],
+                    [
+                        'ff_category' => 4,
+                        'ff_label' => '<h4>C2: Student demonstrates ability to integrate relevant literature.</h4><ul><li><strong>Poor [0-2]:</strong> Demonstrates no or little understanding of relevant literature.</li><li><strong>Fair [3-5]:</strong> Demonstrates a fair understanding of relevant literature.</li><li><strong>Good [6-7]:</strong> Demonstrates a good understanding of relevant literature</li><li><strong>Excellent [8-10]:</strong> Demonstrates an excellent understanding of relevant literature.</li></ul>',
+                        'ff_order' => 12,
+                        'ff_component_required' => 1,
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'C2 : Evaluation Score',
+                        'ff_order' => 13,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_value_options' => json_encode(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
+                        'ff_append_text' => '[EL] Evaluation Level - 0 to 10'
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'C2: Marks (EL x W)',
+                        'ff_order' => 14,
+                        'ff_component_type' => 'text',
+                        'ff_component_required' => 1,
+                        'ff_append_text' => '[W] Weightage = 3'
+                    ],
+                    [
+                        'ff_category' => 4,
+                        'ff_label' => '<h4>C3: Student demonstrates knowledge of appropriate research strategies and methods.</h4><ul><li><strong>Poor [0-2]:</strong> Demonstrates no or little knowledge of research and methods.</li><li><strong>Fair [3-5]:</strong> Demonstrates a fair knowledge of research and methods.</li><li><strong>Good [6-7]:</strong> Demonstrates a good knowledge of research and methods</li><li><strong>Excellent [8-10]:</strong> Demonstrates an excellent knowledge of research and methods.</li></ul>',
+                        'ff_order' => 15,
+                        'ff_component_required' => 1,
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'C3 : Evaluation Score',
+                        'ff_order' => 16,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_value_options' => json_encode(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
+                        'ff_append_text' => '[EL] Evaluation Level - 0 to 10'
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'C3: Marks (EL x W)',
+                        'ff_order' => 17,
+                        'ff_component_type' => 'text',
+                        'ff_component_required' => 1,
+                        'ff_append_text' => '[W] Weightage = 4'
+                    ],
+                    [
+                        'ff_category' => 4,
+                        'ff_label' => '<h4>C4: Student demonstrates ability to orally present problem, objectives, approach and plan for dissertation research.</h4><ul><li><strong>Poor [0-2]:</strong> Demonstrates no or little ability to present orally the proposed dissertation research.</li><li><strong>Fair [3-5]:</strong> Demonstrates a fair ability to present orally the proposed dissertation research.</li><li><strong>Good [6-7]:</strong> Demonstrates a good ability to present orally the proposed dissertation research</li><li><strong>Excellent [8-10]:</strong> Demonstrates an excellent ability to present orally the proposed dissertation research.</li></ul>',
+                        'ff_order' => 18,
+                        'ff_component_required' => 1,
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'C4 : Evaluation Score',
+                        'ff_order' => 19,
+                        'ff_component_type' => 'select',
+                        'ff_component_required' => 1,
+                        'ff_value_options' => json_encode(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
+                        'ff_append_text' => '[EL] Evaluation Level - 0 to 10'
+                    ],
+                    [
+                        'ff_category' => 1,
+                        'ff_label' => 'C4: Marks (EL x W)',
+                        'ff_order' => 20,
+                        'ff_component_type' => 'text',
+                        'ff_component_required' => 1,
+                        'ff_append_text' => '[W] Weightage = 1'
+                    ],
+                    [
+                        'ff_category' => 6,
+                        'ff_label' => 'Examiner',
+                        'ff_order' => 21,
+                        'ff_component_required' => 1,
+                        'ff_signature_role' => 8,
+                        'ff_signature_key' => 'examiner_signature',
+                        'ff_signature_date_key' => 'examiner_signature_date'
+                    ]
+                ];
+            }
+
+
+            // ============ INSERT TO DATABASE ============
+            foreach ($fields as $fieldData) {
+                $fieldData['af_id'] = $af_id;
+                $fieldData['created_at'] = now();
+                $fieldData['updated_at'] = now();
+                FormField::insert($fieldData);
+            }
+
+            return back()->with('success', 'Form template has been generated successfully!');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error getting started: ' . $e->getMessage());
+        }
+    }
+
+
     public function formEditor($formID, $afTarget)
     {
         try {

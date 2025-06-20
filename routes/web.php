@@ -181,6 +181,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/delete-form-activity-{afID}', [SOPController::class, 'deleteActivityForm'])->name('delete-form-activity-get');
 
     /* Form Editor */
+    Route::post('/form-get-started', [SOPController::class, 'formGetStarted'])->name('form-get-started-post');
     Route::get('/form-editor-{formID}-{afTarget}', [SOPController::class, 'formEditor'])->name('form-editor');
     Route::post('/get-activity-form-data', [SOPController::class, 'getActivityFormData'])->name('get-activity-form-data-post');
     Route::get('/activity-document-preview', [SOPController::class, 'previewActivityDocument'])->name('activity-document-preview-get');
