@@ -1012,16 +1012,23 @@ class NominationController extends Controller
             }
 
             if ($option == 1) {
+                /* GET SIGNATURE DATA */
+                $formSignatureFields = FormField::where('af_id', $form->id)
+                    ->where('ff_category', 6)
+                    ->pluck('ff_signature_key')
+                    ->toArray();
 
                 /* PROCESS EVALUATOR DATA */
                 $evaluatorFields = $this->getEvaluatorFields($form);
-                $this->processEvaluators($req, $evaluatorFields, $nomination, $mode);
+                $this->processEvaluators($req, $evaluatorFields, $nomination, $formSignatureFields, $mode);
 
                 /* PROCESS SIGNATURE DATA */
                 $signatureData = $req->input('signatureData', []);
                 if (!empty($signatureData)) {
                     if ($mode == 1) {
                         $this->storeNominationSignature($student, $form, $signatureData, $nomination, 2, auth()->user());
+                    } else if ($mode == 2) {
+                        $this->storeNominationSignature($student, $form, $signatureData, $nomination, 4, auth()->user());
                     } else if ($mode == 3) {
                         $this->storeNominationSignature($student, $form, $signatureData, $nomination, 5, auth()->user());
                     } else if ($mode == 4) {
@@ -1046,13 +1053,24 @@ class NominationController extends Controller
                 if ($mode == 1) {
                     $nomination->nom_status = 2;
                 } else if ($mode == 2) {
-                    $nomination->nom_status = 3;
+                    if (in_array('deputy_dean_signature', $formSignatureFields) || in_array('dean_signature', $formSignatureFields)) {
+                        $nomination->nom_status = 3;
+                    } else {
+                        $nomination->nom_status = 4;
+
+                        $evaluator = Evaluator::where('nom_id', $nomination->id)->where('eva_status', 3)->get();
+                        foreach ($evaluator as $eva) {
+                            $evaluation = new Evaluation();
+                            $evaluation->student_id = $studentId;
+                            $evaluation->staff_id = $eva->staff_id;
+                            $evaluation->activity_id = $actID;
+                            $evaluation->evaluation_status = 1;
+                            $evaluation->save();
+                        }
+                    }
                 } else if ($mode == 3 || $mode == 4) {
                     $nomination->nom_status = 4;
-
                     $evaluator = Evaluator::where('nom_id', $nomination->id)->where('eva_status', 3)->get();
-                    
-                    /* ADD RECORD FOR EVALUATION PHASE */
                     foreach ($evaluator as $eva) {
                         $evaluation = new Evaluation();
                         $evaluation->student_id = $studentId;
@@ -1125,15 +1143,20 @@ class NominationController extends Controller
     }
 
     /* Process Evaluator - Fuzzy Match */
-    protected function processEvaluators($req, $evaluatorFields, $nomination, $mode)
+    protected function processEvaluators($req, $evaluatorFields, $nomination, $formSignatureFields, $mode)
     {
         /* DELETE EXISTING NOMINATION [IF ANY] */
         if ($mode == 1) {
             Evaluator::where('nom_id', $nomination->id)->where('eva_status', 1)->delete();
             $status = 1;
         } else if ($mode == 2) {
-            Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->delete();
-            $status = 2;
+            if (in_array('deputy_dean_signature', $formSignatureFields) || in_array('dean_signature', $formSignatureFields)) {
+                Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->delete();
+                $status = 2;
+            } else {
+                Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->update(['eva_status' => 3]);
+                $status = 3;
+            }
         } else if ($mode == 3 || $mode == 4) {
             Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->update(['eva_status' => 3]);
             $status = 3;

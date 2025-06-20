@@ -25771,7 +25771,7 @@ select[data-multiselectsplitter-secondselect-selector].dataTable-input {
 }
 .auth-main .auth-wrapper.v1 .auth-form {
   flex-direction: column;
-  background: url("../images/authentication/img-auth-bg.jpg");
+  /* background: url("../images/authentication/img-auth-bg.jpg"); */
   min-height: 100vh;
   padding: 24px;
   background-size: cover;

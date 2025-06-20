@@ -180,7 +180,7 @@
     <!-- [ Pre-loader ] End -->
 
     <!-- [ Sidebar Menu ] start -->
-    @include('student.layouts.sidebar')
+    @include('student.layouts.sidebar-new')
     <!-- [ Sidebar Menu ] end -->
 
     <!-- [ Header Topbar ] start -->
