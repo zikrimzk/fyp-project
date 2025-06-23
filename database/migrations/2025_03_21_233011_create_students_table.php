@@ -31,9 +31,6 @@ return new class extends Migration
             $table->foreignId('programme_id')->constrained('programmes');
             $table->rememberToken();
             $table->timestamps();
-
-
-            /*$table->string('student_bio')->nullable();*/
         });
     }
 

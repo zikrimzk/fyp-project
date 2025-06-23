@@ -155,23 +155,297 @@
             }
         }
 
-        .list-description {
-            font-size: 1rem;
-            /* Increase font size for better readability */
-            color: #333 !important;
-            /* Darker text for better contrast */
+        /* Custom classes to avoid conflicts with existing modals */
+        .startup-modal .modal-dialog {
+            max-height: 90vh;
+            margin: 1.75rem auto;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(50px);
-            }
+        .startup-modal .modal-dialog-scrollable {
+            height: auto;
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .startup-modal .modal-content {
+            border: none;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+
+        .startup-modal .modal-header {
+            background-color: rgba(50, 54, 57, 255);
+            color: white;
+            border-bottom: none;
+            padding: 2rem 1.5rem 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .startup-modal .modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+            opacity: 0.5;
+        }
+
+        .startup-modal .modal-body {
+            overflow-y: auto;
+            padding: 1.5rem;
+            flex: 1 1 auto;
+            -webkit-overflow-scrolling: touch;
+            max-height: calc(90vh - 200px);
+        }
+
+        /* Custom scrollbar for modal body */
+        .startup-modal .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .startup-modal .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .startup-modal .modal-body::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .startup-modal .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .startup-modal .modal-footer {
+            border-top: 1px solid #e9ecef;
+            padding: 1rem 1.5rem;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* Rest of styles with updated color */
+        .startup-modal .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .startup-modal .modal-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
+            margin: 0;
+        }
+
+        .startup-modal .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .startup-modal .section-icon {
+            width: 22px;
+            height: 22px;
+            background: rgba(50, 54, 57, 255);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .startup-modal .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .startup-modal .category-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .startup-modal .category-item:hover {
+            border-color: rgba(50, 54, 57, 255);
+            box-shadow: 0 2px 8px rgba(50, 54, 57, 0.1);
+        }
+
+        .startup-modal .category-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #495057;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .startup-modal .category-desc {
+            font-size: 0.8rem;
+            color: #6c757d;
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .startup-modal .guidelines-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .startup-modal .guidelines-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .startup-modal .guidelines-content {
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #6c757d;
+        }
+
+        .startup-modal .guidelines-content p {
+            margin-bottom: 0.75rem;
+        }
+
+        .startup-modal .guideline-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 0.375rem;
+            border-left: 3px solid rgba(50, 54, 57, 255);
+            /* Updated color */
+        }
+
+        .startup-modal .guideline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .startup-modal .guideline-icon {
+            margin-right: 0.5rem;
+            margin-top: 0.1rem;
+            color: rgba(50, 54, 57, 255);
+            /* Updated color */
+            font-size: 1rem;
+        }
+
+        .startup-modal .highlight {
+            background: #fff3cd;
+            color: #856404;
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        .startup-modal .danger-text {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .startup-modal .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.5rem;
+            margin: 0.75rem 0;
+        }
+
+        .startup-modal .status-item {
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .startup-modal .status-pass {
+            background: #d1edff;
+            color: rgba(50, 54, 57, 255);
+            /* Updated color */
+        }
+
+        .startup-modal .status-minor {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .startup-modal .status-major {
+            background: #cff4fc;
+            color: #055160;
+        }
+
+        .startup-modal .status-resubmit {
+            background: #e2e3e5;
+            color: #41464b;
+        }
+
+        .startup-modal .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .startup-modal .note-badge {
+            background: #e7f3ff;
+            color: rgba(50, 54, 57, 255);
+            /* Updated color */
+            padding: 0.4rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid #b3d7ff;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .startup-modal .startup-submit-btn {
+            background: rgba(50, 54, 57, 255);
+            /* Updated color */
+            border: none;
+            padding: 0.75rem 2.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: white;
+            transition: all 0.2s ease;
+        }
+
+        .startup-modal .startup-submit-btn:hover {
+            background: rgba(40, 44, 47, 255);
+            /* Slightly darker on hover */
+            transform: translateY(-1px);
+            color: white;
+            box-shadow: 0 4px 12px rgba(50, 54, 57, 0.3);
+            /* Updated shadow color */
         }
 
         @media (max-width: 768px) {
@@ -192,6 +466,26 @@
 
             .draggable-item {
                 padding: 10px 12px;
+            }
+
+            .startup-modal .modal-dialog {
+                margin: 0.5rem;
+            }
+
+            .startup-modal .category-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .startup-modal .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .startup-modal .modal-header {
+                padding: 1.5rem 1rem 1rem;
+            }
+
+            .startup-modal .modal-title {
+                font-size: 1.3rem;
             }
         }
     </style>
@@ -219,7 +513,8 @@
                                     <div class="row align-items-center">
                                         <div class="col-md-12">
                                             <ul class="breadcrumb text-white">
-                                                <li class="breadcrumb-item"><a href="javascript: void(0)" class="text-white">Administrator</a>
+                                                <li class="breadcrumb-item"><a href="javascript: void(0)"
+                                                        class="text-white">Administrator</a>
                                                 </li>
                                                 <li class="breadcrumb-item">SOP</li>
                                                 <li class="breadcrumb-item"><a href="{{ route('form-setting') }}"
@@ -397,8 +692,7 @@
                                         <option value="1">Input</option>
                                         <option value="2">Output</option>
                                         <option value="3">Section</option>
-                                        <option value="4">Text</option>
-                                        <option value="5" disabled>Table</option>
+                                        <option value="4">Text Editor</option>
                                         <option value="6">Signature</option>
                                     </select>
                                 </div>
@@ -438,6 +732,56 @@
                                         placeholder="Enter input placeholder">
                                 </div>
 
+                                <!-- Value Options -->
+                                <div class="mb-3 input-field-group value-options">
+                                    <div class="card border-1">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Value Options</h5>
+                                            <small>Define options for select, checkbox, or radio fields</small>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Comma-separated input section -->
+                                            <div class="mb-3">
+                                                <label for="ff_value_options" class="form-label">Value Options
+                                                    (for select, checkbox, radio)</label>
+                                                <textarea type="text" id="options-input" class="form-control" rows="2"
+                                                    placeholder="Option 1, Option 2, Option 3"></textarea>
+                                                <small class="text-muted">Enter options separated by commas</small>
+                                                <input type="hidden" id="ff_value_options" name="ff_value_options">
+                                            </div>
+
+                                            <!-- Divider with "OR" -->
+                                            <div class="d-flex align-items-center my-3">
+                                                <hr class="flex-grow-1">
+                                                <span class="px-3 text-muted small">OR</span>
+                                                <hr class="flex-grow-1">
+                                            </div>
+
+                                            <!-- Table selection section -->
+                                            <div class="mb-3">
+                                                <label for="ff_value_options_table" class="form-label">Value
+                                                    Options (Using Table)</label>
+                                                <div class="row g-2">
+                                                    <div class="col-md-6">
+                                                        <select name="ff_value_options_table" class="form-select"
+                                                            id="ff_value_options_table">
+                                                            <option value="" selected>-- Select Table --</option>
+                                                            <option value="students">Student</option>
+                                                            <option value="staff">Staff</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <select name="ff_value_options_column" class="form-select"
+                                                            id="ff_value_options_column">
+                                                            <option value="" selected>-- Select Column --</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Required -->
                                 <div class="mb-3 input-field-group required-option">
                                     <label for="ff_component_required" class="form-label">Is this field
@@ -461,31 +805,6 @@
                                         <option value="4">Dean</option>
                                         <option value="5">Examiner / Panel</option>
                                         <option value="6">Chairman</option>
-                                    </select>
-                                </div>
-
-                                <!-- Value Options -->
-                                <div class="mb-3 input-field-group value-options">
-                                    <label for="ff_value_options" class="form-label">Value Options (for select,
-                                        checkbox, radio)</label>
-                                    <textarea class="form-control" id="ff_value_options" name="ff_value_options" rows="2"
-                                        placeholder='e.g. ["Option 1", "Option 2"]'></textarea>
-
-                                    <div class="d-flex justify-content-center  align-items-center mt-2 mb-2">------ OR
-                                        ------</div>
-
-                                    <label for="ff_value_options_table" class="form-label">Value Options (Using
-                                        Table)</label>
-                                    <select name="ff_value_options_table" class="form-select"
-                                        id="ff_value_options_table">
-                                        <option value="" selected>-- Select Field Table --</option>
-                                        <option value="students">Student</option>
-                                        <option value="staff">Staff</option>
-                                    </select>
-
-                                    <select name="ff_value_options_column" class="form-select mt-2"
-                                        id="ff_value_options_column">
-                                        <option value="" selected>-- Select Column --</option>
                                     </select>
                                 </div>
 
@@ -607,81 +926,108 @@
                 </div>
                 <!-- [ Add & Update Form Field Modal ] end -->
 
+                <form id="formStartupForm" action="{{ route('form-get-started-post') }}" method="post">
+                    @csrf
+                    <div class="modal fade startup-modal" id="formStartupModal" data-bs-backdrop="static"
+                        data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
 
-                <div class="modal fade" id="formStartupModal" data-bs-backdrop="static" data-bs-keyboard="false"
-                    tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-centered">
-                        <div class="modal-content border-0 shadow rounded-4">
-                            <form id="formStartupForm" action="{{ route('form-get-started-post') }}" method="post">
-                                @csrf
-                                <div class="modal-body p-5">
 
-                                    <!-- Header -->
-                                    <div class="text-center mb-4">
-                                        <h3 class="fw-bold text-primary mb-3">Welcome to e-PostGrad Form Builder</h3>
-                                        <p class="fs-5 text-muted">Quick setup before you begin building your form.</p>
+                                <!-- Header -->
+                                <div class="modal-header">
+                                    <div class="w-100">
+                                        <h3 class="modal-title text-white">
+                                            <i class="ti ti-forms me-2"></i>
+                                            e-PostGrad Form Builder
+                                        </h3>
+                                        <p class="modal-subtitle">Configure your form settings and guidelines before
+                                            building</p>
                                     </div>
+                                </div>
 
-                                    <!-- General Guidelines -->
+                                <!-- Scrollable Body -->
+                                <div class="modal-body">
+                                    <!-- Field Categories Overview -->
                                     <div class="mb-4">
-                                        <h5 class="fw-semibold text-dark mb-3">Form Field Categories</h5>
-                                        <div class="row g-2">
-                                            <div class="col-md-4">
-                                                <div class="p-3 border rounded-3 bg-light">
-                                                    <strong>Input*</strong><br>
-                                                    Interactive fields (text, select, radio etc.)
+                                        <div class="section-title">
+                                            <span class="section-icon">
+                                                <i class="ti ti-adjustments"></i>
+                                            </span>
+                                            Form Field Categories
+                                        </div>
+
+                                        <div class="category-grid">
+                                            <div class="category-item">
+                                                <div class="category-name">
+                                                    <i class="ti ti-edit text-primary"></i>
+                                                    Input*
                                                 </div>
+                                                <p class="category-desc">Interactive fields for data entry</p>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="p-3 border rounded-3 bg-light">
-                                                    <strong>Output</strong><br>
-                                                    Read-only system fields.
+
+                                            <div class="category-item">
+                                                <div class="category-name">
+                                                    <i class="ti ti-eye text-success"></i>
+                                                    Output
                                                 </div>
+                                                <p class="category-desc">Read-only system fields</p>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="p-3 border rounded-3 bg-light">
-                                                    <strong>Section</strong><br>
-                                                    Form logical headings.
+
+                                            <div class="category-item">
+                                                <div class="category-name">
+                                                    <i class="ti ti-section text-info"></i>
+                                                    Section
                                                 </div>
+                                                <p class="category-desc">Form section headings</p>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="p-3 border rounded-3 bg-light">
-                                                    <strong>Text</strong><br>
-                                                    Static information blocks.
+
+                                            <div class="category-item">
+                                                <div class="category-name">
+                                                    <i class="ti ti-file-text text-warning"></i>
+                                                    Text
                                                 </div>
+                                                <p class="category-desc">Static information blocks</p>
                                             </div>
-                                            <div class="col-md-4">
-                                                <div class="p-3 border rounded-3 bg-light">
-                                                    <strong>Signature</strong><br>
-                                                    Approval signatures.
+
+                                            <div class="category-item">
+                                                <div class="category-name">
+                                                    <i class="ti ti-writing-sign text-secondary"></i>
+                                                    Signature
                                                 </div>
+                                                <p class="category-desc">Digital approval signatures</p>
                                             </div>
                                         </div>
-                                        <p class="mt-3 small text-muted"><strong>*</strong> Input fields are not allowed
-                                            for Submission form.</p>
+
+                                        <div class="text-center">
+                                            <span class="note-badge">
+                                                <i class="ti ti-info-circle"></i>
+                                                Input fields are not allowed for Submission forms
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <!-- Specific Instructions -->
-                                    <div id="specificGuideline" class="p-4 bg-light border rounded-3 mb-4">
-                                        <!-- This content will be injected dynamically -->
+                                    <!-- Specific Guidelines -->
+                                    <div id="specificGuideline" class="guidelines-section">
+                                        <!-- Dynamic content will be injected here -->
                                     </div>
 
                                     <!-- Hidden Fields -->
                                     <input type="hidden" id="startup_form_target" name="form_target" value="">
                                     <input type="hidden" id="startup_af_id" name="af_id" value="">
-
-                                    <!-- Footer -->
-                                    <div class="text-center">
-                                        <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
-                                            <i class="ti ti-rocket me-2"></i> Get Started
-                                        </button>
-                                    </div>
-
                                 </div>
-                            </form>
+
+                                <!-- Modal Footer -->
+                                <div class="modal-footer">
+                                    <button type="submit" class="startup-submit-btn">
+                                        <i class="ti ti-rocket me-2"></i>
+                                        Start Building
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </form>
 
             </div>
             <!-- [ Main Content ] end -->
@@ -699,6 +1045,14 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
+
+            $('#options-input').on('input', function() {
+                const options = $(this).val()
+                    .split(',')
+                    .map(opt => opt.trim())
+                    .filter(opt => opt);
+                $('#ff_value_options').val(JSON.stringify(options));
+            });
 
             /*********************************************************
              ***************GLOBAL FUNCTION & VARIABLES***************
@@ -783,67 +1137,141 @@
 
                 if (formTarget == 1) {
                     content = `
-                    <h5 class="fw-semibold mb-3 text-primary">Submission Form</h5>
-                    <p class="text-muted">
-                        In this submission form, you can only add the output-related fields since there is no user interaction required in the system. The <b>signature field IS A MUST</b> for this form.
-                    </p>
-                    <p class="text-muted">
-                        <b>Important:</b> The system will generate all required fields for you. <span class="text-danger">Do not modify or remove system-generated fields</span> or the submission process may fail.
-                    </p>
+                    <div class="guidelines-title">
+                        <span class="section-icon">
+                            <i class="ti ti-file-upload"></i>
+                        </span>
+                        Submission Form Guidelines
+                    </div>
+                    <div class="guidelines-content">
+                        <p>Configure your submission form with output fields and signatures only.</p>
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-checkbox guideline-icon"></i>
+                            <div>
+                                <strong>Required Field:</strong> A <span class="highlight">signature field</span> is mandatory for all submission forms.
+                            </div>
+                        </div>
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-settings guideline-icon"></i>
+                            <div>
+                                <strong>Auto-Generation:</strong> The system will create all necessary fields automatically for you.
+                            </div>
+                        </div>
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-alert-triangle guideline-icon"></i>
+                            <div>
+                                <strong>Important:</strong> <span class="danger-text">Do not modify or remove system-generated fields</span> as this may cause submission failures.
+                            </div>
+                        </div>
+                    </div>
                 `;
                 } else if (formTarget == 3) {
                     content = `
-                    <h5 class="fw-semibold mb-3 text-primary">Nomination Form</h5>
-                    <p class="text-muted">
-                        For nomination forms, you must use the keywords <b>"Examiner"</b>, <b>"Panel"</b>, and <b>"Chairman"</b> inside the field labels to allow the system to correctly map staff during nomination.
-                    </p>
-                    <p class="text-muted">
-                        The system will generate all required fields for you. You may freely add or adjust custom fields, but <span class="text-danger">do not modify system-generated fields</span>. If you accidentally modify them, you must re-add correctly.
-                    </p>
+                    <div class="guidelines-title">
+                        <span class="section-icon">
+                            <i class="ti ti-users"></i>
+                        </span>
+                        Nomination Form Guidelines
+                    </div>
+                    <div class="guidelines-content">
+                        <p>Set up nomination workflows with proper staff role mapping.</p>
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-tags guideline-icon"></i>
+                            <div>
+                                <strong>Required Keywords:</strong> Use <span class="highlight">Examiner</span>, <span class="highlight">Panel</span>, and <span class="highlight">Chairman</span> in field labels for system mapping.
+                            </div>
+                        </div>
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-tool guideline-icon"></i>
+                            <div>
+                                <strong>Customization:</strong> You can freely add or adjust custom fields as needed.
+                            </div>
+                        </div>
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-shield-lock guideline-icon"></i>
+                            <div>
+                                <strong>System Fields:</strong> <span class="danger-text">Do not modify system-generated fields</span>. If modified, re-add them correctly.
+                            </div>
+                        </div>
+                    </div>
                 `;
                 } else if (formTarget == 4 || formTarget == 5) {
+                    const roleType = formTarget == 4 ? 'Chairman' : 'Examiner/Panel';
                     content = `
-                        <h5 class="fw-semibold mb-3 text-primary">Evaluation Form (${formTarget == 4 ? 'Chairman' : 'Examiner/Panel'})</h5>
-                        <p class="text-muted">
-                            In evaluation forms, you must include the keywords <b>"Status"</b> or <b>"Decision"</b> for evaluation results.
-                        </p>
-                        <ul class="text-muted mb-2">
-                            <li>For Pass: use keywords <b>"Pass" / "Passed"</b></li>
-                            <li>For Pass (Minor Changes): include <b>"Minor" / "Small"</b></li>
-                            <li>For Pass (Major Changes): include <b>"Major" / "Many"</b></li>
-                            <li>For Resubmit: include <b>"Represent" / "Resubmit"</b></li>
-                            <li>For Fail: include <b>"Fail" / "Failed"</b></li>
-                        </ul>
-
-                        <p class="text-muted mb-2">
-                            For score fields, use keywords <b>"Score"</b> or <b>"Mark"</b> in label (e.g. <i>Examiner 1 Score</i>).
-                        </p>
-
-                        <p class="text-muted mb-2">
-                            For signature fields, always use <b>"Chairman"</b>, <b>"Examiner"</b>, or <b>"Panel"</b>. For multiple examiners, use labels like <b>"Examiner 1"</b>, <b>"Panel 1"</b> etc.
-                        </p>
-
-                        <p class="text-muted">
-                            The system will generate all required fields for you. Custom fields may be added but <span class="text-danger">system-generated fields must not be modified</span>.
-                        </p>
-                    `;
-
-                    // Extra note for Examiner (formTarget == 5)
-                    if (formTarget == 5) {
-                        content += `
-                        <p class="text-muted mt-3">
-                            For Examiner Evaluation, additional generated fields for <b>Criteria</b> and <b>Evaluation Level</b> will be provided. Please modify or add more as required.
-                        </p>
-                    `;
-                    }
+                    <div class="guidelines-title">
+                        <span class="section-icon">
+                            <i class="ti ti-clipboard-check"></i>
+                        </span>
+                        ${roleType} Evaluation Guidelines
+                    </div>
+                    <div class="guidelines-content">
+                        <p>Configure evaluation criteria with proper status and scoring fields.</p>
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-checklist guideline-icon"></i>
+                            <div>
+                                <strong>Status Fields:</strong> Include <span class="highlight">Status</span> or <span class="highlight">Decision</span> keywords in labels.
+                                <div class="status-grid mt-2">
+                                    <div class="status-item status-pass"><strong>Pass:</strong> Pass/Passed</div>
+                                    <div class="status-item status-minor"><strong>Minor:</strong> Minor/Small</div>
+                                    <div class="status-item status-major"><strong>Major:</strong> Major/Many</div>
+                                    <div class="status-item status-resubmit"><strong>Resubmit:</strong> Represent/Resubmit</div>
+                                    <div class="status-item status-fail"><strong>Fail:</strong> Fail/Failed</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-calculator guideline-icon"></i>
+                            <div>
+                                <strong>Score Fields:</strong> Use <span class="highlight">Score</span> or <span class="highlight">Mark</span> keywords (e.g., "Examiner 1 Score").
+                            </div>
+                        </div>
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-writing-sign guideline-icon"></i>
+                            <div>
+                                <strong>Signature Labels:</strong> Use <span class="highlight">Chairman</span>, <span class="highlight">Examiner</span>, or <span class="highlight">Panel</span>. For multiple: "Examiner 1", "Panel 1", etc.
+                            </div>
+                        </div>
+                        
+                        ${formTarget == 5 ? `
+                                                                <div class="guideline-item">
+                                                                    <i class="ti ti-list-details guideline-icon"></i>
+                                                                    <div>
+                                                                        <strong>Additional Fields:</strong> <span class="highlight">Criteria</span> and <span class="highlight">Evaluation Level</span> fields will be auto-generated.
+                                                                    </div>
+                                                                </div>` : ''}
+                        
+                        <div class="guideline-item">
+                            <i class="ti ti-shield-lock guideline-icon"></i>
+                            <div>
+                                <strong>System Protection:</strong> <span class="danger-text">Do not modify system-generated fields</span> to maintain evaluation integrity.
+                            </div>
+                        </div>
+                    </div>
+                `;
                 }
 
                 // Inject into modal content
                 $('#specificGuideline').html(content);
 
-                // Finally show modal
+                // Show modal
                 $('#formStartupModal').modal('show');
             }
+
+            function validateFunctions(formTarget) {
+                if (formTarget == 1) {
+                    $('#ff_category option[value="1"]').prop('disabled', true);
+                }
+            }
+
 
             function getFormData() {
                 const addFFBtn = $('#addFormFieldBtn');
@@ -865,6 +1293,7 @@
                         if (response.success) {
                             $('#txt_form_title').val(response.formTitle);
                             $('#select_form_target').val(response.formTarget);
+                            validateFunctions(response.formTarget);
                             $('#select_form_target_hidden').val(response.formTarget);
                             $('#select_form_status').val(response.formStatus);
                             $('#documentContainer').attr('src',
@@ -1304,6 +1733,7 @@
                     $('#ff_placeholder').val('');
                     $('#ff_component_required').val('1');
                     $('#ff_component_required_role').val('0');
+                    $('#value_options').val('');
                     $('#ff_value_options').val('');
                     $('#ff_value_options_table').val('');
                     $('#ff_value_options_column').val('');
@@ -1393,6 +1823,16 @@
                                 $('#ff_value_options').val(valueOptions);
                                 $('#ff_value_options_table').val('');
                                 $('#ff_value_options_column').val('');
+
+                                const initialOptions = $('#ff_value_options').val();
+                                if (initialOptions) {
+                                    try {
+                                        const optionsArray = JSON.parse(initialOptions);
+                                        $('#options-input').val(optionsArray.join(', '));
+                                    } catch (e) {
+                                        console.error("Invalid JSON in ff_value_options", e);
+                                    }
+                                }
                             }
                         } catch (e) {
                             // Not JSON - manual options
@@ -1578,6 +2018,16 @@
                                 $('#ff_value_options').val(valueOptions);
                                 $('#ff_value_options_table').val('');
                                 $('#ff_value_options_column').val('');
+
+                                const initialOptions = $('#ff_value_options').val();
+                                if (initialOptions) {
+                                    try {
+                                        const optionsArray = JSON.parse(initialOptions);
+                                        $('#options-input').val(optionsArray.join(', '));
+                                    } catch (e) {
+                                        console.error("Invalid JSON in ff_value_options", e);
+                                    }
+                                }
                             }
                         } catch (e) {
                             // Not JSON - manual options
