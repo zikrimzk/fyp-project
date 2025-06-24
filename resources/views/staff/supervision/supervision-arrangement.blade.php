@@ -206,11 +206,8 @@
                                             <label for="student_titleOfResearch" class="form-label">
                                                 Title of Research
                                             </label>
-                                            <input type="text"
-                                                class="form-control @error('student_titleOfResearch') is-invalid @enderror"
-                                                id="student_titleOfResearch" name="student_titleOfResearch"
-                                                placeholder="Enter Title of Research"
-                                                value="{{ $upd->student_titleOfResearch }}">
+                                            <textarea name="student_titleOfResearch" class="form-control @error('student_titleOfResearch') is-invalid @enderror"
+                                                id="student_titleOfResearch" rows="5" placeholder="Enter Title of Research">{{ $upd->student_titleOfResearch }}</textarea>
                                             @error('student_titleOfResearch')
                                                 <div class="invalid-feedback">
                                                     {{ $message }}

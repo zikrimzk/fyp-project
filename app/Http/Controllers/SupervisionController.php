@@ -1043,7 +1043,7 @@ class SupervisionController extends Controller
                         ->select('a.staff_id')
                         ->count();
 
-                    if ($supervisors < 2) {
+                    if ($supervisors == 0) {
                         return '
                             <button type="button" class="btn btn-sm btn-outline-primary" 
                                 data-bs-toggle="modal" data-bs-target="#addSupervisionModal-' . $row->id . '">
