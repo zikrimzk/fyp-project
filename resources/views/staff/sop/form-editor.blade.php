@@ -172,7 +172,9 @@
             max-height: 90vh;
             display: flex;
             flex-direction: column;
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
         }
 
         .startup-modal .modal-header {
@@ -999,13 +1001,6 @@
                                                 <p class="category-desc">Digital approval signatures</p>
                                             </div>
                                         </div>
-
-                                        <div class="text-center">
-                                            <span class="note-badge">
-                                                <i class="ti ti-info-circle"></i>
-                                                Input fields are not allowed for Submission forms
-                                            </span>
-                                        </div>
                                     </div>
 
                                     <!-- Specific Guidelines -->
@@ -1161,6 +1156,13 @@
                                 <strong>Auto-Generation:</strong> The system will create all necessary fields automatically for you.
                             </div>
                         </div>
+
+                        <div class="guideline-item">
+                            <i class="ti ti-info-circle guideline-icon"></i>
+                            <div>
+                                <strong>Note:</strong> Input fields are not allowed for Submission forms.
+                            </div>
+                        </div>
                         
                         <div class="guideline-item">
                             <i class="ti ti-alert-triangle guideline-icon"></i>
@@ -1244,12 +1246,12 @@
                         </div>
                         
                         ${formTarget == 5 ? `
-                                                                        <div class="guideline-item">
-                                                                            <i class="ti ti-list-details guideline-icon"></i>
-                                                                            <div>
-                                                                                <strong>Additional Fields:</strong> <span class="highlight">Criteria</span> and <span class="highlight">Evaluation Level</span> fields will be auto-generated.
-                                                                            </div>
-                                                                        </div>` : ''}
+                                                                            <div class="guideline-item">
+                                                                                <i class="ti ti-list-details guideline-icon"></i>
+                                                                                <div>
+                                                                                    <strong>Additional Fields:</strong> <span class="highlight">Criteria</span> and <span class="highlight">Evaluation Level</span> fields will be auto-generated.
+                                                                                </div>
+                                                                            </div>` : ''}
                         
                         <div class="guideline-item">
                             <i class="ti ti-shield-lock guideline-icon"></i>

@@ -740,7 +740,7 @@ class SOPController extends Controller
                 $fields = [
                     [
                         'ff_category' => 3,
-                        'ff_label' => 'Section A : Student Details',
+                        'ff_label' => 'Student Details',
                         'ff_order' => 1
                     ],
                     [
@@ -797,7 +797,7 @@ class SOPController extends Controller
                     ],
                     [
                         'ff_category' => 3,
-                        'ff_label' => 'Section B : Approvals',
+                        'ff_label' => 'Approvals',
                         'ff_order' => 9
                     ],
                     [
@@ -828,7 +828,54 @@ class SOPController extends Controller
                 $fields = [
                     [
                         'ff_category' => 3,
-                        'ff_label' => 'Section 2: Nomination Details',
+                        'ff_label' => 'Student Details',
+                        'ff_order' => 1
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Student Name',
+                        'ff_order' => 2,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_name'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Matric No.',
+                        'ff_order' => 3,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_matricno'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Programme Of Study',
+                        'ff_order' => 4,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'prog_code [prog_mode]'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Title Of Research',
+                        'ff_order' => 5,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_titleOfResearch'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Main Supervisor',
+                        'ff_order' => 6,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'staff',
+                        'ff_datakey' => 'staff_name',
+                        'ff_extra_datakey' => 'supervision_role',
+                        'ff_extra_condition' => '1'
+                    ],
+                    [
+                        'ff_category' => 3,
+                        'ff_label' => 'Nomination Details',
                         'ff_order' => 7
                     ],
                     [
@@ -860,7 +907,7 @@ class SOPController extends Controller
                     ],
                     [
                         'ff_category' => 3,
-                        'ff_label' => 'Section 3: Result JKPPS - Committee Use',
+                        'ff_label' => 'Result JKPPS - Committee Use',
                         'ff_order' => 11
                     ],
                     [
@@ -907,6 +954,53 @@ class SOPController extends Controller
             // =================================
             elseif ($form_target == 4) {
                 $fields = [
+                    [
+                        'ff_category' => 3,
+                        'ff_label' => 'Student Details',
+                        'ff_order' => 1
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Student Name',
+                        'ff_order' => 2,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_name'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Matric No.',
+                        'ff_order' => 3,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_matricno'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Programme Of Study',
+                        'ff_order' => 4,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'prog_code [prog_mode]'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Title Of Research',
+                        'ff_order' => 5,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_titleOfResearch'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Main Supervisor',
+                        'ff_order' => 6,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'staff',
+                        'ff_datakey' => 'staff_name',
+                        'ff_extra_datakey' => 'supervision_role',
+                        'ff_extra_condition' => '1'
+                    ],
                     [
                         'ff_category' => 1,
                         'ff_label' => 'Decision',
@@ -1016,6 +1110,53 @@ class SOPController extends Controller
             // ===================================
             elseif ($form_target == 5) {
                 $fields = [
+                    [
+                        'ff_category' => 3,
+                        'ff_label' => 'Student Details',
+                        'ff_order' => 1
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Student Name',
+                        'ff_order' => 2,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_name'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Matric No.',
+                        'ff_order' => 3,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_matricno'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Programme Of Study',
+                        'ff_order' => 4,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'prog_code [prog_mode]'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Title Of Research',
+                        'ff_order' => 5,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'students',
+                        'ff_datakey' => 'student_titleOfResearch'
+                    ],
+                    [
+                        'ff_category' => 2,
+                        'ff_label' => 'Main Supervisor',
+                        'ff_order' => 6,
+                        'ff_component_required' => 1,
+                        'ff_table' => 'staff',
+                        'ff_datakey' => 'staff_name',
+                        'ff_extra_datakey' => 'supervision_role',
+                        'ff_extra_condition' => '1'
+                    ],
                     [
                         'ff_category' => 4,
                         'ff_label' => '<h4>C1: Student demonstrates ability to state problem statements and research objectives clearly and well-conceptualized.</h4><ul><li><strong>Poor [0-2]:</strong> Demonstrates no or little ability to describe research objective and problem.</li><li><strong>Fair [3-5]:</strong> Demonstrates a fair ability describe research objective and problem.</li><li><strong>Good [6-7]:</strong> Demonstrates a good ability to describe research objective and problem</li><li><strong>Excellent [8-10]:</strong> Demonstrates an excellent ability describe research objective and problem.</li></ul>',
