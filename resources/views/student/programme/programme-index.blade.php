@@ -122,7 +122,6 @@
                                 @endif
 
                                 {{-- Evaluation Report Section --}}
-                                {{-- Evaluation Report Section --}}
                                 @php
                                     $filteredReports = $evaluationReport->where('activity_id', $act->activity_id);
                                 @endphp

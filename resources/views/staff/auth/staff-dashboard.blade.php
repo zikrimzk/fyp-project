@@ -55,19 +55,74 @@
             <div class="row">
 
                 <!-- [ Dashboard ] start -->
-
-                <div class="col-sm-12">
+                <div class="col-sm-6">
                     <div class="card">
                         <div class="card-body">
-                            <h5>Welcome, User</h5>
-                            <p class="mb-0">You are logged in as Staff.</p>
+                            <h5 class="mb-4">Total Students by Semester</h5>
+
+                            @if ($studentBySemester->isEmpty())
+                                <div class="alert alert-warning">
+                                    No student data available to display.
+                                </div>
+                            @else
+                                <canvas id="studentBySemesterChart" style="height: 400px;"></canvas>
+                            @endif
                         </div>
                     </div>
                 </div>
-
                 <!-- [ Dashboard ] end -->
+
             </div>
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    @if (!$studentBySemester->isEmpty())
+        <script>
+            const ctx = document.getElementById('studentBySemesterChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(54, 162, 235, 0.8)');
+            gradient.addColorStop(1, 'rgba(75, 192, 192, 0.3)');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($studentBySemester->pluck('sem_label')) !!},
+                    datasets: [{
+                        label: 'Total Students',
+                        data: {!! json_encode($studentBySemester->pluck('total_students')) !!},
+                        backgroundColor: gradient,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.parsed.y + ' students';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    @endif
 @endsection

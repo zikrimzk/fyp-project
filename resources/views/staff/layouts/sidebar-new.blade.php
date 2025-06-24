@@ -394,7 +394,7 @@
                 <li class="pc-item">
                     <a href="{{ route('staff-dashboard') }}" class="pc-link">
                         <span class="pc-micon">
-                            <i class="fas fa-tachometer-alt pc-icon"></i>
+                            <i class="fas fa-home pc-icon"></i>
                         </span>
                         <span class="pc-mtext">Dashboard</span>
                     </a>

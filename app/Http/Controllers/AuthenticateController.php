@@ -65,7 +65,6 @@ class AuthenticateController extends Controller
     public function authenticateUser(Request $req)
     {
         try {
-
             $req->validate([
                 'email' => 'required|email',
                 'password' => 'required'
@@ -74,24 +73,29 @@ class AuthenticateController extends Controller
             // Attempt login as Student
             $student = Student::where('student_email', $req->email)->first();
             if ($student && Hash::check($req->password, $student->student_password)) {
-                Auth::guard('student')->login($student);
-
-                $req->session()->regenerate();
-                return redirect()->route('student-home');
+                if ($student->student_status == 1) {
+                    Auth::guard('student')->login($student);
+                    $req->session()->regenerate();
+                    return redirect()->route('student-home');
+                } else {
+                    return back()->withInput()->with('error', 'Your account is currently inactive. Please contact the system administrator for assistance.');
+                }
             }
 
             // Attempt login as Staff
             $staff = Staff::where('staff_email', $req->email)->first();
-
             if ($staff && Hash::check($req->password, $staff->staff_password)) {
-                Auth::guard('staff')->login($staff);
-
-                $req->session()->regenerate();
-                return redirect()->route('staff-dashboard');
+                if ($staff->staff_status == 1) {
+                    Auth::guard('staff')->login($staff);
+                    $req->session()->regenerate();
+                    return redirect()->route('staff-dashboard');
+                } else {
+                    return back()->withInput()->with('error', 'Your account is currently inactive. Please contact the system administrator for assistance.');
+                }
             }
 
             // If both fail
-            return back()->withInput()->with('error', 'Invalid credentials. Please try again.');
+            return back()->withInput()->with('error', 'The email or password you entered is incorrect. Please try again.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error authenticating user: ' . $e->getMessage());
         }
@@ -249,8 +253,17 @@ class AuthenticateController extends Controller
     public function staffDashboard()
     {
         try {
+
+            $studentBySemester = DB::table('student_semesters as a')
+                ->join('semesters as b', 'a.semester_id', '=', 'b.id')
+                ->select('b.sem_label', DB::raw('COUNT(a.student_id) as total_students'))
+                ->groupBy('b.sem_label')
+                ->orderBy('b.sem_label')
+                ->get();
+
             return view('staff.auth.staff-dashboard', [
                 'title' => 'Dashboard',
+                'studentBySemester' => $studentBySemester,
             ]);
         } catch (Exception $e) {
             return abort(500);
