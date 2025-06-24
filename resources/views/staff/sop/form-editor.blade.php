@@ -926,6 +926,7 @@
                 </div>
                 <!-- [ Add & Update Form Field Modal ] end -->
 
+                <!-- [ Form Editor Startup Guide Modal ] start -->
                 <form id="formStartupForm" action="{{ route('form-get-started-post') }}" method="post">
                     @csrf
                     <div class="modal fade startup-modal" id="formStartupModal" data-bs-backdrop="static"
@@ -939,7 +940,7 @@
                                     <div class="w-100">
                                         <h3 class="modal-title text-white">
                                             <i class="ti ti-forms me-2"></i>
-                                            e-PostGrad Form Builder
+                                            e-PostGrad Form Editor
                                         </h3>
                                         <p class="modal-subtitle">Configure your form settings and guidelines before
                                             building</p>
@@ -1028,6 +1029,7 @@
                         </div>
                     </div>
                 </form>
+                <!-- [ Form Editor Startup Guide Modal ] end -->
 
             </div>
             <!-- [ Main Content ] end -->
@@ -1242,12 +1244,12 @@
                         </div>
                         
                         ${formTarget == 5 ? `
-                                                                <div class="guideline-item">
-                                                                    <i class="ti ti-list-details guideline-icon"></i>
-                                                                    <div>
-                                                                        <strong>Additional Fields:</strong> <span class="highlight">Criteria</span> and <span class="highlight">Evaluation Level</span> fields will be auto-generated.
-                                                                    </div>
-                                                                </div>` : ''}
+                                                                    <div class="guideline-item">
+                                                                        <i class="ti ti-list-details guideline-icon"></i>
+                                                                        <div>
+                                                                            <strong>Additional Fields:</strong> <span class="highlight">Criteria</span> and <span class="highlight">Evaluation Level</span> fields will be auto-generated.
+                                                                        </div>
+                                                                    </div>` : ''}
                         
                         <div class="guideline-item">
                             <i class="ti ti-shield-lock guideline-icon"></i>
@@ -1271,7 +1273,6 @@
                     $('#ff_category option[value="1"]').prop('disabled', true);
                 }
             }
-
 
             function getFormData() {
                 const addFFBtn = $('#addFormFieldBtn');
@@ -1698,6 +1699,7 @@
                     },
                     success: function(response) {
                         if (response.success) {} else {
+                            getFormData();
                             showToast('error', response.message);
                         }
                     },
