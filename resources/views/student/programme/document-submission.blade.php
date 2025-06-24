@@ -223,7 +223,7 @@
                                 <div
                                     class="mb-3 d-flex flex-column flex-md-row justify-content-between align-items-start gap-2 text-muted small px-2">
                                     <div>
-                                        File format: <strong>PDF, DOCX</strong>
+                                        File format: <strong>PDF</strong>
                                     </div>
                                     <div>
                                         Maximum file size: <strong>100 MB</strong>, Maximum number of files:
@@ -421,7 +421,7 @@
                 restrictions: {
                     maxNumberOfFiles: 1,
                     maxFileSize: 100 * 1024 * 1024,
-                    allowedFileTypes: ['.pdf', '.docx']
+                    allowedFileTypes: ['.pdf']
                 }
             })
             .use(Dashboard, {
