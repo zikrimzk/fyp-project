@@ -1244,12 +1244,12 @@
                         </div>
                         
                         ${formTarget == 5 ? `
-                                                                    <div class="guideline-item">
-                                                                        <i class="ti ti-list-details guideline-icon"></i>
-                                                                        <div>
-                                                                            <strong>Additional Fields:</strong> <span class="highlight">Criteria</span> and <span class="highlight">Evaluation Level</span> fields will be auto-generated.
-                                                                        </div>
-                                                                    </div>` : ''}
+                                                                        <div class="guideline-item">
+                                                                            <i class="ti ti-list-details guideline-icon"></i>
+                                                                            <div>
+                                                                                <strong>Additional Fields:</strong> <span class="highlight">Criteria</span> and <span class="highlight">Evaluation Level</span> fields will be auto-generated.
+                                                                            </div>
+                                                                        </div>` : ''}
                         
                         <div class="guideline-item">
                             <i class="ti ti-shield-lock guideline-icon"></i>
@@ -1698,8 +1698,9 @@
                         fields: newOrder
                     },
                     success: function(response) {
-                        if (response.success) {} else {
+                        if (response.success) {
                             getFormData();
+                        } else {
                             showToast('error', response.message);
                         }
                     },
