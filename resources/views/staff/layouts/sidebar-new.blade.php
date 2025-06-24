@@ -287,8 +287,26 @@
             </div>
 
             @php
+                // $supervision = DB::table('supervisions')
+                //     ->where('staff_id', auth()->user()->id)
+                //     ->exists();
+
                 $supervision = DB::table('supervisions')
                     ->where('staff_id', auth()->user()->id)
+                    ->whereExists(function ($query) {
+                        $latestSemesterSub = DB::table('student_semesters')
+                            ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                            ->groupBy('student_id');
+                        $query
+                            ->select(DB::raw(1))
+                            ->from('students as s')
+                            ->joinSub($latestSemesterSub, 'latest', function ($join) {
+                                $join->on('latest.student_id', '=', 's.id');
+                            })
+                            ->join('semesters as sem', 'sem.id', '=', 'latest.latest_semester_id')
+                            ->where('s.id', DB::raw('supervisions.student_id'))
+                            ->where('sem.sem_status', 1);
+                    })
                     ->exists();
 
                 $iscommittee = auth()->user()->staff_role == 1;
