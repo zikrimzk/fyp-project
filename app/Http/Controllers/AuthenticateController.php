@@ -256,8 +256,12 @@ class AuthenticateController extends Controller
 
             $studentBySemester = DB::table('student_semesters as a')
                 ->join('semesters as b', 'a.semester_id', '=', 'b.id')
-                ->select('b.sem_label', DB::raw('COUNT(a.student_id) as total_students'))
-                ->groupBy('b.sem_label')
+                ->select(
+                    'b.sem_label',
+                    'a.ss_status',
+                    DB::raw('COUNT(a.student_id) as total_students')
+                )
+                ->groupBy('b.sem_label', 'a.ss_status')
                 ->orderBy('b.sem_label')
                 ->get();
 
@@ -267,6 +271,11 @@ class AuthenticateController extends Controller
                 ->orderBy('sem_startdate', 'desc')
                 ->limit(6)
                 ->get();
+
+            $currentSemester = DB::table('semesters')
+                ->where('sem_status', 1) // active or open semester
+                ->orderBy('sem_startdate', 'desc')
+                ->first();
 
             // Get student count by semester & programme (with mode)
             $studentByProgrammeBySemester = DB::table('student_semesters as a')
@@ -284,13 +293,33 @@ class AuthenticateController extends Controller
                 ->orderBy('b.sem_startdate', 'asc')
                 ->get();
 
-            // dd($studentByProgrammeBySemester);
+
+            $unassignedStudentsCount = DB::table('students as a')
+                ->join('student_semesters as ss', function ($join) use ($currentSemester) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->where('ss.semester_id', '=', $currentSemester->id);
+                })
+                ->leftJoin('supervisions as s', 's.student_id', '=', 'a.id')
+                ->where('a.student_status', 1)
+                ->select('a.id') 
+                ->groupBy('a.id')
+                ->havingRaw('COUNT(s.staff_id) = 0')
+                ->get()
+                ->count();
+
+            $totalStudents = DB::table('students')->count();
+            $totalStaff = DB::table('staff')->count();
+            $totalProgrammes = DB::table('programmes')->count();
 
             return view('staff.auth.staff-dashboard', [
                 'title' => 'Dashboard',
                 'studentBySemester' => $studentBySemester,
                 'studentByProgrammeBySemester' => $studentByProgrammeBySemester,
                 'semesters' => $semesters,
+                'totalStudents' => $totalStudents,
+                'totalStaff' => $totalStaff,
+                'totalProgrammes' => $totalProgrammes,
+                'unassignedStudentsCount' => $unassignedStudentsCount,
             ]);
         } catch (Exception $e) {
             dd($e->getMessage());
