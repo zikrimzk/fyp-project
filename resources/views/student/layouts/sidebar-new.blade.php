@@ -289,7 +289,7 @@
                     @if (auth()->user()->programmes->prog_mode == 'FT')
                         <span class="user-role bg-info text-white">Full Time</span>
                     @else
-                        <span class="user-role bg-warning text-dark">Part Time</span>
+                        <span class="user-role bg-warning text-white">Part Time</span>
                     @endif
                 </div>
             </div>
