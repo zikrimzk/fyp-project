@@ -122,6 +122,7 @@
                                 @endif
 
                                 {{-- Evaluation Report Section --}}
+                                {{-- Evaluation Report Section --}}
                                 @php
                                     $filteredReports = $evaluationReport->where('activity_id', $act->activity_id);
                                 @endphp
@@ -129,13 +130,15 @@
                                 @if ($filteredReports->isNotEmpty())
                                     <div class="mt-4 mb-4">
                                         <h6 class="fw-semibold mb-2">Evaluation Report</h6>
-                                        @foreach ($filteredReports as $report)
-                                            <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'filename' => Crypt::encrypt($report->evaluation_document), 'opt' => 2]) }}"
-                                                target="_blank"
-                                                class="text-decoration-none d-inline-flex align-items-center gap-2 text-primary">
-                                                <i class="ti ti-file-check"></i> View Evaluation Report
-                                            </a>
-                                        @endforeach
+                                        <div class="d-flex flex-column gap-2">
+                                            @foreach ($filteredReports as $report)
+                                                <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'filename' => Crypt::encrypt($report->evaluation_document), 'opt' => 2]) }}"
+                                                    target="_blank"
+                                                    class="text-decoration-none d-flex align-items-center gap-2 text-primary">
+                                                    <i class="ti ti-file-check"></i> View Evaluation Report
+                                                </a>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 @endif
 
