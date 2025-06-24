@@ -14,6 +14,7 @@ use App\Models\Semester;
 use App\Models\FormField;
 use App\Models\Procedure;
 use App\Models\Programme;
+use App\Models\Evaluation;
 use App\Models\Nomination;
 use App\Models\Submission;
 use App\Models\Supervision;
@@ -168,18 +169,19 @@ class SubmissionController extends Controller
                 });
             });
 
-            // dd($programmeActivity);
+            $evaluationReport = Evaluation::where('student_id', auth()->user()->id)
+                ->where('evaluation_isFinal', 1)
+                ->get();
 
             return view('student.programme.programme-index', [
                 'title' => 'Programme Overview',
                 'acts' => $programmeActivity,
                 'docs' => $filtered_documents,
                 'sa' => $student_activity,
-                'submissionReview' => $submissionReview
-
+                'submissionReview' => $submissionReview,
+                'evaluationReport' => $evaluationReport,
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
@@ -799,7 +801,7 @@ class SubmissionController extends Controller
         }
     }
 
-    public function viewFinalDocument($actID, $filename)
+    public function viewFinalDocument($actID, $filename, $opt)
     {
         $actID = decrypt($actID);
         $filename = Crypt::decrypt($filename);
@@ -808,7 +810,11 @@ class SubmissionController extends Controller
             $student = auth()->user();
             $activity = Activity::where('id', $actID)->first()->act_name;
             $progcode = strtoupper($student->programmes->prog_code);
-            $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/Final Document/{$filename}");
+            if ($opt == 1) {
+                $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/Final Document/{$filename}");
+            } else if ($opt == 2) {
+                $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/Evaluation/{$filename}");
+            }
 
             if (!file_exists($basePath)) {
                 abort(404, 'File not found.');
@@ -1743,7 +1749,7 @@ class SubmissionController extends Controller
             $activity = Activity::whereId($studentActivity->activity_id)->first();
             $authUser = auth()->user();
             $afID = ActivityForm::where('activity_id', $studentActivity->activity_id)->where('af_target', 1)->first()?->id;
-            
+
             if (!$afID) {
                 return back()->with('error', 'Activity form not found for this activity.');
             }
