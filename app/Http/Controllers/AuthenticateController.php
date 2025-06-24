@@ -261,11 +261,39 @@ class AuthenticateController extends Controller
                 ->orderBy('b.sem_label')
                 ->get();
 
+            // Get latest 6 semesters with sem_status 1 or 3
+            $semesters = DB::table('semesters')
+                ->whereIn('sem_status', [1, 3])
+                ->orderBy('sem_startdate', 'desc')
+                ->limit(6)
+                ->get();
+
+            // Get student count by semester & programme (with mode)
+            $studentByProgrammeBySemester = DB::table('student_semesters as a')
+                ->join('semesters as b', 'a.semester_id', '=', 'b.id')
+                ->join('students as c', 'a.student_id', '=', 'c.id')
+                ->join('programmes as d', 'c.programme_id', '=', 'd.id')
+                ->select(
+                    'b.sem_label',
+                    'd.prog_code',
+                    'd.prog_mode',
+                    DB::raw('COUNT(a.student_id) as total_students')
+                )
+                ->whereIn('a.semester_id', $semesters->pluck('id'))
+                ->groupBy('b.sem_label', 'd.prog_code', 'd.prog_mode')
+                ->orderBy('b.sem_startdate', 'asc')
+                ->get();
+
+            // dd($studentByProgrammeBySemester);
+
             return view('staff.auth.staff-dashboard', [
                 'title' => 'Dashboard',
                 'studentBySemester' => $studentBySemester,
+                'studentByProgrammeBySemester' => $studentByProgrammeBySemester,
+                'semesters' => $semesters,
             ]);
         } catch (Exception $e) {
+            dd($e->getMessage());
             return abort(500);
         }
     }

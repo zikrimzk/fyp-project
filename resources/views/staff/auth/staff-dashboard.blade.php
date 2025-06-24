@@ -59,13 +59,28 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="mb-4">Total Students by Semester</h5>
-
                             @if ($studentBySemester->isEmpty())
                                 <div class="alert alert-warning">
                                     No student data available to display.
                                 </div>
                             @else
                                 <canvas id="studentBySemesterChart" style="height: 400px;"></canvas>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="mb-4">Total Students by Programme & Mode (by Semester)</h5>
+
+                            @if ($studentByProgrammeBySemester->isEmpty())
+                                <div class="alert alert-warning">
+                                    No data available to display.
+                                </div>
+                            @else
+                                <canvas id="studentByProgrammeBySemesterChart" style="height: 450px;"></canvas>
                             @endif
                         </div>
                     </div>
@@ -79,7 +94,7 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     @if (!$studentBySemester->isEmpty())
         <script>
             const ctx = document.getElementById('studentBySemesterChart').getContext('2d');
@@ -109,6 +124,64 @@
                             callbacks: {
                                 label: function(context) {
                                     return ' ' + context.parsed.y + ' students';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    @endif
+
+    @if (!$studentByProgrammeBySemester->isEmpty())
+        <script>
+            const ctx2 = document.getElementById('studentByProgrammeBySemesterChart').getContext('2d');
+
+            const labels2 = {!! json_encode($semesters->pluck('sem_label')) !!};
+
+            const rawData2 = {!! json_encode($studentByProgrammeBySemester) !!};
+
+            const programmeModes2 = [...new Set(rawData2.map(item => item.prog_code + ' (' + item.prog_mode + ')'))];
+
+            const datasets2 = programmeModes2.map((progLabel, index) => {
+                const color = `hsl(${index * 40}, 70%, 55%)`;
+
+                return {
+                    label: progLabel,
+                    data: labels2.map(sem => {
+                        const record = rawData2.find(item =>
+                            (item.prog_code + ' (' + item.prog_mode + ')') === progLabel &&
+                            item.sem_label === sem
+                        );
+                        return record ? record.total_students : 0;
+                    }),
+                    backgroundColor: color,
+                    borderColor: color,
+                    borderWidth: 1
+                };
+            });
+
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels2,
+                    datasets: datasets2
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y} students`;
                                 }
                             }
                         }
