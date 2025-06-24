@@ -1330,8 +1330,8 @@ class SOPController extends Controller
             }
 
             // Get the next order number
-            $af_count = FormField::where('af_id', $af_id)->count();
-            $nextOrder = $af_count + 1;
+            // $af_count = FormField::where('af_id', $af_id)->count();
+            $nextOrder = 0;
 
             // CHECK WHETHER USER ROLE EXIST IN ff_signature_role
             $signature_key = null;
