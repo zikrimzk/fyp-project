@@ -58,10 +58,10 @@ class StudentImport implements ToCollection, WithHeadingRow
             $msvId = null;
             $cosvId = null;
             if (!empty($row['main_supervisor_id'])) {
-                $msvId = Staff::where('staff_id', Str::upper($row['main_supervisor_id']))->value('id');
+                $msvId = Staff::where('staff_id', Str::upper(trim($row['main_supervisor_id'])))->value('id');
             }
             if (!empty($row['co_supervisor_id'])) {
-                $cosvId = Staff::where('staff_id', Str::upper($row['co_supervisor_id']))->value('id');
+                $cosvId = Staff::where('staff_id', Str::upper(trim($row['co_supervisor_id'])))->value('id');
             }
 
             $row['main_supervisor_id'] = $msvId;
@@ -80,7 +80,7 @@ class StudentImport implements ToCollection, WithHeadingRow
                 'phoneno' => 'nullable|string',
                 'gender' => 'required|string|in:male,female,other',
                 'programme_id' => 'required|integer|exists:programmes,id',
-                'main_supervisor_id' => 'required|integer|exists:staff,id',
+                'main_supervisor_id' => 'nullable|integer|exists:staff,id',
                 'co_supervisor_id' => 'nullable|integer|exists:staff,id|different:main_supervisor_id',
                 'title_of_research' => 'nullable|string|max:150'
             ]);
@@ -130,11 +130,13 @@ class StudentImport implements ToCollection, WithHeadingRow
             }
 
             /* CREATE SUPERVISION DATA [ MAIN SUPERVISOR ] */
-            Supervision::create([
-                'student_id' => $student->id,
-                'staff_id' => $msvId,
-                'supervision_role' => 1
-            ]);
+            if (!is_null($msvId)) {
+                Supervision::create([
+                    'student_id' => $student->id,
+                    'staff_id' => $msvId,
+                    'supervision_role' => 1
+                ]);
+            }
 
             /* CREATE SUPERVISION DATA [ CO-SUPERVISOR ] */
             if (!is_null($cosvId)) {
@@ -147,7 +149,7 @@ class StudentImport implements ToCollection, WithHeadingRow
 
             /* ASSIGN SUBMISSION TO STUDENT */
             //To be continue ...
-            
+
             $this->insertedCount++;
         }
     }

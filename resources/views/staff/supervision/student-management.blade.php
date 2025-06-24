@@ -159,8 +159,7 @@
                                             <option value="">-- Select Semester --</option>
                                             @foreach ($sems as $fil)
                                                 @if ($fil->sem_status == 1)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success"
-                                                        selected>
+                                                    <option value="{{ $fil->id }}" class="bg-light-success">
                                                         {{ $fil->sem_label }} [Current]
                                                     </option>
                                                 @elseif($fil->sem_status == 3)
@@ -203,7 +202,7 @@
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
-                                            <option value="1">Active</option>
+                                            <option value="1" selected>Active</option>
                                             <option value="2">Inactive</option>
                                             <option value="3">Extend</option>
                                             <option value="4">Terminate</option>
