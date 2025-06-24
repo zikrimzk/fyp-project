@@ -140,7 +140,7 @@
                                         <p class="mb-1">Unassigned Supervision</p>
                                         <div class="d-flex align-items-center justify-content-between">
                                             <h4 class="mb-0">{{ number_format($unassignedStudentsCount) }}</h4>
-                                            <a href="{{ route('staff-management') }}" class="link-danger">View</a>
+                                            <a href="{{ route('supervision-arrangement') }}" class="link-danger">View</a>
                                         </div>
                                     </div>
                                 </div>
