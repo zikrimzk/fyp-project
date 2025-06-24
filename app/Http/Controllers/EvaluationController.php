@@ -15,12 +15,13 @@ use App\Models\Evaluation;
 use App\Models\Nomination;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
+use App\Models\StudentActivity;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\File;
 
 
 class EvaluationController extends Controller
@@ -991,11 +992,19 @@ class EvaluationController extends Controller
                 return back()->with('error', 'Oops! Student not found');
             }
 
-            // 2 - Load activity
+            // 2 - Load activity & Student Activity
             $actID = $req->input('activity_id');
             $activity = Activity::find($actID);
             if (!$activity) {
                 return back()->with('error', 'Oops! Activity not found');
+            }
+
+            $studentActivity = StudentActivity::where('student_id', $studentId)
+                ->where('activity_id', $actID)
+                ->first();
+                
+            if (!$studentActivity) {
+                return back()->with('error', 'Oops! Student activity record not found');
             }
 
             // 3 - Load correct form based on mode
@@ -1060,6 +1069,15 @@ class EvaluationController extends Controller
                 } elseif ($mode == 6) {
                     $decisionStatus = $this->mapDecisionToStatus($req->all());
                     $evaluation->evaluation_status = $decisionStatus;
+
+                    if($decisionStatus == 2){
+                        $studentActivity->sa_status = 3;
+                       
+                    }else{
+                        $studentActivity->sa_status = 5;
+                    }
+
+                     $studentActivity->save();
                 }
                 $evaluation->evaluation_isFinal = 1;
             }

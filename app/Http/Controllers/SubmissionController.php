@@ -1742,6 +1742,11 @@ class SubmissionController extends Controller
             $student = Student::findOrFail($studentActivity->student_id);
             $activity = Activity::whereId($studentActivity->activity_id)->first();
             $authUser = auth()->user();
+            $afID = ActivityForm::where('activity_id', $studentActivity->activity_id)->where('af_target', 1)->first()?->id;
+            
+            if (!$afID) {
+                return back()->with('error', 'Activity form not found for this activity.');
+            }
 
             // Check supervision role (SV or CoSV)
             $supervision = Supervision::where('student_id', $student->id)
@@ -1759,6 +1764,7 @@ class SubmissionController extends Controller
                 ->where('a.activity_id', $studentActivity->activity_id)
                 ->where('b.ff_category', 6)
                 ->where('b.ff_signature_role', 2)
+                ->where('a.id', $afID)
                 ->exists();
 
             $hasCoSvfield = DB::table('activity_forms as a')
@@ -1766,6 +1772,7 @@ class SubmissionController extends Controller
                 ->where('a.activity_id', $studentActivity->activity_id)
                 ->where('b.ff_category', 6)
                 ->where('b.ff_signature_role', 3)
+                ->where('a.id', $afID)
                 ->exists();
 
             $hasCoSv = $hasSvfield && $hasCoSvfield;
@@ -1798,14 +1805,14 @@ class SubmissionController extends Controller
 
                 // Handle SV / CoSV logic
                 if (in_array($role, [2, 3])) {
-
-                    // Fetch all signature roles defined in form
                     $formRoles = DB::table('activity_forms as a')
                         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
                         ->where('a.activity_id', $studentActivity->activity_id)
                         ->where('b.ff_category', 6)
+                        ->where('a.id', $afID)
                         ->pluck('b.ff_signature_role')
-                        ->unique()->toArray();
+                        ->unique()
+                        ->toArray();
 
                     $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
 
@@ -1819,14 +1826,17 @@ class SubmissionController extends Controller
                     }
 
                     if ($allSigned) {
-                        $finalStatus = $hasHigherRoles ? 2 : ($isHaveEvaluation ? 7 : 3);
+                        if (!$hasHigherRoles) {
+                            $finalStatus = $isHaveEvaluation ? 7 : 3;
+                        } else {
+                            $finalStatus = 2;
+                        }
                     } else {
                         $finalStatus = 1;
                     }
 
                     $updatedActivity->update(['sa_status' => $finalStatus]);
 
-                    // When fully completed
                     if ($finalStatus == 3) {
                         $this->finalizeSubmission($student, $studentActivity->activity_id, $activity->act_name);
                         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
@@ -1841,6 +1851,7 @@ class SubmissionController extends Controller
                         ->where('a.activity_id', $studentActivity->activity_id)
                         ->where('b.ff_category', 6)
                         ->pluck('b.ff_signature_role')
+                        ->where('a.id', $afID)
                         ->unique()->toArray();
 
                     $roleSignatures = [
