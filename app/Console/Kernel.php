@@ -12,7 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // SEND SUBMISSION REMINDER - STUDENT
+        $schedule->command('submission:reminder')->dailyAt('08:00');
+
+        // UPDATE SUBMISSION STATUS - OVERDUE OR PENDING
+        $schedule->command('submission:update-status')->hourly();
     }
 
     /**
@@ -20,7 +24,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

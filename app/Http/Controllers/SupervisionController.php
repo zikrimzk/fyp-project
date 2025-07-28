@@ -268,51 +268,13 @@ class SupervisionController extends Controller
             /* ASSIGN SUBMISSION TO STUDENT [ASSUMING ALL PRE-REQUISITES DATA ARE SET] */
             $this->assignSubmission(Str::upper($validated['student_matricno']));
 
+            /* SENT EMAIL NOTIFICATION */
+            $ac = new AuthenticateController();
+            $ac->sendAccountNotification($student, 1, 1, route('main-login'));
+
             return back()->with('success', 'Student added successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error adding student: ' . $e->getMessage());
-        }
-    }
-
-    private function assignSubmission($matric_no)
-    {
-        try {
-            // GET DATA
-            $data = DB::table('procedures as a')
-                ->join('activities as b', 'a.activity_id', '=', 'b.id')
-                ->join('documents as c', 'b.id', '=', 'c.activity_id')
-                ->join('programmes as d', 'a.programme_id', '=', 'd.id')
-                ->join('students as e', 'd.id', '=', 'e.programme_id')
-                ->where('e.student_matricno', '=', $matric_no)
-                ->where('e.student_status', '=', 1)
-                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'e.id as student_id', 'c.id as document_id')
-                ->get();
-
-            // GET CURRENT SEMESTER
-            $currSem = Semester::where('sem_status', 1)->first();
-
-            // ASSIGN SUBMISSION 
-            foreach ($data as $sub) {
-                $checkExists = Submission::where('student_id', $sub->student_id)
-                    ->where('document_id', $sub->document_id)
-                    ->exists();
-
-                if (!$checkExists) {
-                    $days = $sub->timeline_week * 7;
-                    $submissionDate = Carbon::parse($currSem->sem_startdate)->addDays($days);
-                    Submission::create([
-                        'submission_document' => '-',
-                        'submission_duedate' => $submissionDate,
-                        'submission_status' => $sub->init_status,
-                        'student_id' => $sub->student_id,
-                        'document_id' => $sub->document_id,
-                    ]);
-                }
-            }
-
-            return back()->with('success', 'Submission has been assigned successfully.');
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error assigning student with submission: ' . $e->getMessage());
         }
     }
 
@@ -400,6 +362,12 @@ class SupervisionController extends Controller
                 ]);
             }
 
+            /* RESET STUDENT SUBMISSION */
+            if ($req->input('programme_id_up') != $student->programme_id) {
+                /* DELETE PREVIOUS SUBMISSION */
+                Submission::where('student_id', $student->id)->delete();
+            }
+
             Student::where('id', $student->id)->update([
                 'student_name' => Str::headline($validated['student_name_up']),
                 'student_matricno' => Str::upper($validated['student_matricno_up']),
@@ -412,9 +380,60 @@ class SupervisionController extends Controller
                 'programme_id' => $validated['programme_id_up'],
             ]);
 
+            if ($validated['student_status_up'] == 2) {
+                /* SENT EMAIL NOTIFICATION */
+                $ac = new AuthenticateController();
+                $ac->sendAccountNotification($student, 2, 1, null);
+            }
+
+            /* ASSIGN SUBMISSION TO STUDENT [ASSUMING ALL PRE-REQUISITES DATA ARE SET] */
+            $this->assignSubmission(Str::upper($validated['student_matricno_up']));
+
             return back()->with('success', 'Student updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating student: ' . $e->getMessage());
+        }
+    }
+
+    private function assignSubmission($matric_no)
+    {
+        try {
+            // GET DATA
+            $data = DB::table('procedures as a')
+                ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                ->join('documents as c', 'b.id', '=', 'c.activity_id')
+                ->join('programmes as d', 'a.programme_id', '=', 'd.id')
+                ->join('students as e', 'd.id', '=', 'e.programme_id')
+                ->where('e.student_matricno', '=', $matric_no)
+                ->where('e.student_status', '=', 1)
+                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'e.id as student_id', 'c.id as document_id')
+                ->get();
+
+            // GET CURRENT SEMESTER
+            $currSem = Semester::where('sem_status', 1)->first();
+
+            // ASSIGN SUBMISSION 
+            foreach ($data as $sub) {
+                $checkExists = Submission::where('student_id', $sub->student_id)
+                    ->where('document_id', $sub->document_id)
+                    ->exists();
+
+                if (!$checkExists) {
+                    $days = $sub->timeline_week * 7;
+                    $submissionDate = Carbon::parse($currSem->sem_startdate)->addDays($days);
+                    Submission::create([
+                        'submission_document' => '-',
+                        'submission_duedate' => $submissionDate,
+                        'submission_status' => $sub->init_status,
+                        'student_id' => $sub->student_id,
+                        'document_id' => $sub->document_id,
+                    ]);
+                }
+            }
+
+            return back()->with('success', 'Submission has been assigned successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error assigning student with submission: ' . $e->getMessage());
         }
     }
 
@@ -423,9 +442,16 @@ class SupervisionController extends Controller
         try {
             $id = decrypt($id);
             $student = Student::find($id);
+            $submission = Submission::where('student_id', $id)->get();
 
             if (!$student) {
                 return back()->with('error', 'Student not found.');
+            }
+
+            if ($submission) {
+                foreach ($submission as $sub) {
+                    $sub->delete();
+                }
             }
 
             $dirPath = $student->student_directory;
@@ -439,7 +465,12 @@ class SupervisionController extends Controller
                 return back()->with('success', 'Student deleted successfully.');
             } elseif ($opt == 2) {
                 $student->update(['student_status' => 2]);
-                return back()->with('success', 'Student set as inactive successfully.');
+
+                /* SENT EMAIL NOTIFICATION */
+                $ac = new AuthenticateController();
+                $ac->sendAccountNotification($student, 2, 1, null);
+
+                return back()->with('success', 'Student has been inactivated successfully.');
             }
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error deleting student: ' . $e->getMessage());
@@ -691,7 +722,7 @@ class SupervisionController extends Controller
             }
 
             /* CREATE STAFF DATA */
-            Staff::create([
+            $staff = Staff::create([
                 'staff_name' => Str::headline($validated['staff_name']),
                 'staff_id' => Str::upper($validated['staff_id']),
                 'staff_email' => Str::lower($validated['staff_email']),
@@ -702,6 +733,10 @@ class SupervisionController extends Controller
                 'staff_photo' => $filePath ?? null,
                 'department_id' => $validated['department_id'],
             ]);
+
+            /* SENT EMAIL NOTIFICATION */
+            $ac = new AuthenticateController();
+            $ac->sendAccountNotification($staff, 1, 2, route('main-login'));
 
             return back()->with('success', 'Staff added successfully.');
         } catch (Exception $e) {
@@ -793,6 +828,12 @@ class SupervisionController extends Controller
                 'department_id' => $validated['department_id_up'],
             ]);
 
+            if ($validated['staff_status_up'] == 2) {
+                /* SENT EMAIL NOTIFICATION */
+                $ac = new AuthenticateController();
+                $ac->sendAccountNotification($staff, 2, 2, null);
+            }
+
             return back()->with('success', 'Staff updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating staff: ' . $e->getMessage());
@@ -821,7 +862,11 @@ class SupervisionController extends Controller
                 return back()->with('success', 'Staff deleted successfully.');
             } elseif ($opt == 2) {
                 $staff->update(['staff_status' => 2]);
-                return back()->with('success', 'Staff set as inactive successfully.');
+
+                /* SENT EMAIL NOTIFICATION */
+                $ac = new AuthenticateController();
+                $ac->sendAccountNotification($staff, 2, 2, null);
+                return back()->with('success', 'Staff has been inactivated successfully.');
             }
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error deleting staff: ' . $e->getMessage());

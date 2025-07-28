@@ -40,7 +40,7 @@ use setasign\Fpdi\PdfParser\StreamReader;
 class SubmissionController extends Controller
 {
     /* General Function [REQUIRE CHECKING] */
-    // EMAIL NOTOFICATION PART IS NOT YET IMPLEMENTED
+    // EMAIL NOTOFICATION
     private function sendSubmissionNotification($data, $userType, $actName, $emailType, $approvalRole)
     {
         //USER TYPE 
@@ -80,14 +80,29 @@ class SubmissionController extends Controller
         // 4 - SUBMISSION REJECTED
         // 5 - SUBMISSION REVERTED
         // 6 - ACTIVITY COMPLETED
+        // 7 - STUDENT SUBMISSION OPENED
+        // 8 - STUDENT SUBMISSION CLOSED
 
-        // Mail::to($email)->send(new SubmissionMail([
-        //     'eType' => $emailType,
-        //     'act_name' => $actName,
-        //     'approvalUser' => $approvalUser,
-        //     'name' => Str::headline($name),
-        //     'sa_date' => Carbon::now()->format('d F Y g:i A'),
-        // ]));
+
+
+        if ($emailType == 2) {
+            $submissionDate = $data->submission_date ?? Carbon::now()->format('d F Y g:i A');
+            $studentname = $data->student_name ?? 'Student';
+            $studentMatricno = $data->student_matricno ?? 'Matric No';
+        }
+
+        if (env('MAIL_ENABLE') == 'true') {
+            Mail::to($email)->send(new SubmissionMail([
+                'eType' => $emailType,
+                'act_name' => $actName,
+                'approvalUser' => $approvalUser,
+                'name' => Str::headline($name),
+                'sa_date' => Carbon::now()->format('d F Y g:i A'),
+                'student_name' => $studentname ?? '-',
+                'student_matricno' => $studentMatricno ?? '-',
+                'submission_date' => $submissionDate ?? Carbon::now()->format('d F Y g:i A'),
+            ]));
+        }
     }
 
     /* Programme Overview [Student] */
@@ -322,7 +337,7 @@ class SubmissionController extends Controller
         }
     }
 
-    // ## SEND EMAIL - SV 
+    // ## SEND EMAIL - SV --> Partially done
     public function confirmStudentSubmission(Request $req, $actID)
     {
         try {
@@ -412,6 +427,24 @@ class SubmissionController extends Controller
             $pdf->Output($mergedPath, 'F');
 
             // SEND EMAIL SECTION
+            $supervision = DB::table('supervisions as a')
+                ->join('staff as b', 'a.staff_id', '=', 'b.id')
+                ->where('a.student_id', $student->id)
+                ->where('a.supervision_role', 1)
+                ->select('b.staff_name', 'b.staff_email')
+                ->first();
+
+            if ($supervision) {
+                $data = [
+                    'student_name' => $student->student_name,
+                    'student_matricno' => $student->student_matricno,
+                    'submission_date' => Carbon::now()->format('d F Y g:i A'),
+                    'staff_name' => $supervision->staff_name,
+                    'staff_email' => $supervision->staff_email,
+                ];
+                // dd($data);
+                $this->sendSubmissionNotification((object)$data, 2, $activity, 2, null);
+            }
 
             return back()->with('success', 'Submission has been confirmed successfully.');
         } catch (Exception $e) {
@@ -2314,7 +2347,7 @@ class SubmissionController extends Controller
         }
     }
 
-    // ## SEND EMAIL - SV & STUDENT
+    // ## SEND EMAIL - STUDENT --> Partially done
     public function studentSubmissionSuggestionApproval($studentID, $activityID, $option)
     {
         $studentID = Crypt::decrypt($studentID);
@@ -2382,7 +2415,8 @@ class SubmissionController extends Controller
                     $nom_message = "Take note that nomination is now open for " . $student->student_name . ".";
                 }
 
-                // SEND EMAIL SECTION
+                // SEND EMAIL SECTION - STUDENT 
+                $this->sendSubmissionNotification($student, 1, $activity->act_name, 7, null);
 
                 return back()->with('success', $student->student_name . ' has been approved for ' . $activity->act_name . ' submission. The submission is now open for this student. ' . $nom_message);
             } elseif ($option == 2) {
@@ -2408,6 +2442,9 @@ class SubmissionController extends Controller
                     $nom_message = "Take note that nomination is now closed for " . $student->student_name . ".";
                 }
 
+                // SEND EMAIL SECTION
+                $this->sendSubmissionNotification($student, 1, $activity->act_name, 8, null);
+
                 return back()->with('success', $student->student_name . ' submission for ' . $activity->act_name . ' has been reverted. The submission is now hidden for this student. ' . $nom_message);
             } else {
                 return back()->with('error', 'Oops! Invalid option. Please try again.');
@@ -2417,7 +2454,7 @@ class SubmissionController extends Controller
         }
     }
 
-    // ## SEND EMAIL - SV & STUDENT
+    // ## SEND EMAIL - STUDENT --> Partially done
     public function multipleStudentSubmissionSuggestionApproval(Request $request)
     {
         $studentIDs = $request->input('selectedIds');
@@ -2433,7 +2470,7 @@ class SubmissionController extends Controller
                 ->whereIn('a.id', $studentIDs)
                 ->where('c.activity_id', $activityID)
                 ->where('d.ss_status', 1)
-                ->select('a.id as student_id', 'a.student_name', 'a.programme_id', 'b.*', 'e.sem_startdate', 'e.sem_enddate')
+                ->select('a.id as student_id', 'a.student_name', 'a.student_email', 'a.programme_id', 'b.*', 'e.sem_startdate', 'e.sem_enddate')
                 ->get();
 
             $activity = Activity::find($activityID);
@@ -2493,8 +2530,8 @@ class SubmissionController extends Controller
 
                         $nom_message = "Take note that nomination is now open for this student.";
                     }
-                    // SEND EMAIL SECTION 
-
+                    // SEND EMAIL SECTION - STUDENT
+                    $this->sendSubmissionNotification($sub, 1, $activity->act_name, 7, null);
                 } elseif ($option == 2) {
                     /* REVERT SUBMISSION */
                     $submission->submission_status = 2;
@@ -2512,6 +2549,9 @@ class SubmissionController extends Controller
 
                         $nom_message = "Take note that nomination is now closed for this student.";
                     }
+
+                    // SEND EMAIL SECTION - STUDENT
+                    $this->sendSubmissionNotification($sub, 1, $activity->act_name, 8, null);
                 }
 
                 $submission->save();

@@ -22,7 +22,7 @@ class AuthenticateController extends Controller
 {
 
     /* General Function */
-    private function sendAccountNotification($data, $emailType, $userType, $link)
+    public function sendAccountNotification($data, $emailType, $userType, $link)
     {
         //USER TYPE 
         if ($userType == 1) {
@@ -42,13 +42,15 @@ class AuthenticateController extends Controller
         // 3 - FORGOT PASSWORD
         // 4 - PASSWORD RESET NOTIFICATION
 
-        Mail::to($email)->send(new AuthenticateMail([
-            'eType' => $emailType,
-            'uType' => $userType,
-            'name' => Str::headline($name),
-            'date' => Carbon::now()->format('d F Y g:i A'),
-            'link' => $link
-        ]));
+        if (env('MAIL_ENABLE') == 'true') {
+            Mail::to($email)->send(new AuthenticateMail([
+                'eType' => $emailType,
+                'uType' => $userType,
+                'name' => Str::headline($name),
+                'date' => Carbon::now()->format('d F Y g:i A'),
+                'link' => $link
+            ]));
+        }
     }
 
     public function mainLogin()
@@ -301,7 +303,7 @@ class AuthenticateController extends Controller
                 })
                 ->leftJoin('supervisions as s', 's.student_id', '=', 'a.id')
                 ->where('a.student_status', 1)
-                ->select('a.id') 
+                ->select('a.id')
                 ->groupBy('a.id')
                 ->havingRaw('COUNT(s.staff_id) = 0')
                 ->get()

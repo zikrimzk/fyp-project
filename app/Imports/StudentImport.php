@@ -12,6 +12,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use App\Http\Controllers\SubmissionController;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class StudentImport implements ToCollection, WithHeadingRow
@@ -148,7 +149,8 @@ class StudentImport implements ToCollection, WithHeadingRow
             }
 
             /* ASSIGN SUBMISSION TO STUDENT */
-            //To be continue ...
+            $sc = new SubmissionController();
+            $sc->assignSubmission($student->student_matricno);
 
             $this->insertedCount++;
         }

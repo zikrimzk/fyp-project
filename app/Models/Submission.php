@@ -17,4 +17,14 @@ class Submission extends Model
         'student_id',
         'document_id',
     ];
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+    public function document()
+    {
+        return $this->belongsTo(Document::class);
+    }
 }
