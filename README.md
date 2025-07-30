@@ -59,7 +59,7 @@ Unauthorized distribution or reproduction of this software is strictly prohibite
 
 ---
 
-## 🛠️ Tech Stack (Optional Section – Add if relevant)
+## 🛠️ Tech Stack
 - Laravel (Backend)
 - MySQL (Database)
 - HTML/CSS + Bootstrap (Frontend)
@@ -67,11 +67,3 @@ Unauthorized distribution or reproduction of this software is strictly prohibite
 
 ---
 
-## 📩 Contact
-
-For access or technical support, please contact:
-
-📧 `zeekesolutions@gmail.com`  
-🏢 UTeM Postgraduate Office
-
----
