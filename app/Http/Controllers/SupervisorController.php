@@ -86,6 +86,7 @@ class SupervisorController extends Controller
                             <div style="max-width: 200px;">
                                 <span class="mb-0 fw-medium">' . $row->student_name . '</span>
                                 <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium"> Enrolled Semesters: ' . $row->student_semcount . '</small>
                             </div>
                         </div>
                     ';
@@ -771,6 +772,7 @@ class SupervisorController extends Controller
                     'n.nom_status',
                     'n.nom_date',
                     'n.nom_document',
+                    'n.semester_id as nom_semester_id',
                 ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
                     $join->on('s.id', '=', 'latest.student_id');
@@ -799,10 +801,10 @@ class SupervisorController extends Controller
                     $data->where('s.programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
-                    $data->where('nom_status', $req->input('status'));
+                    $data->where('n.nom_status', $req->input('status'));
                 }
 
 
@@ -837,8 +839,14 @@ class SupervisorController extends Controller
                 });
 
                 $table->addColumn('nom_document', function ($row) {
+                    // SEMESTER LABEL
+                    $currsemester = Semester::find($row->nom_semester_id);
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
                     // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination';
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination/' . $semesterlabel;
 
                     if (empty($row->nom_document)) {
                         return '-';
@@ -883,12 +891,22 @@ class SupervisorController extends Controller
                     return $status;
                 });
 
+                $table->addColumn('nom_semester', function ($row) {
+                    $semesters = Semester::where('id', $row->nom_semester_id)->first();
+
+                    if (!$semesters) {
+                        return 'N/A';
+                    }
+
+                    return $semesters->sem_label;
+                });
+
                 $table->addColumn('action', function ($row) {
                     $button = '';
 
                     if ($row->nom_status == 1) {
                         $button = '
-                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 1]) . '" class="avtar avtar-xs btn-light-primary">
+                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->nom_semester_id), 'mode' => 1]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-user-plus f-20"></i>
                             </a>
                         ';
@@ -899,7 +917,7 @@ class SupervisorController extends Controller
                     return $button;
                 });
 
-                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'action']);
+                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'nom_semester', 'action']);
 
                 return $table->make(true);
             }
@@ -923,8 +941,8 @@ class SupervisorController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
+            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }
-
 }

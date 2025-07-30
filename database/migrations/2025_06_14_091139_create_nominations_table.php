@@ -20,6 +20,7 @@ return new class extends Migration
             $table->json('nom_extra_data')->nullable()->comment('will store other data in the form if needed');
             $table->foreignId('student_id')->constrained('students');
             $table->foreignId('activity_id')->constrained('activities');
+            $table->foreignId('semester_id')->constrained('semesters');
             $table->timestamps();
         });
     }

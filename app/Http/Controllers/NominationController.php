@@ -64,6 +64,7 @@ class NominationController extends Controller
                     'n.nom_status',
                     'n.nom_date',
                     'n.nom_document',
+                    'n.semester_id',
                 ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
                     $join->on('s.id', '=', 'latest.student_id');
@@ -95,10 +96,10 @@ class NominationController extends Controller
                     $data->where('s.programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
-                    $data->where('nom_status', $req->input('status'));
+                    $data->where('n.nom_status', $req->input('status'));
                 }
 
 
@@ -133,8 +134,15 @@ class NominationController extends Controller
                 });
 
                 $table->addColumn('nom_document', function ($row) {
+
+                    // SEMESTER LABEL
+                    $currsemester = Semester::find($row->semester_id);
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
                     // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination';
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination/' . $semesterlabel;
 
                     if (empty($row->nom_document)) {
                         return '-';
@@ -179,13 +187,29 @@ class NominationController extends Controller
                     return $status;
                 });
 
+                $table->addColumn('nom_semester', function ($row) {
+                    $semesters = Semester::where('id', $row->semester_id)->first();
+
+                    if (empty($semesters)) {
+                        return 'N/A';
+                    }
+
+                    return $semesters->sem_label;
+                });
+
                 $table->addColumn('action', function ($row) {
                     $button = '';
 
                     if ($row->nom_status == 2 || $row->nom_status == 5) {
                         $button = '
-                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 2]) . '" class="avtar avtar-xs btn-light-primary">
+                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->semester_id), 'mode', 'mode' => 2]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-user-plus f-20"></i>
+                            </a>
+                        ';
+                    } elseif ($row->nom_status == 4) {
+                        $button = '
+                            <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#updateNominationModal-' . $row->nomination_id . '-' . $row->semester_id . '" class="avtar avtar-xs btn-light-primary">
+                                <i class="ti ti-pencil f-20"></i>
                             </a>
                         ';
                     } else {
@@ -195,7 +219,7 @@ class NominationController extends Controller
                     return $button;
                 });
 
-                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'action']);
+                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'nom_semester', 'action']);
 
                 return $table->make(true);
             }
@@ -209,6 +233,7 @@ class NominationController extends Controller
                 abort(404, 'Activity not found');
             }
 
+            // dd($data->get());
             return view('staff.nomination.committee-nomination-management', [
                 'title' => 'Committee Nomination Management',
                 'studs' => Student::all(),
@@ -261,6 +286,7 @@ class NominationController extends Controller
                     'n.nom_status',
                     'n.nom_date',
                     'n.nom_document',
+                    'n.semester_id',
                 ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
                     $join->on('s.id', '=', 'latest.student_id');
@@ -292,10 +318,10 @@ class NominationController extends Controller
                     $data->where('s.programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
-                    $data->where('nom_status', $req->input('status'));
+                    $data->where('n.nom_status', $req->input('status'));
                 }
 
 
@@ -330,8 +356,15 @@ class NominationController extends Controller
                 });
 
                 $table->addColumn('nom_document', function ($row) {
+
+                    // SEMESTER LABEL
+                    $currsemester = Semester::find($row->semester_id);
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
                     // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination';
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination/' . $semesterlabel;
 
                     if (empty($row->nom_document)) {
                         return '-';
@@ -376,12 +409,22 @@ class NominationController extends Controller
                     return $status;
                 });
 
+                $table->addColumn('nom_semester', function ($row) {
+                    $semesters = Semester::where('id', $row->semester_id)->first();
+
+                    if (empty($semesters)) {
+                        return 'N/A';
+                    }
+
+                    return $semesters->sem_label;
+                });
+
                 $table->addColumn('action', function ($row) {
                     $button = '';
 
                     if ($row->nom_status == 3) {
                         $button = '
-                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 3]) . '" class="avtar avtar-xs btn-light-primary">
+                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->semester_id), 'mode' => 3]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-user-plus f-20"></i>
                             </a>
                         ';
@@ -392,7 +435,7 @@ class NominationController extends Controller
                     return $button;
                 });
 
-                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'action']);
+                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'nom_semester', 'action']);
 
                 return $table->make(true);
             }
@@ -458,6 +501,7 @@ class NominationController extends Controller
                     'n.nom_status',
                     'n.nom_date',
                     'n.nom_document',
+                    'n.semester_id',
                 ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
                     $join->on('s.id', '=', 'latest.student_id');
@@ -489,10 +533,10 @@ class NominationController extends Controller
                     $data->where('s.programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
-                    $data->where('nom_status', $req->input('status'));
+                    $data->where('n.nom_status', $req->input('status'));
                 }
 
 
@@ -527,8 +571,14 @@ class NominationController extends Controller
                 });
 
                 $table->addColumn('nom_document', function ($row) {
+                    // SEMESTER LABEL
+                    $currsemester = Semester::find($row->semester_id);
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
                     // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination';
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination/' . $semesterlabel;
 
                     if (empty($row->nom_document)) {
                         return '-';
@@ -573,12 +623,22 @@ class NominationController extends Controller
                     return $status;
                 });
 
+                $table->addColumn('nom_semester', function ($row) {
+                    $semesters = Semester::where('id', $row->semester_id)->first();
+
+                    if (empty($semesters)) {
+                        return 'N/A';
+                    }
+
+                    return $semesters->sem_label;
+                });
+
                 $table->addColumn('action', function ($row) {
                     $button = '';
 
                     if ($row->nom_status == 3) {
                         $button = '
-                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 4]) . '" class="avtar avtar-xs btn-light-primary">
+                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->semester_id), 'mode' => 4]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-user-plus f-20"></i>
                             </a>
                         ';
@@ -589,7 +649,7 @@ class NominationController extends Controller
                     return $button;
                 });
 
-                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'action']);
+                $table->rawColumns(['student_photo', 'nom_document', 'nom_date', 'nom_status', 'nom_semester', 'action']);
 
                 return $table->make(true);
             }
@@ -618,13 +678,14 @@ class NominationController extends Controller
     }
 
     /* Nomination Student */
-    public function nominationStudent($studentId, $actId, $mode)
+    public function nominationStudent($studentId, $actId, $semesterId, $mode)
     {
         try {
 
             /* GET ID'S */
             $studentId = decrypt($studentId);
             $actId = decrypt($actId);
+            $semesterId = decrypt($semesterId);
 
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
@@ -688,7 +749,8 @@ class NominationController extends Controller
                 'data' => $data,
                 'mode' => $mode,
                 'page' => $page,
-                'link' => $link
+                'link' => $link,
+                'semid' => $semesterId
             ]);
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
@@ -701,6 +763,8 @@ class NominationController extends Controller
         try {
 
             $mode = $req->input('mode');
+
+            $semesterId = $req->input('semesterid');
 
             /* GET STUDENT DATA */
             $student = Student::whereId($req->input('studentid'))->first();
@@ -742,7 +806,8 @@ class NominationController extends Controller
             /* FETCH - NOMINATION */
             $nominationRecord = Nomination::where([
                 ['activity_id', $actID],
-                ['student_id', $student->id]
+                ['student_id', $student->id],
+                ['semester_id', $semesterId]
             ])->first();
 
             $signatureData = $nominationRecord ? json_decode($nominationRecord->nom_signature_data) : null;
@@ -982,6 +1047,7 @@ class NominationController extends Controller
 
             $option = $req->input('opt');
             $studentId = decrypt($studentId);
+            $semesterId = $req->input('semester_id');
 
             /* GET STUDENT DATA */
             $student = Student::where('id', $studentId)->first();
@@ -1005,10 +1071,19 @@ class NominationController extends Controller
             }
 
             /* GET NOMINATION DATA */
-            $nomination = Nomination::where('student_id', $studentId)->where('activity_id', $actID)->first();
+            $nomination = Nomination::where('student_id', $studentId)
+                ->where('activity_id', $actID)
+                ->where('semester_id', $semesterId)
+                ->first();
 
             if (!$nomination) {
                 return back()->with('error', 'Oops! Nomination not found');
+            }
+
+            $currsemester = Semester::where('id', $semesterId)->first();
+
+            if (!$currsemester) {
+                return back()->with('error', 'Oops! Current semester not found');
             }
 
             if ($option == 1) {
@@ -1064,6 +1139,7 @@ class NominationController extends Controller
                             $evaluation->student_id = $studentId;
                             $evaluation->staff_id = $eva->staff_id;
                             $evaluation->activity_id = $actID;
+                            $evaluation->semester_id = $currsemester->id;
                             $evaluation->evaluation_status = 1;
                             $evaluation->save();
                         }
@@ -1076,6 +1152,7 @@ class NominationController extends Controller
                         $evaluation->student_id = $studentId;
                         $evaluation->staff_id = $eva->staff_id;
                         $evaluation->activity_id = $actID;
+                        $evaluation->semester_id = $currsemester->id;
                         $evaluation->evaluation_status = 1;
                         $evaluation->save();
                     }
@@ -1090,14 +1167,20 @@ class NominationController extends Controller
 
                 /* GENERATE NOMINATION FORM */
                 $progcode = strtoupper($student->programmes->prog_code);
-                $relativeDir = "{$student->student_directory}/{$progcode}/{$activity}/Nomination";
+
+                // SEMESTER LABEL
+                $rawLabel = $currsemester->sem_label;
+                $semesterlabel = str_replace('/', '', $rawLabel);
+                $semesterlabel = trim($semesterlabel);
+
+                $relativeDir = "{$student->student_directory}/{$progcode}/{$activity}/Nomination/{$semesterlabel}";
                 $fullPath = storage_path("app/public/{$relativeDir}");
 
                 if (!File::exists($fullPath)) {
                     File::makeDirectory($fullPath, 0755, true);
                 }
 
-                $this->generateNominationForm($actID, $student, $form, $mode, $relativeDir, $fileName);
+                $this->generateNominationForm($actID, $student, $semesterId, $form, $mode, $relativeDir, $fileName);
 
 
                 if ($mode == 1) {
@@ -1199,6 +1282,7 @@ class NominationController extends Controller
         $handledKeys = [
             '_token',
             'activity_id',
+            'semester_id',
             'opt',
             'signatureData'
         ];
@@ -1310,7 +1394,7 @@ class NominationController extends Controller
     }
 
     /* Generate Nomination Document */
-    public function generateNominationForm($actID, $student, $form, $mode, $finalDocRelativePath, $fileName)
+    public function generateNominationForm($actID, $student, $semesterId, $form, $mode, $finalDocRelativePath, $fileName)
     {
         try {
 
@@ -1339,7 +1423,8 @@ class NominationController extends Controller
             /* FETCH - NOMINATION */
             $nominationRecord = Nomination::where([
                 ['activity_id', $actID],
-                ['student_id', $student->id]
+                ['student_id', $student->id],
+                ['semester_id', $semesterId],
             ])->first();
 
             $signatureData = $nominationRecord ? json_decode($nominationRecord->nom_signature_data) : null;
@@ -1614,5 +1699,72 @@ class NominationController extends Controller
             ->first();
 
         return $staff;
+    }
+
+    public function reNominatedStudent($nominationId)
+    {
+
+        $nomId = Crypt::decrypt($nominationId);
+
+        try {
+            $nomination = Nomination::find($nomId);
+
+            if (!$nomination) {
+                return back()->with('error', 'Nomination not found.');
+            }
+
+            $currsemester = Semester::where('sem_status', 1)->first();
+
+            $existNom = Nomination::where('student_id', $nomination->student_id)
+                ->where('semester_id', $currsemester->id)
+                ->where('activity_id', $nomination->activity_id)
+                ->exists();
+
+            if ($existNom) {
+                return back()->with('error', 'Updating the nomination for this student is not allowed for the current semester. Please try again in the next semester.');
+            }
+
+
+
+            // UPDATE CURRENT EVALUATOR STATUS
+            Evaluator::where('nom_id', $nomId)
+                ->where('eva_status', 3)
+                ->update(['eva_status' => 2]);
+
+            // COPY ALL CURRENT DATA FROM NOMINATION
+            $newnomination = new Nomination();
+            $newnomination->student_id = $nomination->student_id;
+            $newnomination->semester_id = $currsemester->id;
+            $newnomination->activity_id = $nomination->activity_id;
+
+            // REMOVE HIGHER UPS [COMMITTEE / DEPUTY DEAN / DEAN] SIGNATURES
+            $originalSignatures = json_decode($nomination->nom_signature_data, true);
+            $filteredSignatures = array_filter(
+                $originalSignatures,
+                fn($key) => str_starts_with($key, 'sv_signature'),
+                ARRAY_FILTER_USE_KEY
+            );
+
+            $newnomination->nom_signature_data = json_encode($filteredSignatures);
+            $newnomination->nom_extra_data = $nomination->nom_extra_data;
+            $newnomination->nom_status = 2;
+            $newnomination->save();
+
+            // COPYING ALL CURRENT EVALUATOR DETAILS
+            $evaluators = Evaluator::where('nom_id', $nomId)->get();
+            foreach ($evaluators as $evaluator) {
+                $newevaluator = new Evaluator();
+                $newevaluator->nom_id = $newnomination->id;
+                $newevaluator->staff_id = $evaluator->staff_id;
+                $newevaluator->eva_status = $evaluator->eva_status;
+                $newevaluator->eva_role = $evaluator->eva_role;
+                $newevaluator->eva_meta = $evaluator->eva_meta;
+                $newevaluator->save();
+            }
+
+            return redirect()->route('nomination-student', ['studentId' => Crypt::encrypt($nomination->student_id), 'actId' => Crypt::encrypt($nomination->activity_id), 'semesterId' => Crypt::encrypt($currsemester->id), 'mode' => 2])->with('success', 'Your update request has been created successfully. Please complete the nomination process.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error making request for nomination update: ' . $e->getMessage());
+        }
     }
 }

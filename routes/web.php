@@ -145,12 +145,13 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/multiple-submission-eligibility-approval', [SubmissionController::class, 'multipleStudentSubmissionSuggestionApproval'])->name('multiple-submission-eligibility-approval-post');
 
     // Nomination
-    Route::get('/nomination-{studentId}-{actId}-{mode}', [NominationController::class, 'nominationStudent'])->name('nomination-student');
+    Route::get('/nomination-{studentId}-{actId}-{semesterId}-{mode}', [NominationController::class, 'nominationStudent'])->name('nomination-student');
     Route::get('/view-nomination-form', [NominationController::class, 'viewNominationForm'])->name('view-nomination-form-get');
     Route::post('/submit-nomination-{studentId}-{mode}', [NominationController::class, 'submitNomination'])->name('submit-nomination-post');
+    Route::get('/create-renomination-data/{nominationId}', [NominationController::class, 'reNominatedStudent'])->name('renomination-data-get');
 
     // Evaluation
-    Route::get('/evaluation-{studentId}-{actId}-{mode}', [EvaluationController::class, 'evaluationStudent'])->name('evaluation-student');
+    Route::get('/evaluation-{studentId}-{actId}-{semesterId}-{mode}', [EvaluationController::class, 'evaluationStudent'])->name('evaluation-student');
     Route::get('/view-evaluation-form', [EvaluationController::class, 'viewEvaluationForm'])->name('view-evaluation-form-get');
     Route::post('/submit-evaluation-{studentId}-{mode}', [EvaluationController::class, 'submitEvaluation'])->name('submit-evaluation-post');
 

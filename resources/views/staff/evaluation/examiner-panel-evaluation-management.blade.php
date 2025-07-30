@@ -14,7 +14,8 @@
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Examiner / Panel</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluations</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management</li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management
+                                </li>
                             </ul>
                         </div>
                         <div class="col-md-12">
@@ -161,6 +162,7 @@
                                             <th scope="col">Student</th>
                                             <th scope="col">Evaluation</th>
                                             <th scope="col">Date</th>
+                                            <th scope="col">Semester</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>
                                         </tr>
@@ -177,7 +179,7 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
-    
+
     <script type="text/javascript">
         $(document).ready(function() {
 
@@ -219,6 +221,10 @@
                         name: 'evaluation_date'
                     },
                     {
+                        data: 'evaluation_semester',
+                        name: 'evaluation_semester'
+                    },
+                    {
                         data: 'evaluation_status',
                         name: 'evaluation_status'
                     },
@@ -229,7 +235,7 @@
                         searchable: false
                     }
                 ],
-                
+
 
             });
 
@@ -276,4 +282,3 @@
         });
     </script>
 @endsection
-

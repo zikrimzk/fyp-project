@@ -76,6 +76,7 @@
                         <div class="card p-3">
                             <div class="card-body">
                                 <input type="hidden" name="activity_id" value="{{ $act->id }}">
+                                <input type="hidden" name="semester_id" value="{{ $semId }}">
                                 <input type="hidden" name="opt" id="opt-hidden">
                                 <!-- [1] - FOR SAVE DRAFT [2] CONFIRMED DRAFT -->
                                 <div class="container">
@@ -187,7 +188,7 @@
         /*********************************************************/
 
         initSignaturePads();
-        getNominationForm();
+        getEvaluationForm();
 
 
         /*********************************************************/
@@ -240,7 +241,7 @@
         /*********************************************************/
         /**********************GETTERS FUNCTION*******************/
         /*********************************************************/
-        function getNominationForm() {
+        function getEvaluationForm() {
             $.ajax({
                 url: "{{ route('view-evaluation-form-get') }}",
                 type: "GET",
@@ -249,6 +250,7 @@
                     actid: "{{ $act->id }}",
                     afid: "{{ $actform->id }}",
                     studentid: "{{ $data->student_id }}",
+                    semid:"{{ $semId }}",
                     mode: "{{ $mode }}"
                 },
                 beforeSend: function() {

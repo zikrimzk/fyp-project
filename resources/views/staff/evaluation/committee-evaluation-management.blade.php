@@ -168,6 +168,7 @@
                                             <th scope="col">Confirmed By</th>
                                             <th scope="col">Date</th>
                                             <th scope="col">Status</th>
+                                            <th scope="col">Semester</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -226,6 +227,10 @@
                     {
                         data: 'evaluation_date',
                         name: 'evaluation_date'
+                    },
+                    {
+                        data: 'evaluation_semester',
+                        name: 'evaluation_semester'
                     },
                     {
                         data: 'evaluation_status',

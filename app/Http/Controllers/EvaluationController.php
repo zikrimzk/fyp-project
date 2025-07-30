@@ -60,6 +60,8 @@ class EvaluationController extends Controller
                     'f.evaluation_date',
                     'f.evaluation_document',
                     'f.evaluation_isFinal',
+                    'f.evaluation_isFinal',
+                    'f.semester_id',
                 ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
                     $join->on('s.id', '=', 'latest.student_id');
@@ -92,16 +94,16 @@ class EvaluationController extends Controller
                     $data->where('s.programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
                     if ($req->input('status') == 10) {
-                        $data->where('evaluation_isFinal', 1);
+                        $data->where('f.evaluation_isFinal', 1);
                     } else {
-                        $data->where('evaluation_status', $req->input('status'));
+                        $data->where('f.evaluation_status', $req->input('status'));
                     }
                 } else {
-                    $data->where('evaluation_isFinal', 0);
+                    $data->where('f.evaluation_isFinal', 0);
                 }
 
 
@@ -136,8 +138,15 @@ class EvaluationController extends Controller
                 });
 
                 $table->addColumn('evaluation_document', function ($row) {
+
+                    // SEMESTER LABEL
+                    $currsemester = Semester::find($row->semester_id);
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
                     // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Evaluation';
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Evaluation/' . $semesterlabel;
 
                     if (empty($row->evaluation_document)) {
                         return '-';
@@ -188,12 +197,22 @@ class EvaluationController extends Controller
                     return $status;
                 });
 
+                $table->addColumn('evaluation_semester', function ($row) {
+                    $semesters = Semester::where('id', $row->semester_id)->first();
+
+                    if (empty($semesters)) {
+                        return 'N/A';
+                    }
+
+                    return $semesters->sem_label;
+                });
+
                 $table->addColumn('action', function ($row) {
                     $button = '';
 
                     if ($row->evaluation_isFinal != 1) {
                         $button = '
-                            <a href="' . route('evaluation-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 5]) . '" class="avtar avtar-xs btn-light-primary">
+                            <a href="' . route('evaluation-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->semester_id), 'mode' => 5]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-edit f-20"></i>
                             </a>
                         ';
@@ -204,7 +223,7 @@ class EvaluationController extends Controller
                     return $button;
                 });
 
-                $table->rawColumns(['student_photo', 'evaluation_document', 'evaluation_date', 'evaluation_status', 'action']);
+                $table->rawColumns(['student_photo', 'evaluation_document', 'evaluation_date', 'evaluation_status', 'evaluation_semester', 'action']);
 
                 return $table->make(true);
             }
@@ -266,6 +285,7 @@ class EvaluationController extends Controller
                     'f.evaluation_date',
                     'f.evaluation_document',
                     'f.evaluation_isFinal',
+                    'f.semester_id',
                 ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
                     $join->on('s.id', '=', 'latest.student_id');
@@ -298,16 +318,16 @@ class EvaluationController extends Controller
                     $data->where('s.programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
                     if ($req->input('status') == 10) {
-                        $data->where('evaluation_isFinal', 1);
+                        $data->where('f.evaluation_isFinal', 1);
                     } else {
-                        $data->where('evaluation_status', $req->input('status'));
+                        $data->where('f.evaluation_status', $req->input('status'));
                     }
                 } else {
-                    $data->where('evaluation_isFinal', 0);
+                    $data->where('f.evaluation_isFinal', 0);
                 }
 
 
@@ -342,8 +362,15 @@ class EvaluationController extends Controller
                 });
 
                 $table->addColumn('evaluation_document', function ($row) {
+
+                    // SEMESTER LABEL
+                    $currsemester = Semester::find($row->semester_id);
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
                     // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Evaluation';
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Evaluation/' . $semesterlabel;
 
                     if (empty($row->evaluation_document)) {
                         return '-';
@@ -394,12 +421,22 @@ class EvaluationController extends Controller
                     return $status;
                 });
 
+                $table->addColumn('evaluation_semester', function ($row) {
+                    $semesters = Semester::where('id', $row->semester_id)->first();
+
+                    if (empty($semesters)) {
+                        return 'N/A';
+                    }
+
+                    return $semesters->sem_label;
+                });
+
                 $table->addColumn('action', function ($row) {
                     $button = '';
 
                     if ($row->evaluation_isFinal != 1) {
                         $button = '
-                            <a href="' . route('evaluation-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'mode' => 6]) . '" class="avtar avtar-xs btn-light-primary">
+                            <a href="' . route('evaluation-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->semester_id), 'mode' => 6]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-edit f-20"></i>
                             </a>
                         ';
@@ -410,7 +447,7 @@ class EvaluationController extends Controller
                     return $button;
                 });
 
-                $table->rawColumns(['student_photo', 'evaluation_document', 'evaluation_date', 'evaluation_status', 'action']);
+                $table->rawColumns(['student_photo', 'evaluation_document', 'evaluation_date', 'evaluation_status', 'evaluation_semester', 'action']);
 
                 return $table->make(true);
             }
@@ -509,11 +546,11 @@ class EvaluationController extends Controller
                     $data->where('s.programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
 
-                    $data->where('evaluation_status', $req->input('status'));
+                    $data->where('f.evaluation_status', $req->input('status'));
                 }
 
                 $data = $data->get();
@@ -547,8 +584,15 @@ class EvaluationController extends Controller
                 });
 
                 $table->addColumn('evaluation_document', function ($row) {
+
+                    // SEMESTER LABEL
+                    $currsemester = Semester::find($row->semester_id);
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
                     // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Evaluation';
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Evaluation/' . $semesterlabel;
 
                     if (empty($row->evaluation_document)) {
                         return '-';
@@ -617,7 +661,17 @@ class EvaluationController extends Controller
                     return $status;
                 });
 
-                $table->rawColumns(['student_photo', 'evaluation_document', 'evaluation_date', 'confirmed_by', 'evaluation_status']);
+                $table->addColumn('evaluation_semester', function ($row) {
+                    $semesters = Semester::where('id', $row->semester_id)->first();
+
+                    if (empty($semesters)) {
+                        return 'N/A';
+                    }
+
+                    return $semesters->sem_label;
+                });
+
+                $table->rawColumns(['student_photo', 'evaluation_document', 'evaluation_date', 'confirmed_by', 'evaluation_status', 'evaluation_semester']);
 
                 return $table->make(true);
             }
@@ -646,13 +700,14 @@ class EvaluationController extends Controller
     }
 
     /* Evaluation Student */
-    public function evaluationStudent($studentId, $actId, $mode)
+    public function evaluationStudent($studentId, $actId, $semesterId, $mode)
     {
         try {
 
             /* GET ID'S */
             $studentId = decrypt($studentId);
             $actId = decrypt($actId);
+            $semId = decrypt($semesterId);
 
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
@@ -722,7 +777,8 @@ class EvaluationController extends Controller
                 'data' => $data,
                 'mode' => $mode,
                 'page' => $page,
-                'link' => $link
+                'link' => $link,
+                'semId' => $semId
             ]);
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
@@ -735,8 +791,9 @@ class EvaluationController extends Controller
         try {
 
             $mode = $req->input('mode');
-
             $staffId = auth()->user()->id;
+            $semid = $req->input('semid');
+
 
             /* GET STUDENT DATA */
             $student = Student::whereId($req->input('studentid'))->first();
@@ -780,6 +837,7 @@ class EvaluationController extends Controller
                 ['activity_id', $actID],
                 ['student_id', $student->id],
                 ['staff_id', $staffId],
+                ['semester_id', $semid],
             ])->first();
 
             $signatureData = $evaluationRecord ? json_decode($evaluationRecord->evaluation_signature_data) : null;
@@ -978,13 +1036,15 @@ class EvaluationController extends Controller
         }
     }
 
-    /* Submit Evaluation Form */
+    /* Submit Evaluation Form [IN FOCUS] */
     public function submitEvaluation(Request $req, $studentId, $mode)
     {
         try {
             $studentId = decrypt($studentId);
             $staffId = auth()->user()->id;
             $option = $req->input('opt');
+            $semId = $req->input('semester_id');
+
 
             // 1 - Load student
             $student = Student::where('id', $studentId)->first();
@@ -1002,7 +1062,7 @@ class EvaluationController extends Controller
             $studentActivity = StudentActivity::where('student_id', $studentId)
                 ->where('activity_id', $actID)
                 ->first();
-                
+
             if (!$studentActivity) {
                 return back()->with('error', 'Oops! Student activity record not found');
             }
@@ -1025,6 +1085,7 @@ class EvaluationController extends Controller
             // 4 - Load nomination
             $nomination = Nomination::where('student_id', $studentId)
                 ->where('activity_id', $actID)
+                ->where('semester_id', $semId)
                 ->first();
             if (!$nomination) {
                 return back()->with('error', 'Oops! Nomination record not found');
@@ -1034,18 +1095,26 @@ class EvaluationController extends Controller
             $evaluation = Evaluation::where('student_id', $studentId)
                 ->where('activity_id', $actID)
                 ->where('staff_id', $staffId)
+                ->where('semester_id', $semId)
                 ->first();
             if (!$evaluation) {
                 return back()->with('error', 'Oops! Evaluation record not found');
             }
 
-            // 6 - Prepare form meta data
-            $formData = $req->except(['_token', 'signatureData', 'opt']);
+            // 6 - Load semester
+            $currsemester = Semester::where('id', $semId)->first();
+
+            if (!$currsemester) {
+                return back()->with('error', 'Oops! Current semester not found');
+            }
+
+            // 7 - Prepare form meta data
+            $formData = $req->except(['_token', 'signatureData', 'opt', 'semester_id']);
             $scoreData = $this->extractScoreData($formData);
             $evaluationMeta = $formData;
             $evaluationMeta['Score'] = $scoreData;
 
-            // 7 - Handle signatures
+            // 8 - Handle signatures
             if ($req->has('signatureData')) {
                 $this->storeEvaluationSignature(
                     $student,
@@ -1057,10 +1126,10 @@ class EvaluationController extends Controller
                 );
             }
 
-            // 8 - Generate filename
+            // 9 - Generate filename
             $fileName = $this->generateEvaluationFilename($student, $nomination, $mode);
 
-            // 9 - Update evaluation record
+            // 10 - Update evaluation record
             if ($option == 1) {
                 $evaluation->evaluation_status = 7; // Submitted (Draft)
             } elseif ($option == 2) {
@@ -1070,14 +1139,13 @@ class EvaluationController extends Controller
                     $decisionStatus = $this->mapDecisionToStatus($req->all());
                     $evaluation->evaluation_status = $decisionStatus;
 
-                    if($decisionStatus == 2){
+                    if ($decisionStatus == 2) {
                         $studentActivity->sa_status = 3;
-                       
-                    }else{
+                    } else {
                         $studentActivity->sa_status = 5;
                     }
 
-                     $studentActivity->save();
+                    $studentActivity->save();
                 }
                 $evaluation->evaluation_isFinal = 1;
             }
@@ -1087,10 +1155,16 @@ class EvaluationController extends Controller
             $evaluation->evaluation_document = $fileName;
             $evaluation->save();
 
-            // 10 - Generate Evaluation Form File
+            // 11 - Generate Evaluation Form File
             $progcode = strtoupper($student->programmes->prog_code);
             $activityName = str_replace(['/', '\\'], '-', $activity->act_name);
-            $relativeDir = "{$student->student_directory}/{$progcode}/{$activityName}/Evaluation";
+
+            // 12 - Sem Label Format
+            $rawLabel = $currsemester->sem_label;
+            $semesterlabel = str_replace('/', '', $rawLabel);
+            $semesterlabel = trim($semesterlabel);
+
+            $relativeDir = "{$student->student_directory}/{$progcode}/{$activityName}/Evaluation/{$semesterlabel}";
             $fullPath = storage_path("app/public/{$relativeDir}");
 
             if (!File::exists($fullPath)) {
@@ -1099,7 +1173,7 @@ class EvaluationController extends Controller
 
             $this->generateEvaluationForm($actID, $student, $form, $mode, $relativeDir, $fileName);
 
-            // 11 - Redirect
+            // 13 - Redirect
             if ($mode == 5) {
                 return redirect()->route('examiner-panel-evaluation', strtolower(str_replace(' ', '-', $activity->act_name)))
                     ->with('success', 'Evaluation submitted successfully!');

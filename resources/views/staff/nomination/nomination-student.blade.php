@@ -76,6 +76,7 @@
                         <div class="card p-3">
                             <div class="card-body">
                                 <input type="hidden" name="activity_id" value="{{ $act->id }}">
+                                <input type="hidden" name="semester_id" value="{{ $semid }}">
                                 <input type="hidden" name="opt" id="opt-hidden">
                                 <!-- [1] - FOR SUBMIT OR APPROVE [2] REJECT -->
                                 <div class="container">
@@ -201,6 +202,7 @@
                     actid: "{{ $act->id }}",
                     afid: "{{ $actform->id }}",
                     studentid: "{{ $data->student_id }}",
+                    semesterid: "{{ $semid }}",
                     mode: "{{ $mode }}"
                 },
                 beforeSend: function() {

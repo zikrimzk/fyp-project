@@ -162,6 +162,7 @@
                                             <th scope="col">Student</th>
                                             <th scope="col">Evaluation</th>
                                             <th scope="col">Date</th>
+                                            <th scope="col">Semester</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>
                                         </tr>
@@ -218,6 +219,10 @@
                     {
                         data: 'evaluation_date',
                         name: 'evaluation_date'
+                    },
+                      {
+                        data: 'evaluation_semester',
+                        name: 'evaluation_semester'
                     },
                     {
                         data: 'evaluation_status',

@@ -18,6 +18,7 @@ class Evaluation extends Model
         'evaluation_isFinal',
         'student_id',
         'staff_id',
-        'activity_id'
+        'activity_id',
+        'semester_id',
     ];
 }

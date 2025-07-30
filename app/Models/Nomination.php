@@ -16,6 +16,7 @@ class Nomination extends Model
         'nom_document',
         'nom_extra_data',
         'student_id',
-        'activity_id'
+        'activity_id',
+        'semester_id',
     ];
 }

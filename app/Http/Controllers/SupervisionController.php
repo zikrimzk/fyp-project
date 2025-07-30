@@ -89,6 +89,7 @@ class SupervisionController extends Controller
                             <div style="max-width: 200px;">
                                 <span class="mb-0 fw-medium">' . $row->student_name . '</span>
                                 <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium"> Enrolled Semesters: ' . $row->student_semcount . '</small>
                             </div>
                         </div>
                     ';

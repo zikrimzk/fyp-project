@@ -14,7 +14,8 @@
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Committee</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Nomination</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Nomination Management</li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Nomination Management
+                                </li>
                             </ul>
                         </div>
                         <div class="col-md-12">
@@ -163,6 +164,7 @@
                                             <th scope="col">Student</th>
                                             <th scope="col">Nomination</th>
                                             <th scope="col">Date</th>
+                                            <th scope="col">Semester</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>
                                         </tr>
@@ -174,6 +176,74 @@
                     </div>
                 </div>
                 <!-- [ Activity Nomination ] end -->
+
+
+                @foreach ($data as $nom)
+                    <!-- [ Update Alert Modal ] Start -->
+                    <div class="modal fade" id="updateNominationModal-{{ $nom->nomination_id }}-{{ $nom->semester_id }}"
+                        data-bs-keyboard="false" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-body">
+                                    <div class="row">
+
+                                        <!-- Icon -->
+                                        <div class="col-sm-12 mb-4 text-center">
+                                            <i class="ti ti-info-circle text-warning" style="font-size: 100px"></i>
+                                        </div>
+
+                                        <!-- Title -->
+                                        <div class="col-sm-12 text-center">
+                                            <h2 class="f-18">Update Nomination?</h2>
+                                        </div>
+
+                                        <!-- Instruction -->
+                                        <div class="col-sm-12 mb-3">
+                                            <div class="alert alert-warning border text-start f-14">
+                                                <strong class="d-block mb-2 text-dark">Important Notice:</strong>
+                                                <ul class="mb-2 ps-3">
+                                                    <li><strong>Only one nomination update is allowed per student per
+                                                            semester.</strong></li>
+                                                    <li>If this is the student’s first nomination for the current semester,
+                                                        updates are only allowed in the <strong>next semester</strong>.</li>
+                                                    <li>Please review the nomination details before confirming.</li>
+                                                    <li>By clicking <strong>"Confirmed"</strong>, the system will:
+                                                        <ul class="ps-3">
+                                                            <li>Duplicate this nomination as a new record,</li>
+                                                            <li>Retain this nomination as reference,</li>
+                                                            <li>Require you to provide updated nominee details.</li>
+                                                        </ul>
+                                                    </li>
+                                                    <li class="text-danger"><strong>All currently approved evaluators will
+                                                            lose access to evaluate this student until the new nomination is
+                                                            fully completed.</strong></li>
+                                                    <li class="text-danger"><strong>This action is irreversible. Please
+                                                            double-check all information.</strong></li>
+                                                </ul>
+                                                <div class="mt-2">
+                                                    <em class="text-muted d-block">By proceeding, you acknowledge and
+                                                        accept responsibility for this update.</em>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <div class="d-flex justify-content-between gap-3 w-100">
+                                        <button type="button" class="btn btn-light w-50"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{{ route('renomination-data-get', ['nominationId' => Crypt::encrypt($nom->nomination_id)]) }}"
+                                            class="btn btn-warning w-50">
+                                            Confirmed
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ Update Alert Modal ] End -->
+                @endforeach
 
             </div>
             <!-- [ Main Content ] end -->
@@ -220,6 +290,10 @@
                         name: 'nom_date'
                     },
                     {
+                        data: 'nom_semester',
+                        name: 'nom_semester'
+                    },
+                    {
                         data: 'nom_status',
                         name: 'nom_status'
                     },
@@ -230,7 +304,7 @@
                         searchable: false
                     }
                 ],
-                
+
 
             });
 
@@ -277,4 +351,3 @@
         });
     </script>
 @endsection
-

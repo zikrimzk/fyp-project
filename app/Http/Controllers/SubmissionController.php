@@ -2362,7 +2362,7 @@ class SubmissionController extends Controller
                 ->where('a.id', $studentID)
                 ->where('c.activity_id', $activityID)
                 ->where('d.ss_status', 1)
-                ->select('a.programme_id', 'b.*', 'e.sem_startdate', 'e.sem_enddate')
+                ->select('a.programme_id', 'b.*', 'e.id as sem_id','e.sem_startdate', 'e.sem_enddate')
                 ->get();
 
             $activity = Activity::whereId($activityID)->first();
@@ -2409,7 +2409,8 @@ class SubmissionController extends Controller
                     Nomination::create([
                         'nom_status' => 1,
                         'student_id' => $studentID,
-                        'activity_id' => $activityID
+                        'activity_id' => $activityID,
+                        'semester_id' => $sub->sem_id
                     ]);
 
                     $nom_message = "Take note that nomination is now open for " . $student->student_name . ".";
@@ -2438,7 +2439,6 @@ class SubmissionController extends Controller
 
                 if ($procedure) {
                     Nomination::where('student_id', $studentID)->where('activity_id', $activityID)->delete();
-
                     $nom_message = "Take note that nomination is now closed for " . $student->student_name . ".";
                 }
 
@@ -2470,7 +2470,7 @@ class SubmissionController extends Controller
                 ->whereIn('a.id', $studentIDs)
                 ->where('c.activity_id', $activityID)
                 ->where('d.ss_status', 1)
-                ->select('a.id as student_id', 'a.student_name', 'a.student_email', 'a.programme_id', 'b.*', 'e.sem_startdate', 'e.sem_enddate')
+                ->select('a.id as student_id', 'a.student_name', 'a.student_email', 'a.programme_id', 'b.*','e.id as sem_id', 'e.sem_startdate', 'e.sem_enddate')
                 ->get();
 
             $activity = Activity::find($activityID);
@@ -2524,7 +2524,8 @@ class SubmissionController extends Controller
                             Nomination::create([
                                 'nom_status' => 1,
                                 'student_id' => $sub->student_id,
-                                'activity_id' => $activityID
+                                'activity_id' => $activityID,
+                                'semester_id' => $sub->sem_id
                             ]);
                         }
 
