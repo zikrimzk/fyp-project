@@ -53,7 +53,7 @@ Traditional systems faced key challenges:
 
 ## 🔒 License & Ownership
 
-This system is a **private software solution** developed by  
+This system is a **private software solution** developed for
 **Universiti Teknikal Malaysia Melaka (UTeM)** in collaboration with **Zeeke Software Solutions**.  
 Unauthorized distribution or reproduction of this software is strictly prohibited.
 
