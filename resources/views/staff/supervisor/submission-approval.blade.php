@@ -211,6 +211,8 @@
                                             <option value="3">Approved & Completed</option>
                                             <option value="4">Rejected: Supervisor</option>
                                             <option value="5">Rejected: (Comm/DD/Dean)</option>
+                                            <option value="8">Evaluation: Major/Minor Correction</option>
+                                            <option value="9">Evaluation: Resubmit/Represent</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">

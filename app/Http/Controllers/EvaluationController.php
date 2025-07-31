@@ -209,8 +209,9 @@ class EvaluationController extends Controller
 
                 $table->addColumn('action', function ($row) {
                     $button = '';
+                    $currsemester = Semester::where('sem_status', 1)->first();
 
-                    if ($row->evaluation_isFinal != 1) {
+                    if ($row->evaluation_isFinal != 1 && ($row->semester_id == $currsemester->id)) {
                         $button = '
                             <a href="' . route('evaluation-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->semester_id), 'mode' => 5]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-edit f-20"></i>
@@ -433,8 +434,9 @@ class EvaluationController extends Controller
 
                 $table->addColumn('action', function ($row) {
                     $button = '';
+                    $currsemester = Semester::where('sem_status', 1)->first();
 
-                    if ($row->evaluation_isFinal != 1) {
+                    if ($row->evaluation_isFinal != 1 && ($row->semester_id == $currsemester->id)) {
                         $button = '
                             <a href="' . route('evaluation-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->semester_id), 'mode' => 6]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-edit f-20"></i>
@@ -511,6 +513,7 @@ class EvaluationController extends Controller
                     'f.evaluation_date',
                     'f.evaluation_document',
                     'f.evaluation_isFinal',
+                    'f.semester_id',
                     'd.staff_name',
                 ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
@@ -1141,6 +1144,8 @@ class EvaluationController extends Controller
 
                     if ($decisionStatus == 2) {
                         $studentActivity->sa_status = 3;
+                    } elseif($decisionStatus == 5) {
+                        $studentActivity->sa_status = 9;
                     } else {
                         $studentActivity->sa_status = 5;
                     }
@@ -1171,7 +1176,7 @@ class EvaluationController extends Controller
                 File::ensureDirectoryExists($fullPath, 0755, true);
             }
 
-            $this->generateEvaluationForm($actID, $student, $form, $mode, $relativeDir, $fileName);
+            $this->generateEvaluationForm($actID, $student,$semId, $form, $mode, $relativeDir, $fileName);
 
             // 13 - Redirect
             if ($mode == 5) {
@@ -1445,7 +1450,7 @@ class EvaluationController extends Controller
     }
 
     /* Generate Evaluation Document */
-    public function generateEvaluationForm($actID, $student, $form, $mode, $finalDocRelativePath, $fileName)
+    public function generateEvaluationForm($actID, $student, $semesterId, $form, $mode, $finalDocRelativePath, $fileName)
     {
         try {
 
@@ -1478,6 +1483,7 @@ class EvaluationController extends Controller
                 ['activity_id', $actID],
                 ['student_id', $student->id],
                 ['staff_id', $staffId],
+                ['semester_id', $semesterId],
             ])->first();
 
             $signatureData = $evaluationRecord ? json_decode($evaluationRecord->evaluation_signature_data) : null;

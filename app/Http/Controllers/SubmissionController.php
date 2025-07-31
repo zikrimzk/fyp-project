@@ -822,7 +822,11 @@ class SubmissionController extends Controller
                     }
 
                     // Merge and save
-                    $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
+                    if ($signatureRole == 1) {
+                        $mergedSignatureData = $newSignatureData;
+                    } else {
+                        $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
+                    }
                     $studentActivity->sa_signature_data = json_encode($mergedSignatureData);
                     $studentActivity->sa_final_submission = $documentName;
                     $studentActivity->sa_status = $status;
@@ -1535,6 +1539,9 @@ class SubmissionController extends Controller
                         4 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> Supervisor</span>",
                         5 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> (Comm/DD/Dean)</span>",
                         7 => "<span class='badge bg-light-warning d-block mb-1'>Pending: <br> Evaluation</span>",
+                        8 => "<span class='badge bg-light-warning d-block mb-1'>Evaluation: <br> Minor/Major Correction</span>",
+                        9 => "<span class='badge bg-light-danger d-block mb-1'>Evaluation: <br> Resubmit/Represent</span>",
+
                         default => "N/A",
                     };
 
@@ -2362,7 +2369,7 @@ class SubmissionController extends Controller
                 ->where('a.id', $studentID)
                 ->where('c.activity_id', $activityID)
                 ->where('d.ss_status', 1)
-                ->select('a.programme_id', 'b.*', 'e.id as sem_id','e.sem_startdate', 'e.sem_enddate')
+                ->select('a.programme_id', 'b.*', 'e.id as sem_id', 'e.sem_startdate', 'e.sem_enddate')
                 ->get();
 
             $activity = Activity::whereId($activityID)->first();
@@ -2470,7 +2477,7 @@ class SubmissionController extends Controller
                 ->whereIn('a.id', $studentIDs)
                 ->where('c.activity_id', $activityID)
                 ->where('d.ss_status', 1)
-                ->select('a.id as student_id', 'a.student_name', 'a.student_email', 'a.programme_id', 'b.*','e.id as sem_id', 'e.sem_startdate', 'e.sem_enddate')
+                ->select('a.id as student_id', 'a.student_name', 'a.student_email', 'a.programme_id', 'b.*', 'e.id as sem_id', 'e.sem_startdate', 'e.sem_enddate')
                 ->get();
 
             $activity = Activity::find($activityID);

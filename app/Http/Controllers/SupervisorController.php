@@ -558,6 +558,8 @@ class SupervisorController extends Controller
                         4 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> Supervisor</span>",
                         5 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> (Comm/DD/Dean)</span>",
                         7 => "<span class='badge bg-light-warning d-block mb-1'>Pending: <br> Evaluation</span>",
+                        8 => "<span class='badge bg-light-warning d-block mb-1'>Evaluation: <br> Minor/Major Correction</span>",
+                        9 => "<span class='badge bg-light-danger d-block mb-1'>Evaluation: <br> Resubmit/Represent</span>",
                         default => "N/A",
                     };
 

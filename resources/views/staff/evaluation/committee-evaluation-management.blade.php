@@ -167,8 +167,8 @@
                                             <th scope="col">Evaluation</th>
                                             <th scope="col">Confirmed By</th>
                                             <th scope="col">Date</th>
-                                            <th scope="col">Status</th>
                                             <th scope="col">Semester</th>
+                                            <th scope="col">Status</th>
                                         </tr>
                                     </thead>
                                 </table>

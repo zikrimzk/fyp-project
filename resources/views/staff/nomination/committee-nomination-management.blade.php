@@ -194,13 +194,30 @@
 
                                         <!-- Title -->
                                         <div class="col-sm-12 text-center">
-                                            <h2 class="f-18">Update Nomination?</h2>
+                                            <h2 class="f-18">Update / Re-nominate Nomination?</h2>
                                         </div>
 
                                         <!-- Instruction -->
                                         <div class="col-sm-12 mb-3">
                                             <div class="alert alert-warning border text-start f-14">
                                                 <strong class="d-block mb-2 text-dark">Important Notice:</strong>
+
+                                                <p class="mb-2">
+                                                    This action may be required for one of the following reasons:
+                                                </p>
+                                                <ul class="mb-2 ps-3">
+                                                    <li><strong>To update nomination details</strong> for the current
+                                                        semester (e.g., modifying examiner or panel information, correcting
+                                                        data).</li>
+                                                    <li><strong>To re-nominate the student</strong> for the current semester
+                                                        because they need to <strong>re-present or re-submit</strong> a
+                                                        previous activity, requiring a new evaluation process. Evaluators
+                                                        may remain the same, but a fresh nomination record is still required
+                                                        to proceed.</li>
+                                                </ul>
+
+                                                <hr class="my-3">
+
                                                 <ul class="mb-2 ps-3">
                                                     <li><strong>Only one nomination update is allowed per student per
                                                             semester.</strong></li>
@@ -209,9 +226,11 @@
                                                     <li>Please review the nomination details before confirming.</li>
                                                     <li>By clicking <strong>"Confirmed"</strong>, the system will:
                                                         <ul class="ps-3">
-                                                            <li>Duplicate this nomination as a new record,</li>
-                                                            <li>Retain this nomination as reference,</li>
-                                                            <li>Require you to provide updated nominee details.</li>
+                                                            <li>Duplicate this nomination as a new record for the current
+                                                                semester,</li>
+                                                            <li>Retain the original nomination as reference,</li>
+                                                            <li>Require you to provide updated or reconfirmed nominee
+                                                                details.</li>
                                                         </ul>
                                                     </li>
                                                     <li class="text-danger"><strong>All currently approved evaluators will
@@ -220,12 +239,14 @@
                                                     <li class="text-danger"><strong>This action is irreversible. Please
                                                             double-check all information.</strong></li>
                                                 </ul>
+
                                                 <div class="mt-2">
                                                     <em class="text-muted d-block">By proceeding, you acknowledge and
                                                         accept responsibility for this update.</em>
                                                 </div>
                                             </div>
                                         </div>
+
                                     </div>
                                 </div>
 

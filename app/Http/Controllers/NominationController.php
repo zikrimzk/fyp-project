@@ -208,9 +208,9 @@ class NominationController extends Controller
                         ';
                     } elseif ($row->nom_status == 4) {
                         $button = '
-                            <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#updateNominationModal-' . $row->nomination_id . '-' . $row->semester_id . '" class="avtar avtar-xs btn-light-primary">
-                                <i class="ti ti-pencil f-20"></i>
-                            </a>
+                            <button href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#updateNominationModal-' . $row->nomination_id . '-' . $row->semester_id . '" class="btn btn-sm btn-light-warning">
+                                <small>Update / Re-nominate</small>
+                            </button>
                         ';
                     } else {
                         $button = '<div class="fst-italic text-muted">No action required</div>';

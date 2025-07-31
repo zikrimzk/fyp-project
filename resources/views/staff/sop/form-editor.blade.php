@@ -616,6 +616,7 @@
                                                         <select name="select_form_target" class="form-select"
                                                             id="select_form_target" disabled>
                                                             <option value="1">Submission</option>
+                                                            <option value="2">Correction</option>
                                                             <option value="3">Nomination</option>
                                                             <option value="4">Evaluation - Chairman </option>
                                                             <option value="5">Evaluation - Examiner / Panel</option>

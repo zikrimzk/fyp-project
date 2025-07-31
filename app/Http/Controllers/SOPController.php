@@ -371,23 +371,27 @@ class SOPController extends Controller
     public function addProcedure(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'activity_id'   => 'required|integer|exists:activities,id',
-            'programme_id'  => 'required|integer|exists:programmes,id',
-            'act_seq'       => 'required|integer|min:1',
-            'timeline_sem'  => 'required|integer|min:1',
-            'timeline_week' => 'required|integer|min:1|max:52',
-            'init_status'   => 'required|integer|in:1,2',
-            'is_haveEva'    => 'required|boolean|in:0,1',
-            'material'      => 'nullable|file|mimes:pdf|max:5120',
+            'activity_id'       => 'required|integer|exists:activities,id',
+            'programme_id'      => 'required|integer|exists:programmes,id',
+            'act_seq'           => 'required|integer|min:1',
+            'timeline_sem'      => 'required|integer|min:1',
+            'timeline_week'     => 'required|integer|min:1|max:52',
+            'init_status'       => 'required|integer|in:1,2',
+            'is_repeatable'     => 'required|integer|in:0,1',
+            'is_haveEva'        => 'required|boolean|in:0,1',
+            'is_haveCorrection' => 'required|boolean|in:0,1',
+            'material'          => 'nullable|file|mimes:pdf|max:5120',
         ], [], [
-            'activity_id'   => 'activity',
-            'programme_id'  => 'programme',
-            'act_seq'       => 'activity sequence',
-            'timeline_sem'  => 'semester timeline',
-            'timeline_week' => 'week timeline',
-            'init_status'   => 'initial status',
-            'is_haveEva'    => 'evaluation',
-            'material'      => 'material',
+            'activity_id'       => 'activity',
+            'programme_id'      => 'programme',
+            'act_seq'           => 'activity sequence',
+            'timeline_sem'      => 'semester timeline',
+            'timeline_week'     => 'week timeline',
+            'init_status'       => 'initial status',
+            'is_repeatable'     => 'repeatable',
+            'is_haveEva'        => 'evaluation',
+            'is_haveCorrection' => 'correction',
+            'material'          => 'material',
         ]);
 
         if ($validator->fails()) {
@@ -436,7 +440,9 @@ class SOPController extends Controller
                 'timeline_sem'  => $validated['timeline_sem'],
                 'timeline_week' => $validated['timeline_week'],
                 'init_status'   => $validated['init_status'],
+                'is_repeatable'   => $validated['is_repeatable'],
                 'is_haveEva'    => $validated['is_haveEva'],
+                'is_haveCorrection' => $validated['is_haveCorrection'],
                 'material'      => $filePath . $fileName,
             ]);
 
@@ -452,19 +458,23 @@ class SOPController extends Controller
         $progID = decrypt($progID);
 
         $validator = Validator::make($req->all(), [
-            'act_seq_up'       => 'required|integer|min:1',
-            'timeline_sem_up'  => 'required|integer|min:1',
-            'timeline_week_up' => 'required|integer|min:1|max:52',
-            'init_status_up'   => 'required|integer|in:1,2',
-            'is_haveEva_up'    => 'required|boolean|in:0,1',
-            'material_up'      => 'nullable|file|mimes:pdf|max:5120',
+            'act_seq_up'            => 'required|integer|min:1',
+            'timeline_sem_up'       => 'required|integer|min:1',
+            'timeline_week_up'      => 'required|integer|min:1|max:52',
+            'init_status_up'        => 'required|integer|in:1,2',
+            'is_repeatable_up'      => 'required|integer|in:0,1',
+            'is_haveEva_up'         => 'required|boolean|in:0,1',
+            'is_haveCorrection_up'  => 'required|boolean|in:0,1',
+            'material_up'           => 'nullable|file|mimes:pdf|max:5120',
         ], [], [
-            'act_seq_up'       => 'activity sequence',
-            'timeline_sem_up'  => 'semester timeline',
-            'timeline_week_up' => 'week timeline',
-            'init_status_up'   => 'initial status',
-            'is_haveEva_up'    => 'evaluation',
-            'material_up'      => 'material',
+            'act_seq_up'            => 'activity sequence',
+            'timeline_sem_up'       => 'semester timeline',
+            'timeline_week_up'      => 'week timeline',
+            'init_status_up'        => 'initial status',
+            'is_repeatable_up'      => 'repeatable',
+            'is_haveEva_up'         => 'evaluation',
+            'is_haveCorrection_up'  => 'correction',
+            'material_up'           => 'material',
         ]);
 
         if ($validator->fails()) {
@@ -511,7 +521,9 @@ class SOPController extends Controller
                 'timeline_sem'  => $validated['timeline_sem_up'],
                 'timeline_week' => $validated['timeline_week_up'],
                 'init_status'   => $validated['init_status_up'],
+                'is_repeatable'   => $validated['is_repeatable_up'],
                 'is_haveEva'    => $validated['is_haveEva_up'],
+                'is_haveCorrection' => $validated['is_haveCorrection_up'],
             ]);
 
             return back()->with('success', 'Procedure updated successfully.');
@@ -582,6 +594,8 @@ class SOPController extends Controller
 
                 if ($row->form_target == 1) {
                     $target = '<span class="badge bg-yellow-900">' . 'Submission' . '</span>';
+                } elseif ($row->form_target == 2) {
+                    $target = '<span class="badge bg-yellow-700">' . 'Correction' . '</span>';
                 } elseif ($row->form_target == 3) {
                     $target = '<span class="badge bg-yellow-300">' . 'Nomination' . '</span>';
                 } elseif ($row->form_target == 4) {
@@ -736,7 +750,7 @@ class SOPController extends Controller
             // ================================
             // Submission Form (form_target == 1)
             // ================================
-            if ($form_target == 1) {
+            if ($form_target == 1 || $form_target == 2) {
                 $fields = [
                     [
                         'ff_category' => 3,

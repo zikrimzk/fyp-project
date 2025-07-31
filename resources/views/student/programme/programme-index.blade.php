@@ -1,5 +1,6 @@
 @php
     use Carbon\Carbon;
+    use App\Models\Semester;
 @endphp
 
 @extends('student.layouts.main')
@@ -85,6 +86,10 @@
                                                 Dean</span>
                                         @elseif($act->init_status == 7)
                                             <span class="badge bg-light-warning">Pending : Evaluation</span>
+                                        @elseif($act->init_status == 8)
+                                            <span class="badge bg-light-warning">Evaluation : Minor/Major Correction</span>
+                                        @elseif($act->init_status == 9)
+                                            <span class="badge bg-light-danger">Evaluation : Represent/Resubmit</span>
                                         @elseif ($act->init_status == 10)
                                             <span class="badge bg-success badge-flash">Open for Submission</span>
                                         @elseif($act->init_status == 11)
@@ -131,10 +136,23 @@
                                         <h6 class="fw-semibold mb-2">Evaluation Report</h6>
                                         <div class="d-flex flex-column gap-2">
                                             @foreach ($filteredReports as $report)
-                                                <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'filename' => Crypt::encrypt($report->evaluation_document), 'opt' => 2]) }}"
+                                                @php
+                                                    $currsemester = Semester::where(
+                                                        'id',
+                                                        $report->semester_id,
+                                                    )->first();
+                                                    $rawLabel = $currsemester->sem_label;
+                                                    $semesterlabel = str_replace('/', '', $rawLabel);
+                                                    $semesterlabel = trim($semesterlabel);
+
+                                                    $file = $semesterlabel . '/' . $report->evaluation_document;
+                                                @endphp
+                                                <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'filename' => Crypt::encrypt($file), 'opt' => 2]) }}"
                                                     target="_blank"
                                                     class="text-decoration-none d-flex align-items-center gap-2 text-primary">
-                                                    <i class="ti ti-file-check"></i> View Evaluation Report
+                                                    <i
+                                                        class="ti ti-file-check"></i>{{ str_replace('.pdf', '', $report->evaluation_document) }}
+                                                    [{{ $rawLabel }}]
                                                 </a>
                                             @endforeach
                                         </div>
@@ -213,7 +231,7 @@
                                                                 </div>
                                                             </div>
                                                             <div class="text-md-end">
-                                                                @if (in_array($act->init_status, [10, 11, 4, 5]))
+                                                                @if (in_array($act->init_status, [10, 11, 4, 5, 8, 9]))
                                                                     {{-- Allow submission based on status --}}
                                                                     @if ($item->submission_status == 1 || $item->submission_status == 4)
                                                                         <a href="{{ route('student-document-submission', Crypt::encrypt($item->submission_id)) }}"
@@ -255,7 +273,7 @@
                             @if (
                                 ($act->required_document > 0 &&
                                     $act->submitted_required_document == $act->required_document &&
-                                    !in_array($act->init_status, [1, 2, 3, 7])) ||
+                                    !in_array($act->init_status, [1, 2, 3, 7, 8])) ||
                                     ($act->required_document == 0 &&
                                         $act->optional_document > 0 &&
                                         $act->submitted_optional_document >= 1 &&
@@ -265,6 +283,14 @@
                                         data-bs-target="#confirmSubmissionModal-{{ $act->activity_id }}">
                                         <i class="fas fa-file-signature ms-2 me-2"></i>
                                         <span class="me-2">Confirm Submission</span>
+                                    </button>
+                                </div>
+                            @elseif(in_array($act->init_status, [8]))
+                                <div class="card-footer d-flex justify-content-end align-items-center">
+                                    <button class="btn btn-sm btn-light-warning" data-bs-toggle="modal"
+                                        data-bs-target="#confirmCorrectionModal-{{ $act->activity_id }}">
+                                        <i class="fas fa-file-signature ms-2 me-2"></i>
+                                        <span class="me-2">Confirm Correction</span>
                                     </button>
                                 </div>
                             @endif
