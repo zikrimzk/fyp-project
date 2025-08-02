@@ -55,6 +55,8 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->name('student-remove-document-get');
     Route::post('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-post');
     Route::get('/view-final-document/{actID}/{filename}/{opt}', [SubmissionController::class, 'viewFinalDocument'])->where('filename', '.*')->name('student-view-final-document-get');
+
+    Route::post('/confirm-correction-submission-{actID}', [SubmissionController::class, 'confirmStudentCorrection'])->name('student-confirm-correction-post');
 });
 
 
@@ -138,6 +140,11 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/get-submission-review', [SubmissionController::class, 'getReview'])->name('get-review-data-post');
     Route::post('/update-review-activity', [SubmissionController::class, 'updateReview'])->name('update-review-post');
     Route::post('/delete-review-activity', [SubmissionController::class, 'deleteReview'])->name('delete-review-post');
+
+    /* Correction Approval */
+    Route::get('/correction-approval', [SubmissionController::class, 'correctionApproval'])->name('correction-approval');
+
+
 
     /* Submission Suggestion */
     Route::get('/submission-suggestion', [SubmissionController::class, 'submissionSuggestion'])->name('submission-suggestion');
@@ -266,10 +273,13 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     /* Submission Approval */
     Route::get('/mysupervision-submission-approval', [SupervisorController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
 
+    /* Correction Approval */
+    Route::get('/mysupervision-correction-approval', [SupervisorController::class, 'mySupervisionCorrectionApproval'])->name('my-supervision-correction-approval');
+
     /* Nomination */
     Route::get('/mysupervision-nomination-{name}', [SupervisorController::class, 'mySupervisionNomination'])->name('my-supervision-nomination');
 
-    
+
     // ---------------------------------------------------------------------------------------------------------------------//
     // ---------------------------------------------- EXAMINER / PANEL -----------------------------------------------------//
     // ---------------------------------------------------------------------------------------------------------------------//
@@ -284,5 +294,4 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     // Evaluation
     Route::get('/chairman-evaluation-{name}', [EvaluationController::class, 'chairmanEvaluation'])->name('chairman-evaluation');
-
 });

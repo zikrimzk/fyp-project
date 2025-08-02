@@ -287,10 +287,6 @@
             </div>
 
             @php
-                // $supervision = DB::table('supervisions')
-                //     ->where('staff_id', auth()->user()->id)
-                //     ->exists();
-
                 $supervision = DB::table('supervisions')
                     ->where('staff_id', auth()->user()->id)
                     ->whereExists(function ($query) {
@@ -432,6 +428,11 @@
                             <li class="pc-item">
                                 <a class="pc-link" href="{{ route('my-supervision-submission-approval') }}">
                                     Submission Approval
+                                </a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('my-supervision-correction-approval') }}">
+                                    Correction Approval
                                 </a>
                             </li>
                         </ul>
@@ -678,6 +679,11 @@
                             <li class="pc-item">
                                 <a class="pc-link" href="{{ route('submission-suggestion') }}">
                                     Submission Suggestion
+                                </a>
+                            </li>
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('correction-approval') }}">
+                                    Correction Approval
                                 </a>
                             </li>
                         </ul>

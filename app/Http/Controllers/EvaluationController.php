@@ -1144,12 +1144,13 @@ class EvaluationController extends Controller
 
                     if ($decisionStatus == 2) {
                         $studentActivity->sa_status = 3;
+                    } elseif($decisionStatus == 3 || $decisionStatus == 4) {
+                        $studentActivity->sa_status = 8;
                     } elseif($decisionStatus == 5) {
                         $studentActivity->sa_status = 9;
                     } else {
                         $studentActivity->sa_status = 5;
                     }
-
                     $studentActivity->save();
                 }
                 $evaluation->evaluation_isFinal = 1;
