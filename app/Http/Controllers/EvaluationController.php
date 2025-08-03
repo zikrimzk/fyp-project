@@ -17,6 +17,7 @@ use App\Models\ActivityForm;
 use Illuminate\Http\Request;
 use App\Models\StudentActivity;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\ActivityCorrection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Crypt;
@@ -1139,14 +1140,38 @@ class EvaluationController extends Controller
                 if ($mode == 5) {
                     $evaluation->evaluation_status = 8; // Confirmed [Examiner/Panel]
                 } elseif ($mode == 6) {
+                    $duration = $this->findDurationInRequest($req);
                     $decisionStatus = $this->mapDecisionToStatus($req->all());
                     $evaluation->evaluation_status = $decisionStatus;
 
                     if ($decisionStatus == 2) {
                         $studentActivity->sa_status = 3;
-                    } elseif($decisionStatus == 3 || $decisionStatus == 4) {
+                    } elseif ($decisionStatus == 3 || $decisionStatus == 4) {
                         $studentActivity->sa_status = 8;
-                    } elseif($decisionStatus == 5) {
+
+                        // CREATE OR UPDATE CORRECTION DATA
+                        $startDate = Carbon::now()->startOfDay();
+                        $dueDate = $duration
+                            ? Carbon::now()->add($duration['unit'] . 's', $duration['value'])->startOfDay()
+                            : null;
+
+                        ActivityCorrection::updateOrCreate(
+                            [
+                                'student_id' => $student->id,
+                                'activity_id' => $actID,
+                            ],
+                            [
+                                'ac_status' => 1,
+                                'ac_startdate' => $startDate,
+                                'ac_duedate' => $dueDate,
+                                'ac_signature_data' => json_encode([]),
+                                'semester_id' => $semId,
+                            ]
+                        );
+
+                        $this->restoreSubmission($student, $actID, $dueDate);
+
+                    } elseif ($decisionStatus == 5) {
                         $studentActivity->sa_status = 9;
                     } else {
                         $studentActivity->sa_status = 5;
@@ -1177,7 +1202,7 @@ class EvaluationController extends Controller
                 File::ensureDirectoryExists($fullPath, 0755, true);
             }
 
-            $this->generateEvaluationForm($actID, $student,$semId, $form, $mode, $relativeDir, $fileName);
+            $this->generateEvaluationForm($actID, $student, $semId, $form, $mode, $relativeDir, $fileName);
 
             // 13 - Redirect
             if ($mode == 5) {
@@ -1327,6 +1352,108 @@ class EvaluationController extends Controller
         }
 
         return $scoreData;
+    }
+
+    /* Extract duration data - Function 1 */
+    function extractDurationPhrase(string $text): ?array
+    {
+        // map word-numbers up to twenty
+        $wordNumbers = [
+            'one' => 1,
+            'two' => 2,
+            'three' => 3,
+            'four' => 4,
+            'five' => 5,
+            'six' => 6,
+            'seven' => 7,
+            'eight' => 8,
+            'nine' => 9,
+            'ten' => 10,
+            'eleven' => 11,
+            'twelve' => 12,
+            'thirteen' => 13,
+            'fourteen' => 14,
+            'fifteen' => 15,
+            'sixteen' => 16,
+            'seventeen' => 17,
+            'eighteen' => 18,
+            'nineteen' => 19,
+            'twenty' => 20
+        ];
+
+        // Build regex for words or digits
+        $wordsPattern = implode('|', array_keys($wordNumbers));
+        $regex = '/\b('
+            . '\d+'
+            . '|' . $wordsPattern
+            . ')\b\s*'
+            . '(day|days|week|weeks|month|months|year|years)\b/i';
+
+        if (preg_match($regex, $text, $m)) {
+            // number part
+            $numRaw = strtolower($m[1]);
+            $value = is_numeric($numRaw)
+                ? (int)$numRaw
+                : ($wordNumbers[$numRaw] ?? null);
+            if (! $value) {
+                return null;
+            }
+
+            // unit part → normalize to singular
+            $unit = strtolower($m[2]);
+            $unit = rtrim($unit, 's'); // days→day, months→month
+
+            return ['value' => $value, 'unit' => $unit];
+        }
+
+        return null;
+    }
+
+    /* Extract duration data - Function 2 */
+    function findDurationInRequest(Request $request): ?array
+    {
+        foreach ($request->all() as $key => $val) {
+            if (
+                preg_match('/duration|time|deadline|period/i', $key)
+                && is_string($val)
+            ) {
+                if ($duration = $this->extractDurationPhrase($val)) {
+                    return $duration;
+                }
+            }
+        }
+        return null;
+    }
+
+    /* Restore Archieves Submission */
+    public function restoreSubmission($student, $activityId, $newduedate)
+    {
+        $submissions = DB::table('submissions as a')
+            ->join('documents as b', 'a.document_id', '=', 'b.id')
+            ->join('activities as c', 'b.activity_id', '=', 'c.id')
+            ->where('a.student_id', $student->id)
+            ->where('c.id', $activityId)
+            ->where('a.submission_status', 5)
+            ->select('a.id as submission_id', 'a.submission_document')
+            ->get();
+
+        foreach ($submissions as $submission) {
+            if ($submission->submission_document !== '-') {
+                DB::table('submissions')
+                    ->where('id', $submission->submission_id)
+                    ->update([
+                        'submission_status' => 3,
+                        'submission_duedate' => $newduedate,
+                    ]);
+            } else {
+                DB::table('submissions')
+                    ->where('id', $submission->submission_id)
+                    ->update([
+                        'submission_status' => 1,
+                        'submission_duedate' => $newduedate,
+                    ]);
+            }
+        }
     }
 
     public function storeEvaluationSignature($student, $form, $signatureData, $evaluation, $nomination, $mode)

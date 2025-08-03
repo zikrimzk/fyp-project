@@ -143,8 +143,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Correction Approval */
     Route::get('/correction-approval', [SubmissionController::class, 'correctionApproval'])->name('correction-approval');
-
-
+    Route::post('/student-correction-approval/{actCorrID}-{option}', [SubmissionController::class, 'studentActivityCorrectionApproval'])->name('staff-correction-approval-post');
 
     /* Submission Suggestion */
     Route::get('/submission-suggestion', [SubmissionController::class, 'submissionSuggestion'])->name('submission-suggestion');
@@ -286,6 +285,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     // Evaluation
     Route::get('/examiner-panel-evaluation-{name}', [EvaluationController::class, 'examinerPanelEvaluation'])->name('examiner-panel-evaluation');
+    Route::get('/examiner-panel-correction-approval', [SubmissionController::class, 'examinerPanelCorrectionApproval'])->name('examiner-panel-correction-approval');
 
 
     // ---------------------------------------------------------------------------------------------------------------------//

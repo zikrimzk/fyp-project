@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('ac_final_submission');
             $table->integer('ac_status')->default(1)->comment('1- Pending 2- Approved SV 3- Approved Examiner/Panel 4- Approved Committee 5- Rejected');
             $table->json('ac_signature_data')->comment('will store the respected signature_key: signature_data , signature_date:Date');
-            $table->date('ac_date')->nullable();
+            $table->dateTime('ac_startdate')->nullable();
+            $table->dateTime('ac_duedate')->nullable();
             $table->foreignId('student_id')->constrained('students');
             $table->foreignId('activity_id')->constrained('activities');
             $table->foreignId('semester_id')->constrained('semesters');

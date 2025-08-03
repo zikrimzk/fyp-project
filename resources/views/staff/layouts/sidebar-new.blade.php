@@ -607,6 +607,23 @@
                             @endforeach
                         </ul>
                     </li>
+
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-file-upload pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Submissions</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('examiner-panel-correction-approval') }}">
+                                    Correction Approval
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 @endif
 
                 @if ($higherUps)

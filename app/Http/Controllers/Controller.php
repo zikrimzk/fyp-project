@@ -1145,4 +1145,91 @@ class Controller extends BaseController
     //     }
     // }
 
+
+     // public function storeCorrectionSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status, $preferredFieldId = null)
+    // {
+    //     try {
+    //         if ($signatureData) {
+    //             // Load or create activity correction entry
+    //             $activityCorrection = ActivityCorrection::firstOrNew([
+    //                 'activity_id' => $actID,
+    //                 'student_id' => $student->id,
+    //                 'semester_id' => $semester->id
+    //             ]);
+
+    //             // Decode existing signature data
+    //             $existingSignatureData = [];
+    //             if ($activityCorrection->ac_signature_data) {
+    //                 $existingSignatureData = json_decode($activityCorrection->ac_signature_data, true);
+    //             }
+
+    //             // Load all signature fields for this role
+    //             $allSignatureFields = FormField::where([
+    //                 ['af_id', $form->id],
+    //                 ['ff_category', 6],
+    //                 ['ff_signature_role', $signatureRole]
+    //             ])->get();
+
+    //             $signatureField = null;
+
+    //             // Pick the first empty field for this role (e.g. examiner_1, examiner_2, etc.)
+    //             foreach ($allSignatureFields as $field) {
+    //                 $key = $field->ff_signature_key;
+    //                 if (empty($existingSignatureData[$key])) {
+    //                     $signatureField = $field;
+    //                     break;
+    //                 }
+    //             }
+
+    //             // If no available field to sign, return
+    //             if (!$signatureField) {
+    //                 return back()->with('error', 'All required signatures for your role have already been completed.');
+    //             }
+
+    //             $signatureKey = $signatureField->ff_signature_key;
+    //             $dateKey = $signatureField->ff_signature_date_key;
+
+    //             // Create new signature block
+    //             if ($signatureRole == 1) {
+    //                 // Student role
+    //                 $newSignatureData = [
+    //                     $signatureKey => $signatureData,
+    //                     $dateKey => now()->format('d M Y'),
+    //                     $signatureKey . '_name' => $student->student_name,
+    //                     $signatureKey . '_role' => 'Student',
+    //                     $signatureKey . '_is_cross_approval' => false
+    //                 ];
+    //             } else {
+    //                 // Staff roles
+    //                 $roleName = match ($userData->staff_role) {
+    //                     1 => "Committee",
+    //                     2 => "Lecturer",
+    //                     3 => "Deputy Dean",
+    //                     4 => "Dean",
+    //                     default => "Staff",
+    //                 };
+
+    //                 $newSignatureData = [
+    //                     $signatureKey => $signatureData,
+    //                     $dateKey => now()->format('d M Y'),
+    //                     $signatureKey . '_name' => $userData->staff_name,
+    //                     $signatureKey . '_role' => $roleName,
+    //                     $signatureKey . '_is_cross_approval' => false
+    //                 ];
+    //             }
+
+    //             // Merge with existing data
+    //             $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
+
+    //             // Save updated data
+    //             $activityCorrection->ac_signature_data = json_encode($mergedSignatureData);
+    //             $activityCorrection->ac_final_submission = $documentName;
+    //             $activityCorrection->ac_status = $status;
+    //             $activityCorrection->save();
+    //         }
+    //     } catch (Exception $e) {
+    //         return back()->with('error', 'Oops! Error storing signature: ' . $e->getMessage());
+    //     }
+    // }
+
 }

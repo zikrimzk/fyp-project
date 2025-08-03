@@ -872,7 +872,7 @@ class SupervisorController extends Controller
                     $semesterlabel = str_replace('/', '', $rawLabel);
                     $semesterlabel = trim($semesterlabel);
 
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Correction/'. $semesterlabel;
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Correction/' . $semesterlabel;
 
                     $final_submission =
                         '
@@ -889,214 +889,143 @@ class SupervisorController extends Controller
                     return  $row->updated_at == null ? '-' : Carbon::parse($row->updated_at)->format('d M Y g:i A');
                 });
 
-                // $table->addColumn('ac_status', function ($row) {
-
-                //     $confirmation_status = match ($row->ac_status) {
-                //         2 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval: <br> Supervisor</span>",
-                //         3 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval: <br> (Comm/DD/Dean)</span>",
-                //         3 => "<span class='badge bg-success d-block mb-1'>Approved & Completed</span>",
-                //         4 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> Supervisor</span>",
-                //         5 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> (Comm/DD/Dean)</span>",
-                //         7 => "<span class='badge bg-light-warning d-block mb-1'>Pending: <br> Evaluation</span>",
-                //         8 => "<span class='badge bg-light-warning d-block mb-1'>Evaluation: <br> Minor/Major Correction</span>",
-                //         9 => "<span class='badge bg-light-danger d-block mb-1'>Evaluation: <br> Resubmit/Represent</span>",
-                //         default => "N/A",
-                //     };
-
-
-                //     $signatureData = !empty($row->ac_signature_data)
-                //         ? json_decode($row->ac_signature_data, true)
-                //         : [];
-
-                //     // Get required signature roles for the activity
-                //     $formRoles = DB::table('activity_forms as a')
-                //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                //         ->where('a.activity_id', $row->activity_id)
-                //         ->where('a.af_target', 2)
-                //         ->where('b.ff_category', 6)
-                //         ->pluck('b.ff_signature_role')
-                //         ->unique()
-                //         ->sort()
-                //         ->values()
-                //         ->toArray();
-
-                //     // All roles involved in approvals (SV, Co-SV, Comm, DD, Dean)
-
-                //     if ($row->ac_status == 2) {
-                //         $roleMap = [
-                //             2 => 'Main Supervisor',
-                //             3 => 'Co-Supervisor',
-                //         ];
-                //         $signatureKeys = [
-                //             2 => 'sv_signature',
-                //             3 => 'cosv_signature',
-                //         ];
-                //     } elseif ($row->ac_status == 3) {
-                //         $roleMap = [
-                //             8 => 'Examiner 1',
-                //             8 => 'Examiner 2',
-                //         ];
-                //         $signatureKeys = [
-                //             8 => 'examiner_1_signature',
-                //             8 => 'examiner_2_signature',
-                //         ];
-                //     } elseif ($row->ac_status == 4) {
-
-                //         $roleMap = [
-                //             4 => 'Committee',
-                //             5 => 'Deputy Dean',
-                //             6 => 'Dean'
-                //         ];
-
-                //         // Signature key for each role
-                //         $signatureKeys = [
-                //             4 => 'comm_signature_date',
-                //             5 => 'deputy_dean_signature_date',
-                //             6 => 'dean_signature_date'
-                //         ];
-                //     } else {
-                //         $roleMap = [];
-                //         $signatureKeys = [];
-                //     }
-
-
-                //     $statusFragments = [];
-
-                //     foreach ($formRoles as $role) {
-                //         // Skip if not mapped properly
-                //         if (!isset($roleMap[$role]) || !isset($signatureKeys[$role])) {
-                //             continue;
-                //         }
-
-                //         $roleName = $roleMap[$role];
-                //         $signatureKey = $signatureKeys[$role];
-                //         $hasSigned = !empty($signatureData[$signatureKey]);
-
-                //         $statusFragments[] = $hasSigned
-                //             ? '<span class="badge bg-light-success d-block mb-1">Approved (' . $roleName . ')</span>'
-                //             : '<span class="badge bg-light-danger d-block mb-1">Required: ' . $roleName . '</span>';
-                //     }
-
-                //     return $confirmation_status . implode('', $statusFragments);
-                // });
-
                 $table->addColumn('ac_status', function ($row) {
-
-                    // Main confirmation status badge
-                    $confirmation_status = match ($row->ac_status) {
-                        2 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval: <br> Supervisor</span>",
-                        3 => "<span class='badge bg-light-success d-block mb-1'>Approved & Completed</span>",
-                        4 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> Supervisor</span>",
-                        5 => "<span class='badge bg-danger d-block mb-1'>Rejected: <br> (Comm/DD/Dean)</span>",
-                        7 => "<span class='badge bg-light-warning d-block mb-1'>Pending: <br> Evaluation</span>",
-                        8 => "<span class='badge bg-light-warning d-block mb-1'>Evaluation: <br> Minor/Major Correction</span>",
-                        9 => "<span class='badge bg-light-danger d-block mb-1'>Evaluation: <br> Resubmit/Represent</span>",
-                        default => "N/A",
+                    // 1) Main status badge
+                    $confirmationBadge = match ($row->ac_status) {
+                        1 => "<span class='badge bg-light-warning d-block mb-1'>Pending:<br>Student Action</span>",
+                        2 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval:<br>Supervisor</span>",
+                        3 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval:<br>Examiners/Panels</span>",
+                        4 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval:<br>(Comm/DD/Dean)</span>",
+                        5 => "<span class='badge bg-light-success d-block mb-1'>Approved & Completed</span>",
+                        6 => "<span class='badge bg-light-danger d-block mb-1'>Rejected:<br>Supervisor</span>",
+                        7 => "<span class='badge bg-light-danger d-block mb-1'>Rejected:<br>Examiners/Panels</span>",
+                        8 => "<span class='badge bg-light-danger d-block mb-1'>Rejected:<br>(Comm/DD/Dean)</span>",
+                        default => "<span class='badge bg-secondary d-block mb-1'>N/A</span>",
                     };
 
-                    // Decode saved signature data (JSON)
-                    $signatureData = !empty($row->ac_signature_data)
+                    // 2) Decode stored signatures
+                    $sigs = ! empty($row->ac_signature_data)
                         ? json_decode($row->ac_signature_data, true)
                         : [];
 
-                    // Get dynamic form fields with roles and signature keys for approval process
+                    // 3) Pull all signature‐fields once
                     $formFields = DB::table('activity_forms as a')
-                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                        ->join('form_fields as f', 'a.id', '=', 'f.af_id')
                         ->where('a.activity_id', $row->activity_id)
-                        ->where('a.af_target', 2) // Only approval signature fields
-                        ->where('b.ff_category', 6) // Only fields that require signature
-                        ->select('b.ff_signature_role', 'b.ff_label', 'b.ff_signature_key')
-                        ->orderBy('b.ff_signature_role') // Optional: order by role ID
+                        ->where('a.af_target',   2)   // correction form
+                        ->where('f.ff_category', 6)   // signature fields
+                        ->select('f.ff_signature_role', 'f.ff_label', 'f.ff_signature_key')
+                        ->orderBy('f.ff_order')
                         ->get();
 
-                    $statusFragments = [];
+                    // 4) Which roles belong to this level?
+                    $levelRoles = match ($row->ac_status) {
+                        2 => [2, 3],      // Supervisor + Co-Supervisor
+                        3 => [8],         // Examiners/Panels
+                        4 => [4, 5, 6],   // Committee, Deputy Dean, Dean
+                        default => [],
+                    };
 
-                    foreach ($formFields as $field) {
-                        $roleLabel = $field->ff_label; // e.g. "Examiner 1", "Supervisor"
-                        $signatureKey = $field->ff_signature_key; // e.g. "examiner_1_signature"
+                    // 5) Build sub-badges for *just* this level
+                    $subBadges = '';
+                    if ($levelRoles) {
+                        $fieldsThisLevel = $formFields
+                            ->whereIn('ff_signature_role', $levelRoles);
 
-                        $hasSigned = !empty($signatureData[$signatureKey]);
+                        foreach ($fieldsThisLevel as $f) {
+                            $label = e($f->ff_label);
+                            $key   = $f->ff_signature_key;
+                            $signed = ! empty($sigs[$key]);
 
-                        $statusFragments[] = $hasSigned
-                            ? '<span class="badge bg-light-success d-block mb-1">Approved (' . e($roleLabel) . ')</span>'
-                            : '<span class="badge bg-light-danger d-block mb-1">Required: ' . e($roleLabel) . '</span>';
+                            if ($signed) {
+                                $subBadges .=
+                                    "<span class='badge bg-light-success d-block mb-1 text-wrap'>
+                                        Approved: {$label}
+                                    </span>";
+                                                } else {
+                                                    $subBadges .=
+                                                        "<span class='badge bg-light-danger d-block mb-1 text-wrap'>
+                                        Required: {$label}
+                                    </span>";
+                            }
+                        }
                     }
 
-                    return $confirmation_status . implode('', $statusFragments);
+                    return $confirmationBadge . $subBadges;
                 });
 
                 $table->addColumn('action', function ($row) {
-                    $activityId = $row->activity_id;
+                    // Status constants
+                    $PENDING_SUPERVISOR = 2;
 
-                    // Query only once and cache the result
-                    $formFields = DB::table('activity_forms as a')
-                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                    $activityId      = $row->activity_id;
+                    $correctionId    = $row->activity_correction_id;
+                    $myRole          = $row->supervision_role;   // 1 = SV, 2 = CoSV
+
+                    // 1) Which signature roles does the form require?
+                    $requiredRoles = DB::table('activity_forms as a')
+                        ->join('form_fields as f', 'a.id', '=', 'f.af_id')
                         ->where('a.activity_id', $activityId)
-                        ->where('a.af_target', 2)
-                        ->where('b.ff_category', 6)
-                        ->select('b.ff_signature_role')
-                        ->pluck('ff_signature_role')
+                        ->where('a.af_target',   2)
+                        ->where('f.ff_category', 6)
+                        ->pluck('f.ff_signature_role')
+                        ->unique()
                         ->toArray();
 
-                    $hasSvfield = in_array(2, $formFields);
-                    $hasCoSvfield = in_array(3, $formFields);
-                    $hasCoSv = ($hasSvfield && $hasCoSvfield);
+                    $svRequired   = in_array(2, $requiredRoles, true);
+                    $cosvRequired = in_array(3, $requiredRoles, true);
 
-                    // Check signatures
-                    $hasSvSignature = false;
-                    $hasCoSvSignature = false;
+                    // 2) What’s already signed?
+                    $sigData    = json_decode($row->ac_signature_data ?? '[]', true);
+                    $svSigned   = ! empty($sigData['sv_signature']);
+                    $cosvSigned = ! empty($sigData['cosv_signature']);
 
-                    if (!empty($row->ac_signature_data)) {
-                        $signatureData = json_decode($row->ac_signature_data, true);
-                        $hasSvSignature = isset($signatureData['sv_signature']);
-                        $hasCoSvSignature = isset($signatureData['cosv_signature']);
-                    }
+                    // 3) Has this level fully completed?
+                    //    – if both required, both must sign
+                    //    – if only one required, that one alone suffices
+                    $levelComplete = (
+                        ($svRequired   && $cosvRequired && $svSigned && $cosvSigned)
+                        || ($svRequired   && ! $cosvRequired && $svSigned)
+                        || (! $svRequired && $cosvRequired   && $cosvSigned)
+                    );
 
-                    $signatureExists = ($hasCoSv && $hasSvSignature && $hasCoSvSignature);
+                    // 4) Is my signature required? And have I already signed?
+                    $iAmRequired = ($myRole === 1 && $svRequired)
+                        || ($myRole === 2 && $cosvRequired);
 
-                    $svNoBtn = ($row->supervision_role == 1 && $hasSvSignature);
-                    $cosvNoBtn = ($row->supervision_role == 2 && $hasCoSvSignature);
+                    $iHaveSigned = ($myRole === 1 && $svSigned)
+                        || ($myRole === 2 && $cosvSigned);
 
-                    $svNoPermission = ($row->supervision_role == 1 && !$hasSvfield);
-                    $cosvNoPermission = ($row->supervision_role == 2 && !$hasCoSvfield);
-
-                    $studentActivityId = $row->activity_correction_id;
-
-                    if ($signatureExists) {
-                        return '<div class="fst-italic text-muted">No action to proceed</div>';
-                    }
-
-                    if (!$signatureExists && $row->ac_status == 2) {
-
-                        if ($svNoPermission || $cosvNoPermission) {
-                            return '<div class="fst-italic text-muted">No action to proceed</div>';
-                        }
-
-                        if ($svNoBtn || $cosvNoBtn) {
-                            return '<div class="fst-italic text-muted">No action to proceed</div>';
-                        }
-
+                    // 5) Only show buttons in PENDING_SUPERVISOR if:
+                    //    • I am one of the required signers
+                    //    • I haven't signed yet
+                    //    • The level is not already completed
+                    if (
+                        $row->ac_status === $PENDING_SUPERVISOR
+                        && $iAmRequired
+                        && ! $iHaveSigned
+                        && ! $levelComplete
+                    ) {
                         return '
-                            <button type="button" class="btn btn-light-success btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
-                                data-bs-toggle="modal" data-bs-target="#approveModal-' . $studentActivityId . '">
-                                <i class="ti ti-circle-check me-2"></i>
-                                <span class="me-2">Approve</span>
+                            <button class="btn btn-light-success btn-sm mb-1 w-100"
+                                data-bs-toggle="modal"
+                                data-bs-target="#approveModal-' . $correctionId . '">
+                                <i class="ti ti-circle-check me-2"></i>Approve
                             </button>
-
-                            <button type="button" class="btn btn-light-danger btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
-                                data-bs-toggle="modal" data-bs-target="#rejectModal-' . $studentActivityId . '">
-                                <i class="ti ti-circle-x me-2"></i>
-                                <span class="me-2">Reject</span>
+                            <button class="btn btn-light-danger btn-sm mb-1 w-100"
+                                data-bs-toggle="modal"
+                                data-bs-target="#rejectModal-' . $correctionId . '">
+                                <i class="ti ti-circle-x me-2"></i>Reject
                             </button>
-
-                            <button type="button" class="btn btn-light-warning btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
-                                data-bs-toggle="modal" data-bs-target="#revertModal-' . $studentActivityId . '">
-                                <i class="ti ti-rotate me-2"></i>
-                                <span class="me-2">Revert</span>
+                            <button class="btn btn-light-warning btn-sm w-100"
+                                data-bs-toggle="modal"
+                                data-bs-target="#revertModal-' . $correctionId . '">
+                                <i class="ti ti-rotate me-2"></i>Revert
                             </button>
                         ';
                     }
 
+                    // 6) Everything else:
                     return '<div class="fst-italic text-muted">No action to proceed</div>';
                 });
 

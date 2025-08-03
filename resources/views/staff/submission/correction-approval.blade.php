@@ -15,8 +15,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">Supervisor</a></li>
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">My Supervision</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Submission</a></li>
                                 <li class="breadcrumb-item" aria-current="page">Correction Approval</li>
                             </ul>
@@ -66,32 +65,24 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Submission Approval ] start -->
+                <!-- [ Correction Approval ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
 
-                            <!-- Supervisor Correction Approval Guidelines -->
+                            <!-- Correction Approval Guidelines -->
                             <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
                                 <i class="ti ti-info-circle fs-3"></i>
                                 <div class="w-100">
                                     <h4 class="mb-3 fw-semibold">Correction Approval Guidelines</h4>
                                     <ul class="mb-0 ps-3 small">
                                         <li class="mb-2">
-                                            Supervisors must thoroughly review and confirm the student's corrected documents
-                                            before allowing progression to the next approval level.
+                                            Approval actions are only shown to roles configured in the <strong>Form Settings
+                                                signature flow</strong>.
                                         </li>
                                         <li class="mb-2">
-                                            If both <strong>Main Supervisor</strong> and <strong>Co-Supervisor</strong> are
-                                            involved, <strong>both must approve</strong> the correction submission.
-                                        </li>
-                                        <li class="mb-2">
-                                            If no further approval is required after supervisor level, the correction
-                                            process will be marked as complete upon supervisor approval.
-                                        </li>
-                                        <li class="mb-2">
-                                            Supervisors may <strong>revert</strong> the correction request if the revised
-                                            documents are incomplete or require further improvement.
+                                            Each role (Committee, Deputy Dean, Dean) can only approve submissions if their
+                                            signature is required.
                                         </li>
                                     </ul>
                                 </div>
@@ -206,10 +197,10 @@
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
                                             <option value="1">Pending : Student Action</option>
-                                            <option value="2" selected>Correction: Pending Supervisor Approval
+                                            <option value="2">Correction: Pending Supervisor Approval
                                             </option>
                                             <option value="3">Correction: Pending Examiners/Panels Approval</option>
-                                            <option value="4">Correction: Pending Comm/DD/Dean Approval
+                                            <option value="4" selected>Correction: Pending Comm/DD/Dean Approval
                                             </option>
                                             <option value="6">Rejected: Supervisor [Correction]</option>
                                             <option value="7">Rejected: Examiners/Panels [Correction]</option>
@@ -223,23 +214,9 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-4">
-                                    <div class="input-group">
-                                        <select id="fil_role" class="form-select">
-                                            <option value="">-- Select Role --</option>
-                                            <option value="1">Main Supervisor</option>
-                                            <option value="2">Co-Supervisor</option>
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearRoleFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
                             </div>
+                            
                             <!-- [ Filter Section ] End -->
-
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -305,6 +282,16 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <!-- Optional Comment -->
+                                            {{-- <div class="col-sm-12 mb-3">
+                                                <label for="comment_txt_{{ $upd->activity_correction_id }}"
+                                                    class="form-label">
+                                                    Comment / Notes <span class="text-muted">(optional)</span>
+                                                </label>
+                                                <textarea name="comment" id="comment_txt_{{ $upd->activity_correction_id }}" class="form-control" rows="4"
+                                                    placeholder="Enter any remarks if needed..."></textarea>
+                                            </div> --}}
 
                                             <!-- Signature Canvas -->
                                             <div class="col-sm-12 mb-3">
@@ -416,65 +403,8 @@
                         </div>
                     </form>
                     <!-- [ Reject Modal ] End -->
-
-                    <!-- [ Revert Modal ] Start -->
-                    <form method="POST"
-                        action="{{ route('staff-correction-approval-post', ['actCorrID' => Crypt::encrypt($upd->activity_correction_id), 'option' => 3]) }}">
-                        @csrf
-                        <div class="modal fade" id="revertModal-{{ $upd->activity_correction_id }}"
-                            data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-body">
-                                        <div class="row">
-
-                                            <!-- Icon -->
-                                            <div class="col-sm-12 mb-4">
-                                                <div class="d-flex justify-content-center align-items-center mb-3">
-                                                    <i class="ti ti-refresh-alert text-warning"
-                                                        style="font-size: 100px"></i>
-                                                </div>
-                                            </div>
-
-                                            <!-- Title -->
-                                            <div class="col-sm-12">
-                                                <div class="d-flex justify-content-center align-items-center text-center">
-                                                    <h2 class="f-18">Revert Student Correction?</h2>
-                                                </div>
-                                            </div>
-
-                                            <!-- Message -->
-                                            <div class="col-sm-12 mb-3">
-                                                <div class="d-flex justify-content-center align-items-center">
-                                                    <p class="fw-normal f-14 text-center text-muted">
-                                                        This action will <strong>cancel</strong> the student's current
-                                                        confirmation.<br>
-                                                        The student must log in and <strong>confirm again</strong> before
-                                                        proceeding further.
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <!-- Action Buttons -->
-                                            <div class="col-sm-12">
-                                                <div class="d-flex justify-content-between gap-3 align-items-center">
-                                                    <button type="reset" class="btn btn-light w-50"
-                                                        data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit"
-                                                        class="btn btn-warning w-50 confirm-btn">Confirm
-                                                        Revert</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                    <!-- [ Revert Modal ] End -->
                 @endforeach
-
-                <!-- [ Submission Approval ] end -->
+                <!-- [ Correction Approval ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -576,7 +506,7 @@
         $(document).ready(function() {
 
             /*********************************************************/
-            /************DATATABLE : STUDENT ACTIVITIES***************/
+            /**********DATATABLE : ACTIVITIY CORRECTION***************/
             /*********************************************************/
             var table = $('.data-table').DataTable({
                 processing: true,
@@ -584,7 +514,7 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('my-supervision-correction-approval') }}",
+                    url: "{{ route('correction-approval') }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id').val();
                         d.programme = $('#fil_programme_id').val();

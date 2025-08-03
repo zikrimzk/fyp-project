@@ -103,8 +103,15 @@
                                         @elseif ($act->init_status == 14)
                                             <span class="badge bg-light-warning">Correction : Pending Committee / Deputy
                                                 Dean / Dean Approval </span>
-                                        @elseif ($act->init_status == 14)
-                                            <span class="badge bg-light-danger">Correction : Require Revision</span>
+                                        @elseif ($act->init_status == 15)
+                                            <span class="badge bg-success">Correction : Approve & Completed</span>
+                                        @elseif ($act->init_status == 16)
+                                            <span class="badge bg-light-danger">Correction : Rejected by Supervisor</span>
+                                        @elseif ($act->init_status == 17)
+                                            <span class="badge bg-light-danger">Correction : Rejected by Examiners/Panels</span>
+                                        @elseif ($act->init_status == 18)
+                                            <span class="badge bg-light-danger">Correction : Rejected by Committee / Deputy
+                                                Dean / Dean Approval</span>
                                         @else
                                             <span class="badge bg-secondary">N/A</span>
                                         @endif
@@ -289,7 +296,7 @@
                             @if (
                                 ($act->required_document > 0 &&
                                     $act->submitted_required_document == $act->required_document &&
-                                    !in_array($act->init_status, [1, 2, 3, 7, 8, 12, 13, 14, 15])) ||
+                                    !in_array($act->init_status, [1, 2, 3, 7, 8, 12, 13, 14, 15, 16, 17, 18])) ||
                                     ($act->required_document == 0 &&
                                         $act->optional_document > 0 &&
                                         $act->submitted_optional_document >= 1 &&
@@ -305,7 +312,7 @@
                                         <span class="me-2">Confirm Submission</span>
                                     </button>
                                 </div>
-                            @elseif(in_array($act->init_status, [8, 15]))
+                            @elseif(in_array($act->init_status, [8, 16, 17, 18]))
                                 @php
                                     $modalCorrectionAppear = true;
                                 @endphp
