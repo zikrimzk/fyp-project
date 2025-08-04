@@ -3979,8 +3979,8 @@ class SubmissionController extends Controller
 
                     $updatedCorrection->update(['ac_status' => $finalStatus]);
 
-                    if ($finalStatus == 3) {
-                        $this->finalizeSubmission($student, $activityCorrection->activity_id);
+                    if ($finalStatus == 5) {
+                        $this->finalizeCorrection($student, $updatedCorrection, $activityCorrection->activity_id);
                     }
                 }
                 /* HANDLE EXAMINER/PANEL LOGIC */ elseif ($role == 8) {
@@ -4027,7 +4027,7 @@ class SubmissionController extends Controller
                     $updatedCorrection->update(['ac_status' => $newStatus]);
 
                     if ($newStatus === 5) {
-                        $this->finalizeSubmission($student, $activityCorrection->activity_id);
+                        $this->finalizeCorrection($student, $updatedCorrection, $activityCorrection->activity_id);
                     }
                 }
                 /* HANDLE COMM/DD/DEAN LOGIC */ elseif (in_array($role, [4, 5, 6])) {
@@ -4050,11 +4050,11 @@ class SubmissionController extends Controller
                     $finalStatus = $allSigned ? 5 : 4;
                     $updatedCorrection->update(['ac_status' => $finalStatus]);
 
-                    if ($finalStatus == 3) {
-                        $this->finalizeSubmission($student, $activityCorrection->activity_id);
+                    if ($finalStatus == 5) {
+                        $this->finalizeCorrection($student, $updatedCorrection, $activityCorrection->activity_id);
                     }
                 }
-                return back()->with('success', 'Submission has been approved successfully.');
+                return back()->with('success', 'Correction for ' . $student->student_name . ' has been approved successfully.');
             }
             // === REJECTION ===
             elseif ($option == 2) {
@@ -4073,7 +4073,7 @@ class SubmissionController extends Controller
                         'ac_signature_data' => json_encode([]),
                     ]);
 
-                return back()->with('success', 'Correction has been rejected successfully.');
+                return back()->with('success', 'Correction for ' . $student->student_name . ' has been rejected successfully.');
             }
             // === REVERT ===
             elseif ($option == 3) {
@@ -4083,12 +4083,33 @@ class SubmissionController extends Controller
                         'ac_signature_data' => json_encode([]),
                     ]);
 
-                return back()->with('success', 'The student correction has been successfully reverted.');
+                return back()->with('success', 'Correction for ' . $student->student_name . ' has been successfully reverted.');
             }
 
             return back()->with('error', 'Oops! Invalid option.');
         } catch (Exception $e) {
             return back()->with('error', 'Error occurred: ' . $e->getMessage());
         }
+    }
+
+    /* Finalize Correction - Function [Staff]  */
+    public function finalizeCorrection($student, $correction, $activityID)
+    {
+        DB::table('submissions as a')
+            ->join('documents as b', 'a.document_id', '=', 'b.id')
+            ->join('activities as c', 'b.activity_id', '=', 'c.id')
+            ->where('a.student_id', $student->id)
+            ->where('c.id', $activityID)
+            ->update(['a.submission_status' => 5]);
+
+        $studentactivity = StudentActivity::where('student_id', $student->id)
+            ->where('activity_id', $activityID)
+            ->first();
+
+        if (!$studentactivity) {
+            return back()->with('error', 'Error occurred: Student activity not found.');
+        }
+
+        $studentactivity->update(['sa_status' => 3, 'sa_final_submission' => $correction->ac_final_submission]);
     }
 }
