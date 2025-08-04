@@ -151,10 +151,7 @@ class SubmissionController extends Controller
 
             $activityCorrections = DB::table('activity_corrections')
                 ->where('student_id', auth()->user()->id)
-                // ->where('semester_id', $currsemester->id)
                 ->get();
-
-            // dd($submissionReview);
 
             foreach ($programmeActivity as $activity) {
                 $activitySubmissions = $document->get($activity->activity_id);
@@ -178,6 +175,17 @@ class SubmissionController extends Controller
                     ];
 
                     $activity->init_status = $correctionStatusMap[$activityCorrection->ac_status] ?? 10;
+
+                    // SEMESTER LABEL
+                    $currsemester = Semester::find($activityCorrection->semester_id);
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
+                    // CONFIRMED DOCUMENT
+                    if ($activityCorrection->ac_final_submission != null) {
+                        $activity->confirmed_corrected_document = $semesterlabel . '/' . $activityCorrection->ac_final_submission;
+                    }
                 } elseif ($studentAct) {
                     // Change status based on SA status
                     $activity->init_status = $studentAct->sa_status;
@@ -2279,6 +2287,7 @@ class SubmissionController extends Controller
                     's.student_email',
                     's.student_directory',
                     's.student_photo',
+                    's.student_semcount',
                     'b.sem_label',
                     'c.prog_code',
                     'c.prog_mode',
@@ -2408,6 +2417,7 @@ class SubmissionController extends Controller
                                 <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
                                 <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
                                 <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                                <small class="text-muted d-block fw-medium"> Enrolled Semesters: ' . $row->student_semcount . '</small>
                             </div>
                         </div>
                     ';
@@ -3011,6 +3021,19 @@ class SubmissionController extends Controller
                         'on' => ['a.id', '=', 'b.staff_id'],
                     ],
                 ],
+                'corrections' => [
+                    'activities' => [
+                        'alias' => 'b',
+                        'table' => 'activities',
+                        'on' => ['a.activity_id', '=', 'b.id'],
+                    ],
+                    'students' => [
+                        'alias' => 'c',
+                        'table' => 'students',
+                        'on' => ['a.student_id', '=', 'c.id'],
+                    ],
+
+                ],
             ];
 
             foreach ($formfields as $field) {
@@ -3090,6 +3113,11 @@ class SubmissionController extends Controller
                         $joinedAliases[] = 'b';
                     }
                     $query->where('b.student_id', $student->id);
+                }
+
+                if ($baseTable === 'corrections') {
+                    $query->where('a.student_id', $student->id)
+                        ->where('a.activity_id', $act->id);
                 }
 
                 if (!empty($extraKey) && !empty($extraCondition)) {
@@ -4110,6 +4138,14 @@ class SubmissionController extends Controller
             return back()->with('error', 'Error occurred: Student activity not found.');
         }
 
-        $studentactivity->update(['sa_status' => 3, 'sa_final_submission' => $correction->ac_final_submission]);
+        // SEMESTER LABEL
+        $currsemester = Semester::find($correction->semester_id);
+        $rawLabel = $currsemester->sem_label;
+        $semesterlabel = str_replace('/', '', $rawLabel);
+        $semesterlabel = trim($semesterlabel);
+
+        $corrPath = '../Correction/' . $semesterlabel . '/' . $correction->ac_final_submission;
+
+        $studentactivity->update(['sa_status' => 3, 'sa_final_submission' => $corrPath]);
     }
 }

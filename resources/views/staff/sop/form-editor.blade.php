@@ -828,6 +828,7 @@
                                         <option value="documents">Document</option>
                                         <option value="submissions">Submission</option>
                                         <option value="semesters">Semester</option>
+                                        <option value="activity_corrections">Correction</option>
                                     </select>
                                 </div>
 
@@ -865,6 +866,11 @@
 
                                         <option value="" disabled>-- Semester --</option>
                                         <option value="sem_label" data-table="semesters">Current Semester</option>
+
+                                        <option value="" disabled>-- Evaluation --</option>
+                                        <option value="ac_startdate" data-table="activity_corrections">Start Date of Correction</option>
+                                        <option value="ac_duedate" data-table="activity_corrections">Dateline of Correction</option>
+                                        {{-- <option value="ac_duration" data-table="activity_corrections">Duration</option> --}}
                                     </select>
                                 </div>
 

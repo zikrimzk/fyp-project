@@ -144,6 +144,18 @@
                                     </div>
                                 @endif
 
+                                 {{-- Final Correction Document Section --}}
+                                @if (isset($act->confirmed_corrected_document))
+                                    <div class="mt-4 mb-4">
+                                        <h6 class="fw-semibold mb-2">Final Document</h6>
+                                        <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'filename' => Crypt::encrypt($act->confirmed_corrected_document), 'opt' => 3]) }}"
+                                            target="_blank"
+                                            class="text-decoration-none d-inline-flex align-items-center gap-2 text-primary">
+                                            <i class="ti ti-file-check"></i> View Final Document (Correction)
+                                        </a>
+                                    </div>
+                                @endif
+
                                 {{-- Evaluation Report Section --}}
                                 @php
                                     $filteredReports = $evaluationReport->where('activity_id', $act->activity_id);

@@ -609,7 +609,6 @@ class SOPController extends Controller
                 return $target;
             });
 
-
             $table->addColumn('form_status', function ($row) {
                 if (is_null($row->form_status)) {
                     return null;
@@ -645,7 +644,6 @@ class SOPController extends Controller
                     ';
                 return $html;
             });
-
 
             $table->rawColumns(['form_target', 'form_status', 'action']);
 
