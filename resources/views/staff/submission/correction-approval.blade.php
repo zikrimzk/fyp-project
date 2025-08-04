@@ -722,7 +722,7 @@
 
                     let idsParam = encodeURIComponent(JSON.stringify(selectedIds));
                     window.location.href = "{{ route('download-multiple-final-document-get') }}?ids=" +
-                        idsParam;
+                        idsParam + "&option=2";
                     clearBtn.trigger('click');
                     $('.data-table').DataTable().ajax.reload();
                 } else {
