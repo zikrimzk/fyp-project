@@ -636,6 +636,19 @@ class SubmissionController extends Controller
                         'on' => ['a.id', '=', 'b.staff_id'],
                     ],
                 ],
+                'corrections' => [
+                    'activities' => [
+                        'alias' => 'b',
+                        'table' => 'activities',
+                        'on' => ['a.activity_id', '=', 'b.id'],
+                    ],
+                    'students' => [
+                        'alias' => 'c',
+                        'table' => 'students',
+                        'on' => ['a.student_id', '=', 'c.id'],
+                    ],
+
+                ],
             ];
 
             foreach ($formfields as $field) {
@@ -715,6 +728,11 @@ class SubmissionController extends Controller
                         $joinedAliases[] = 'b';
                     }
                     $query->where('b.student_id', $student->id);
+                }
+
+                if ($baseTable === 'corrections') {
+                    $query->where('a.student_id', $student->id)
+                        ->where('a.activity_id', $act->id);
                 }
 
                 if (!empty($extraKey) && !empty($extraCondition)) {

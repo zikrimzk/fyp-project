@@ -848,6 +848,7 @@
                                         </option>
                                         <option value="prog_code [prog_mode]" data-table="students">Programme Code [Mode]
                                         </option>
+                                        <option value="student_semcount" data-table="students">Total Enrolled Semester</option>
 
                                         <option value="" disabled>-- Staff --</option>
                                         <option value="staff_name" data-table="staff">Name</option>
