@@ -694,13 +694,13 @@
                                 </a>
                             </li>
                             <li class="pc-item">
-                                <a class="pc-link" href="{{ route('submission-suggestion') }}">
-                                    Submission Suggestion
+                                <a class="pc-link" href="{{ route('correction-approval') }}">
+                                    Correction Approval
                                 </a>
                             </li>
                             <li class="pc-item">
-                                <a class="pc-link" href="{{ route('correction-approval') }}">
-                                    Correction Approval
+                                <a class="pc-link" href="{{ route('submission-suggestion') }}">
+                                    Submission Suggestion
                                 </a>
                             </li>
                         </ul>
