@@ -192,8 +192,13 @@ class SubmissionController extends Controller
                     $activity->confirmed_document = $studentAct->sa_final_submission;
                 } else {
                     // No confirmation yet
-                    $lockedSubmission = $activitySubmissions?->firstWhere('submission_status', 2);
-                    $activity->init_status = $lockedSubmission ? 11 : 10;
+                    if ($activitySubmissions) {
+                        $lockedSubmission = $activitySubmissions?->firstWhere('submission_status', 2);
+
+                        $activity->init_status = $lockedSubmission ? 11 : 10;
+                    } else {
+                        $activity->init_status = 11;
+                    }
                 }
 
                 $activity->required_document = $requiredDocument;
@@ -298,25 +303,47 @@ class SubmissionController extends Controller
             $programme_name = Str::upper($student->programmes->prog_code);
             $activity = Activity::where('id', $validated['activity_id'])->first();
             $document = Document::where('id', $validated['document_id'])->first();
+            $semester = Semester::where('sem_status', 1)->first();
+
+            $procedure = DB::table('procedures as a')
+                ->join('programmes as b', 'a.programme_id', '=', 'b.id')
+                ->join('activities as c', 'a.activity_id', '=', 'c.id')
+                ->join('documents as d', 'c.id', '=', 'd.activity_id')
+                ->where('b.id', auth()->user()->programme_id)
+                ->where('c.id', $validated['activity_id'])
+                ->where('d.id', $validated['document_id'])
+                ->first();
 
             $activity_name = $activity->act_name ?? 'UNKNOWN';
             $document_name = $document->doc_name ?? 'UNKNOWN';
+            $semester_name = $semester->sem_label ?? 'UNKNOWN';
 
             // 1 - CUSTOMIZE FILENAME
             $activity_clean = preg_replace('/[\/\s]+/', '', $activity_name);
             $document_clean = preg_replace('/[\/\s]+/', '', $document_name);
-
             $filename = "{$student->student_matricno}_{$document_clean}_{$activity_clean}." . $originalFile->getClientOriginalExtension();
 
             // 2 - SAVE SUBMISSION FILE INTO DIRECTORY
+            $semesterlabel = str_replace('/', '', $semester_name);
+            $semesterlabel = trim($semesterlabel);
             $safe_path = "{$student->student_directory}/{$programme_name}/{$activity_name}";
+
+            if ($procedure->is_repeatable == 1) {
+                $safe_path = $safe_path . '/' . $semesterlabel;
+            }
+
             $originalFile->storeAs($safe_path, $filename);
+
+            if ($procedure->is_repeatable == 1) {
+                $filename = $semesterlabel . '/' . $filename;
+            }
 
             // 3 - SAVE SUBMISSION DATA INTO DATABASE
             Submission::where('id', $validated['submission_id'])->update([
                 'submission_document' => $filename,
                 'submission_date' => now()->toDateTimeString(),
                 'submission_status' => 3,
+                'semester_id' => $semester->id
             ]);
 
             return response()->json([
@@ -913,8 +940,7 @@ class SubmissionController extends Controller
         }
     }
 
-
-    /* Submission Management [Staff] [Committee] */
+    /* Submission Management [Staff] [Committee/DD/DEAN] */
     public function submissionManagement(Request $req)
     {
         try {
@@ -961,7 +987,7 @@ class SubmissionController extends Controller
                     $data->where('programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('activity') && !empty($req->input('activity'))) {
                     $data->where('activity_id', $req->input('activity'));
@@ -1122,52 +1148,271 @@ class SubmissionController extends Controller
         }
     }
 
+    public function getStudentSubmissionEligibility($matricno, $activityid)
+    {
+        try {
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as s')
+                ->select([
+                    's.id as student_id',
+                    's.student_name',
+                    's.student_matricno',
+                    's.student_email',
+                    's.student_directory',
+                    's.student_photo',
+                    's.student_semcount',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'c.fac_id',
+                    's.student_semcount',
+                    'p.timeline_sem',
+                    'p.programme_id',
+                    'a.id as activity_id',
+                    'a.act_name as activity_name',
+                    'p.act_seq',
+                    'p.init_status',
+                    DB::raw("
+                    CASE
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                            AND sa_current.sa_status = 3
+                        ) THEN 5
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status = 5
+                        ) THEN 6
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                        ) THEN 4
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status IN (1, 4)
+                        ) 
+                        AND NOT EXISTS (
+                            SELECT 1 FROM student_activities sa
+                            WHERE sa.student_id = s.id
+                            AND sa.activity_id = p.activity_id
+                        ) THEN 2
+                        WHEN EXISTS (
+                            SELECT 1 FROM procedures p_prev
+                            WHERE p_prev.programme_id = s.programme_id
+                            AND p_prev.act_seq < p.act_seq
+                            AND NOT EXISTS (
+                                SELECT 1 FROM student_activities sa_prev
+                                WHERE sa_prev.student_id = s.id
+                                AND sa_prev.activity_id = p_prev.activity_id
+                                AND sa_prev.sa_status = 3
+                            )
+                        ) THEN 3
+                        ELSE 1
+                    END as suggestion_status
+                ")
+                ])
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('s.id', '=', 'latest.student_id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 's.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('procedures as p', function ($join) {
+                    $join->on('s.programme_id', '=', 'p.programme_id')
+                        ->whereRaw('s.student_semcount >= p.timeline_sem')
+                        ->where('p.init_status', '=', 2);
+                })
+                ->join('activities as a', 'p.activity_id', '=', 'a.id')
+                ->join('programmes as c', 'c.id', '=', 's.programme_id')
+                ->where('s.student_matricno', '=', $matricno)
+                ->where('a.id', '=', $activityid)
+                ->where('s.student_status', '=', 1)
+                ->orderBy('s.student_matricno')
+                ->orderBy('p.act_seq')
+                ->first();
+
+            return $data ? $data->suggestion_status : 0;
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+
     public function assignSubmission()
     {
         try {
-            // GET DATA
+            /** LOAD CURRENT SEMESTER **/
+            $currsemester = Semester::where('sem_status', 1)->first();
+
+            if (!$currsemester) {
+                return back()->with('error', 'No current semester found.');
+            }
+
+            /** LOAD PROCEDURES DATA **/
             $data = DB::table('procedures as a')
                 ->join('activities as b', 'a.activity_id', '=', 'b.id')
                 ->join('documents as c', 'b.id', '=', 'c.activity_id')
                 ->join('programmes as d', 'a.programme_id', '=', 'd.id')
                 ->join('students as e', 'd.id', '=', 'e.programme_id')
                 ->where('e.student_status', '=', 1)
-                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'e.id as student_id', 'c.id as document_id')
+                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
                 ->get();
 
-            // GET CURRENT SEMESTER
-            $currSem = Semester::where('sem_status', 1)->first();
-
-            // ASSIGN SUBMISSION 
+            /** ASSIGNING SUBMISSION **/
             foreach ($data as $sub) {
-                $checkExists = Submission::where('student_id', $sub->student_id)
-                    ->where('document_id', $sub->document_id)
-                    ->exists();
+                $createdSubmission = null;
+
+                if ($sub->is_repeatable == 1) {
+                    $checkExists = Submission::where('student_id', $sub->student_id)
+                        ->where('document_id', $sub->document_id)
+                        ->where('semester_id', $currsemester->id)
+                        ->exists();
+                } else {
+                    $checkExists = Submission::where('student_id', $sub->student_id)
+                        ->where('document_id', $sub->document_id)
+                        ->exists();
+                }
 
                 if (!$checkExists) {
                     $days = $sub->timeline_week * 7;
-                    $submissionDate = Carbon::parse($currSem->sem_startdate)->addDays($days);
+                    $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($days);
 
-                    // Determine submission status
                     if ($sub->init_status == 2) {
                         $status = 2;
                     } elseif ($sub->init_status == 1) {
-                        if ($submissionDate->lt(Carbon::today())) {
-                            $status = 4;
-                        } else {
-                            $status = 1;
-                        }
+                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
                     } else {
                         $status = $sub->init_status;
                     }
 
-                    Submission::create([
+                    $createdSubmission = Submission::create([
                         'submission_document' => '-',
                         'submission_duedate' => $submissionDate,
                         'submission_status' => $status,
                         'student_id' => $sub->student_id,
                         'document_id' => $sub->document_id,
+                        'semester_id' => $currsemester->id
                     ]);
+                }
+
+                $createdSubmission = Submission::where('student_id', $sub->student_id)
+                    ->where('document_id', $sub->document_id)
+                    ->where('semester_id', $currsemester->id)
+                    ->first();
+
+                if ($sub->is_repeatable == 1 && $createdSubmission) {
+                    $decision = $this->getStudentSubmissionEligibility($sub->student_matricno, $sub->activity_id);
+
+                    if ($decision == 1) {
+                        $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($sub->timeline_week * 7);
+                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
+
+                        $createdSubmission->update([
+                            'submission_status' => $status,
+                            'submission_duedate' => $submissionDate
+                        ]);
+                    } elseif (in_array($decision, [0, 3])) {
+                        $createdSubmission->delete();
+                    }
+                }
+            }
+
+            return back()->with('success', 'Submission has been assigned successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error assigning students with submission: ' . $e->getMessage());
+        }
+    }
+
+    public function assignStudentSubmission($matricno)
+    {
+        try {
+
+            /** LOAD CURRENT SEMESTER **/
+            $currsemester = Semester::where('sem_status', 1)->first();
+
+            if (!$currsemester) {
+                return back()->with('error', 'No current semester found.');
+            }
+
+            /** LOAD PROCEDURES DATA **/
+            $data = DB::table('procedures as a')
+                ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                ->join('documents as c', 'b.id', '=', 'c.activity_id')
+                ->join('programmes as d', 'a.programme_id', '=', 'd.id')
+                ->join('students as e', 'd.id', '=', 'e.programme_id')
+                ->where('e.student_status', '=', 1)
+                ->where('e.student_matricno', '=', $matricno)
+                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
+                ->get();
+
+            /** ASSIGNING SUBMISSION **/
+            foreach ($data as $sub) {
+                $createdSubmission = null;
+
+                if ($sub->is_repeatable == 1) {
+                    $checkExists = Submission::where('student_id', $sub->student_id)
+                        ->where('document_id', $sub->document_id)
+                        ->where('semester_id', $currsemester->id)
+                        ->exists();
+                } else {
+                    $checkExists = Submission::where('student_id', $sub->student_id)
+                        ->where('document_id', $sub->document_id)
+                        ->exists();
+                }
+
+                if (!$checkExists) {
+                    $days = $sub->timeline_week * 7;
+                    $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($days);
+
+                    if ($sub->init_status == 2) {
+                        $status = 2;
+                    } elseif ($sub->init_status == 1) {
+                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
+                    } else {
+                        $status = $sub->init_status;
+                    }
+
+                    $createdSubmission = Submission::create([
+                        'submission_document' => '-',
+                        'submission_duedate' => $submissionDate,
+                        'submission_status' => $status,
+                        'student_id' => $sub->student_id,
+                        'document_id' => $sub->document_id,
+                        'semester_id' => $currsemester->id
+                    ]);
+                }
+
+                $createdSubmission = Submission::where('student_id', $sub->student_id)
+                    ->where('document_id', $sub->document_id)
+                    ->where('semester_id', $currsemester->id)
+                    ->first();
+
+                if ($sub->is_repeatable == 1 && $createdSubmission) {
+                    $decision = $this->getStudentSubmissionEligibility($sub->student_matricno, $sub->activity_id);
+
+                    if ($decision == 1) {
+                        $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($sub->timeline_week * 7);
+                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
+
+                        $createdSubmission->update([
+                            'submission_status' => $status,
+                            'submission_duedate' => $submissionDate
+                        ]);
+                    } elseif (in_array($decision, [0, 3])) {
+                        $createdSubmission->delete();
+                    }
                 }
             }
 

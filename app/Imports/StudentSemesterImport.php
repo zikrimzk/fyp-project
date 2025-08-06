@@ -9,6 +9,7 @@ use App\Models\StudentSemester;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use App\Http\Controllers\SubmissionController;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class StudentSemesterImport implements ToCollection, WithHeadingRow
@@ -89,6 +90,10 @@ class StudentSemesterImport implements ToCollection, WithHeadingRow
             $student = Student::where('id', $validated['student_matricno'])->first();
             $student->student_semcount = $semCount;
             $student->save();
+
+            /* ASSIGN STUDENT SUBMISSION */
+            $sc = new SubmissionController();
+            $sc->assignStudentSubmission($student->student_matricno);
 
             $this->insertedCount++;
         }

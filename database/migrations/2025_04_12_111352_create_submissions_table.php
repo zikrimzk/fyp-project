@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('submission_status')->default(2)->comment('1- Open [No Attempt] 2- Locked [Closed Submission] 3- Submitted 4- Overdue 5- Deleted');
             $table->foreignId('student_id')->constrained('students');
             $table->foreignId('document_id')->constrained('documents');
+            $table->foreignId('semester_id')->constrained('semesters');
             $table->timestamps();
         });
     }

@@ -16,6 +16,7 @@ class Submission extends Model
         'submission_status',
         'student_id',
         'document_id',
+        'semester_id'
     ];
 
     public function student()

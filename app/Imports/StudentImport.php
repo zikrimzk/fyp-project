@@ -147,10 +147,10 @@ class StudentImport implements ToCollection, WithHeadingRow
                     'supervision_role' => 2
                 ]);
             }
-
-            /* ASSIGN SUBMISSION TO STUDENT */
+            
+            /* ASSIGN STUDENT SUBMISSION */
             $sc = new SubmissionController();
-            $sc->assignSubmission($student->student_matricno);
+            $sc->assignStudentSubmission($student->student_matricno);
 
             $this->insertedCount++;
         }

@@ -209,20 +209,31 @@ class EvaluationController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
-                    $button = '';
                     $currsemester = Semester::where('sem_status', 1)->first();
 
+                    $submissionInProgress = StudentActivity::where('activity_id', $row->activity_id)
+                        ->where('student_id', $row->student_id)
+                        ->whereBetween('sa_status', [1, 5])
+                        ->exists();
+
+                    if ($submissionInProgress) {
+                        return '<span class="badge bg-light-danger p-2">Student submission process <br> not yet completed.</span>';
+                    }
+
                     if ($row->evaluation_isFinal != 1 && ($row->semester_id == $currsemester->id)) {
-                        $button = '
-                            <a href="' . route('evaluation-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->semester_id), 'mode' => 5]) . '" class="avtar avtar-xs btn-light-primary">
+                        return '
+                            <a href="' . route('evaluation-student', [
+                            'studentId' => Crypt::encrypt($row->student_id),
+                            'actId' => Crypt::encrypt($row->activity_id),
+                            'semesterId' => Crypt::encrypt($row->semester_id),
+                            'mode' => 5
+                        ]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-edit f-20"></i>
                             </a>
                         ';
-                    } else {
-                        $button = '<div class="fst-italic text-muted">No action required</div>';
                     }
 
-                    return $button;
+                    return '<div class="fst-italic text-muted">No action required</div>';
                 });
 
                 $table->rawColumns(['student_photo', 'evaluation_document', 'evaluation_date', 'evaluation_status', 'evaluation_semester', 'action']);
@@ -434,20 +445,31 @@ class EvaluationController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
-                    $button = '';
                     $currsemester = Semester::where('sem_status', 1)->first();
+                    
+                    $submissionInProgress = StudentActivity::where('activity_id', $row->activity_id)
+                        ->where('student_id', $row->student_id)
+                        ->whereBetween('sa_status', [1, 5])
+                        ->exists();
+
+                    if ($submissionInProgress) {
+                        return '<span class="badge bg-light-danger p-2">Student submission process <br> not yet completed.</span>';
+                    }
 
                     if ($row->evaluation_isFinal != 1 && ($row->semester_id == $currsemester->id)) {
-                        $button = '
-                            <a href="' . route('evaluation-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->semester_id), 'mode' => 6]) . '" class="avtar avtar-xs btn-light-primary">
+                        return '
+                            <a href="' . route('evaluation-student', [
+                                            'studentId' => Crypt::encrypt($row->student_id),
+                                            'actId' => Crypt::encrypt($row->activity_id),
+                                            'semesterId' => Crypt::encrypt($row->semester_id),
+                                            'mode' => 5
+                                        ]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-edit f-20"></i>
                             </a>
                         ';
-                    } else {
-                        $button = '<div class="fst-italic text-muted">No action required</div>';
                     }
 
-                    return $button;
+                    return '<div class="fst-italic text-muted">No action required</div>';
                 });
 
                 $table->rawColumns(['student_photo', 'evaluation_document', 'evaluation_date', 'evaluation_status', 'evaluation_semester', 'action']);
@@ -1170,7 +1192,6 @@ class EvaluationController extends Controller
                         );
 
                         $this->restoreSubmission($student, $actID, $dueDate);
-
                     } elseif ($decisionStatus == 5) {
                         $studentActivity->sa_status = 9;
                     } else {

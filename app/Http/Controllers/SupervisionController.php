@@ -267,7 +267,8 @@ class SupervisionController extends Controller
             ]);
 
             /* ASSIGN SUBMISSION TO STUDENT [ASSUMING ALL PRE-REQUISITES DATA ARE SET] */
-            $this->assignSubmission(Str::upper($validated['student_matricno']));
+            $sc = new SubmissionController();
+            $sc->assignStudentSubmission(Str::upper($validated['student_matricno']));
 
             /* SENT EMAIL NOTIFICATION */
             $ac = new AuthenticateController();
@@ -388,53 +389,12 @@ class SupervisionController extends Controller
             }
 
             /* ASSIGN SUBMISSION TO STUDENT [ASSUMING ALL PRE-REQUISITES DATA ARE SET] */
-            $this->assignSubmission(Str::upper($validated['student_matricno_up']));
+            $sc = new SubmissionController();
+            $sc->assignStudentSubmission(Str::upper($validated['student_matricno_up']));
 
             return back()->with('success', 'Student updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating student: ' . $e->getMessage());
-        }
-    }
-
-    private function assignSubmission($matric_no)
-    {
-        try {
-            // GET DATA
-            $data = DB::table('procedures as a')
-                ->join('activities as b', 'a.activity_id', '=', 'b.id')
-                ->join('documents as c', 'b.id', '=', 'c.activity_id')
-                ->join('programmes as d', 'a.programme_id', '=', 'd.id')
-                ->join('students as e', 'd.id', '=', 'e.programme_id')
-                ->where('e.student_matricno', '=', $matric_no)
-                ->where('e.student_status', '=', 1)
-                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'e.id as student_id', 'c.id as document_id')
-                ->get();
-
-            // GET CURRENT SEMESTER
-            $currSem = Semester::where('sem_status', 1)->first();
-
-            // ASSIGN SUBMISSION 
-            foreach ($data as $sub) {
-                $checkExists = Submission::where('student_id', $sub->student_id)
-                    ->where('document_id', $sub->document_id)
-                    ->exists();
-
-                if (!$checkExists) {
-                    $days = $sub->timeline_week * 7;
-                    $submissionDate = Carbon::parse($currSem->sem_startdate)->addDays($days);
-                    Submission::create([
-                        'submission_document' => '-',
-                        'submission_duedate' => $submissionDate,
-                        'submission_status' => $sub->init_status,
-                        'student_id' => $sub->student_id,
-                        'document_id' => $sub->document_id,
-                    ]);
-                }
-            }
-
-            return back()->with('success', 'Submission has been assigned successfully.');
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error assigning student with submission: ' . $e->getMessage());
         }
     }
 
@@ -1619,7 +1579,10 @@ class SupervisionController extends Controller
             $student->student_semcount = $semCount;
             $student->save();
 
-            return back()->with('success', 'Student has been assigned to this semester successfully.');
+            $sc = new SubmissionController();
+            $sc->assignStudentSubmission($student->student_matricno);
+
+            return back()->with('success', $student->student_name . ' has been assigned to this semester successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error assigning student: ' . $e->getMessage());
         }
@@ -1662,7 +1625,10 @@ class SupervisionController extends Controller
                 $student->save();
             }
 
-            return back()->with('success', 'Student semester status updated successfully.');
+            $sc = new SubmissionController();
+            $sc->assignStudentSubmission($student->student_matricno);
+
+            return back()->with('success', $student->student_name . ' semester status updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating student semester status: ' . $e->getMessage());
         }
@@ -1682,7 +1648,10 @@ class SupervisionController extends Controller
             $student->student_semcount = $semCount;
             $student->save();
 
-            return back()->with('success', 'Student has been deleted successfully.');
+            $sc = new SubmissionController();
+            $sc->assignStudentSubmission($student->student_matricno);
+
+            return back()->with('success',  $student->student_name . ' semester enrollment has been deleted successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error deleting student: ' . $e->getMessage());
         }
@@ -1709,6 +1678,9 @@ class SupervisionController extends Controller
                     ->count();
 
                 $student->save();
+
+                $sc = new SubmissionController();
+                $sc->assignStudentSubmission($student->student_matricno);
             }
 
             DB::commit();
@@ -1738,17 +1710,18 @@ class SupervisionController extends Controller
             $students = Student::whereIn('id', $studentIds)->get();
 
             foreach ($students as $student) {
-                // Delete the semester record for this student
                 StudentSemester::where('student_id', $student->id)
                     ->where('semester_id', $sem_id)
                     ->delete();
 
-                // Recalculate the student_semcount
                 $student->student_semcount = StudentSemester::where('student_id', $student->id)
                     ->whereIn('ss_status', [1, 4])
                     ->count();
 
                 $student->save();
+
+                $sc = new SubmissionController();
+                $sc->assignStudentSubmission($student->student_matricno);
             }
 
             DB::commit();

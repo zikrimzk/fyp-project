@@ -237,8 +237,11 @@
                                 </div>
 
                                 <!-- PDF Preview -->
-                                <iframe id="pdfPreview" width="100%" height="1000px"
-                                    style="display: none; border: 1px solid #ccc;"></iframe>
+                                <div class="d-none d-md-block">
+                                    <iframe id="pdfPreview" width="100%" height="1000px"
+                                        style="display: none; border: 1px solid #ccc;"></iframe>
+                                </div>
+
                                 <hr>
 
                                 <!-- Action Buttons -->
@@ -259,7 +262,7 @@
                     </div>
                 </div>
 
-                <!-- [ Delete Modal ] start -->
+                {{-- <!-- [ Delete Modal ] start -->
                 <div class="modal fade" id="removeSubmissionModal" data-bs-keyboard="false" tabindex="-1"
                     aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
@@ -291,7 +294,37 @@
                         </div>
                     </div>
                 </div>
-                <!-- [ Delete Modal ] end -->
+                <!-- [ Delete Modal ] end --> --}}
+
+                <!-- [ Delete Confirmation Modal ] start -->
+                <div class="modal fade" id="removeSubmissionModal" data-bs-keyboard="false" tabindex="-1"
+                    aria-hidden="true" data-bs-backdrop="static">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-body p-5">
+                                <div class="text-center">
+                                    <i class="ti ti-alert-circle text-danger" style="font-size: 80px;"></i>
+                                    <h4 class="mt-4 fw-semibold">Confirm Submission Deletion</h4>
+                                    <p class="text-muted mt-2 mb-4">
+                                        Are you sure you want to delete this submission? This action cannot be
+                                        undone.
+                                    </p>
+                                </div>
+                                <div class="d-flex justify-content-between gap-3">
+                                    <button type="button" class="btn btn-outline-secondary w-50"
+                                        data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                    <a href="{{ route('student-remove-document-get', ['id' => Crypt::encrypt($doc->submission_id), 'filename' => Crypt::encrypt($submission_dir . '/' . $doc->submission_document)]) }}"
+                                        class="btn btn-danger w-50">
+                                        Delete Anyways
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Delete Confirmation Modal ] end -->
 
                 <!-- [ Submission Document ] end -->
             </div>
