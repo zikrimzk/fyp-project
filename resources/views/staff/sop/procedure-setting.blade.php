@@ -255,6 +255,30 @@
                                                 @enderror
                                             </div>
                                         </div>
+                                        <!--Evaluation Input-->
+                                        <div class="col-sm-12 col-md-6 col-lg-6">
+                                            <div class="mb-3">
+                                                <label for="is_haveEva" class="form-label">Evaluation <span
+                                                        class="text-danger">*</span></label>
+                                                <select name="is_haveEva" id="is_haveEva"
+                                                    class="form-select @error('is_haveEva') is-invalid @enderror" required>
+                                                    @if (old('is_haveEva') == 1)
+                                                        <option value="1" selected>Yes</option>
+                                                        <option value="0">No</option>
+                                                    @elseif(old('is_haveEva') == 0)
+                                                        <option value="1">Yes</option>
+                                                        <option value="0"selected>No</option>
+                                                    @else
+                                                        <option value="" selected>- Select Option -</option>
+                                                        <option value="1">Yes</option>
+                                                        <option value="0">No</option>
+                                                    @endif
+                                                </select>
+                                                @error('is_haveEva')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
                                         <!--Activity Repeatable Input-->
                                         <div class="col-sm-12 col-md-6 col-lg-6">
                                             <div class="mb-3">
@@ -276,43 +300,18 @@
                                                 @enderror
                                             </div>
                                         </div>
-                                        <!--Evaluation Input-->
+                                        <!--Journal Publication Input-->
                                         <div class="col-sm-12 col-md-6 col-lg-6">
                                             <div class="mb-3">
-                                                <label for="is_haveEva" class="form-label">Evaluation <span
-                                                        class="text-danger">*</span></label>
-                                                <select name="is_haveEva" id="is_haveEva"
-                                                    class="form-select @error('is_haveEva') is-invalid @enderror"
-                                                    required>
-                                                    @if (old('is_haveEva') == 1)
-                                                        <option value="1" selected>Yes</option>
-                                                        <option value="0">No</option>
-                                                    @elseif(old('is_haveEva') == 0)
-                                                        <option value="1">Yes</option>
-                                                        <option value="0"selected>No</option>
-                                                    @else
-                                                        <option value="" selected>- Select Option -</option>
-                                                        <option value="1">Yes</option>
-                                                        <option value="0">No</option>
-                                                    @endif
-                                                </select>
-                                                @error('is_haveEva')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!--Correction Input-->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="is_haveCorrection" class="form-label">Correction <span
-                                                        class="text-danger">*</span></label>
-                                                <select name="is_haveCorrection" id="is_haveCorrection"
-                                                    class="form-select @error('is_haveCorrection') is-invalid @enderror"
+                                                <label for="is_haveJournalPublication" class="form-label">Journal
+                                                    Publication<span class="text-danger">*</span></label>
+                                                <select name="is_haveJournalPublication" id="is_haveJournalPublication"
+                                                    class="form-select @error('is_haveJournalPublication') is-invalid @enderror"
                                                     disabled>
-                                                    @if (old('is_haveCorrection') == 1)
+                                                    @if (old('is_haveJournalPublication') == 1)
                                                         <option value="1" selected>Yes</option>
                                                         <option value="0">No</option>
-                                                    @elseif(old('is_haveCorrection') == 0)
+                                                    @elseif(old('is_haveJournalPublication') == 0)
                                                         <option value="1">Yes</option>
                                                         <option value="0"selected>No</option>
                                                     @else
@@ -321,7 +320,9 @@
                                                         <option value="0">No</option>
                                                     @endif
                                                 </select>
-                                                @error('is_haveCorrection')
+                                                <small class="form-text text-muted">Only can be select if the activity is
+                                                    repeatable</small>
+                                                @error('is_haveJournalPublication')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -378,7 +379,7 @@
                                     </div>
 
                                     <div class="modal-body">
-                                        <div class="row">
+                                        <div class="row repeatable-group">
                                             <!--Activity Input-->
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
@@ -494,33 +495,13 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <!--Activity Initial Status Input-->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="is_repeatable_up" class="form-label">Repeatable <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="is_repeatable_up" id="is_repeatable_up"
-                                                        class="form-select @error('is_repeatable_up') is-invalid @enderror"
-                                                        required>
-                                                        <option value="1"
-                                                            @if ($upd->is_repeatable == 1) selected @endif>Yes
-                                                        </option>
-                                                        <option value="0"
-                                                            @if ($upd->is_repeatable == 0) selected @endif>No
-                                                        </option>
-                                                    </select>
-                                                    @error('is_repeatable_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
                                             <!--Evaluation Input-->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
                                                     <label for="is_haveEva_up" class="form-label">Evaluation <span
                                                             class="text-danger">*</span></label>
                                                     <select name="is_haveEva_up" id="is_haveEva_up"
-                                                        class="form-select is-haveEva @error('is_haveEva_up') is-invalid @enderror"
+                                                        class="form-select @error('is_haveEva_up') is-invalid @enderror"
                                                         required>
                                                         <option value="">- Select Option -</option>
                                                         <option value="1"
@@ -537,25 +518,49 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <!--Correction Input-->
+                                            <!--Activity Repeatable Input-->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="is_haveCorrection_up" class="form-label">Correction <span
+                                                    <label for="is_repeatable_up" class="form-label">Repeatable <span
                                                             class="text-danger">*</span></label>
-                                                    <select name="is_haveCorrection_up" id="is_haveCorrection_up"
-                                                        class="form-select is-haveCorrection @error('is_haveCorrection_up') is-invalid @enderror"
+                                                    <select name="is_repeatable_up" id="is_repeatable_up"
+                                                        class="form-select is-repeat @error('is_repeatable_up') is-invalid @enderror"
+                                                        required>
+                                                        <option value="1"
+                                                            @if ($upd->is_repeatable == 1) selected @endif>Yes
+                                                        </option>
+                                                        <option value="0"
+                                                            @if ($upd->is_repeatable == 0) selected @endif>No
+                                                        </option>
+                                                    </select>
+                                                    @error('is_repeatable_up')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <!--Journal Publication Input-->
+                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="is_haveJournalPublication_up" class="form-label">Journal
+                                                        Publication <span class="text-danger">*</span></label>
+                                                    <select name="is_haveJournalPublication_up"
+                                                        id="is_haveJournalPublication_up"
+                                                        class="form-select is-havePublication @error('is_haveJournalPublication_up') is-invalid @enderror"
                                                         required>
                                                         <option value="">- Select Option -</option>
                                                         <option value="1"
-                                                            @if ($upd->is_haveCorrection == 1) selected @endif>
+                                                            @if ($upd->is_haveJournalPublication == 1) selected @endif>
                                                             Yes
                                                         </option>
                                                         <option value="0"
-                                                            @if ($upd->is_haveCorrection == 0) selected @endif>
+                                                            @if ($upd->is_haveJournalPublication == 0) selected @endif>
                                                             No
                                                         </option>
                                                     </select>
-                                                    @error('is_haveCorrection_up')
+                                                    <small class="form-text text-muted">Only can be select if the activity
+                                                        is repeatable</small>
+
+                                                    @error('is_haveJournalPublication_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -755,25 +760,25 @@
             });
 
 
-            $('#is_haveEva').change(function() {
+            $('#is_repeatable').change(function() {
                 if (this.value == 1) {
-                    $('#is_haveCorrection').attr('disabled', false);
+                    $('#is_haveJournalPublication').attr('disabled', false);
                 } else {
-                    $('#is_haveCorrection').attr('disabled', true);
+                    $('#is_haveJournalPublication').attr('disabled', true);
                 }
             });
 
-            $('.is-haveEva').on('change', function() {
-                const correctionSelect = $(this).closest('.row').find('.is-haveCorrection');
+            $('.is-repeat').on('change', function() {
+                const publicationSelect = $(this).closest('.repeatable-group').find('.is-havePublication');
 
                 if ($(this).val() == '1') {
-                    correctionSelect.prop('disabled', false);
+                    publicationSelect.prop('disabled', false);
                 } else {
-                    correctionSelect.prop('disabled', true);
+                    publicationSelect.prop('disabled', true);
                 }
             });
 
-            $('.is-haveEva').each(function() {
+            $('.is-repeat').each(function() {
                 $(this).trigger('change');
             });
 

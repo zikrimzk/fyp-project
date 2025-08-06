@@ -26,6 +26,7 @@ use App\Models\StudentActivity;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\SubmissionReview;
 use App\Models\ActivityCorrection;
+use App\Models\JournalPublication;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -122,6 +123,7 @@ class SubmissionController extends Controller
                 ->join('activities as c', 'a.activity_id', '=', 'c.id')
                 ->join('documents as d', 'c.id', '=', 'd.activity_id')
                 ->join('submissions as e', 'd.id', '=', 'e.document_id')
+                ->join('semesters as f', 'e.semester_id', '=', 'f.id')
                 ->where('b.id', auth()->user()->programme_id)
                 ->where('e.student_id', auth()->user()->id)
                 ->select(
@@ -134,6 +136,7 @@ class SubmissionController extends Controller
                     'e.submission_duedate',
                     'e.submission_document',
                     'e.submission_date',
+                    'f.sem_label'
                 )
                 ->get()
                 ->groupBy('activity_id');
@@ -937,6 +940,185 @@ class SubmissionController extends Controller
             return response()->file($basePath);
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
+        }
+    }
+
+
+    /* Journal Publication Management [Student] - Route */
+    public function journalPublicationManagement(Request $req)
+    {
+        try {
+
+            $data = DB::table('journal_publications')
+                ->select('id as journal_id', 'journal_name', 'journal_scopus_isi', 'created_at')
+                ->where('student_id', auth()->user()->id)
+                ->get();
+
+            if ($req->ajax()) {
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->journal_id . '">';
+                });
+
+                $table->addColumn('journal_scopus_isi', function ($row) {
+                    if ($row->journal_scopus_isi == 1) {
+                        return '<i class="fas fa-check text-success"></i>';
+                    } else {
+                        return '<i class="fas fa-minus text-danger"></i>';
+                    }
+                });
+
+                $table->addColumn('created_at', function ($row) {
+                    return Carbon::parse($row->created_at)->format('d M Y g:i A') ?? '-';
+                });
+
+                $table->addColumn('action', function ($row) {
+                    return
+                        '
+                            <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary editJournalBtn" 
+                                data-id=' . $row->journal_id . ' data-name="' . $row->journal_name . '" data-scopus=' . $row->journal_scopus_isi . '>
+                                <i class="ti ti-edit f-20"></i>
+                            </a>
+
+                             <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger deleteJournalBtn" data-id=' . $row->journal_id . '>
+                                    <i class="ti ti-trash f-20"></i>
+                            </a>
+                        ';
+                });
+
+                $table->rawColumns(['checkbox', 'journal_scopus_isi', 'created_at', 'action']);
+
+                return $table->make(true);
+            }
+            return view('student.submission.journal-publication-management', [
+                'title' => 'Student Journal Publication',
+                'journals' => $data
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500);
+        }
+    }
+
+    /* Get Journal Publication [Student] [UNUSED] - Function */
+    public function getJournalPublication()
+    {
+        try {
+            $id = auth()->user()->id;
+            $journal = JournalPublication::where('student_id', $id)->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $journal
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => 'Error fetching journal publication: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /* Add Journal Publication [Student] - Function */
+    public function addJournalPublication(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'journal_name' => 'required|string',
+            'journal_scopus_isi' => 'required|integer|in:0,1',
+        ], [], [
+            'journal_name' => 'journal name',
+            'journal_scopus_isi' => 'journal scopus/isi',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $validated = $validator->validated();
+
+            $journal = JournalPublication::create([
+                'journal_name' => $validated['journal_name'],
+                'journal_scopus_isi' => $validated['journal_scopus_isi'],
+                'student_id' => auth()->user()->id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $journal,
+                'message' => 'Journal publication added successfully.'
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => 'Error adding journal publication: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /* Update Journal Publication [Student] - Function */
+    public function updateJournalPublication(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'journal_name' => 'required|string',
+            'journal_scopus_isi' => 'required|integer|in:0,1',
+        ], [], [
+            'journal_name' => 'journal name',
+            'journal_scopus_isi' => 'journal scopus/isi',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $validated = $validator->validated();
+
+            $journal = JournalPublication::where('id', $req->journal_id)
+                ->where('student_id', auth()->user()->id)
+                ->firstOrFail();
+
+            $journal->update([
+                'journal_name' => $validated['journal_name'],
+                'journal_scopus_isi' => $validated['journal_scopus_isi'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $journal,
+                'message' => 'Journal publication updated successfully.'
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => 'Error updating journal publication: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /* Delete Journal Publication [Student] - Function */
+    public function deleteJournalPublication(Request $req)
+    {
+        try {
+            JournalPublication::where('id', $req->id)->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Journal publication deleted successfully.'
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => 'Error deleting journal publication: ' . $e->getMessage()
+            ], 500);
         }
     }
 

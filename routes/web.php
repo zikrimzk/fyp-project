@@ -56,7 +56,15 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::post('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-post');
     Route::get('/view-final-document/{actID}/{filename}/{opt}', [SubmissionController::class, 'viewFinalDocument'])->where('filename', '.*')->name('student-view-final-document-get');
 
+    /* Correction Confirmation */
     Route::post('/confirm-correction-submission-{actID}', [SubmissionController::class, 'confirmStudentCorrection'])->name('student-confirm-correction-post');
+
+    /* Journal Publication */
+    Route::get('/journal-publication', [SubmissionController::class, 'journalPublicationManagement'])->name('student-journal-publication');
+    Route::get('/get-journal-publication', [SubmissionController::class, 'getJournalPublication'])->name('get-journal-publication');
+    Route::post('/add-journal-publication', [SubmissionController::class, 'addJournalPublication'])->name('student-add-journal-publication-post');
+    Route::post('/update-journal-publication', [SubmissionController::class, 'updateJournalPublication'])->name('student-update-journal-publication-post');
+    Route::post('/delete-journal-publication', [SubmissionController::class, 'deleteJournalPublication'])->name('student-delete-journal-publication-post');
 });
 
 

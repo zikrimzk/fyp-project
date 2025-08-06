@@ -16,9 +16,9 @@ class Procedure extends Model
         'timeline_sem',
         'timeline_week',
         'init_status',
-        'is_repeatable',
         'is_haveEva',
-        'is_haveCorrection',
+        'is_repeatable',
+        'is_haveJournalPublication',
         'material',
     ];
 }

@@ -108,7 +108,8 @@
                                         @elseif ($act->init_status == 16)
                                             <span class="badge bg-light-danger">Correction : Rejected by Supervisor</span>
                                         @elseif ($act->init_status == 17)
-                                            <span class="badge bg-light-danger">Correction : Rejected by Examiners/Panels</span>
+                                            <span class="badge bg-light-danger">Correction : Rejected by
+                                                Examiners/Panels</span>
                                         @elseif ($act->init_status == 18)
                                             <span class="badge bg-light-danger">Correction : Rejected by Committee / Deputy
                                                 Dean / Dean Approval</span>
@@ -117,6 +118,25 @@
                                         @endif
                                     </div>
                                 </div>
+
+                                @if ($act->is_haveJournalPublication == 1 && $act->init_status != 11)
+                                    <div class="alert alert-light text-dark rounded-3" role="alert">
+                                        <div class="d-flex align-items-center">
+                                            <i class="ti ti-info-circle fs-4 text-danger me-3 mt-1"></i>
+                                            <div>
+                                                <p class="mb-0">
+                                                    This activity requires you to add <strong>journal publication
+                                                        details</strong>.
+                                                    Please ensure that the necessary information is provided.
+                                                    <br>
+                                                    <span class="text-muted small">Failure to do so may impact your
+                                                        evaluation
+                                                        process.</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
 
                                 {{-- Flowchart Section --}}
                                 <div class="mb-4">
@@ -144,7 +164,7 @@
                                     </div>
                                 @endif
 
-                                 {{-- Final Correction Document Section --}}
+                                {{-- Final Correction Document Section --}}
                                 @if (isset($act->confirmed_corrected_document))
                                     <div class="mt-4 mb-4">
                                         <h6 class="fw-semibold mb-2">Final Document</h6>
@@ -218,8 +238,15 @@
                                                         <div
                                                             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
                                                             <div>
-                                                                <h6 class="fw-bold mb-1 text-dark">
-                                                                    {{ $item->document_name }}</h6>
+                                                                @if ($act->is_repeatable == 1)
+                                                                    <h6 class="fw-bold mb-1 text-dark">
+                                                                        {{ $item->document_name . ' (' . $item->sem_label . ')' }}
+                                                                    </h6>
+                                                                @else
+                                                                    <h6 class="fw-bold mb-1 text-dark">
+                                                                        {{ $item->document_name }}
+                                                                    </h6>
+                                                                @endif
                                                                 <span
                                                                     class="badge {{ $item->isRequired == 1 ? 'bg-danger' : 'bg-secondary' }}">
                                                                     {{ $item->isRequired == 1 ? 'Required' : 'Optional' }}
@@ -317,7 +344,14 @@
                                     $modalConfirmAppear = true;
                                 @endphp
 
-                                <div class="card-footer d-flex justify-content-end align-items-center">
+                                <div class="card-footer d-flex justify-content-end align-items-center gap-2">
+                                    @if ($act->is_haveJournalPublication == 1)
+                                        <a href="{{ route('student-journal-publication') }}"
+                                            class="btn btn-sm btn-light-primary">
+                                            <i class="fas fa-journal-whills ms-2 me-2"></i>
+                                            <span class="me-2">Manage Journal Publication</span>
+                                        </a>
+                                    @endif
                                     <button class="btn btn-sm btn-light-danger" data-bs-toggle="modal"
                                         data-bs-target="#confirmSubmissionModal-{{ $act->activity_id }}">
                                         <i class="fas fa-file-signature ms-2 me-2"></i>
@@ -328,6 +362,13 @@
                                 @php
                                     $modalCorrectionAppear = true;
                                 @endphp
+                                @if ($act->is_haveJournalPublication == 1)
+                                    <a href="{{ route('student-journal-publication') }}"
+                                        class="btn btn-sm btn-light-primary">
+                                        <i class="fas fa-journal-whills ms-2 me-2"></i>
+                                        <span class="me-2">Manage Journal Publication</span>
+                                    </a>
+                                @endif
                                 <div class="card-footer d-flex justify-content-end align-items-center">
                                     <button class="btn btn-sm btn-light-warning" data-bs-toggle="modal"
                                         data-bs-target="#confirmCorrectionModal-{{ $act->activity_id }}">

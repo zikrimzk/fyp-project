@@ -379,7 +379,7 @@ class SOPController extends Controller
             'init_status'       => 'required|integer|in:1,2',
             'is_repeatable'     => 'required|integer|in:0,1',
             'is_haveEva'        => 'required|boolean|in:0,1',
-            'is_haveCorrection' => 'required|boolean|in:0,1',
+            'is_haveJournalPublication' => 'nullable|boolean|in:0,1',
             'material'          => 'nullable|file|mimes:pdf|max:5120',
         ], [], [
             'activity_id'       => 'activity',
@@ -390,7 +390,7 @@ class SOPController extends Controller
             'init_status'       => 'initial status',
             'is_repeatable'     => 'repeatable',
             'is_haveEva'        => 'evaluation',
-            'is_haveCorrection' => 'correction',
+            'is_haveJournalPublication' => 'journal publication',
             'material'          => 'material',
         ]);
 
@@ -442,7 +442,7 @@ class SOPController extends Controller
                 'init_status'   => $validated['init_status'],
                 'is_repeatable'   => $validated['is_repeatable'],
                 'is_haveEva'    => $validated['is_haveEva'],
-                'is_haveCorrection' => $validated['is_haveCorrection'],
+                'is_haveJournalPublication' => $validated['is_haveJournalPublication'] ?? 0,
                 'material'      => $filePath . $fileName,
             ]);
 
@@ -464,7 +464,7 @@ class SOPController extends Controller
             'init_status_up'        => 'required|integer|in:1,2',
             'is_repeatable_up'      => 'required|integer|in:0,1',
             'is_haveEva_up'         => 'required|boolean|in:0,1',
-            'is_haveCorrection_up'  => 'required|boolean|in:0,1',
+            'is_haveJournalPublication_up'  => 'nullable|boolean|in:0,1',
             'material_up'           => 'nullable|file|mimes:pdf|max:5120',
         ], [], [
             'act_seq_up'            => 'activity sequence',
@@ -473,7 +473,7 @@ class SOPController extends Controller
             'init_status_up'        => 'initial status',
             'is_repeatable_up'      => 'repeatable',
             'is_haveEva_up'         => 'evaluation',
-            'is_haveCorrection_up'  => 'correction',
+            'is_haveJournalPublication_up'  => 'journal publication',
             'material_up'           => 'material',
         ]);
 
@@ -523,7 +523,7 @@ class SOPController extends Controller
                 'init_status'   => $validated['init_status_up'],
                 'is_repeatable'   => $validated['is_repeatable_up'],
                 'is_haveEva'    => $validated['is_haveEva_up'],
-                'is_haveCorrection' => $validated['is_haveCorrection_up'],
+                'is_haveJournalPublication' => $validated['is_haveJournalPublication_up'] ?? 0,
             ]);
 
             return back()->with('success', 'Procedure updated successfully.');
