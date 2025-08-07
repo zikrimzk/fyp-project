@@ -254,11 +254,6 @@
             background-image: none !important;
         }
 
-        .option-group label {
-            display: block;
-            margin: 2px 0;
-        }
-
         /* HIDE FORM CONTROLS IN PDF */
         input,
         select,
@@ -296,7 +291,7 @@
         }
 
         .report-text {
-            white-space:pre-line;
+            white-space: pre-line;
             word-wrap: break-word;
             font-family: Arial, Helvetica, sans-serif;
             font-size: 12pt;
@@ -468,6 +463,50 @@
                         <input type="text" id="{{ $key }}" name="{{ $key }}" value="{{ e($value) }}"
                             placeholder="{{ $placeholder }}">
                 @endswitch
+            </td>
+        </tr>
+        @php $i++; @endphp
+    @elseif($ff->ff_category == 2 && $ff->ff_table === 'journal_publications')
+        @php
+            // build the key exactly as your joinMap loop does:
+            $key = str_replace(' ', '_', strtolower($ff->ff_label));
+            $value = $userData[$key] ?? '';
+            // each row was stored as "journal_name : journal_scopus_isi", separated by <br>
+            $rows = $value !== '-' ? explode('<br>', $value) : [];
+        @endphp
+
+        <tr>
+            <td colspan="3">
+                <table class="pub-table" style="width:100%; border-collapse:collapse; margin-bottom:1em;">
+                    <thead>
+                        <tr>
+                            <th style="border:1px solid #000;padding:4px; text-align:center">No</th>
+                            <th style="border:1px solid #000;padding:4px; text-align:center">Journal Name</th>
+                            <th style="border:1px solid #000;padding:4px; text-align:center">Scopus/ISI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($rows as $idx => $row)
+                            @php
+                                // split into the two columns:
+                                [$journal, $scopus] = array_map('trim', explode(' : ', $row) + ['', '']);
+                            @endphp
+                            <tr>
+                                <td style="border:1px solid #000;padding:4px; text-align:center">
+                                    {{ $idx + 1 }}</td>
+                                <td style="border:1px solid #000;padding:4px;">{{ $journal }}</td>
+                                <td style="border:1px solid #000;padding:4px; text-align:center">{{ $scopus }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" style="border:1px solid #000;padding:4px; text-align:center">
+                                    No journal publications found.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </td>
         </tr>
         @php $i++; @endphp

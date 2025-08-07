@@ -830,6 +830,7 @@
                                         <option value="semesters">Semester</option>
                                         <option value="activity_corrections">Correction</option>
                                         <option value="evaluators">Evaluator</option>
+                                        <option value="journal_publications">Journal Publication</option>
                                     </select>
                                 </div>
 
@@ -849,7 +850,8 @@
                                         </option>
                                         <option value="prog_code [prog_mode]" data-table="students">Programme Code [Mode]
                                         </option>
-                                        <option value="student_semcount" data-table="students">Total Enrolled Semester</option>
+                                        <option value="student_semcount" data-table="students">Total Enrolled Semester
+                                        </option>
 
                                         <option value="" disabled>-- Staff --</option>
                                         <option value="staff_name" data-table="staff">Name</option>
@@ -870,13 +872,20 @@
                                         <option value="sem_label" data-table="semesters">Current Semester</option>
 
                                         <option value="" disabled>-- Correction --</option>
-                                        <option value="ac_startdate" data-table="activity_corrections">Start Date of Correction</option>
-                                        <option value="ac_duedate" data-table="activity_corrections">Dateline of Correction</option>
+                                        <option value="ac_startdate" data-table="activity_corrections">Start Date of
+                                            Correction</option>
+                                        <option value="ac_duedate" data-table="activity_corrections">Dateline of
+                                            Correction</option>
 
                                         <option value="" disabled>-- Evaluator --</option>
-                                        <option value="staff_name" data-table="evaluators">Evaluator Name</option>
-                                        <option value="staff_email" data-table="evaluators">Evaluator Email</option>
-                                        <option value="staff_phoneno" data-table="evaluators">Evaluator Phone No</option>
+                                        <option value="evaluator_name" data-table="evaluators">Evaluator Name</option>
+                                        <option value="evaluator_email" data-table="evaluators">Evaluator Email</option>
+                                        <option value="evaluator_phoneno" data-table="evaluators">Evaluator Phone No
+                                        </option>
+
+                                        <option value="" disabled>-- Journal Publication --</option>
+                                        <option value="journal_name : journal_scopus_isi"
+                                            data-table="journal_publications">Journal Title : Scopus/ISI</option>
                                     </select>
                                 </div>
 
@@ -886,6 +895,7 @@
                                     <select name="ff_extra_datakey" class="form-select" id="ff_extra_datakey">
                                         <option value="" selected>-- Select Extra Attribute --</option>
                                         <option value="supervision_role" data-table="staff">Supervision Role</option>
+                                        <option value="eva_role" data-table="evaluators">Evaluator Role</option>
                                     </select>
                                 </div>
 
@@ -898,7 +908,10 @@
                                         </option>
                                         <option value="2" data-table="supervision_role">Co-Supervisor
                                         </option>
-
+                                        <option value="3" data-table="eva_role">Examiner/Panel
+                                        </option>
+                                        <option value="4" data-table="eva_role">Chairman
+                                        </option>
                                     </select>
                                 </div>
 
@@ -1259,12 +1272,12 @@
                         </div>
                         
                         ${formTarget == 5 ? `
-                                                                            <div class="guideline-item">
-                                                                                <i class="ti ti-list-details guideline-icon"></i>
-                                                                                <div>
-                                                                                    <strong>Additional Fields:</strong> <span class="highlight">Criteria</span> and <span class="highlight">Evaluation Level</span> fields will be auto-generated.
-                                                                                </div>
-                                                                            </div>` : ''}
+                                                                                                    <div class="guideline-item">
+                                                                                                        <i class="ti ti-list-details guideline-icon"></i>
+                                                                                                        <div>
+                                                                                                            <strong>Additional Fields:</strong> <span class="highlight">Criteria</span> and <span class="highlight">Evaluation Level</span> fields will be auto-generated.
+                                                                                                        </div>
+                                                                                                    </div>` : ''}
                         
                         <div class="guideline-item">
                             <i class="ti ti-shield-lock guideline-icon"></i>
@@ -1529,6 +1542,19 @@
 
                     $('#ff_extra_datakey').prop('disabled', false).show();
                 }
+
+                if (selectedTable === 'evaluators') {
+                    $('#ff_extra_datakey option').each(function() {
+                        const table = $(this).data('table');
+                        if (table === 'evaluators') {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+
+                    $('#ff_extra_datakey').prop('disabled', false).show();
+                }
             });
 
             $('#ff_extra_datakey').on('change', function() {
@@ -1545,10 +1571,22 @@
                     });
 
                     $('#ff_extra_condition').prop('disabled', false).show();
+                } else if (selectedKey === 'eva_role') {
+                    $('#ff_extra_condition option').each(function() {
+                        const table = $(this).data('table');
+                        if (table === 'eva_role') {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+
+                    $('#ff_extra_condition').prop('disabled', false).show();
                 } else {
                     $('#ff_extra_condition').val('').prop('disabled', true).hide();
                 }
             });
+
 
             $('#ff_component_type').on('change', function() {
                 const type = $(this).val();
@@ -2040,6 +2078,7 @@
                                 const initialOptions = $('#ff_value_options').val();
                                 if (initialOptions) {
                                     try {
+                                        $('#options-input').val("");
                                         const optionsArray = JSON.parse(initialOptions);
                                         $('#options-input').val(optionsArray.join(', '));
                                     } catch (e) {
