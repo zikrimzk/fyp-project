@@ -1449,7 +1449,7 @@ class SubmissionController extends Controller
                 ->join('programmes as d', 'a.programme_id', '=', 'd.id')
                 ->join('students as e', 'd.id', '=', 'e.programme_id')
                 ->where('e.student_status', '=', 1)
-                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
+                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'a.is_haveEva', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
                 ->get();
 
             /** ASSIGNING SUBMISSION **/
@@ -1505,8 +1505,25 @@ class SubmissionController extends Controller
                             'submission_status' => $status,
                             'submission_duedate' => $submissionDate
                         ]);
+
+                        if ($sub->is_haveEva == 1) {
+                            Nomination::updateOrCreate(
+                                [
+                                    'student_id' => $sub->student_id,
+                                    'activity_id' => $sub->activity_id,
+                                    'semester_id' => $currsemester->id
+                                ],
+                                [
+                                    'nom_status' => 1
+                                ]
+                            );
+                        }
                     } elseif (in_array($decision, [0, 3])) {
                         $createdSubmission->delete();
+                        Nomination::where('student_id', $sub->student_id)
+                            ->where('activity_id', $sub->activity_id)
+                            ->where('semester_id', $currsemester->id)
+                            ->delete();
                     }
                 }
             }
@@ -1536,7 +1553,7 @@ class SubmissionController extends Controller
                 ->join('students as e', 'd.id', '=', 'e.programme_id')
                 ->where('e.student_status', '=', 1)
                 ->where('e.student_matricno', '=', $matricno)
-                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
+                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'a.is_haveEva', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
                 ->get();
 
             /** ASSIGNING SUBMISSION **/
@@ -1592,6 +1609,19 @@ class SubmissionController extends Controller
                             'submission_status' => $status,
                             'submission_duedate' => $submissionDate
                         ]);
+
+                        if ($sub->is_haveEva == 1) {
+                            Nomination::updateOrCreate(
+                                [
+                                    'student_id' => $sub->student_id,
+                                    'activity_id' => $sub->activity_id,
+                                    'semester_id' => $currsemester->id
+                                ],
+                                [
+                                    'nom_status' => 1
+                                ]
+                            );
+                        }
                     } elseif (in_array($decision, [0, 3])) {
                         $createdSubmission->delete();
                     }

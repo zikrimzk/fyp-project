@@ -371,27 +371,32 @@ class SOPController extends Controller
     public function addProcedure(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'activity_id'       => 'required|integer|exists:activities,id',
-            'programme_id'      => 'required|integer|exists:programmes,id',
-            'act_seq'           => 'required|integer|min:1',
-            'timeline_sem'      => 'required|integer|min:1',
-            'timeline_week'     => 'required|integer|min:1|max:52',
-            'init_status'       => 'required|integer|in:1,2',
-            'is_repeatable'     => 'required|integer|in:0,1',
-            'is_haveEva'        => 'required|boolean|in:0,1',
+            'activity_id'               => 'required|integer|exists:activities,id',
+            'programme_id'              => 'required|integer|exists:programmes,id',
+            'activity_type'             => 'required|integer|in:1,2',
+            'act_seq'                   => 'required|integer|min:1',
+            'timeline_sem'              => 'required|integer|min:1',
+            'timeline_week'             => 'required|integer|min:1|max:52',
+            'init_status'               => 'nullable|integer|in:1,2',
+            'is_repeatable'             => 'nullable|integer|in:0,1',
             'is_haveJournalPublication' => 'nullable|boolean|in:0,1',
-            'material'          => 'nullable|file|mimes:pdf|max:5120',
+            'is_haveEva'                => 'nullable|boolean|in:0,1',
+            'evaluation_mode'           => 'nullable|integer|in:1,2',
+            'material'                  => 'nullable|file|mimes:pdf|max:5120',
         ], [], [
-            'activity_id'       => 'activity',
-            'programme_id'      => 'programme',
-            'act_seq'           => 'activity sequence',
-            'timeline_sem'      => 'semester timeline',
-            'timeline_week'     => 'week timeline',
-            'init_status'       => 'initial status',
-            'is_repeatable'     => 'repeatable',
-            'is_haveEva'        => 'evaluation',
+            'activity_id'               => 'activity',
+            'programme_id'              => 'programme',
+            'activity_type'             => 'activity type',
+            'act_seq'                   => 'activity sequence',
+            'activity_type_id'          => 'required|integer',
+            'timeline_sem'              => 'semester timeline',
+            'timeline_week'             => 'week timeline',
+            'init_status'               => 'initial status',
+            'is_repeatable'             => 'repeatable',
             'is_haveJournalPublication' => 'journal publication',
-            'material'          => 'material',
+            'is_haveEva'                => 'evaluation',
+            'evaluation_mode'           => 'evaluation mode',
+            'material'                  => 'material',
         ]);
 
         if ($validator->fails()) {
@@ -403,6 +408,7 @@ class SOPController extends Controller
         try {
 
             $validated = $validator->validated();
+
             $fileName = "";
             $filePath = "";
             $checkExists = Procedure::where('activity_id', $validated['activity_id'])
@@ -413,15 +419,16 @@ class SOPController extends Controller
                 return back()->with('error', 'Procedure already exists for this activity and programme.');
             }
 
-            if ($req->hasFile('material')) {
-                // 1 - GET THE DATA
-                $activity = Activity::findOrFail($validated['activity_id']);
-                $programme = Programme::findOrFail($validated['programme_id']);
+            // 1 - GET THE DATA
+            $activity = Activity::findOrFail($validated['activity_id']);
+            $programme = Programme::findOrFail($validated['programme_id']);
 
-                // 2 - CALL THE DATA
-                $act_name = $activity->act_name ?? 'N/A';
-                $prog_code = $programme->prog_code ?? 'N/A';
-                $prog_mode = $programme->prog_mode ?? 'N/A';
+            // 2 - CALL THE DATA
+            $act_name = $activity->act_name ?? 'N/A';
+            $prog_code = $programme->prog_code ?? 'N/A';
+            $prog_mode = $programme->prog_mode ?? 'N/A';
+
+            if ($req->hasFile('material')) {
 
                 // 3 - SET & DECLARE FILE ROUTE
                 $fileName = Str::upper(str_replace(' ', '', $act_name) . '_' . $prog_code . '(' . $prog_mode . ')') . '.pdf';
@@ -433,20 +440,23 @@ class SOPController extends Controller
                 $file->storeAs($filePath, $fileName, 'public');
             }
 
+
             Procedure::create([
-                'activity_id'   => $validated['activity_id'],
-                'programme_id'  => $validated['programme_id'],
-                'act_seq'       => $validated['act_seq'],
-                'timeline_sem'  => $validated['timeline_sem'],
-                'timeline_week' => $validated['timeline_week'],
-                'init_status'   => $validated['init_status'],
-                'is_repeatable'   => $validated['is_repeatable'],
-                'is_haveEva'    => $validated['is_haveEva'],
+                'activity_id'               => $validated['activity_id'],
+                'programme_id'              => $validated['programme_id'],
+                'activity_type'             => $validated['activity_type'],
+                'act_seq'                   => $validated['act_seq'],
+                'timeline_sem'              => $validated['timeline_sem'],
+                'timeline_week'             => $validated['timeline_week'],
+                'init_status'               => $validated['init_status'] ?? 2,
+                'is_repeatable'             => $validated['is_repeatable'] ?? 0,
                 'is_haveJournalPublication' => $validated['is_haveJournalPublication'] ?? 0,
-                'material'      => $filePath . $fileName,
+                'is_haveEva'                => $validated['is_haveEva'] ?? 0,
+                'evaluation_mode'           => $validated['evaluation_mode'] ?? null,
+                'material'                  => $filePath . $fileName,
             ]);
 
-            return back()->with('success', 'Procedure added successfully.');
+            return back()->with('success', 'Procedure for ' . $act_name . ' - ' . $prog_code . ' (' . $prog_mode . ') added successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error adding procedure: ' . $e->getMessage());
         }
@@ -458,23 +468,27 @@ class SOPController extends Controller
         $progID = decrypt($progID);
 
         $validator = Validator::make($req->all(), [
-            'act_seq_up'            => 'required|integer|min:1',
-            'timeline_sem_up'       => 'required|integer|min:1',
-            'timeline_week_up'      => 'required|integer|min:1|max:52',
-            'init_status_up'        => 'required|integer|in:1,2',
-            'is_repeatable_up'      => 'required|integer|in:0,1',
-            'is_haveEva_up'         => 'required|boolean|in:0,1',
-            'is_haveJournalPublication_up'  => 'nullable|boolean|in:0,1',
-            'material_up'           => 'nullable|file|mimes:pdf|max:5120',
+            'activity_type_up'             => 'required|integer|in:1,2',
+            'act_seq_up'                   => 'required|integer|min:1',
+            'timeline_sem_up'              => 'required|integer|min:1',
+            'timeline_week_up'             => 'required|integer|min:1|max:52',
+            'init_status_up'               => 'nullable|integer|in:1,2',
+            'is_repeatable_up'             => 'nullable|integer|in:0,1',
+            'is_haveJournalPublication_up' => 'nullable|boolean|in:0,1',
+            'is_haveEva_up'                => 'nullable|boolean|in:0,1',
+            'evaluation_mode_up'           => 'nullable|integer|in:1,2',
+            'material_up'                  => 'nullable|file|mimes:pdf|max:5120',
         ], [], [
-            'act_seq_up'            => 'activity sequence',
-            'timeline_sem_up'       => 'semester timeline',
-            'timeline_week_up'      => 'week timeline',
-            'init_status_up'        => 'initial status',
-            'is_repeatable_up'      => 'repeatable',
-            'is_haveEva_up'         => 'evaluation',
-            'is_haveJournalPublication_up'  => 'journal publication',
-            'material_up'           => 'material',
+            'act_seq_up'                   => 'activity sequence',
+            'activity_type_up'             => 'activity type',
+            'timeline_sem_up'              => 'semester timeline',
+            'timeline_week_up'             => 'week timeline',
+            'init_status_up'               => 'initial status',
+            'is_repeatable_up'             => 'repeatable',
+            'is_haveJournalPublication_up' => 'journal publication',
+            'is_haveEva_up'                => 'evaluation',
+            'evaluation_mode_up'           => 'evaluation mode',
+            'material_up'                  => 'material',
         ]);
 
         if ($validator->fails()) {
@@ -488,16 +502,16 @@ class SOPController extends Controller
 
             $validated = $validator->validated();
 
+            // 1 - GET THE DATA
+            $activity = Activity::findOrFail($actID);
+            $programme = Programme::findOrFail($progID);
+
+            // 2 - CALL THE DATA
+            $act_name = $activity->act_name ?? 'N/A';
+            $prog_code = $programme->prog_code ?? 'N/A';
+            $prog_mode = $programme->prog_mode ?? 'N/A';
+
             if ($req->hasFile('material_up')) {
-
-                // 1 - GET THE DATA
-                $activity = Activity::findOrFail($actID);
-                $programme = Programme::findOrFail($progID);
-
-                // 2 - CALL THE DATA
-                $act_name = $activity->act_name ?? 'N/A';
-                $prog_code = $programme->prog_code ?? 'N/A';
-                $prog_mode = $programme->prog_mode ?? 'N/A';
 
                 // 3 - SET & DECLARE FILE ROUTE
                 $fileName = Str::upper(str_replace(' ', '', $act_name) . '_' . $prog_code . '(' . $prog_mode . ')') . '.pdf';
@@ -517,16 +531,18 @@ class SOPController extends Controller
             }
 
             Procedure::where('activity_id', $actID)->where('programme_id', $progID)->update([
-                'act_seq'       => $validated['act_seq_up'],
-                'timeline_sem'  => $validated['timeline_sem_up'],
-                'timeline_week' => $validated['timeline_week_up'],
-                'init_status'   => $validated['init_status_up'],
-                'is_repeatable'   => $validated['is_repeatable_up'],
-                'is_haveEva'    => $validated['is_haveEva_up'],
+                'activity_type'             => $validated['activity_type_up'],
+                'act_seq'                   => $validated['act_seq_up'],
+                'timeline_sem'              => $validated['timeline_sem_up'],
+                'timeline_week'             => $validated['timeline_week_up'],
+                'init_status'               => $validated['init_status_up'] ?? 2,
+                'is_repeatable'             => $validated['is_repeatable_up'] ?? 0,
                 'is_haveJournalPublication' => $validated['is_haveJournalPublication_up'] ?? 0,
+                'is_haveEva'                => $validated['is_haveEva_up'] ?? 0,
+                'evaluation_mode'           => $validated['evaluation_mode_up'] ?? null,
             ]);
 
-            return back()->with('success', 'Procedure updated successfully.');
+            return back()->with('success', 'Procedure for ' . $act_name . ' - ' . $prog_code . '(' . $prog_mode . ')' . ' updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating procedure: ' . $e->getMessage());
         }

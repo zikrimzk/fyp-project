@@ -244,7 +244,7 @@ class SupervisorController extends Controller
                     $data->where('programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('activity') && !empty($req->input('activity'))) {
                     $data->where('activity_id', $req->input('activity'));

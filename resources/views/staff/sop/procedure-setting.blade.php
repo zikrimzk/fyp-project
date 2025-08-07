@@ -192,8 +192,33 @@
                                                 @enderror
                                             </div>
                                         </div>
+
+                                        <hr>
+
+                                        <h6 class="mb-3">Activity Setting</h6>
+                                        <!--Activity Type Input-->
+                                        <div class="col-sm-12 col-md-6 col-lg-6">
+                                            <div class="mb-3">
+                                                <label for="activity_type" class="form-label">Activity Type <span
+                                                        class="text-danger">*</span></label>
+                                                <select name="activity_type" id="activity_type"
+                                                    class="form-select @error('activity_type') is-invalid @enderror"
+                                                    required>
+                                                    <option value="">- Select Activity Type -</option>
+                                                    <option value="1"
+                                                        @if (old('activity_type') == 1) selected @endif>Submission
+                                                    </option>
+                                                    <option value="2"
+                                                        @if (old('activity_type') == 2) selected @endif>Record-based
+                                                    </option>
+                                                </select>
+                                                @error('activity_type')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
                                         <!--Activity Sequence Input-->
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                        <div class="col-sm-12 col-md-6 col-lg-6">
                                             <div class="mb-3">
                                                 <label for="act_seq" class="form-label">Activity Sequence <span
                                                         class="text-danger">*</span></label>
@@ -234,8 +259,23 @@
                                                 @enderror
                                             </div>
                                         </div>
+                                        <!--Activity Material Input-->
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="material" class="form-label">Activity Material </label>
+                                                <input type="file" name="material" id="material"
+                                                    class="form-control @error('material') is-invalid @enderror">
+                                                @error('material')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <h6 class="mb-3">Submission Setting</h6>
                                         <!--Activity Initial Status Input-->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
                                             <div class="mb-3">
                                                 <label for="init_status" class="form-label">Initial Status <span
                                                         class="text-danger">*</span></label>
@@ -251,30 +291,6 @@
                                                     </option>
                                                 </select>
                                                 @error('init_status')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <!--Evaluation Input-->
-                                        <div class="col-sm-12 col-md-6 col-lg-6">
-                                            <div class="mb-3">
-                                                <label for="is_haveEva" class="form-label">Evaluation <span
-                                                        class="text-danger">*</span></label>
-                                                <select name="is_haveEva" id="is_haveEva"
-                                                    class="form-select @error('is_haveEva') is-invalid @enderror" required>
-                                                    @if (old('is_haveEva') == 1)
-                                                        <option value="1" selected>Yes</option>
-                                                        <option value="0">No</option>
-                                                    @elseif(old('is_haveEva') == 0)
-                                                        <option value="1">Yes</option>
-                                                        <option value="0"selected>No</option>
-                                                    @else
-                                                        <option value="" selected>- Select Option -</option>
-                                                        <option value="1">Yes</option>
-                                                        <option value="0">No</option>
-                                                    @endif
-                                                </select>
-                                                @error('is_haveEva')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -327,17 +343,49 @@
                                                 @enderror
                                             </div>
                                         </div>
-                                        <!--Activity Material Input-->
-                                        <div class="col-sm-12 col-md-12 col-lg-12">
+
+                                        <hr>
+
+                                        <h6 class="mb-3">Evaluation Setting</h6>
+                                        <!--Evaluation Input-->
+                                        <div class="col-sm-12 col-md-6 col-lg-6">
                                             <div class="mb-3">
-                                                <label for="material" class="form-label">Activity Material </label>
-                                                <input type="file" name="material" id="material"
-                                                    class="form-control @error('material') is-invalid @enderror">
-                                                @error('material')
+                                                <label for="is_haveEva" class="form-label">Evaluation <span
+                                                        class="text-danger">*</span></label>
+                                                <select name="is_haveEva" id="is_haveEva"
+                                                    class="form-select @error('is_haveEva') is-invalid @enderror"
+                                                    required>
+                                                    <option value="">- Select Option -</option>
+                                                    <option value="1"
+                                                        @if (old('is_haveEva') == 1) selected @endif>Yes</option>
+                                                    <option value="2"
+                                                        @if (old('is_haveEva') == 0) selected @endif>No</option>
+                                                </select>
+                                                @error('is_haveEva')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
                                         </div>
+                                        <!--Evaluation Mode Input-->
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="evaluation_mode" class="form-label">Evaluation Mode</label>
+                                                <select name="evaluation_mode" id="evaluation_mode"
+                                                    class="form-select @error('evaluation_mode') is-invalid @enderror">
+                                                    <option value="">- Select Evaluation Mode -</option>
+                                                    <option value="1"
+                                                        @if (old('evaluation_mode') == 1) selected @endif>Examiner/Panel &
+                                                        Chairman (Report)</option>
+                                                    <option value="2"
+                                                        @if (old('evaluation_mode') == 2) selected @endif>Examiner/Panel
+                                                        ONLY (Report + Approval)</option>
+                                                </select>
+                                                @error('evaluation_mode')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                                 <div class="modal-footer bg-light justify-content-end">
@@ -365,7 +413,7 @@
                     <!-- [ Update Modal ] start -->
                     <form
                         action="{{ route('update-procedure-post', ['actID' => Crypt::encrypt($upd->activity_id), 'progID' => Crypt::encrypt($upd->programme_id)]) }}"
-                        method="POST" enctype="multipart/form-data">
+                        method="POST" enctype="multipart/form-data" class="updateForm">
                         @csrf
                         <div class="modal fade" id="updateModal-{{ $upd->activity_id }}-{{ $upd->programme_id }}"
                             tabindex="-1" aria-labelledby="updateModal" aria-hidden="true">
@@ -432,8 +480,33 @@
                                                     @enderror
                                                 </div>
                                             </div>
+
+                                            <hr>
+
+                                            <h6 class="mb-3">Activity Setting</h6>
+                                            <!--Activity Type Input-->
+                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="activity_type_up" class="form-label">Activity Type <span
+                                                            class="text-danger">*</span></label>
+                                                    <select name="activity_type_up" id="activity_type_up"
+                                                        class="form-select activity_type_up @error('activity_type_up') is-invalid @enderror"
+                                                        required>
+                                                        <option value="" selected>- Select Activity Type -</option>
+                                                        <option value="1"
+                                                            @if ($upd->activity_type == 1) selected @endif>Submission
+                                                        </option>
+                                                        <option value="2"
+                                                            @if ($upd->activity_type == 2) selected @endif>Record-based
+                                                        </option>
+                                                    </select>
+                                                    @error('activity_type_up')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
                                             <!--Activity Sequence Input-->
-                                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
                                                     <label for="act_seq_up" class="form-label">Activity Sequence <span
                                                             class="text-danger">*</span></label>
@@ -474,13 +547,33 @@
                                                     @enderror
                                                 </div>
                                             </div>
+                                            <!--Activity Material Input-->
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                                <div class="mb-3">
+                                                    <label for="material_up" class="form-label">Activity Material </label>
+                                                    <input type="file" name="material_up" id="material_up"
+                                                        class="form-control @error('material_up') is-invalid @enderror mb-2">
+                                                    @if ($upd->material)
+                                                        <a href="{{ URL::signedRoute('view-material-get', ['filename' => Crypt::encrypt($upd->material)]) }}"
+                                                            target="_blank" class="link-primary">View Uploaded
+                                                            Material</a>
+                                                    @endif
+                                                    @error('material_up')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+
+                                            <hr>
+
+                                            <h6 class="mb-3">Submission Setting</h6>
                                             <!--Activity Initial Status Input-->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                            <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
                                                     <label for="init_status_up" class="form-label">Initial Status <span
                                                             class="text-danger">*</span></label>
                                                     <select name="init_status_up" id="init_status_up"
-                                                        class="form-select @error('init_status_up') is-invalid @enderror"
+                                                        class="form-select init_status_up @error('init_status_up') is-invalid @enderror"
                                                         required>
                                                         <option value="1"
                                                             @if ($upd->init_status == 1) selected @endif>(O) Open
@@ -495,36 +588,13 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <!--Evaluation Input-->
-                                            <div class="col-sm-12 col-md-6 col-lg-6">
-                                                <div class="mb-3">
-                                                    <label for="is_haveEva_up" class="form-label">Evaluation <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="is_haveEva_up" id="is_haveEva_up"
-                                                        class="form-select @error('is_haveEva_up') is-invalid @enderror"
-                                                        required>
-                                                        <option value="">- Select Option -</option>
-                                                        <option value="1"
-                                                            @if ($upd->is_haveEva == 1) selected @endif>
-                                                            Yes
-                                                        </option>
-                                                        <option value="0"
-                                                            @if ($upd->is_haveEva == 0) selected @endif>
-                                                            No
-                                                        </option>
-                                                    </select>
-                                                    @error('is_haveEva_up')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
                                             <!--Activity Repeatable Input-->
                                             <div class="col-sm-12 col-md-6 col-lg-6">
                                                 <div class="mb-3">
                                                     <label for="is_repeatable_up" class="form-label">Repeatable <span
                                                             class="text-danger">*</span></label>
                                                     <select name="is_repeatable_up" id="is_repeatable_up"
-                                                        class="form-select is-repeat @error('is_repeatable_up') is-invalid @enderror"
+                                                        class="form-select is-repeat is_repeatable_up @error('is_repeatable_up') is-invalid @enderror"
                                                         required>
                                                         <option value="1"
                                                             @if ($upd->is_repeatable == 1) selected @endif>Yes
@@ -545,7 +615,7 @@
                                                         Publication <span class="text-danger">*</span></label>
                                                     <select name="is_haveJournalPublication_up"
                                                         id="is_haveJournalPublication_up"
-                                                        class="form-select is-havePublication @error('is_haveJournalPublication_up') is-invalid @enderror"
+                                                        class="form-select is-havePublication is_haveJournalPublication_up @error('is_haveJournalPublication_up') is-invalid @enderror"
                                                         required>
                                                         <option value="">- Select Option -</option>
                                                         <option value="1"
@@ -565,18 +635,48 @@
                                                     @enderror
                                                 </div>
                                             </div>
-                                            <!--Activity Material Input-->
+
+                                            <hr>
+
+                                            <h6 class="mb-3">Evaluation Setting</h6>
+                                            <!--Evaluation Input-->
+                                            <div class="col-sm-12 col-md-6 col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="is_haveEva_up" class="form-label">Evaluation <span
+                                                            class="text-danger">*</span></label>
+                                                    <select name="is_haveEva_up" id="is_haveEva_up"
+                                                        class="form-select is_haveEva_up @error('is_haveEva_up') is-invalid @enderror"
+                                                        required>
+                                                        <option value="">- Select Option -</option>
+                                                        <option value="1"
+                                                            @if ($upd->is_haveEva == 1) selected @endif>
+                                                            Yes
+                                                        </option>
+                                                        <option value="0"
+                                                            @if ($upd->is_haveEva == 0) selected @endif>
+                                                            No
+                                                        </option>
+                                                    </select>
+                                                    @error('is_haveEva_up')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <!--Evaluation Mode Input-->
                                             <div class="col-sm-12 col-md-12 col-lg-12">
                                                 <div class="mb-3">
-                                                    <label for="material_up" class="form-label">Activity Material </label>
-                                                    <input type="file" name="material_up" id="material_up"
-                                                        class="form-control @error('material_up') is-invalid @enderror mb-2">
-                                                    @if ($upd->material)
-                                                        <a href="{{ URL::signedRoute('view-material-get', ['filename' => Crypt::encrypt($upd->material)]) }}"
-                                                            target="_blank" class="link-primary">View Uploaded
-                                                            Material</a>
-                                                    @endif
-                                                    @error('material_up')
+                                                    <label for="evaluation_mode_up" class="form-label">Evaluation Mode</label>
+                                                    <select name="evaluation_mode_up" id="evaluation_mode_up"
+                                                        class="form-select evaluation_mode_up @error('evaluation_mode_up') is-invalid @enderror">
+                                                        <option value="" selected>- Select Evaluation Mode -</option>
+                                                        <option value="1"
+                                                            @if ($upd->evaluation_mode == 1) selected @endif>
+                                                            Examiner/Panel & Chairman (Report)</option>
+                                                        <option value="2"
+                                                            @if ($upd->evaluation_mode == 2) selected @endif>
+                                                            Examiner/Panel ONLY (Report + Approval)</option>
+                                                    </select>
+                                                    @error('evaluation_mode_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -760,6 +860,54 @@
             });
 
 
+
+
+            // -------------------------------
+            // [ ADD MODAL ] Logic
+            // -------------------------------
+            function toggleAddFields() {
+                const type = $('#activity_type').val();
+                const targets = [
+                    '#init_status',
+                    '#is_repeatable',
+                    '#is_haveJournalPublication',
+                    '#is_haveEva',
+                    '#evaluation_mode'
+                ];
+                const disable = (type === '2');
+                targets.forEach(id => $(id).prop('disabled', disable));
+            }
+
+            $('#activity_type').on('change', toggleAddFields);
+            toggleAddFields(); // Init on load
+
+            // -------------------------------
+            // [ UPDATE MODALS ] Logic
+            // -------------------------------
+            $('.updateForm').each(function() {
+                const $form = $(this);
+                const $typeField = $form.find('.activity_type_up');
+
+                function toggleUpdateFields() {
+                    const type = $typeField.val();
+                    const disable = (type === '2');
+
+                    $form.find('.init_status_up').prop('disabled', disable);
+                    $form.find('.is_repeatable_up').prop('disabled', disable);
+                    $form.find('.is_haveJournalPublication_up').prop('disabled', disable);
+                    $form.find('.is_haveEva_up').prop('disabled', disable);
+                    $form.find('.evaluation_mode_up').prop('disabled', disable);
+                }
+
+                // Init on page load
+                toggleUpdateFields();
+
+                // Watch for changes
+                $typeField.on('change', toggleUpdateFields);
+            });
+
+
+
             $('#is_repeatable').change(function() {
                 if (this.value == 1) {
                     $('#is_haveJournalPublication').attr('disabled', false);
@@ -781,6 +929,9 @@
             $('.is-repeat').each(function() {
                 $(this).trigger('change');
             });
+
+
+
 
         });
     </script>

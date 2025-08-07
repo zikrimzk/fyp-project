@@ -1056,7 +1056,7 @@ class NominationController extends Controller
                 return back()->with('error', 'Oops! Student not found');
             }
 
-            /* GET FORM FIELD DATA */
+            /* GET ACTIVITY DATA */
             $actID = $req->input('activity_id');
             $activity = Activity::where('id', $actID)->first()->act_name;
 
@@ -1064,6 +1064,7 @@ class NominationController extends Controller
                 return back()->with('error', 'Oops! Activity not found');
             }
 
+            /* GET ACTIVITY FORM DATA */
             $form = ActivityForm::where('activity_id', $actID)->where('af_target', 3)->first();
 
             if (!$form) {
@@ -1085,6 +1086,12 @@ class NominationController extends Controller
             if (!$currsemester) {
                 return back()->with('error', 'Oops! Current semester not found');
             }
+
+            /* GET PROCDURE DATA */
+            $procedure = DB::table('procedures as a')
+                ->where('a.programme_id', $student->programme_id)
+                ->where('a.activity_id',  $actID)
+                ->first();
 
             if ($option == 1) {
                 /* GET SIGNATURE DATA */
@@ -1135,6 +1142,40 @@ class NominationController extends Controller
 
                         $evaluator = Evaluator::where('nom_id', $nomination->id)->where('eva_status', 3)->get();
                         foreach ($evaluator as $eva) {
+                            if ($procedure->evaluation_mode == 1) {
+                                $evaluation = new Evaluation();
+                                $evaluation->student_id = $studentId;
+                                $evaluation->staff_id = $eva->staff_id;
+                                $evaluation->activity_id = $actID;
+                                $evaluation->semester_id = $currsemester->id;
+                                $evaluation->evaluation_status = 1;
+                                $evaluation->save();
+                            } elseif ($procedure->evaluation_mode == 2 && $eva->eva_role == 1) {
+
+                                $evaluation = new Evaluation();
+                                $evaluation->student_id = $studentId;
+                                $evaluation->staff_id = $eva->staff_id;
+                                $evaluation->activity_id = $actID;
+                                $evaluation->semester_id = $currsemester->id;
+                                $evaluation->evaluation_status = 1;
+                                $evaluation->save();
+                            }
+                        }
+                    }
+                } else if ($mode == 3 || $mode == 4) {
+                    $nomination->nom_status = 4;
+                    $evaluator = Evaluator::where('nom_id', $nomination->id)->where('eva_status', 3)->get();
+                    foreach ($evaluator as $eva) {
+                        if ($procedure->evaluation_mode == 1) {
+                            $evaluation = new Evaluation();
+                            $evaluation->student_id = $studentId;
+                            $evaluation->staff_id = $eva->staff_id;
+                            $evaluation->activity_id = $actID;
+                            $evaluation->semester_id = $currsemester->id;
+                            $evaluation->evaluation_status = 1;
+                            $evaluation->save();
+                        } elseif ($procedure->evaluation_mode == 2 && $eva->eva_role == 1) {
+
                             $evaluation = new Evaluation();
                             $evaluation->student_id = $studentId;
                             $evaluation->staff_id = $eva->staff_id;
@@ -1143,18 +1184,6 @@ class NominationController extends Controller
                             $evaluation->evaluation_status = 1;
                             $evaluation->save();
                         }
-                    }
-                } else if ($mode == 3 || $mode == 4) {
-                    $nomination->nom_status = 4;
-                    $evaluator = Evaluator::where('nom_id', $nomination->id)->where('eva_status', 3)->get();
-                    foreach ($evaluator as $eva) {
-                        $evaluation = new Evaluation();
-                        $evaluation->student_id = $studentId;
-                        $evaluation->staff_id = $eva->staff_id;
-                        $evaluation->activity_id = $actID;
-                        $evaluation->semester_id = $currsemester->id;
-                        $evaluation->evaluation_status = 1;
-                        $evaluation->save();
                     }
                 } else {
                     $nomination->nom_status = 1;
@@ -1206,7 +1235,7 @@ class NominationController extends Controller
                 }
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error submitting nomination: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error submitting nomination: ' . $e->getMessage() . ' ' . $e->getLine());
         }
     }
 
