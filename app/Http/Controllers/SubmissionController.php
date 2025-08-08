@@ -432,119 +432,13 @@ class SubmissionController extends Controller
             /* SET SIGNATURE DATA */
             $signatureData = $req->input('signatureData');
 
-            /* STORE SIGNATURE
-                role - 1 = Student
-                status - 1 = Pending
+            /* 
+            * MERGE AND PROCESS SIGNATURE
+            * Signature Role : 1 [STUDENT]
+            * status : 1 [PENDING]
+            * type : 1 [ACTIVITY FORM]
             */
-            $this->mergeStudentSubmission($activityID, $student, $currentSemester, $signatureData, 1, null, 1);
-
-
-            // /* LOAD ACTIVITY FORM DATA */
-            // $form = ActivityForm::where([
-            //     ['activity_id', $actID],
-            //     ['af_status', 1],
-            //     ['af_target', 1],
-            // ])->first();
-
-            // if (!$form) {
-            //     return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
-            // }
-
-            // /* LOAD PROCEDURE DATA */
-            // $procedure = Procedure::where([
-            //     'activity_id' => $actID,
-            //     'programme_id' => $student->programme_id
-            // ])->first();
-
-            // if (!$procedure) {
-            //     return back()->with('error', 'Procedure not found. Submission could not be confirmed. Please contact administrator for further assistance.');
-            // }
-
-            // /* SEMESTER LABEL CONVERSION */
-            // $rawLabel = $currentSemester->sem_label;
-            // $semesterlabel = str_replace('/', '', $rawLabel);
-            // $semesterlabel = trim($semesterlabel);
-
-            // /* SET DOCUMENT NAME */
-            // if ($procedure->is_repeatable == 1) {
-            //     $documentName = $semesterlabel . '/' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
-            // } else {
-            //     $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
-            // }
-
-            // //---------------------------------------------------------------------------//
-            // //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
-            // //---------------------------------------------------------------------------//
-
-            // /* SET SIGNATURE DATA */
-            // $signatureData = $req->input('signatureData');
-
-            // /* STORE SIGNATURE
-            //     1 - Signature Role [Student]
-            //     1 - Document Status [Pending]
-            // */
-            // $this->storeSignature($actID, $student, $currentSemester, $form, $signatureData, $documentName, 1, null, 1);
-
-            // //---------------------------------------------------------------------------//
-            // //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
-            // //---------------------------------------------------------------------------//
-
-            // /* LOAD ACTIVITY DIRECTORY */
-            // $progcode = strtoupper($student->programmes->prog_code);
-
-            // if ($procedure->is_repeatable == 1) {
-            //     $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/{$semesterlabel}");
-            //     $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/{$semesterlabel}/";
-            // } else {
-            //     $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
-            //     $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
-            // }
-
-            // if (!File::exists($basePath)) {
-            //     return back()->with('error', 'Activity folder not found.');
-            // }
-
-            // /* CREATE NEW DIRECTORY - FINAL DOCUMENT */
-            // $finalDocPath = $basePath . '/Final Document';
-
-            // if (!File::exists($finalDocPath)) {
-            //     File::makeDirectory($finalDocPath, 0755, true);
-            // }
-
-            // /* GENERATE ACTIVITY FORM FUNCTION */
-            // $this->generateActivityForm($actID, $student, $currentSemester, $form, $relativePath);
-
-            // //---------------------------------------------------------------------------//
-            // //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
-            // //---------------------------------------------------------------------------//
-
-            // /* LOAD PDF FILES */
-            // $pdfFiles = File::files($basePath);
-            // $pdfFiles = array_filter($pdfFiles, function ($file) {
-            //     return strtolower($file->getExtension()) === 'pdf';
-            // });
-
-            // if (empty($pdfFiles)) {
-            //     return back()->with('error', 'No PDF documents found in the activity folder.' .  $basePath);
-            // }
-
-            // /* LOAD FPDI LIBRARY FOR MERGING */
-            // $pdf = new Fpdi();
-
-            // foreach ($pdfFiles as $file) {
-            //     $pageCount = $pdf->setSourceFile(StreamReader::createByFile($file->getPathname()));
-            //     for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-            //         $template = $pdf->importPage($pageNo);
-            //         $size = $pdf->getTemplateSize($template);
-
-            //         $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-            //         $pdf->useTemplate($template);
-            //     }
-            // }
-
-            // /* SAVE MERGED FILE */
-            // $mergedPath =  $finalDocPath . '/' . $documentName;
-            // $pdf->Output($mergedPath, 'F');
+            $this->mergeStudentSubmission($activityID, $student, $currentSemester, $signatureData, 1, null, 1, 1);
 
             /* SEND EMAIL CONFIRMATION TO SUPERVISOR */
             $supervision = DB::table('supervisions as a')
@@ -571,10 +465,93 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Merge and Handle Activity Form Document [Student] - Function */
-    public function mergeStudentSubmission($actID, $student, $semester, $signatureData, $role, $userName, $status)
+    /* Correction Student Confirmation [Student] - Function | Email : Yes With Works  */
+    public function confirmStudentCorrection(Request $req, $actID)
     {
         try {
+
+            /* INITIALIZE VARIABLES */
+            $actID = decrypt($actID);
+
+            /* LOAD STUDENT DATA */
+            $student = auth()->user();
+
+            if (!$student) {
+                return back()->with('error', 'Unauthorized access : Student record is not found.');
+            }
+
+            /* LOAD SEMESTER DATA */
+            $currentSemester = Semester::where('sem_status', 1)->first();
+
+            if (!$currentSemester) {
+                return back()->with('error', 'Semester not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $actID)->first()->act_name;
+
+            if (!$activity) {
+                return back()->with('error', 'Activity not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+            }
+
+            /* ENCRYPT ACTIVITY ID */
+            $activityID = encrypt($actID);
+
+            /* SET SIGNATURE DATA */
+            $signatureData = $req->input('signatureData');
+
+            /* 
+            * MERGE AND PROCESS SIGNATURE
+            * Signature Role : 1 [STUDENT]
+            * status : 2 [PENDING]
+            * type : 2 [CORRECTION FORM]
+            */
+            $this->mergeStudentSubmission($activityID, $student, $currentSemester, $signatureData, 1, null, 2, 2);
+
+            /* SEND EMAIL CONFIRMATION TO SUPERVISOR */
+            $supervision = DB::table('supervisions as a')
+                ->join('staff as b', 'a.staff_id', '=', 'b.id')
+                ->where('a.student_id', $student->id)
+                ->where('a.supervision_role', 1)
+                ->select('b.staff_name', 'b.staff_email')
+                ->first();
+
+            if ($supervision) {
+                $data = [
+                    'student_name' => $student->student_name,
+                    'student_matricno' => $student->student_matricno,
+                    'submission_date' => Carbon::now()->format('d F Y g:i A'),
+                    'staff_name' => $supervision->staff_name,
+                    'staff_email' => $supervision->staff_email,
+                ];
+                // $this->sendSubmissionNotification((object)$data, 2, $activity, 2, null);
+            }
+
+            return back()->with('success', 'Correction for ' . $activity . ' has been confirmed successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
+        }
+    }
+
+    /* Merge and Handle Activity Form Document [Student] - Function */
+    public function mergeStudentSubmission($actID, $student, $semester, $signatureData, $role, $userName, $status, $type, $evaluatorIndex = null)
+    {
+        try {
+
+            /* 
+             * HANDLE TYPE
+             * 1 : Activity Form
+             * 2 : Correction Form
+             */
+            $aftarget = 0;
+
+            if ($type == 1) {
+                $aftarget = 1;
+            } else if ($type == 2) {
+                $aftarget = 2;
+            } else {
+                return back()->with('error', 'Invalid operation. Could not merge submission. Please contact administrator for further assistance.');
+            }
 
             /* HANDLE UNAUTHORIZED ACCESS */
             if (!$student) {
@@ -589,18 +566,11 @@ class SubmissionController extends Controller
                 return back()->with('error', 'Activity not found. Could not merge submission. Please contact administrator for further assistance.');
             }
 
-            /* LOAD SEMESTER DATA */
-            $currentSemester = Semester::where('sem_status', 1)->first();
-
-            if (!$currentSemester) {
-                return back()->with('error', 'Semester not found. Could not merge submission. Please contact administrator for further assistance.');
-            }
-
             /* LOAD ACTIVITY FORM DATA */
             $form = ActivityForm::where([
                 ['activity_id', $actID],
                 ['af_status', 1],
-                ['af_target', 1],
+                ['af_target', $aftarget],
             ])->first();
 
             if (!$form) {
@@ -618,26 +588,37 @@ class SubmissionController extends Controller
             }
 
             /* SEMESTER LABEL CONVERSION */
-            $rawLabel = $currentSemester->sem_label;
+            $rawLabel = $semester->sem_label;
             $semesterlabel = str_replace('/', '', $rawLabel);
             $semesterlabel = trim($semesterlabel);
 
             /* SET DOCUMENT NAME */
             if ($procedure->is_repeatable == 1) {
-                $documentName = $semesterlabel . '-' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+                if ($type == 1) {
+                    $documentName = $semesterlabel . '-' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+                } elseif ($type == 2) {
+                    $documentName = $semesterlabel . '-Correction_' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+                }
             } else {
-                $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+                if ($type == 1) {
+                    $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+                } elseif ($type == 2) {
+                    $documentName = 'Correction_' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+                }
             }
 
             //---------------------------------------------------------------------------//
             //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
             //---------------------------------------------------------------------------//
 
-            /* STORE SIGNATURE
-                role - Signature Role
-                status- Document Status
+            /* 
+            * STORE SIGNATURE
+            * role : Signature Role
+            * status : Document Status
+            * type : Document Type
             */
-            $this->storeSignature($actID, $student, $semester, $form, $signatureData, $documentName, $role, $userName, $status);
+
+            $this->storeSignature($actID, $student, $semester, $form, $signatureData, $documentName, $role, $userName, $status, $type, $evaluatorIndex);
 
             //---------------------------------------------------------------------------//
             //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
@@ -655,18 +636,22 @@ class SubmissionController extends Controller
             }
 
             if (!File::exists($basePath)) {
-                return back()->with('error', 'Activity folder not found.');
+                return back()->with('error', 'Activity folder not found. Could not merge submission. Please contact administrator for further assistance.');
             }
 
-            /* CREATE NEW DIRECTORY - FINAL DOCUMENT */
-            $finalDocPath = $basePath . '/Final Document';
+            /* CREATE NEW DIRECTORY */
+            if ($type == 1) {
+                $finalDocPath = $basePath . '/Final Document';
+            } elseif ($type == 2) {
+                $finalDocPath = $basePath . '/Correction/' . $semesterlabel;
+            }
 
             if (!File::exists($finalDocPath)) {
                 File::makeDirectory($finalDocPath, 0755, true);
             }
 
             /* GENERATE ACTIVITY FORM FUNCTION */
-            $this->generateActivityForm($actID, $student, $currentSemester, $form, $relativePath);
+            $this->generateActivityForm($actID, $student, $semester, $form, $relativePath, $type);
 
             //---------------------------------------------------------------------------//
             //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
@@ -705,89 +690,173 @@ class SubmissionController extends Controller
     }
 
     /* Store Activity Form Signature [Student] - Function */
-    public function storeSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status)
+    public function storeSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status, $type, $evaluatorIndex = null)
     {
         try {
             if ($signatureData) {
 
-                /* LOAD SIGNATURE FIELD DATA */
-                $signatureField = FormField::where([
-                    ['af_id', $form->id],
-                    ['ff_category', 6],
-                    ['ff_signature_role', $signatureRole]
-                ])->first();
+                if ($type == 1) {
+                    /* ACTIVITY FORM SIGNATURE */
 
-                /* INITIALIZE STUDENT ACTIVITY */
-                $studentActivity = StudentActivity::firstOrNew([
-                    'activity_id' => $actID,
-                    'student_id' => $student->id,
-                    'semester_id' => $semester->id
-                ]);
-
-                /* STORE SIGNATURE LOGIC */
-                $existingSignatureData = [];
-                if ($studentActivity->sa_signature_data) {
-                    $existingSignatureData = json_decode($studentActivity->sa_signature_data, true);
-                }
-
-                $isCrossApproval = false;
-
-                if (!$signatureField) {
-                    $allSignatureFields = FormField::where([
+                    /* LOAD SIGNATURE FIELD DATA */
+                    $signatureField = FormField::where([
                         ['af_id', $form->id],
                         ['ff_category', 6],
-                    ])->get();
+                        ['ff_signature_role', $signatureRole]
+                    ])->first();
 
-                    foreach ($allSignatureFields as $field) {
-                        $key = $field->ff_signature_key;
+                    /* INITIALIZE STUDENT ACTIVITY */
+                    $studentActivity = StudentActivity::firstOrNew([
+                        'activity_id' => $actID,
+                        'student_id' => $student->id,
+                        'semester_id' => $semester->id
+                    ]);
 
-                        if (in_array($field->ff_signature_role, [2, 3]) && empty($existingSignatureData[$key])) {
-                            $signatureField = $field;
-                            $isCrossApproval = true;
+                    /* STORE SIGNATURE LOGIC */
+                    $existingSignatureData = [];
+                    if ($studentActivity->sa_signature_data) {
+                        $existingSignatureData = json_decode($studentActivity->sa_signature_data, true);
+                    }
+
+                    $isCrossApproval = false;
+
+                    if (!$signatureField) {
+                        $allSignatureFields = FormField::where([
+                            ['af_id', $form->id],
+                            ['ff_category', 6],
+                        ])->get();
+
+                        foreach ($allSignatureFields as $field) {
+                            $key = $field->ff_signature_key;
+
+                            if (in_array($field->ff_signature_role, [2, 3]) && empty($existingSignatureData[$key])) {
+                                $signatureField = $field;
+                                $isCrossApproval = true;
+                            }
                         }
                     }
-                }
 
-                if ($signatureField) {
-                    $signatureKey = $signatureField->ff_signature_key;
+                    if ($signatureField) {
+                        $signatureKey = $signatureField->ff_signature_key;
+                        $dateKey = $signatureField->ff_signature_date_key;
+
+                        if ($signatureRole == 1) {
+                            $newSignatureData = [
+                                $signatureKey => $signatureData,
+                                $dateKey => now()->format('d M Y'),
+                                $signatureKey . '_name' => $student->student_name,
+                                $signatureKey . '_role' => 'Student',
+                                $signatureKey . '_is_cross_approval' => $isCrossApproval
+                            ];
+                        } else {
+                            $role = match ($userData->staff_role) {
+                                1 => "Committee",
+                                2 => "Lecturer",
+                                3 => "Deputy Dean",
+                                4 => "Dean",
+                                default => "N/A",
+                            };
+
+                            $newSignatureData = [
+                                $signatureKey => $signatureData,
+                                $dateKey => now()->format('d M Y'),
+                                $signatureKey . '_name' => $userData->staff_name,
+                                $signatureKey . '_role' => $role,
+                                $signatureKey . '_is_cross_approval' => $isCrossApproval
+                            ];
+                        }
+
+
+                        if ($signatureRole == 1) {
+                            $mergedSignatureData = $newSignatureData;
+                        } else {
+                            $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
+                        }
+
+                        /* MERGE AND STORE SIGNATURE DATA */
+                        $studentActivity->sa_signature_data = json_encode($mergedSignatureData);
+                        $studentActivity->sa_final_submission = $documentName;
+                        $studentActivity->sa_status = $status;
+                        $studentActivity->save();
+                    }
+                } elseif ($type == 2) {
+                    /* CORRECTION FORM SIGNATURE */
+
+                    /* LOAD SIGNATURE FIELD DATA */
+                    $signatureFields = FormField::where('af_id', $form->id)
+                        ->where('ff_category', 6)
+                        ->where('ff_signature_role', $signatureRole)
+                        ->orderBy('ff_order')
+                        ->get();
+
+                    /* INITIALIZE ACTIVITY CORRECTION */
+                    $correction = ActivityCorrection::firstOrNew([
+                        'activity_id' => $actID,
+                        'student_id' => $student->id,
+                        'semester_id' => $semester->id,
+                    ]);
+
+                    /* STORE SIGNATURE LOGIC */
+                    $existing = $correction->ac_signature_data
+                        ? json_decode($correction->ac_signature_data, true)
+                        : [];
+
+                    if ($signatureRole === 8 && is_int($evaluatorIndex)) {
+                        /* GET EXAMINER */
+                        $signatureField = $signatureFields->get($evaluatorIndex);
+                    } else {
+                        /* GET SV/COSV/COMMITTEE/DEPUTY DEAN/DEAN */
+                        $signatureField = null;
+                        foreach ($signatureFields as $f) {
+                            if (empty($existing[$f->ff_signature_key])) {
+                                $signatureField = $f;
+                                break;
+                            }
+                        }
+                    }
+
+                    /* CHECK IF ALL REQUIRED SIGNATURES ARE COMPLETED */
+                    if (! $signatureField) {
+                        return back()->with(
+                            'error',
+                            'All required signatures for your role are already completed.'
+                        );
+                    }
+
+                    $sigKey  = $signatureField->ff_signature_key;
                     $dateKey = $signatureField->ff_signature_date_key;
 
-                    if ($signatureRole == 1) {
-                        $newSignatureData = [
-                            $signatureKey => $signatureData,
-                            $dateKey => now()->format('d M Y'),
-                            $signatureKey . '_name' => $student->student_name,
-                            $signatureKey . '_role' => 'Student',
-                            $signatureKey . '_is_cross_approval' => $isCrossApproval
+                    if ($signatureRole === 1) {
+                        $block = [
+                            $sigKey        => $signatureData,
+                            $dateKey       => now()->format('d M Y'),
+                            "{$sigKey}_name" => $student->student_name,
+                            "{$sigKey}_role" => 'Student',
+                            "{$sigKey}_is_cross_approval" => false,
                         ];
                     } else {
-                        $role = match ($userData->staff_role) {
-                            1 => "Committee",
-                            2 => "Lecturer",
-                            3 => "Deputy Dean",
-                            4 => "Dean",
-                            default => "N/A",
-                        };
-
-                        $newSignatureData = [
-                            $signatureKey => $signatureData,
-                            $dateKey => now()->format('d M Y'),
-                            $signatureKey . '_name' => $userData->staff_name,
-                            $signatureKey . '_role' => $role,
-                            $signatureKey . '_is_cross_approval' => $isCrossApproval
+                        $names = [
+                            1 => 'Committee',
+                            2 => 'Lecturer',
+                            3 => 'Deputy Dean',
+                            4 => 'Dean'
+                        ];
+                        $roleName = $names[$userData->staff_role] ?? 'Staff';
+                        $block = [
+                            $sigKey        => $signatureData,
+                            $dateKey       => now()->format('d M Y'),
+                            "{$sigKey}_name" => $userData->staff_name,
+                            "{$sigKey}_role" => $roleName,
+                            "{$sigKey}_is_cross_approval" => false,
                         ];
                     }
 
-
-                    if ($signatureRole == 1) {
-                        $mergedSignatureData = $newSignatureData;
-                    } else {
-                        $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
-                    }
-                    $studentActivity->sa_signature_data = json_encode($mergedSignatureData);
-                    $studentActivity->sa_final_submission = $documentName;
-                    $studentActivity->sa_status = $status;
-                    $studentActivity->save();
+                    /* MERGE AND STORE SIGNATURE DATA */
+                    $merged = array_merge($existing, $block);
+                    $correction->ac_signature_data   = json_encode($merged);
+                    $correction->ac_final_submission  = $documentName;
+                    $correction->ac_status            = $status;
+                    $correction->save();
                 }
             }
         } catch (Exception $e) {
@@ -796,7 +865,7 @@ class SubmissionController extends Controller
     }
 
     /* Generate Activity Form Document [Student] - Function */
-    public function generateActivityForm($actID, $student, $semester, $form, $finalDocRelativePath)
+    public function generateActivityForm($actID, $student, $semester, $form, $finalDocRelativePath, $type)
     {
         try {
 
@@ -821,14 +890,34 @@ class SubmissionController extends Controller
 
             $signatures = $formfields->where('ff_category', 6);
 
-            /* LOAD SIGNATURE DATA */
-            $signatureRecord = StudentActivity::where([
-                ['activity_id', $actID],
-                ['student_id', $student->id],
-                ['semester_id', $semester->id],
-            ])->select('sa_signature_data')->first();
+            /* SIGNATURE & DOCUMENT NAME LOGIC */
+            if ($type == 1) {
 
-            $signatureData = $signatureRecord ? json_decode($signatureRecord->sa_signature_data) : null;
+                /* LOAD SIGNATURE DATA */
+                $signatureRecord = StudentActivity::where([
+                    ['activity_id', $actID],
+                    ['student_id', $student->id],
+                    ['semester_id', $semester->id],
+                ])->select('sa_signature_data')->first();
+
+                $signatureData = $signatureRecord ? json_decode($signatureRecord->sa_signature_data) : null;
+
+                /* SET DOCUMENT NAME */
+                $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';
+            } elseif ($type == 2) {
+
+                /* LOAD SIGNATURE DATA */
+                $signatureRecord = ActivityCorrection::where([
+                    ['activity_id', $actID],
+                    ['student_id', $student->id],
+                    ['semester_id', $semester->id],
+                ])->select('ac_signature_data')->first();
+
+                $signatureData = $signatureRecord ? json_decode($signatureRecord->ac_signature_data) : null;
+
+                /* SET DOCUMENT NAME */
+                $fileName = 'Activity_Correction_Form_' . $student->student_matricno . '_' . '.pdf';
+            }
 
             /* DATA MAPPING LOGIC */
             $userData = [];
@@ -837,7 +926,7 @@ class SubmissionController extends Controller
 
             /* RETURN PDF VIEW */
             $pdf = Pdf::loadView('student.programme.form-template.activity-document', [
-                'title' => $act->act_name . " Document",
+                'title' => $fileName,
                 'act' => $act,
                 'form_title' => $form->af_title,
                 'formfields' => $formfields,
@@ -847,9 +936,6 @@ class SubmissionController extends Controller
                 'signatureData' => $signatureData
             ]);
 
-            /* SET DOCUMENT NAME */
-            $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';
-
             /* SAVING DOCUMENT */
             $relativePath = $finalDocRelativePath . '/' . $fileName;
             Storage::disk('public')->put($relativePath, $pdf->output());
@@ -857,7 +943,7 @@ class SubmissionController extends Controller
             /* RETURN PDF STREAM */
             return $pdf->stream($fileName . '.pdf');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error generating activity form: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error generating form: ' . $e->getMessage());
         }
     }
 
@@ -2234,10 +2320,9 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Submission Approval Handler [Staff] [Committee/DD/DEAN] - Function */
+    /* Submission Approval Handler [Staff] - Function | Email : Yes */
     public function studentActivitySubmissionApproval(Request $request, $stuActID, $option)
     {
-
         /* DECRYPT PROCESS */
         $stuActID = Crypt::decrypt($stuActID);
 
@@ -2327,8 +2412,8 @@ class SubmissionController extends Controller
                 /* DETERMINE APPROVAL ROLE AND STATUS */
                 [$role, $status] = $this->determineApprovalRoleStatus($supervision, null, $authUser->staff_role, 1);
 
-                /* MERGE AND HANDLE ACTIVITY FORM */
-                $this->mergeStudentSubmission($actID, $student, $semester, $request->input('signatureData'), $role, $authUser, $status);
+                /* MERGE AND HANDLE FORM */
+                $this->mergeStudentSubmission($actID, $student, $semester, $request->input('signatureData'), $role, $authUser, $status, 1);
 
                 /* HANDLE REVIEW PROCESS */
                 if ($request->filled('comment')) {
@@ -2351,7 +2436,7 @@ class SubmissionController extends Controller
                 $updatedSignatureData = json_decode($updatedActivity->sa_signature_data ?? '[]', true);
 
                 /* HANDLE SIGNATURE LOGIC */
-                $this->handleSignatureApprovalStatus($student, $updatedActivity, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation);
+                $this->handleSignatureApprovalStatus($student, $updatedActivity, null, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, 1);
 
                 // if (in_array($role, [2, 3])) {
                 //     /* HANDLE SUPERVISOR LOGIC */
@@ -2472,7 +2557,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Determine Approval Role and Status [Staff] [Committee/DD/DEAN] - Function */
+    /* Determine Approval Role and Status [Staff] - Function */
     private function determineApprovalRoleStatus($supervision, $evaluator, $staffRole, $option)
     {
         if ($option === 1) {
@@ -2526,7 +2611,7 @@ class SubmissionController extends Controller
         return [0, 2];
     }
 
-    /* Determine Rejection Role and Status [Staff] [Committee/DD/DEAN] - Function */
+    /* Determine Rejection Role and Status [Staff] - Function */
     private function determineRejectionRoleStatus($supervision, $evaluator, $staffRole, $option)
     {
         if ($option == 1) {
@@ -2575,59 +2660,156 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Handle Signature And Status [Staff] [Committee/DD/DEAN] - Function */
-    private function handleSignatureApprovalStatus($student, $updatedActivity, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation)
+    /* Handle Signature And Status [Staff] - Function | Email : Yes With Works */
+    private function handleSignatureApprovalStatus($student, $updatedActivity, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, $type)
     {
-        /** FIND FORM ROLES **/
+        /* HANDLE TARGET */
+        $target = $type === 1 ? 1 : 2;
+
+        /* HANDLE FORM ROLES */
         $formRoles = DB::table('activity_forms as a')
             ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-            ->where('a.activity_id', $updatedActivity->activity_id)
             ->where('a.id', $afID)
-            ->where('a.af_target', 1)
+            ->where('a.af_target', $target)
             ->where('b.ff_category', 6)
             ->pluck('b.ff_signature_role')
             ->unique()
             ->toArray();
 
         if (in_array($role, [2, 3])) {
-            /** HANDLE SUPERVISOR / CO-SUPERVISOR **/
+            /* SUPERVISOR / CO-SUPERVISOR LOGIC */
 
-            $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
-            $hasSvSignature = isset($updatedSignatureData['sv_signature']);
+            $hasHigherRoles   = collect($formRoles)->intersect([4, 5, 6, 8])->isNotEmpty();
+            $hasSvSignature   = isset($updatedSignatureData['sv_signature']);
             $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
+            $allSigned        = $hasCoSv
+                ? ($hasSvSignature && $hasCoSvSignature)
+                : $hasSvSignature;
 
-            $allSigned = $hasCoSv ? ($hasSvSignature && $hasCoSvSignature) : $hasSvSignature;
+            if ($type === 1) {
+                /* ACTIVITY FORM */
+                if ($allSigned) {
+                    if (! $hasHigherRoles) {
+                        $finalStatus = $isHaveEvaluation ? 7 : 3;
+                    } else {
+                        $finalStatus = 2;
+                    }
+                } else {
+                    $finalStatus = 1;
+                }
 
-            if ($allSigned) {
-                $finalStatus = !$hasHigherRoles
-                    ? ($isHaveEvaluation ? 7 : 3)
-                    : 2;
+                /* UPDATE STATUS */
+                $updatedActivity->update(['sa_status' => $finalStatus]);
+
+                /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO STUDENT */
+                if ($finalStatus === 3) {
+                    $this->finalizeSubmission($student, $updatedActivity->activity_id);
+                    $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                }
             } else {
-                $finalStatus = 1;
+                /* CORRECTION FORM */
+                if ($allSigned) {
+                    $finalStatus = $hasHigherRoles ? 3 : 5;
+                } else {
+                    $finalStatus = 2;
+                }
+
+                /* UPDATE STATUS */
+                $updatedCorrection->update(['ac_status' => $finalStatus]);
+
+                /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO STUDENT */
+                if ($finalStatus === 5) {
+                    $this->finalizeCorrection($student, $updatedCorrection);
+                    // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                }
             }
-        } else {
-            /** HANDLE COMMITTEE / DEPUTY DEAN / DEAN **/
-
-            $roleSignatures = [
-                4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
-                5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
-                6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
-            ];
-
-            $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
-
-            $finalStatus = $allSigned
-                ? ($isHaveEvaluation ? 7 : 3)
-                : 2;
+            return;
         }
 
-        /** UPDATE STUDENT ACTIVITY STATUS **/
-        $updatedActivity->update(['sa_status' => $finalStatus]);
+        if ($role === 8 && $type === 2) {
+            /* EXAMINER / PANEL LOGIC - ONLY CORRECTION */
+            $hasHigherRoles = collect($formRoles)
+                ->intersect([4, 5, 6])
+                ->isNotEmpty();
 
-        /** HANDLE FINAL STATUS OF SUBMISSION **/
-        if ($finalStatus == 3) {
-            $this->finalizeSubmission($student, $updatedActivity->activity_id);
-            $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+            $examKeys = DB::table('form_fields')
+                ->where('af_id', $afID)
+                ->where('ff_category', 6)
+                ->where('ff_signature_role', 8)
+                ->pluck('ff_signature_key')
+                ->toArray();
+
+            $allSigned = collect($examKeys)
+                ->every(
+                    fn($key) =>
+                    isset($updatedSignatureData[$key]) &&
+                        ! empty($updatedSignatureData[$key])
+                );
+
+            if (! $allSigned) {
+                $newStatus = 3;
+            } elseif ($hasHigherRoles) {
+                $newStatus = 4;
+            } else {
+                $newStatus = 5;
+            }
+
+            /* UPDATE STATUS */
+            $updatedCorrection->update(['ac_status' => $newStatus]);
+
+            /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO STUDENT */
+            if ($newStatus === 5) {
+                $this->finalizeCorrection($student, $updatedCorrection);
+                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+            }
+            return;
+        }
+
+        if (in_array($role, [4, 5, 6])) {
+            /* COMMITTEE / DEPUTY-DEAN / DEAN LOGIC */
+
+            $roleSignatures = [
+                4 => in_array(4, $formRoles)
+                    ? isset($updatedSignatureData['comm_signature_date'])
+                    : true,
+                5 => in_array(5, $formRoles)
+                    ? isset($updatedSignatureData['deputy_dean_signature_date'])
+                    : true,
+                6 => in_array(6, $formRoles)
+                    ? isset($updatedSignatureData['dean_signature_date'])
+                    : true,
+            ];
+
+            $allSigned = collect($roleSignatures)
+                ->only($formRoles)
+                ->every(fn($signed) => $signed);
+
+            if ($type === 1) {
+                /* ACTIVITY FORM */
+
+                $finalStatus = $allSigned ? ($isHaveEvaluation ? 7 : 3) : 2;
+
+                /* UPDATE STATUS */
+                $updatedActivity->update(['sa_status' => $finalStatus]);
+
+                /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO STUDENT */
+                if ($finalStatus === 3) {
+                    $this->finalizeSubmission($student, $updatedActivity->activity_id);
+                    $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                }
+            } else {
+                /* CORRECTION FORM */
+                $finalStatus = $allSigned ? 5 : 4;
+
+                /* UPDATE STATUS */
+                $updatedCorrection->update(['ac_status' => $finalStatus]);
+
+                /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO STUDENT */
+                if ($finalStatus === 5) {
+                    $this->finalizeCorrection($student, $updatedCorrection);
+                    // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                }
+            }
         }
     }
 
@@ -2887,828 +3069,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Submission Suggestion */
-    public function submissionSuggestion(Request $req)
-    {
-        try {
-            $latestSemesterSub = DB::table('student_semesters')
-                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
-                ->groupBy('student_id');
-
-            $data = DB::table('students as s')
-                ->select([
-                    's.id as student_id',
-                    's.student_name',
-                    's.student_matricno',
-                    's.student_email',
-                    's.student_directory',
-                    's.student_photo',
-                    's.student_semcount',
-                    'b.sem_label',
-                    'c.prog_code',
-                    'c.prog_mode',
-                    'c.fac_id',
-                    's.student_semcount',
-                    'p.timeline_sem',
-                    'p.programme_id',
-                    'a.id as activity_id',
-                    'a.act_name as activity_name',
-                    'p.act_seq',
-                    'p.init_status',
-                    DB::raw(
-                        'CASE
-                        WHEN EXISTS (
-                            SELECT 1 FROM student_activities sa_current
-                            WHERE sa_current.student_id = s.id
-                            AND sa_current.activity_id = p.activity_id
-                            AND sa_current.sa_status = 3
-                        ) THEN 5
-                        WHEN EXISTS (
-                            SELECT 1 FROM documents d
-                            JOIN submissions sub ON sub.document_id = d.id
-                            WHERE d.activity_id = p.activity_id
-                            AND sub.student_id = s.id
-                            AND sub.submission_status = 5
-                        ) THEN 6
-                        WHEN EXISTS (
-                            SELECT 1 FROM student_activities sa_current
-                            WHERE sa_current.student_id = s.id
-                            AND sa_current.activity_id = p.activity_id
-                        ) THEN 4
-                        WHEN EXISTS (
-                            SELECT 1 FROM documents d
-                            JOIN submissions sub ON sub.document_id = d.id
-                            WHERE d.activity_id = p.activity_id
-                            AND sub.student_id = s.id
-                            AND sub.submission_status IN (1, 4)
-                        ) 
-                        AND NOT EXISTS (
-                            SELECT 1 FROM student_activities sa
-                            WHERE sa.student_id = s.id
-                            AND sa.activity_id = p.activity_id
-                        ) THEN 2
-                        WHEN EXISTS (
-                            SELECT 1 FROM procedures p_prev
-                            WHERE p_prev.programme_id = s.programme_id
-                            AND p_prev.act_seq < p.act_seq
-                            AND NOT EXISTS (
-                                SELECT 1 FROM student_activities sa_prev
-                                WHERE sa_prev.student_id = s.id
-                                AND sa_prev.activity_id = p_prev.activity_id
-                                AND sa_prev.sa_status = 3
-                            )
-                        ) THEN 3
-                        ELSE 1
-                    END as suggestion_status'
-                    )
-                ])
-                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
-                    $join->on('s.id', '=', 'latest.student_id');
-                })
-                ->leftJoin('student_semesters as ss', function ($join) {
-                    $join->on('ss.student_id', '=', 's.id')
-                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
-                })
-                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
-                ->join('procedures as p', function ($join) {
-                    $join->on('s.programme_id', '=', 'p.programme_id')
-                        ->whereRaw('s.student_semcount >= p.timeline_sem')
-                        ->where('p.init_status', '=', 2);
-                })
-                ->join('activities as a', 'p.activity_id', '=', 'a.id')
-                ->join('programmes as c', 'c.id', '=', 's.programme_id')
-                ->where('s.student_status', '=', 1)
-                ->orderBy('s.student_matricno')
-                ->orderBy('p.act_seq');
-
-            if ($req->ajax()) {
-
-                if ($req->has('activity') && !empty($req->input('activity'))) {
-                    $data->where('a.id', $req->input('activity'));
-                }
-                if ($req->has('faculty') && !empty($req->input('faculty'))) {
-                    $data->where('c.fac_id', $req->input('faculty'));
-                }
-                if ($req->has('programme') && !empty($req->input('programme'))) {
-                    $data->where('p.programme_id', $req->input('programme'));
-                }
-                if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
-                }
-                if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
-                    $data->having('suggestion_status', $req->input('status'));
-                }
-
-                $data = $data->get();
-
-                $table = DataTables::of($data)->addIndexColumn();
-
-                $table->addColumn('checkbox', function ($row) {
-
-                    if ($row->suggestion_status == 1 || $row->suggestion_status == 2) {
-                        return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->student_id . '">';
-                    } else {
-                        return '<input type="checkbox" class="user-checkbox-d form-check-input" disabled>';
-                    }
-                });
-
-                $table->addColumn('student_photo', function ($row) {
-                    $mode = match ($row->prog_mode) {
-                        "FT" => "Full-Time",
-                        "PT" => "Part-Time",
-                        default => "N/A",
-                    };
-
-                    $photoUrl = empty($row->student_photo)
-                        ? asset('assets/images/user/default-profile-1.jpg')
-                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
-
-                    return '
-                        <div class="d-flex align-items-center" >
-                            <div class="me-3">
-                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
-                            </div>
-                            <div style="max-width: 200px;">
-                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
-                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
-                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
-                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
-                                <small class="text-muted d-block fw-medium"> Enrolled Semesters: ' . $row->student_semcount . '</small>
-                            </div>
-                        </div>
-                    ';
-                });
-
-                $table->addColumn('suggestion_status', function ($row) {
-                    $status = '';
-
-                    if ($row->suggestion_status == 1) {
-                        $status = '<span class="badge bg-light-success">' . 'Eligible' . '</span>';
-                    } elseif ($row->suggestion_status == 2) {
-                        $status = '<span class="badge bg-success">' . 'Submission Opened' . '</span>';
-                    } elseif ($row->suggestion_status == 3) {
-                        $status = '<span class="badge bg-light-warning">' . 'Prerequisite Pending' . '</span>';
-                    } elseif ($row->suggestion_status == 4) {
-                        $status = '<span class="badge bg-light-warning">' . 'Under Review' . '</span>';
-                    } elseif ($row->suggestion_status == 5) {
-                        $status = '<span class="badge bg-light-secondary">' . 'Completed' . '</span>';
-                    } elseif ($row->suggestion_status == 6) {
-                        $status = '<span class="badge bg-light-danger">' . 'Submission Archived' . '</span>';
-                    } else {
-                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
-                    }
-                    return $status;
-                });
-
-                $table->addColumn('action', function ($row) {
-                    $button = '';
-
-                    if ($row->suggestion_status == 1) {
-                        $button = '
-                            <button type="button" class="btn btn-light-success btn-sm d-flex justify-content-center align-items-center w-100"
-                                data-bs-toggle="modal" data-bs-target="#approveModal-' . $row->student_id . $row->activity_id . '">
-                                <i class="ti ti-circle-check me-2"></i> Approve
-                            </button>
-                        ';
-                    } elseif ($row->suggestion_status == 2) {
-                        $button = '
-                            <button type="button" class="btn btn-light-warning btn-sm d-flex justify-content-center align-items-center w-100"
-                                data-bs-toggle="modal" data-bs-target="#revertModal-' . $row->student_id . $row->activity_id . '">
-                                <i class="ti ti-rotate me-2"></i> Revert
-                            </button>
-                        ';
-                    } else {
-                        $button = '<span class="fst-italic text-muted">No Action Required</span>';
-                    }
-
-                    return $button;
-                });
-
-                $table->rawColumns(['checkbox', 'student_photo', 'suggestion_status', 'action']);
-
-                return $table->make(true);
-            }
-
-            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
-                ->select('a.id', 'a.act_name')
-                ->where('b.init_status', 2)
-                ->orderBy('a.act_name')
-                ->distinct()
-                ->get();
-
-            return view('staff.submission.submission-suggestion', [
-                'title' => 'Submission Suggestion',
-                'studs' => Student::all(),
-                'progs' => Programme::all(),
-                'facs' => Faculty::all(),
-                'sems' => Semester::all(),
-                'acts' => $act,
-                'data' => $data->get(),
-            ]);
-        } catch (Exception $e) {
-            dd($e->getMessage());
-            return abort(500, $e->getMessage());
-        }
-    }
-
-    // ## SEND EMAIL - STUDENT --> Partially done
-    public function studentSubmissionSuggestionApproval($studentID, $activityID, $option)
-    {
-        $studentID = Crypt::decrypt($studentID);
-        $activityID = Crypt::decrypt($activityID);
-
-        try {
-            $submissions = DB::table('students as a')
-                ->join('submissions as b', 'a.id', '=', 'b.student_id')
-                ->join('documents as c', 'b.document_id', '=', 'c.id')
-                ->join('student_semesters as d', 'a.id', '=', 'd.student_id')
-                ->join('semesters as e', 'd.semester_id', '=', 'e.id')
-                ->where('a.id', $studentID)
-                ->where('c.activity_id', $activityID)
-                ->where('d.ss_status', 1)
-                ->select('a.programme_id', 'b.*', 'e.id as sem_id', 'e.sem_startdate', 'e.sem_enddate')
-                ->get();
-
-            $activity = Activity::whereId($activityID)->first();
-            $student = Student::whereId($studentID)->first();
-
-            if ($submissions->isEmpty()) {
-                return back()->with('error', 'No submission found for this student.');
-            }
-
-            if ($option == 1) {
-                /* APPROVE OPENING */
-                foreach ($submissions as $sub) {
-                    $submission = Submission::whereId($sub->id)->first();
-                    $procedures = Procedure::where('programme_id', $sub->programme_id)
-                        ->where('activity_id', $activityID)
-                        ->where('init_status', 2)
-                        ->first();
-
-                    $days = $procedures->timeline_week * 7;
-                    $submissionDate = Carbon::parse($sub->sem_startdate)->addDays($days);
-                    $submission->submission_duedate = $submissionDate;
-
-                    // DETERMINE SUBMISSION STATUS
-                    $sub_status = 1;
-                    if (Carbon::parse($submissionDate)->lessThan(now())) {
-                        $sub_status = 4;
-                    } else {
-                        $sub_status = 1;
-                    }
-
-                    $submission->submission_status = $sub_status;
-                    $submission->save();
-                }
-
-                /* NOMINATION OPENING */
-                $nom_message = "";
-                $procedure = DB::table('procedures as a')
-                    ->where('a.programme_id', $student->programme_id)
-                    ->where('a.activity_id', $activityID)
-                    ->where('a.is_haveEva', 1)
-                    ->exists();
-
-                if ($procedure) {
-                    Nomination::create([
-                        'nom_status' => 1,
-                        'student_id' => $studentID,
-                        'activity_id' => $activityID,
-                        'semester_id' => $sub->sem_id
-                    ]);
-
-                    $nom_message = "Take note that nomination is now open for " . $student->student_name . ".";
-                }
-
-                // SEND EMAIL SECTION - STUDENT 
-                $this->sendSubmissionNotification($student, 1, $activity->act_name, 7, null);
-
-                return back()->with('success', $student->student_name . ' has been approved for ' . $activity->act_name . ' submission. The submission is now open for this student. ' . $nom_message);
-            } elseif ($option == 2) {
-                /* REVERT SUBMISSION */
-                foreach ($submissions as $sub) {
-                    $submission = Submission::whereId($sub->id)->first();
-                    $submission->submission_status = 2;
-                    $submission->submission_document = '-';
-                    $submission->save();
-                }
-
-                /* REVERT NOMINATION */
-                $nom_message = "";
-                $procedure = DB::table('procedures as a')
-                    ->where('a.programme_id', $student->programme_id)
-                    ->where('a.activity_id', $activityID)
-                    ->where('a.is_haveEva', 1)
-                    ->exists();
-
-                if ($procedure) {
-                    Nomination::where('student_id', $studentID)->where('activity_id', $activityID)->delete();
-                    $nom_message = "Take note that nomination is now closed for " . $student->student_name . ".";
-                }
-
-                // SEND EMAIL SECTION
-                $this->sendSubmissionNotification($student, 1, $activity->act_name, 8, null);
-
-                return back()->with('success', $student->student_name . ' submission for ' . $activity->act_name . ' has been reverted. The submission is now hidden for this student. ' . $nom_message);
-            } else {
-                return back()->with('error', 'Oops! Invalid option. Please try again.');
-            }
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error approving student submission opening: ' . $e->getMessage());
-        }
-    }
-
-    // ## SEND EMAIL - STUDENT --> Partially done
-    public function multipleStudentSubmissionSuggestionApproval(Request $request)
-    {
-        $studentIDs = $request->input('selectedIds');
-        $activityID = $request->input('activityId');
-        $option = $request->input('option');
-
-        try {
-            $submissions = DB::table('students as a')
-                ->join('submissions as b', 'a.id', '=', 'b.student_id')
-                ->join('documents as c', 'b.document_id', '=', 'c.id')
-                ->join('student_semesters as d', 'a.id', '=', 'd.student_id')
-                ->join('semesters as e', 'd.semester_id', '=', 'e.id')
-                ->whereIn('a.id', $studentIDs)
-                ->where('c.activity_id', $activityID)
-                ->where('d.ss_status', 1)
-                ->select('a.id as student_id', 'a.student_name', 'a.student_email', 'a.programme_id', 'b.*', 'e.id as sem_id', 'e.sem_startdate', 'e.sem_enddate')
-                ->get();
-
-            $activity = Activity::find($activityID);
-
-            if ($submissions->isEmpty()) {
-                return back()->with('error', 'No submission found for the selected students.');
-            }
-
-            $studentNames = [];
-
-            foreach ($submissions as $sub) {
-                $submission = Submission::find($sub->id);
-                $studentNames[] = $sub->student_name;
-                $nom_message = "";
-
-                if ($option == 1) {
-                    /* APPROVE OPENNING */
-                    $procedure = Procedure::where('programme_id', $sub->programme_id)
-                        ->where('activity_id', $activityID)
-                        ->where('init_status', 2)
-                        ->first();
-
-                    if ($procedure) {
-                        $dueDate = Carbon::parse($sub->sem_startdate)->addDays($procedure->timeline_week * 7);
-                        $submission->submission_duedate = $dueDate;
-
-                        // DETERMINE SUBMISSION STATUS
-                        $sub_status = 1;
-                        if (Carbon::parse($dueDate)->lessThan(now())) {
-                            $sub_status = 4;
-                        } else {
-                            $sub_status = 1;
-                        }
-                        $submission->submission_status =  $sub_status;
-                    }
-
-                    /* NOMINATION OPENING */
-                    $procedureEva = DB::table('procedures as a')
-                        ->where('a.programme_id', $sub->programme_id)
-                        ->where('a.activity_id', $activityID)
-                        ->where('a.is_haveEva', 1)
-                        ->exists();
-
-                    if ($procedureEva) {
-
-                        $checkExists = Nomination::where('student_id', $sub->student_id)
-                            ->where('activity_id', $activityID)
-                            ->exists();
-
-                        if (!$checkExists) {
-                            Nomination::create([
-                                'nom_status' => 1,
-                                'student_id' => $sub->student_id,
-                                'activity_id' => $activityID,
-                                'semester_id' => $sub->sem_id
-                            ]);
-                        }
-
-                        $nom_message = "Take note that nomination is now open for this student.";
-                    }
-                    // SEND EMAIL SECTION - STUDENT
-                    $this->sendSubmissionNotification($sub, 1, $activity->act_name, 7, null);
-                } elseif ($option == 2) {
-                    /* REVERT SUBMISSION */
-                    $submission->submission_status = 2;
-                    $submission->submission_document = '-';
-
-                    /* REVERT NOMINATION */
-                    $procedure = DB::table('procedures as a')
-                        ->where('a.programme_id', $sub->programme_id)
-                        ->where('a.activity_id', $activityID)
-                        ->where('a.is_haveEva', 1)
-                        ->exists();
-
-                    if ($procedure) {
-                        Nomination::where('student_id', $sub->student_id)->where('activity_id', $activityID)->delete();
-
-                        $nom_message = "Take note that nomination is now closed for this student.";
-                    }
-
-                    // SEND EMAIL SECTION - STUDENT
-                    $this->sendSubmissionNotification($sub, 1, $activity->act_name, 8, null);
-                }
-
-                $submission->save();
-            }
-
-            $uniqueNames = implode(', ', array_unique($studentNames));
-
-            if ($option == 1) {
-                return response()->json([
-                    'success' => true,
-                    'message' => "Submission for {$uniqueNames} has been approved for {$activity->act_name}. The submission is now open. " . $nom_message
-                ], 200);
-            } elseif ($option == 2) {
-                return response()->json([
-                    'success' => true,
-                    'message' => "Submission for {$uniqueNames} has been reverted for {$activity->act_name}. It is now hidden. " . $nom_message
-                ], 200);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid option selected.'
-                ], 400);
-            }
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error approving student submission opening: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /* Correction Confirmation - Function [Student]  */
-    public function confirmStudentCorrection(Request $req, $actID)
-    {
-        try {
-            $actID = decrypt($actID);
-            $student = auth()->user();
-
-            if (!$student) {
-                return back()->with('error', 'Unauthorized access : Student record is not found.');
-            }
-
-            $activity = Activity::where('id', $actID)->first()->act_name;
-            $form = ActivityForm::where([
-                ['activity_id', $actID],
-                ['af_status', 1],
-                ['af_target', 2],
-            ])->first();
-
-            if (!$form) {
-                return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
-            }
-
-            $currsemester = Semester::where('sem_status', 1)->first();
-
-            if (!$currsemester) {
-                return back()->with('error', 'No active semester found.');
-            }
-
-            $documentName = 'Correction-' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
-
-            //---------------------------------------------------------------------------//
-            //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
-            //---------------------------------------------------------------------------//
-
-            $signatureData = $req->input('signatureData');
-
-            // 1 - Signature Role [Student]
-            // 1 - Document Status [Pending]
-            $this->storeCorrectionSignature($actID, $student, $currsemester, $form, $signatureData, $documentName, 1, null, 2);
-
-            //---------------------------------------------------------------------------//
-            //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
-            //---------------------------------------------------------------------------//
-
-            // RETRIEVE ACTIVITY PATH
-            $progcode = strtoupper($student->programmes->prog_code);
-            $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
-
-            if (!File::exists($basePath)) {
-                return back()->with('error', 'Activity folder not found.');
-            }
-
-            // CREATE A NEW FOLDER (CORRECTION)
-            $rawLabel = $currsemester->sem_label;
-            $semesterlabel = str_replace('/', '', $rawLabel);
-            $semesterlabel = trim($semesterlabel);
-            $finalDocPath = $basePath . '/Correction/' . $semesterlabel;
-
-            if (!File::exists($finalDocPath)) {
-                File::makeDirectory($finalDocPath, 0755, true);
-            }
-
-            $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
-
-            $this->generateCorrectionForm($actID, $student, $currsemester, $form, $relativePath);
-
-            //---------------------------------------------------------------------------//
-            //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
-            //---------------------------------------------------------------------------//
-
-            // RETRIEVE PDF FILES
-            $pdfFiles = File::files($basePath);
-
-            $pdfFiles = array_filter($pdfFiles, function ($file) {
-                return strtolower($file->getExtension()) === 'pdf';
-            });
-
-            if (empty($pdfFiles)) {
-                return back()->with('error', 'No PDF documents found in the activity folder.' .  $basePath);
-            }
-
-            usort($pdfFiles, function ($a, $b) {
-                return strcmp($a->getFilename(), $b->getFilename());
-            });
-
-            $pdf = new Fpdi();
-
-            foreach ($pdfFiles as $file) {
-                $pageCount = $pdf->setSourceFile(StreamReader::createByFile($file->getPathname()));
-                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $template = $pdf->importPage($pageNo);
-                    $size = $pdf->getTemplateSize($template);
-
-                    $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                    $pdf->useTemplate($template);
-                }
-            }
-
-            // Save the merged file
-            $mergedPath = $finalDocPath . '/' . $documentName;
-            $pdf->Output($mergedPath, 'F');
-
-            // SEND EMAIL SECTION
-            $supervision = DB::table('supervisions as a')
-                ->join('staff as b', 'a.staff_id', '=', 'b.id')
-                ->where('a.student_id', $student->id)
-                ->where('a.supervision_role', 1)
-                ->select('b.staff_name', 'b.staff_email')
-                ->first();
-
-            if ($supervision) {
-                $data = [
-                    'student_name' => $student->student_name,
-                    'student_matricno' => $student->student_matricno,
-                    'submission_date' => Carbon::now()->format('d F Y g:i A'),
-                    'staff_name' => $supervision->staff_name,
-                    'staff_email' => $supervision->staff_email,
-                ];
-                // dd($data);
-                // $this->sendSubmissionNotification((object)$data, 2, $activity, 2, null);
-            }
-
-            return back()->with('success', 'Correction has been confirmed successfully.');
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error confirming corrections: ' . $e->getMessage());
-        }
-    }
-
-    /* Document [Correction Form] Handler Function [Start] */
-    public function mergeStudentCorrection($actID, $student, $semester, $signatureData, $role, $userName, $status, $evaluatorIndex = null)
-    {
-        try {
-            $actID = decrypt($actID);
-
-            if (!$student) {
-                return back()->with('error', 'Unauthorized access : Student record is not found.');
-            }
-
-            $activity = Activity::where('id', $actID)->first()->act_name;
-            $form = ActivityForm::where([
-                ['activity_id', $actID],
-                ['af_status', 1],
-                ['af_target', 2],
-            ])->first();
-
-            if (!$form) {
-                return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
-            }
-
-            $documentName = 'Correction-' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
-
-            //---------------------------------------------------------------------------//
-            //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
-            //---------------------------------------------------------------------------//
-
-            // 1 - Signature Role [Student]
-            // 1 - Document Status [Pending]
-            $this->storeCorrectionSignature($actID, $student, $semester, $form, $signatureData, $documentName, $role, $userName, $status, $evaluatorIndex);
-
-            //---------------------------------------------------------------------------//
-            //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
-            //---------------------------------------------------------------------------//
-
-            // RETRIEVE ACTIVITY PATH
-            $progcode = strtoupper($student->programmes->prog_code);
-            $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
-
-            if (!File::exists($basePath)) {
-                return back()->with('error', 'Activity folder not found.');
-            }
-
-            // CREATE A NEW FOLDER (CORRECTION)
-            $rawLabel = $semester->sem_label;
-            $semesterlabel = str_replace('/', '', $rawLabel);
-            $semesterlabel = trim($semesterlabel);
-            $finalDocPath = $basePath . '/Correction/' . $semesterlabel;
-
-            if (!File::exists($finalDocPath)) {
-                File::makeDirectory($finalDocPath, 0755, true);
-            }
-
-            $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
-
-            $this->generateCorrectionForm($actID, $student, $semester, $form, $relativePath);
-
-            //---------------------------------------------------------------------------//
-            //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
-            //---------------------------------------------------------------------------//
-
-            // RETRIEVE PDF FILES
-            $pdfFiles = File::files($basePath);
-
-            $pdfFiles = array_filter($pdfFiles, function ($file) {
-                return strtolower($file->getExtension()) === 'pdf';
-            });
-
-            if (empty($pdfFiles)) {
-                return back()->with('error', 'No PDF documents found in the activity folder.' .  $basePath);
-            }
-
-            $pdf = new Fpdi();
-
-            foreach ($pdfFiles as $file) {
-                $pageCount = $pdf->setSourceFile(StreamReader::createByFile($file->getPathname()));
-                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $template = $pdf->importPage($pageNo);
-                    $size = $pdf->getTemplateSize($template);
-
-                    $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                    $pdf->useTemplate($template);
-                }
-            }
-
-            // SAVE THE MERGED PDF
-            $mergedPath =  $finalDocPath . '/' . $documentName;
-            return $pdf->Output($mergedPath, 'F');
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
-        }
-    }
-
-    public function generateCorrectionForm($actID, $student, $semester, $form, $finalDocRelativePath)
-    {
-        try {
-
-            $act = Activity::where('id', $actID)->first();
-
-            if (!$act) {
-                return back()->with('error', 'Activity not found.');
-            }
-
-            $formfields = FormField::where('af_id', $form->id)
-                ->orderBy('ff_order')
-                ->get();
-
-            $faculty = Faculty::where('fac_status', 3)->first();
-            $signatures = $formfields->where('ff_category', 6);
-
-            $signatureRecord = ActivityCorrection::where([
-                ['activity_id', $actID],
-                ['student_id', $student->id],
-                ['semester_id', $semester->id],
-            ])->select('ac_signature_data')->first();
-
-            $signatureData = $signatureRecord ? json_decode($signatureRecord->ac_signature_data) : null;
-
-            $userData = [];
-
-            $fhc = new FormHandlerController();
-            $userData = $fhc->joinMap($formfields, $student, $act);
-
-            $pdf = Pdf::loadView('student.programme.form-template.activity-document', [
-                'title' => "Correction-" . $act->act_name . " Document",
-                'act' => $act,
-                'form_title' => $form->af_title,
-                'formfields' => $formfields,
-                'userData' => $userData,
-                'faculty' => $faculty,
-                'signatures' => $signatures,
-                'signatureData' => $signatureData
-            ]);
-
-            $fileName = 'Activity_Correction_Form_' . $student->student_matricno . '_' . '.pdf';
-            $relativePath = $finalDocRelativePath . '/' . $fileName;
-
-            Storage::disk('public')->put($relativePath, $pdf->output());
-
-            return $pdf->stream($fileName . '.pdf');
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error generating correction form: ' . $e->getMessage());
-        }
-    }
-
-
-    public function storeCorrectionSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status, $evaluatorIndex = null)
-    {
-        try {
-            if (! $signatureData) return;
-
-            $correction = ActivityCorrection::firstOrNew([
-                'activity_id' => $actID,
-                'student_id' => $student->id,
-                'semester_id' => $semester->id,
-            ]);
-
-            $existing = $correction->ac_signature_data
-                ? json_decode($correction->ac_signature_data, true)
-                : [];
-
-            // 1) Load all signature fields for this role, ordered by ff_order:
-            $fields = FormField::where('af_id', $form->id)
-                ->where('ff_category', 6)
-                ->where('ff_signature_role', $signatureRole)
-                ->orderBy('ff_order')
-                ->get();  // [Field1, Field2, ...]
-
-            // 2) Pick your field:
-            if ($signatureRole === 8 && is_int($evaluatorIndex)) {
-                // Examiner: use your slot
-                $signatureField = $fields->get($evaluatorIndex);
-            } else {
-                // SV/CoSV/Committee/etc: first empty
-                $signatureField = null;
-                foreach ($fields as $f) {
-                    if (empty($existing[$f->ff_signature_key])) {
-                        $signatureField = $f;
-                        break;
-                    }
-                }
-            }
-
-            if (! $signatureField) {
-                return back()->with(
-                    'error',
-                    'All required signatures for your role are already completed.'
-                );
-            }
-
-            $sigKey  = $signatureField->ff_signature_key;
-            $dateKey = $signatureField->ff_signature_date_key;
-
-            // 3) Build new block
-            if ($signatureRole === 1) {
-                $block = [
-                    $sigKey        => $signatureData,
-                    $dateKey       => now()->format('d M Y'),
-                    "{$sigKey}_name" => $student->student_name,
-                    "{$sigKey}_role" => 'Student',
-                    "{$sigKey}_is_cross_approval" => false,
-                ];
-            } else {
-                $names = [
-                    1 => 'Committee',
-                    2 => 'Lecturer',
-                    3 => 'Deputy Dean',
-                    4 => 'Dean'
-                ];
-                $roleName = $names[$userData->staff_role] ?? 'Staff';
-                $block = [
-                    $sigKey        => $signatureData,
-                    $dateKey       => now()->format('d M Y'),
-                    "{$sigKey}_name" => $userData->staff_name,
-                    "{$sigKey}_role" => $roleName,
-                    "{$sigKey}_is_cross_approval" => false,
-                ];
-            }
-
-            // 4) Merge + save
-            $merged = array_merge($existing, $block);
-            $correction->ac_signature_data   = json_encode($merged);
-            $correction->ac_final_submission  = $documentName;
-            $correction->ac_status            = $status;
-            $correction->save();
-        } catch (Exception $e) {
-            return back()->with('error', 'Error storing signature: ' . $e->getMessage());
-        }
-    }
-    /* Document [Correction Form] Handler Function [End] */
-
-
-    /* Correction Approval [Staff] [Committee/DD/DEAN] */
+    /* Correction Approval [Staff] [Committee/DD/DEAN] - Route */
     public function correctionApproval(Request $req)
     {
         try {
@@ -4007,7 +3368,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Correction Approval - [Staff] [Examiners/Panels] */
+    /* Correction Approval - [Staff] [Examiners/Panels] - Route */
     public function examinerPanelCorrectionApproval(Request $req)
     {
         try {
@@ -4294,33 +3655,60 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Correction Approval - Function [Staff]  */
+    /* Student Correction Approval - Function [Staff] | Email : Yes With Works */
     public function studentActivityCorrectionApproval(Request $request, $actCorrID, $option)
     {
+        /* DECRYPT PROCESS */
         $actCorrID = Crypt::decrypt($actCorrID);
 
         try {
-            /* LOAD ACTIVITY CORRECTION DATA */
-            $activityCorrection = ActivityCorrection::findOrFail($actCorrID);
 
-            /* LOAD ACTIVITY DATA */
-            $actID = Crypt::encrypt($activityCorrection->activity_id); // ENCRYPT ACTIVITY ID
-            $activity = Activity::whereId($activityCorrection->activity_id)->first();
-
-            /* LOAD STUDENT DATA */
-            $student = Student::findOrFail($activityCorrection->student_id);
+            /* LOAD USER DATA */
             $authUser = auth()->user();
 
-            /* LOAD SEMESTER DATA */
-            $semester = Semester::findOrFail($activityCorrection->semester_id);
-
-            /* LOAD ACTIVITY FORM DATA */
-            $afID = ActivityForm::where('activity_id', $activityCorrection->activity_id)->where('af_target', 2)->first()?->id;
-            if (!$afID) {
-                return back()->with('error', 'Activity form not found for this activity.');
+            if (!$authUser) {
+                return back()->with('error', 'Unauthorized access : Staff record is not found.');
             }
 
-            /* CHECK EVALUATORS */
+            /* LOAD ACTIVITY CORRECTION DATA */
+            $activityCorrection = ActivityCorrection::where('id', $actCorrID)->first();
+
+            if (!$activityCorrection) {
+                return back()->with('error', 'Activity correction record is not found. Approval could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $activityCorrection->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Student record not found. Approval could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $activityCorrection->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Activity record not found. Approval could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD SEMESTER DATA */
+            $semester = Semester::where('id', $activityCorrection->semester_id)->first();
+
+            if (!$semester) {
+                return back()->with('error', 'Semester record not found. Approval could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* GET ACTIVITY FORM ID */
+            $afID = ActivityForm::where('activity_id', $activityCorrection->activity_id)->where('af_target', 2)->first()?->id;
+
+            if (!$afID) {
+                return back()->with('error', 'Activity form not found. Approval could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* ENCRYPT ACTIVITY ID */
+            $actID = Crypt::encrypt($activityCorrection->activity_id);
+
+            /* CHECK ALL EXAMINER */
             $allExaminers = DB::table('nominations as a')
                 ->join('evaluators as b', 'a.id', '=', 'b.nom_id')
                 ->where('a.activity_id', $activityCorrection->activity_id)
@@ -4331,11 +3719,13 @@ class SubmissionController extends Controller
                 ->pluck('b.staff_id')
                 ->toArray();
 
+            /* GET EXAMINER EVALUATORS */
             $evaluatorIndex = array_search($authUser->id, $allExaminers, true);
             if ($evaluatorIndex === false) {
                 $evaluatorIndex = null;
             }
 
+            /* GET CURRENT USER - EXAMINER */
             $evaluator = DB::table('nominations as a')
                 ->join('evaluators as b', 'a.id', '=', 'b.nom_id')
                 ->where('a.activity_id', $activityCorrection->activity_id)
@@ -4367,210 +3757,86 @@ class SubmissionController extends Controller
 
             $hasCoSv = $hasSvfield && $hasCoSvfield;
 
-            // === APPROVAL === //
             if ($option == 1) {
+                /* APPROVE LOGIC */
 
-                /* INDICATOR [STATUS] */
-                // 1: CORRECTION : PENDING STUDENT ACTION
-                // 2: CORRECTION : PENDING SUPERVISION ACTION
-                // 3: CORRECTION : PENDING EXAMINER/PANEL ACTION
-                // 4: CORRECTION : PENDING COMM/DD/DEAN ACTION
-                // 5: CORRECTION : APPROVE & COMPLETED
-
-
-                /* INDICATOR [ROLE] */
-                // 1: STUDENT [NOT APPLICABLE FOR THIS LOGIC]
-                // 2: MAIN SUPERVISOR
-                // 3: COSV
-                // 8: EXAMINER/PANEL (EXAMINER 1 / PANEL 1 / EXAMINER 2 / PANEL 2 .. etc)
-                // 4: COMMITTEE
-                // 5: DEPUTY DEAN
-                // 6: DEAN
-
-                /* INDICATOR [ROLE] AND STATUS AFTER APPROVAL */
-                // 2: MAIN SUPERVISOR [3]
-                // 3: COSV [3]
-                // 8: EXAMINER/PANEL (EXAMINER 1 / PANEL 1 / EXAMINER 2 / PANEL 2 .. etc) [4]
-                // 4: COMMITTEE [5]
-                // 5: DEPUTY DEAN [5]
-                // 6: DEAN [5]
-
-                /* DETERMINE APPROVAL STATUS BASED ON ROLE */
+                /* DETERMINE APPROVAL ROLE AND STATUS */
                 [$role, $status] = $this->determineApprovalRoleStatus($supervision, $evaluator, $authUser->staff_role, 2);
 
-                /* MERGE SIGNATURE DATA AND GENERATE CORRECTION FORM */
-                $this->mergeStudentCorrection(
-                    $actID,
-                    $student,
-                    $semester,
-                    $request->input('signatureData'),
-                    $role,
-                    $authUser,
-                    $status,
-                    $evaluatorIndex
-                );
+                /* MERGE AND HANDLE FORM */
+                $this->mergeStudentSubmission($actID, $student, $semester, $request->input('signatureData'), $role, $authUser, $status, 2, $evaluatorIndex);
 
-                /* LOAD UPDATED DATA */
-                $updatedCorrection = ActivityCorrection::findOrFail($actCorrID);
+                /* RELOAD STUDENT ACTIVITY DATA */
+                $updatedCorrection = ActivityCorrection::where('id', $activityCorrection->id)->first();
+
+                if (!$updatedCorrection) {
+                    return back()->with('error', 'Student activity record not found. Approval could not be processed. Please contact administrator for further assistance.');
+                }
+
+                /* DECODE UPDATED SIGNATURE DATA */
                 $updatedSignatureData = json_decode($updatedCorrection->ac_signature_data ?? '[]', true);
 
-                /* HANDLE SV / COSV LOGIC [SV: 2, COSV: 3] */
-                if (in_array($role, [2, 3])) {
-                    $formRoles = DB::table('activity_forms as a')
-                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                        ->where('a.id', $afID)
-                        ->where('b.ff_category', 6)
-                        ->pluck('b.ff_signature_role')
-                        ->unique()->toArray();
+                /* HANDLE SIGNATURE LOGIC */
+                $this->handleSignatureApprovalStatus($student, null, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, null, 2);
 
-                    $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6, 8])->isNotEmpty();
+                /* SEND EMAIL NOTIFICATION TO STUDENT [NOT DONE] */
+                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
 
-                    $hasSvSignature = isset($updatedSignatureData['sv_signature']);
-                    $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
+                /* RETURN SUCCESS */
+                return back()->with('success',  $student->student_name . ' correction for ' . $activity->act_name . ' has been approved. An email notification has been sent to the student.');
+            } elseif ($option == 2) {
+                /* REJECTION LOGIC */
 
-                    if ($hasCoSv) {
-                        $allSigned = $hasSvSignature && $hasCoSvSignature;
-                    } else {
-                        $allSigned = $hasSvSignature;
-                    }
+                /* DETERMINE REJECTION ROLE AND STATUS */
+                [$role, $status] = $this->determineRejectionRoleStatus($supervision, $evaluator, $authUser->staff_role, 2);
 
-                    if ($allSigned) {
-                        if (!$hasHigherRoles) {
-                            $finalStatus = 5;
-                        } else {
-                            $finalStatus = 3;
-                        }
-                    } else {
-                        $finalStatus = 2;
-                    }
-
-                    $updatedCorrection->update(['ac_status' => $finalStatus]);
-
-                    if ($finalStatus == 5) {
-                        $this->finalizeCorrection($student, $updatedCorrection, $activityCorrection->activity_id);
-                    }
-                }
-                /* HANDLE EXAMINER/PANEL LOGIC */ elseif ($role == 8) {
-                    // 1) Load all roles from the form
-                    $formRoles = DB::table('activity_forms as a')
-                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                        ->where('a.id', $afID)
-                        ->where('b.ff_category', 6)
-                        ->pluck('b.ff_signature_role')
-                        ->unique()
-                        ->toArray();
-
-                    // 2) Check if there *are* any higher‐level approvers
-                    $hasHigherRoles = collect($formRoles)
-                        ->intersect([4, 5, 6])   // Committee=4, Deputy Dean=5, Dean=6
-                        ->isNotEmpty();
-
-                    // 3) Check all examiners have signed
-                    $examKeys = DB::table('form_fields')
-                        ->where('af_id', $afID)
-                        ->where('ff_category', 6)
-                        ->where('ff_signature_role', 8)
-                        ->pluck('ff_signature_key')
-                        ->toArray();
-
-                    $allSigned = collect($examKeys)->every(
-                        fn($key) =>
-                        isset($updatedSignatureData[$key]) && !empty($updatedSignatureData[$key])
-                    );
-
-                    // 4) Determine new status
-                    if (! $allSigned) {
-                        // still waiting on at least one examiner
-                        $newStatus = 3;
-                    } elseif ($hasHigherRoles) {
-                        // examiners done, move to Committee/DD/Dean
-                        $newStatus = 4;
-                    } else {
-                        // examiners were the last approvers → complete
-                        $newStatus = 5;
-                    }
-
-                    // 5) Persist and finalize if complete
-                    $updatedCorrection->update(['ac_status' => $newStatus]);
-
-                    if ($newStatus === 5) {
-                        $this->finalizeCorrection($student, $updatedCorrection, $activityCorrection->activity_id);
-                    }
-                }
-                /* HANDLE COMM/DD/DEAN LOGIC */ elseif (in_array($role, [4, 5, 6])) {
-
-                    $formRoles = DB::table('activity_forms as a')
-                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                        ->where('a.id', $afID)
-                        ->where('b.ff_category', 6)
-                        ->pluck('b.ff_signature_role')
-                        ->unique()->toArray();
-
-                    $roleSignatures = [
-                        4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
-                        5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
-                        6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
-                    ];
-
-                    $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
-
-                    $finalStatus = $allSigned ? 5 : 4;
-                    $updatedCorrection->update(['ac_status' => $finalStatus]);
-
-                    if ($finalStatus == 5) {
-                        $this->finalizeCorrection($student, $updatedCorrection, $activityCorrection->activity_id);
-                    }
-                }
-                return back()->with('success', 'Correction for ' . $student->student_name . ' has been approved successfully.');
-            }
-            // === REJECTION ===
-            elseif ($option == 2) {
-                // 1) figure out which status to go to
-                [$role, $status] = $this->determineRejectionRoleStatus(
-                    $supervision,
-                    $evaluator,
-                    $authUser->staff_role,
-                    2
-                );
-
-                // 2) clear every signature slot
+                /* UPDATE STATUS */
                 ActivityCorrection::whereId($actCorrID)
                     ->update([
                         'ac_status'         => $status,
                         'ac_signature_data' => json_encode([]),
                     ]);
 
-                return back()->with('success', 'Correction for ' . $student->student_name . ' has been rejected successfully.');
-            }
-            // === REVERT ===
-            elseif ($option == 3) {
+                /* SEND EMAIL NOTIFICATION TO STUDENT [NOT DONE] */
+                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 4, $role);
+
+                /* RETURN SUCCESS */
+                return back()->with('success', $student->student_name . ' correction for ' . $activity->act_name . ' has been rejected. An email notification has been sent to the student.');
+            } elseif ($option == 3) {
+                /* REVERT LOGIC */
+
+                /* UPDATE STATUS */
                 ActivityCorrection::whereId($actCorrID)
                     ->update([
-                        'ac_status'         => 1,           // back to “Pending Student Action”
+                        'ac_status'         => 1,
                         'ac_signature_data' => json_encode([]),
                     ]);
 
-                return back()->with('success', 'Correction for ' . $student->student_name . ' has been successfully reverted.');
+                /* SEND EMAIL NOTIFICATION TO STUDENT [NOT DONE] */
+                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 5, 0);
+
+                /* RETURN SUCCESS */
+                return back()->with('success', $student->student_name . ' correction for ' . $activity->act_name . ' has been reverted. An email notification has been sent to the student.');
             }
 
-            return back()->with('error', 'Oops! Invalid option.');
+            return back()->with('error', 'Oops! Something went wrong. Cannot process your request. Please try again. If the problem persists, please contact the system administrator.');
         } catch (Exception $e) {
             return back()->with('error', 'Error occurred: ' . $e->getMessage());
         }
     }
 
     /* Finalize Correction - Function [Staff]  */
-    public function finalizeCorrection($student, $correction, $activityID)
+    public function finalizeCorrection($student, $correction)
     {
         DB::table('submissions as a')
             ->join('documents as b', 'a.document_id', '=', 'b.id')
             ->join('activities as c', 'b.activity_id', '=', 'c.id')
             ->where('a.student_id', $student->id)
-            ->where('c.id', $activityID)
+            ->where('c.id', $correction->activity_id)
             ->update(['a.submission_status' => 5]);
 
         $studentactivity = StudentActivity::where('student_id', $student->id)
-            ->where('activity_id', $activityID)
+            ->where('activity_id', $correction->activity_id)
             ->first();
 
         if (!$studentactivity) {
@@ -4586,5 +3852,469 @@ class SubmissionController extends Controller
         $corrPath = '../Correction/' . $semesterlabel . '/' . $correction->ac_final_submission;
 
         $studentactivity->update(['sa_status' => 3, 'sa_final_submission' => $corrPath]);
+    }
+
+    /* Submission Suggestion */
+    public function submissionSuggestion(Request $req)
+    {
+        try {
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as s')
+                ->select([
+                    's.id as student_id',
+                    's.student_name',
+                    's.student_matricno',
+                    's.student_email',
+                    's.student_directory',
+                    's.student_photo',
+                    's.student_semcount',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'c.fac_id',
+                    's.student_semcount',
+                    'p.timeline_sem',
+                    'p.programme_id',
+                    'a.id as activity_id',
+                    'a.act_name as activity_name',
+                    'p.act_seq',
+                    'p.init_status',
+                    'p.is_repeatable',
+                    DB::raw(
+                        'CASE
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                            AND sa_current.sa_status = 3
+                        ) THEN 5
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status = 5
+                        ) THEN 6
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                        ) THEN 4
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status IN (1, 4)
+                        ) 
+                        AND NOT EXISTS (
+                            SELECT 1 FROM student_activities sa
+                            WHERE sa.student_id = s.id
+                            AND sa.activity_id = p.activity_id
+                        ) THEN 2
+                        WHEN EXISTS (
+                            SELECT 1 FROM procedures p_prev
+                            WHERE p_prev.programme_id = s.programme_id
+                            AND p_prev.act_seq < p.act_seq
+                            AND NOT EXISTS (
+                                SELECT 1 FROM student_activities sa_prev
+                                WHERE sa_prev.student_id = s.id
+                                AND sa_prev.activity_id = p_prev.activity_id
+                                AND sa_prev.sa_status = 3
+                            )
+                        ) THEN 3
+                        ELSE 1
+                    END as suggestion_status'
+                    )
+                ])
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('s.id', '=', 'latest.student_id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 's.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('procedures as p', function ($join) {
+                    $join->on('s.programme_id', '=', 'p.programme_id')
+                        ->whereRaw('s.student_semcount >= p.timeline_sem')
+                        ->where('p.init_status', '=', 2)
+                        ->where('p.is_repeatable', '=', 0);
+                })
+                ->join('activities as a', 'p.activity_id', '=', 'a.id')
+                ->join('programmes as c', 'c.id', '=', 's.programme_id')
+                ->where('s.student_status', '=', 1)
+                ->orderBy('s.student_matricno')
+                ->orderBy('p.act_seq');
+
+            if ($req->ajax()) {
+
+                if ($req->has('activity') && !empty($req->input('activity'))) {
+                    $data->where('a.id', $req->input('activity'));
+                }
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('c.fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('p.programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('semester_id', $req->input('semester'));
+                }
+                if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
+                    $data->having('suggestion_status', $req->input('status'));
+                }
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('checkbox', function ($row) {
+
+                    if ($row->suggestion_status == 1 || $row->suggestion_status == 2) {
+                        return '<input type="checkbox" class="user-checkbox form-check-input" value="' . $row->student_id . '">';
+                    } else {
+                        return '<input type="checkbox" class="user-checkbox-d form-check-input" disabled>';
+                    }
+                });
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                                <small class="text-muted d-block fw-medium"> Enrolled Semesters: ' . $row->student_semcount . '</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('suggestion_status', function ($row) {
+                    $status = '';
+
+                    if ($row->suggestion_status == 1) {
+                        $status = '<span class="badge bg-light-success">' . 'Eligible' . '</span>';
+                    } elseif ($row->suggestion_status == 2) {
+                        $status = '<span class="badge bg-success">' . 'Submission Opened' . '</span>';
+                    } elseif ($row->suggestion_status == 3) {
+                        $status = '<span class="badge bg-light-warning">' . 'Prerequisite Pending' . '</span>';
+                    } elseif ($row->suggestion_status == 4) {
+                        $status = '<span class="badge bg-light-warning">' . 'Under Review' . '</span>';
+                    } elseif ($row->suggestion_status == 5) {
+                        $status = '<span class="badge bg-light-secondary">' . 'Completed' . '</span>';
+                    } elseif ($row->suggestion_status == 6) {
+                        $status = '<span class="badge bg-light-danger">' . 'Submission Archived' . '</span>';
+                    } else {
+                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                    }
+                    return $status;
+                });
+
+                $table->addColumn('action', function ($row) {
+                    $button = '';
+
+                    if ($row->suggestion_status == 1) {
+                        $button = '
+                            <button type="button" class="btn btn-light-success btn-sm d-flex justify-content-center align-items-center w-100"
+                                data-bs-toggle="modal" data-bs-target="#approveModal-' . $row->student_id . $row->activity_id . '">
+                                <i class="ti ti-circle-check me-2"></i> Approve
+                            </button>
+                        ';
+                    } elseif ($row->suggestion_status == 2) {
+                        $button = '
+                            <button type="button" class="btn btn-light-warning btn-sm d-flex justify-content-center align-items-center w-100"
+                                data-bs-toggle="modal" data-bs-target="#revertModal-' . $row->student_id . $row->activity_id . '">
+                                <i class="ti ti-rotate me-2"></i> Revert
+                            </button>
+                        ';
+                    } else {
+                        $button = '<span class="fst-italic text-muted">No Action Required</span>';
+                    }
+
+                    return $button;
+                });
+
+                $table->rawColumns(['checkbox', 'student_photo', 'suggestion_status', 'action']);
+
+                return $table->make(true);
+            }
+
+            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
+                ->select('a.id', 'a.act_name')
+                ->where('b.init_status', 2)
+                ->where('b.is_repeatable', 0)
+                ->orderBy('a.act_name')
+                ->distinct()
+                ->get();
+
+            return view('staff.submission.submission-suggestion', [
+                'title' => 'Submission Suggestion',
+                'studs' => Student::all(),
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'acts' => $act,
+                'data' => $data->get(),
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    // ## SEND EMAIL - STUDENT --> Partially done
+    public function studentSubmissionSuggestionApproval($studentID, $activityID, $option)
+    {
+        $studentID = Crypt::decrypt($studentID);
+        $activityID = Crypt::decrypt($activityID);
+
+        try {
+            $submissions = DB::table('students as a')
+                ->join('submissions as b', 'a.id', '=', 'b.student_id')
+                ->join('documents as c', 'b.document_id', '=', 'c.id')
+                ->join('student_semesters as d', 'a.id', '=', 'd.student_id')
+                ->join('semesters as e', 'd.semester_id', '=', 'e.id')
+                ->where('a.id', $studentID)
+                ->where('c.activity_id', $activityID)
+                ->where('d.ss_status', 1)
+                ->select('a.programme_id', 'b.*', 'e.id as sem_id', 'e.sem_startdate', 'e.sem_enddate')
+                ->get();
+
+            $activity = Activity::whereId($activityID)->first();
+            $student = Student::whereId($studentID)->first();
+
+            if ($submissions->isEmpty()) {
+                return back()->with('error', 'No submission found for this student.');
+            }
+
+            if ($option == 1) {
+                /* APPROVE OPENING */
+                foreach ($submissions as $sub) {
+                    $submission = Submission::whereId($sub->id)->first();
+                    $procedures = Procedure::where('programme_id', $sub->programme_id)
+                        ->where('activity_id', $activityID)
+                        ->where('init_status', 2)
+                        ->first();
+
+                    $days = $procedures->timeline_week * 7;
+                    $submissionDate = Carbon::parse($sub->sem_startdate)->addDays($days);
+                    $submission->submission_duedate = $submissionDate;
+
+                    // DETERMINE SUBMISSION STATUS
+                    $sub_status = 1;
+                    if (Carbon::parse($submissionDate)->lessThan(now())) {
+                        $sub_status = 4;
+                    } else {
+                        $sub_status = 1;
+                    }
+
+                    $submission->submission_status = $sub_status;
+                    $submission->save();
+                }
+
+                /* NOMINATION OPENING */
+                $nom_message = "";
+                $procedure = DB::table('procedures as a')
+                    ->where('a.programme_id', $student->programme_id)
+                    ->where('a.activity_id', $activityID)
+                    ->where('a.is_haveEva', 1)
+                    ->exists();
+
+                if ($procedure) {
+                    Nomination::create([
+                        'nom_status' => 1,
+                        'student_id' => $studentID,
+                        'activity_id' => $activityID,
+                        'semester_id' => $sub->sem_id
+                    ]);
+
+                    $nom_message = "Take note that nomination is now open for " . $student->student_name . ".";
+                }
+
+                // SEND EMAIL SECTION - STUDENT 
+                $this->sendSubmissionNotification($student, 1, $activity->act_name, 7, null);
+
+                return back()->with('success', $student->student_name . ' has been approved for ' . $activity->act_name . ' submission. The submission is now open for this student. ' . $nom_message);
+            } elseif ($option == 2) {
+                /* REVERT SUBMISSION */
+                foreach ($submissions as $sub) {
+                    $submission = Submission::whereId($sub->id)->first();
+                    $submission->submission_status = 2;
+                    $submission->submission_document = '-';
+                    $submission->save();
+                }
+
+                /* REVERT NOMINATION */
+                $nom_message = "";
+                $procedure = DB::table('procedures as a')
+                    ->where('a.programme_id', $student->programme_id)
+                    ->where('a.activity_id', $activityID)
+                    ->where('a.is_haveEva', 1)
+                    ->exists();
+
+                if ($procedure) {
+                    Nomination::where('student_id', $studentID)->where('activity_id', $activityID)->delete();
+                    $nom_message = "Take note that nomination is now closed for " . $student->student_name . ".";
+                }
+
+                // SEND EMAIL SECTION
+                $this->sendSubmissionNotification($student, 1, $activity->act_name, 8, null);
+
+                return back()->with('success', $student->student_name . ' submission for ' . $activity->act_name . ' has been reverted. The submission is now hidden for this student. ' . $nom_message);
+            } else {
+                return back()->with('error', 'Oops! Invalid option. Please try again.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error approving student submission opening: ' . $e->getMessage());
+        }
+    }
+
+    // ## SEND EMAIL - STUDENT --> Partially done
+    public function multipleStudentSubmissionSuggestionApproval(Request $request)
+    {
+        $studentIDs = $request->input('selectedIds');
+        $activityID = $request->input('activityId');
+        $option = $request->input('option');
+
+        try {
+            $submissions = DB::table('students as a')
+                ->join('submissions as b', 'a.id', '=', 'b.student_id')
+                ->join('documents as c', 'b.document_id', '=', 'c.id')
+                ->join('student_semesters as d', 'a.id', '=', 'd.student_id')
+                ->join('semesters as e', 'd.semester_id', '=', 'e.id')
+                ->whereIn('a.id', $studentIDs)
+                ->where('c.activity_id', $activityID)
+                ->where('d.ss_status', 1)
+                ->select('a.id as student_id', 'a.student_name', 'a.student_email', 'a.programme_id', 'b.*', 'e.id as sem_id', 'e.sem_startdate', 'e.sem_enddate')
+                ->get();
+
+            $activity = Activity::find($activityID);
+
+            if ($submissions->isEmpty()) {
+                return back()->with('error', 'No submission found for the selected students.');
+            }
+
+            $studentNames = [];
+
+            foreach ($submissions as $sub) {
+                $submission = Submission::find($sub->id);
+                $studentNames[] = $sub->student_name;
+                $nom_message = "";
+
+                if ($option == 1) {
+                    /* APPROVE OPENNING */
+                    $procedure = Procedure::where('programme_id', $sub->programme_id)
+                        ->where('activity_id', $activityID)
+                        ->where('init_status', 2)
+                        ->first();
+
+                    if ($procedure) {
+                        $dueDate = Carbon::parse($sub->sem_startdate)->addDays($procedure->timeline_week * 7);
+                        $submission->submission_duedate = $dueDate;
+
+                        // DETERMINE SUBMISSION STATUS
+                        $sub_status = 1;
+                        if (Carbon::parse($dueDate)->lessThan(now())) {
+                            $sub_status = 4;
+                        } else {
+                            $sub_status = 1;
+                        }
+                        $submission->submission_status =  $sub_status;
+                    }
+
+                    /* NOMINATION OPENING */
+                    $procedureEva = DB::table('procedures as a')
+                        ->where('a.programme_id', $sub->programme_id)
+                        ->where('a.activity_id', $activityID)
+                        ->where('a.is_haveEva', 1)
+                        ->exists();
+
+                    if ($procedureEva) {
+
+                        $checkExists = Nomination::where('student_id', $sub->student_id)
+                            ->where('activity_id', $activityID)
+                            ->exists();
+
+                        if (!$checkExists) {
+                            Nomination::create([
+                                'nom_status' => 1,
+                                'student_id' => $sub->student_id,
+                                'activity_id' => $activityID,
+                                'semester_id' => $sub->sem_id
+                            ]);
+                        }
+
+                        $nom_message = "Take note that nomination is now open for this student.";
+                    }
+                    // SEND EMAIL SECTION - STUDENT
+                    $this->sendSubmissionNotification($sub, 1, $activity->act_name, 7, null);
+                } elseif ($option == 2) {
+                    /* REVERT SUBMISSION */
+                    $submission->submission_status = 2;
+                    $submission->submission_document = '-';
+
+                    /* REVERT NOMINATION */
+                    $procedure = DB::table('procedures as a')
+                        ->where('a.programme_id', $sub->programme_id)
+                        ->where('a.activity_id', $activityID)
+                        ->where('a.is_haveEva', 1)
+                        ->exists();
+
+                    if ($procedure) {
+                        Nomination::where('student_id', $sub->student_id)->where('activity_id', $activityID)->delete();
+
+                        $nom_message = "Take note that nomination is now closed for this student.";
+                    }
+
+                    // SEND EMAIL SECTION - STUDENT
+                    $this->sendSubmissionNotification($sub, 1, $activity->act_name, 8, null);
+                }
+
+                $submission->save();
+            }
+
+            $uniqueNames = implode(', ', array_unique($studentNames));
+
+            if ($option == 1) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Submission for {$uniqueNames} has been approved for {$activity->act_name}. The submission is now open. " . $nom_message
+                ], 200);
+            } elseif ($option == 2) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Submission for {$uniqueNames} has been reverted for {$activity->act_name}. It is now hidden. " . $nom_message
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid option selected.'
+                ], 400);
+            }
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error approving student submission opening: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

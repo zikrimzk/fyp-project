@@ -698,9 +698,9 @@ class Controller extends BaseController
 
     //     return $status;
     // });
-    
 
-       // public function storeSignature($actID, $student, $form, $signatureData, $documentName, $signatureRole, $status)
+
+    // public function storeSignature($actID, $student, $form, $signatureData, $documentName, $signatureRole, $status)
     // {
     //     try {
     //         if ($signatureData) {
@@ -756,89 +756,89 @@ class Controller extends BaseController
     // }
 
     // $data = DB::table('students as s')
-            //     ->select([
-            //         's.id as student_id',
-            //         's.student_name',
-            //         's.student_matricno',
-            //         's.student_email',
-            //         's.student_directory',
-            //         's.student_photo',
-            //         'b.sem_label',
-            //         'c.prog_code',
-            //         'c.prog_mode',
-            //         'c.fac_id',
-            //         's.student_semcount',
-            //         'p.timeline_sem',
-            //         'p.programme_id',
-            //         'a.id as activity_id',
-            //         'a.act_name as activity_name',
-            //         'p.act_seq',
-            //         'p.init_status',
-            //         DB::raw(
-            //             'CASE
-            //             WHEN EXISTS (
-            //                 SELECT 1 FROM student_activities sa_current
-            //                 WHERE sa_current.student_id = s.id
-            //                 AND sa_current.activity_id = p.activity_id
-            //                 AND sa_current.sa_status = 3
-            //             ) THEN 5
-            //             WHEN EXISTS (
-            //                 SELECT 1 FROM documents d
-            //                 JOIN submissions sub ON sub.document_id = d.id
-            //                 WHERE d.activity_id = p.activity_id
-            //                 AND sub.student_id = s.id
-            //                 AND sub.submission_status = 5
-            //             ) THEN 6
-            //             WHEN EXISTS (
-            //                 SELECT 1 FROM student_activities sa_current
-            //                 WHERE sa_current.student_id = s.id
-            //                 AND sa_current.activity_id = p.activity_id
-            //             ) THEN 4
-            //             WHEN EXISTS (
-            //                 SELECT 1 FROM documents d
-            //                 JOIN submissions sub ON sub.document_id = d.id
-            //                 WHERE d.activity_id = p.activity_id
-            //                 AND sub.student_id = s.id
-            //                 AND sub.submission_status IN (1, 4)
-            //             ) 
-            //             AND NOT EXISTS (
-            //                 SELECT 1 FROM student_activities sa
-            //                 WHERE sa.student_id = s.id
-            //                 AND sa.activity_id = p.activity_id
-            //             ) THEN 2
-            //             WHEN EXISTS (
-            //                 SELECT 1 FROM procedures p_prev
-            //                 WHERE p_prev.programme_id = s.programme_id
-            //                 AND p_prev.act_seq < p.act_seq
-            //                 AND NOT EXISTS (
-            //                     SELECT 1 FROM student_activities sa_prev
-            //                     WHERE sa_prev.student_id = s.id
-            //                     AND sa_prev.activity_id = p_prev.activity_id
-            //                     AND sa_prev.sa_status = 3
-            //                 )
-            //             ) THEN 3
-            //             ELSE 1
-            //         END as suggestion_status'
-            //         )
-            //     ])
-            //     ->join('student_semesters as ss', function ($join) {
-            //         $join->on('s.id', '=', 'ss.student_id')
-            //             ->where('ss.ss_status', '=', 1);
-            //     })
-            //     ->join('procedures as p', function ($join) {
-            //         $join->on('s.programme_id', '=', 'p.programme_id')
-            //             ->whereRaw('s.student_semcount >= p.timeline_sem')
-            //             ->where('p.init_status', '=', 2);
-            //     })
-            //     ->join('activities as a', 'p.activity_id', '=', 'a.id')
-            //     ->join('semesters as b', 'b.id', '=', 'ss.semester_id')
-            //     ->join('programmes as c', 'c.id', '=', 's.programme_id')
-            //     ->where('s.student_status', '=', 1)
-            //     ->orderBy('s.student_matricno')
-            //     ->orderBy('p.act_seq');
+    //     ->select([
+    //         's.id as student_id',
+    //         's.student_name',
+    //         's.student_matricno',
+    //         's.student_email',
+    //         's.student_directory',
+    //         's.student_photo',
+    //         'b.sem_label',
+    //         'c.prog_code',
+    //         'c.prog_mode',
+    //         'c.fac_id',
+    //         's.student_semcount',
+    //         'p.timeline_sem',
+    //         'p.programme_id',
+    //         'a.id as activity_id',
+    //         'a.act_name as activity_name',
+    //         'p.act_seq',
+    //         'p.init_status',
+    //         DB::raw(
+    //             'CASE
+    //             WHEN EXISTS (
+    //                 SELECT 1 FROM student_activities sa_current
+    //                 WHERE sa_current.student_id = s.id
+    //                 AND sa_current.activity_id = p.activity_id
+    //                 AND sa_current.sa_status = 3
+    //             ) THEN 5
+    //             WHEN EXISTS (
+    //                 SELECT 1 FROM documents d
+    //                 JOIN submissions sub ON sub.document_id = d.id
+    //                 WHERE d.activity_id = p.activity_id
+    //                 AND sub.student_id = s.id
+    //                 AND sub.submission_status = 5
+    //             ) THEN 6
+    //             WHEN EXISTS (
+    //                 SELECT 1 FROM student_activities sa_current
+    //                 WHERE sa_current.student_id = s.id
+    //                 AND sa_current.activity_id = p.activity_id
+    //             ) THEN 4
+    //             WHEN EXISTS (
+    //                 SELECT 1 FROM documents d
+    //                 JOIN submissions sub ON sub.document_id = d.id
+    //                 WHERE d.activity_id = p.activity_id
+    //                 AND sub.student_id = s.id
+    //                 AND sub.submission_status IN (1, 4)
+    //             ) 
+    //             AND NOT EXISTS (
+    //                 SELECT 1 FROM student_activities sa
+    //                 WHERE sa.student_id = s.id
+    //                 AND sa.activity_id = p.activity_id
+    //             ) THEN 2
+    //             WHEN EXISTS (
+    //                 SELECT 1 FROM procedures p_prev
+    //                 WHERE p_prev.programme_id = s.programme_id
+    //                 AND p_prev.act_seq < p.act_seq
+    //                 AND NOT EXISTS (
+    //                     SELECT 1 FROM student_activities sa_prev
+    //                     WHERE sa_prev.student_id = s.id
+    //                     AND sa_prev.activity_id = p_prev.activity_id
+    //                     AND sa_prev.sa_status = 3
+    //                 )
+    //             ) THEN 3
+    //             ELSE 1
+    //         END as suggestion_status'
+    //         )
+    //     ])
+    //     ->join('student_semesters as ss', function ($join) {
+    //         $join->on('s.id', '=', 'ss.student_id')
+    //             ->where('ss.ss_status', '=', 1);
+    //     })
+    //     ->join('procedures as p', function ($join) {
+    //         $join->on('s.programme_id', '=', 'p.programme_id')
+    //             ->whereRaw('s.student_semcount >= p.timeline_sem')
+    //             ->where('p.init_status', '=', 2);
+    //     })
+    //     ->join('activities as a', 'p.activity_id', '=', 'a.id')
+    //     ->join('semesters as b', 'b.id', '=', 'ss.semester_id')
+    //     ->join('programmes as c', 'c.id', '=', 's.programme_id')
+    //     ->where('s.student_status', '=', 1)
+    //     ->orderBy('s.student_matricno')
+    //     ->orderBy('p.act_seq');
 
 
-            
+
     // public function storeEvaluationSignature($student, $form, $signatureData, $evaluation, $signatureRole, $userData, $nomination)
     // {
     //     try {
@@ -1146,7 +1146,7 @@ class Controller extends BaseController
     // }
 
 
-     // public function storeCorrectionSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status, $preferredFieldId = null)
+    // public function storeCorrectionSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status, $preferredFieldId = null)
     // {
     //     try {
     //         if ($signatureData) {
@@ -1232,4 +1232,429 @@ class Controller extends BaseController
     //     }
     // }
 
+
+    // private function handleSignatureApprovalStatus($student, $updatedActivity, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, $type)
+    // {
+    //     // type == 1 [Activity Form] , type == 2 [COrrection form]
+
+    //     //[1] -- ACTIVITY FORM
+    //     /** FIND FORM ROLES **/
+    //     $formRoles = DB::table('activity_forms as a')
+    //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+    //         ->where('a.activity_id', $updatedActivity->activity_id)
+    //         ->where('a.id', $afID)
+    //         ->where('a.af_target', 1)
+    //         ->where('b.ff_category', 6)
+    //         ->pluck('b.ff_signature_role')
+    //         ->unique()
+    //         ->toArray();
+
+    //     if (in_array($role, [2, 3])) {
+    //         /** HANDLE SUPERVISOR / CO-SUPERVISOR **/
+
+    //         $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
+    //         $hasSvSignature = isset($updatedSignatureData['sv_signature']);
+    //         $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
+
+    //         $allSigned = $hasCoSv ? ($hasSvSignature && $hasCoSvSignature) : $hasSvSignature;
+
+    //         if ($allSigned) {
+    //             $finalStatus = !$hasHigherRoles
+    //                 ? ($isHaveEvaluation ? 7 : 3)
+    //                 : 2;
+    //         } else {
+    //             $finalStatus = 1;
+    //         }
+    //     } else {
+    //         /** HANDLE COMMITTEE / DEPUTY DEAN / DEAN **/
+
+    //         $roleSignatures = [
+    //             4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
+    //             5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
+    //             6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
+    //         ];
+
+    //         $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
+
+    //         $finalStatus = $allSigned
+    //             ? ($isHaveEvaluation ? 7 : 3)
+    //             : 2;
+    //     }
+
+    //     /** UPDATE STUDENT ACTIVITY STATUS **/
+    //     $updatedActivity->update(['sa_status' => $finalStatus]);
+
+    //     /** HANDLE FINAL STATUS OF SUBMISSION **/
+    //     if ($finalStatus == 3) {
+    //         $this->finalizeSubmission($student, $updatedActivity->activity_id);
+    //         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+    //     }
+
+    //     //[2] -- CORRECTION FORM
+
+    //     /* HANDLE SV / COSV LOGIC [SV: 2, COSV: 3] */
+    //     if (in_array($role, [2, 3])) {
+    //         $formRoles = DB::table('activity_forms as a')
+    //             ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+    //             ->where('a.id', $afID)
+    //             ->where('b.ff_category', 6)
+    //             ->pluck('b.ff_signature_role')
+    //             ->unique()->toArray();
+
+    //         $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6, 8])->isNotEmpty();
+
+    //         $hasSvSignature = isset($updatedSignatureData['sv_signature']);
+    //         $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
+
+    //         if ($hasCoSv) {
+    //             $allSigned = $hasSvSignature && $hasCoSvSignature;
+    //         } else {
+    //             $allSigned = $hasSvSignature;
+    //         }
+
+    //         if ($allSigned) {
+    //             if (!$hasHigherRoles) {
+    //                 $finalStatus = 5;
+    //             } else {
+    //                 $finalStatus = 3;
+    //             }
+    //         } else {
+    //             $finalStatus = 2;
+    //         }
+
+    //         $updatedCorrection->update(['ac_status' => $finalStatus]);
+
+    //         if ($finalStatus == 5) {
+    //             $this->finalizeCorrection($student, $updatedCorrection);
+    //         }
+    //     }
+    //     /* HANDLE EXAMINER/PANEL LOGIC */ elseif ($role == 8) {
+    //         // 1) Load all roles from the form
+    //         $formRoles = DB::table('activity_forms as a')
+    //             ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+    //             ->where('a.id', $afID)
+    //             ->where('b.ff_category', 6)
+    //             ->pluck('b.ff_signature_role')
+    //             ->unique()
+    //             ->toArray();
+
+    //         // 2) Check if there *are* any higher‐level approvers
+    //         $hasHigherRoles = collect($formRoles)
+    //             ->intersect([4, 5, 6])   // Committee=4, Deputy Dean=5, Dean=6
+    //             ->isNotEmpty();
+
+    //         // 3) Check all examiners have signed
+    //         $examKeys = DB::table('form_fields')
+    //             ->where('af_id', $afID)
+    //             ->where('ff_category', 6)
+    //             ->where('ff_signature_role', 8)
+    //             ->pluck('ff_signature_key')
+    //             ->toArray();
+
+    //         $allSigned = collect($examKeys)->every(
+    //             fn($key) =>
+    //             isset($updatedSignatureData[$key]) && !empty($updatedSignatureData[$key])
+    //         );
+
+    //         // 4) Determine new status
+    //         if (! $allSigned) {
+    //             // still waiting on at least one examiner
+    //             $newStatus = 3;
+    //         } elseif ($hasHigherRoles) {
+    //             // examiners done, move to Committee/DD/Dean
+    //             $newStatus = 4;
+    //         } else {
+    //             // examiners were the last approvers → complete
+    //             $newStatus = 5;
+    //         }
+
+    //         // 5) Persist and finalize if complete
+    //         $updatedCorrection->update(['ac_status' => $newStatus]);
+
+    //         if ($newStatus === 5) {
+    //             $this->finalizeCorrection($student, $updatedCorrection);
+    //         }
+    //     }
+    //     /* HANDLE COMM/DD/DEAN LOGIC */ elseif (in_array($role, [4, 5, 6])) {
+
+    //         $formRoles = DB::table('activity_forms as a')
+    //             ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+    //             ->where('a.id', $afID)
+    //             ->where('b.ff_category', 6)
+    //             ->pluck('b.ff_signature_role')
+    //             ->unique()->toArray();
+
+    //         $roleSignatures = [
+    //             4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
+    //             5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
+    //             6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
+    //         ];
+
+    //         $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
+
+    //         $finalStatus = $allSigned ? 5 : 4;
+    //         $updatedCorrection->update(['ac_status' => $finalStatus]);
+
+    //         if ($finalStatus == 5) {
+    //             $this->finalizeCorrection($student, $updatedCorrection);
+    //         }
+    //     }
+    // }
+
+    // /* Document [Correction Form] Handler Function [Start] */
+    // public function mergeStudentCorrection($actID, $student, $semester, $signatureData, $role, $userName, $status, $evaluatorIndex = null)
+    // {
+    //     try {
+    //         $actID = decrypt($actID);
+
+    //         if (!$student) {
+    //             return back()->with('error', 'Unauthorized access : Student record is not found.');
+    //         }
+
+    //         $activity = Activity::where('id', $actID)->first()->act_name;
+    //         $form = ActivityForm::where([
+    //             ['activity_id', $actID],
+    //             ['af_status', 1],
+    //             ['af_target', 2],
+    //         ])->first();
+
+    //         if (!$form) {
+    //             return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+    //         }
+
+    //         $documentName = 'Correction-' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+
+    //         //---------------------------------------------------------------------------//
+    //         //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
+    //         //---------------------------------------------------------------------------//
+
+    //         // 1 - Signature Role [Student]
+    //         // 1 - Document Status [Pending]
+    //         $this->storeCorrectionSignature($actID, $student, $semester, $form, $signatureData, $documentName, $role, $userName, $status, $evaluatorIndex);
+
+    //         //---------------------------------------------------------------------------//
+    //         //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
+    //         //---------------------------------------------------------------------------//
+
+    //         // RETRIEVE ACTIVITY PATH
+    //         $progcode = strtoupper($student->programmes->prog_code);
+    //         $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
+
+    //         if (!File::exists($basePath)) {
+    //             return back()->with('error', 'Activity folder not found.');
+    //         }
+
+    //         // CREATE A NEW FOLDER (CORRECTION)
+    //         $rawLabel = $semester->sem_label;
+    //         $semesterlabel = str_replace('/', '', $rawLabel);
+    //         $semesterlabel = trim($semesterlabel);
+    //         $finalDocPath = $basePath . '/Correction/' . $semesterlabel;
+
+    //         if (!File::exists($finalDocPath)) {
+    //             File::makeDirectory($finalDocPath, 0755, true);
+    //         }
+
+    //         $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
+
+    //         $this->generateCorrectionForm($actID, $student, $semester, $form, $relativePath);
+
+    //         //---------------------------------------------------------------------------//
+    //         //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
+    //         //---------------------------------------------------------------------------//
+
+    //         // RETRIEVE PDF FILES
+    //         $pdfFiles = File::files($basePath);
+
+    //         $pdfFiles = array_filter($pdfFiles, function ($file) {
+    //             return strtolower($file->getExtension()) === 'pdf';
+    //         });
+
+    //         if (empty($pdfFiles)) {
+    //             return back()->with('error', 'No PDF documents found in the activity folder.' .  $basePath);
+    //         }
+
+    //         $pdf = new Fpdi();
+
+    //         foreach ($pdfFiles as $file) {
+    //             $pageCount = $pdf->setSourceFile(StreamReader::createByFile($file->getPathname()));
+    //             for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+    //                 $template = $pdf->importPage($pageNo);
+    //                 $size = $pdf->getTemplateSize($template);
+
+    //                 $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+    //                 $pdf->useTemplate($template);
+    //             }
+    //         }
+
+    //         // SAVE THE MERGED PDF
+    //         $mergedPath =  $finalDocPath . '/' . $documentName;
+    //         return $pdf->Output($mergedPath, 'F');
+    //     } catch (Exception $e) {
+    //         return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
+    //     }
+    // }
+
+    // public function generateCorrectionForm($actID, $student, $semester, $form, $finalDocRelativePath)
+    // {
+    //     try {
+
+    //         $act = Activity::where('id', $actID)->first();
+
+    //         if (!$act) {
+    //             return back()->with('error', 'Activity not found.');
+    //         }
+
+    //         $formfields = FormField::where('af_id', $form->id)
+    //             ->orderBy('ff_order')
+    //             ->get();
+
+    //         $faculty = Faculty::where('fac_status', 3)->first();
+    //         $signatures = $formfields->where('ff_category', 6);
+
+    //         $signatureRecord = ActivityCorrection::where([
+    //             ['activity_id', $actID],
+    //             ['student_id', $student->id],
+    //             ['semester_id', $semester->id],
+    //         ])->select('ac_signature_data')->first();
+
+    //         $signatureData = $signatureRecord ? json_decode($signatureRecord->ac_signature_data) : null;
+
+    //         $userData = [];
+
+    //         $fhc = new FormHandlerController();
+    //         $userData = $fhc->joinMap($formfields, $student, $act);
+
+    //         $pdf = Pdf::loadView('student.programme.form-template.activity-document', [
+    //             'title' => "Correction-" . $act->act_name . " Document",
+    //             'act' => $act,
+    //             'form_title' => $form->af_title,
+    //             'formfields' => $formfields,
+    //             'userData' => $userData,
+    //             'faculty' => $faculty,
+    //             'signatures' => $signatures,
+    //             'signatureData' => $signatureData
+    //         ]);
+
+    //         $fileName = 'Activity_Correction_Form_' . $student->student_matricno . '_' . '.pdf';
+    //         $relativePath = $finalDocRelativePath . '/' . $fileName;
+
+    //         Storage::disk('public')->put($relativePath, $pdf->output());
+
+    //         return $pdf->stream($fileName . '.pdf');
+    //     } catch (Exception $e) {
+    //         return back()->with('error', 'Oops! Error generating correction form: ' . $e->getMessage());
+    //     }
+    // }
+
+
+    // public function storeCorrectionSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status, $evaluatorIndex = null)
+    // {
+    //     try {
+    //         if (! $signatureData) return;
+
+    //         $correction = ActivityCorrection::firstOrNew([
+    //             'activity_id' => $actID,
+    //             'student_id' => $student->id,
+    //             'semester_id' => $semester->id,
+    //         ]);
+
+    //         $existing = $correction->ac_signature_data
+    //             ? json_decode($correction->ac_signature_data, true)
+    //             : [];
+
+    //         // 1) Load all signature fields for this role, ordered by ff_order:
+    //         $fields = FormField::where('af_id', $form->id)
+    //             ->where('ff_category', 6)
+    //             ->where('ff_signature_role', $signatureRole)
+    //             ->orderBy('ff_order')
+    //             ->get();  // [Field1, Field2, ...]
+
+    //         // 2) Pick your field:
+    //         if ($signatureRole === 8 && is_int($evaluatorIndex)) {
+    //             // Examiner: use your slot
+    //             $signatureField = $fields->get($evaluatorIndex);
+    //         } else {
+    //             // SV/CoSV/Committee/etc: first empty
+    //             $signatureField = null;
+    //             foreach ($fields as $f) {
+    //                 if (empty($existing[$f->ff_signature_key])) {
+    //                     $signatureField = $f;
+    //                     break;
+    //                 }
+    //             }
+    //         }
+
+    //         if (! $signatureField) {
+    //             return back()->with(
+    //                 'error',
+    //                 'All required signatures for your role are already completed.'
+    //             );
+    //         }
+
+    //         $sigKey  = $signatureField->ff_signature_key;
+    //         $dateKey = $signatureField->ff_signature_date_key;
+
+    //         // 3) Build new block
+    //         if ($signatureRole === 1) {
+    //             $block = [
+    //                 $sigKey        => $signatureData,
+    //                 $dateKey       => now()->format('d M Y'),
+    //                 "{$sigKey}_name" => $student->student_name,
+    //                 "{$sigKey}_role" => 'Student',
+    //                 "{$sigKey}_is_cross_approval" => false,
+    //             ];
+    //         } else {
+    //             $names = [
+    //                 1 => 'Committee',
+    //                 2 => 'Lecturer',
+    //                 3 => 'Deputy Dean',
+    //                 4 => 'Dean'
+    //             ];
+    //             $roleName = $names[$userData->staff_role] ?? 'Staff';
+    //             $block = [
+    //                 $sigKey        => $signatureData,
+    //                 $dateKey       => now()->format('d M Y'),
+    //                 "{$sigKey}_name" => $userData->staff_name,
+    //                 "{$sigKey}_role" => $roleName,
+    //                 "{$sigKey}_is_cross_approval" => false,
+    //             ];
+    //         }
+
+    //         // 4) Merge + save
+    //         $merged = array_merge($existing, $block);
+    //         $correction->ac_signature_data   = json_encode($merged);
+    //         $correction->ac_final_submission  = $documentName;
+    //         $correction->ac_status            = $status;
+    //         $correction->save();
+    //     } catch (Exception $e) {
+    //         return back()->with('error', 'Error storing signature: ' . $e->getMessage());
+    //     }
+    // }
+    /* Document [Correction Form] Handler Function [End] */
+
+
+    /* INDICATOR [STATUS] */
+    // 1: CORRECTION : PENDING STUDENT ACTION
+    // 2: CORRECTION : PENDING SUPERVISION ACTION
+    // 3: CORRECTION : PENDING EXAMINER/PANEL ACTION
+    // 4: CORRECTION : PENDING COMM/DD/DEAN ACTION
+    // 5: CORRECTION : APPROVE & COMPLETED
+
+
+    /* INDICATOR [ROLE] */
+    // 1: STUDENT [NOT APPLICABLE FOR THIS LOGIC]
+    // 2: MAIN SUPERVISOR
+    // 3: COSV
+    // 8: EXAMINER/PANEL (EXAMINER 1 / PANEL 1 / EXAMINER 2 / PANEL 2 .. etc)
+    // 4: COMMITTEE
+    // 5: DEPUTY DEAN
+    // 6: DEAN
+
+    /* INDICATOR [ROLE] AND STATUS AFTER APPROVAL */
+    // 2: MAIN SUPERVISOR [3]
+    // 3: COSV [3]
+    // 8: EXAMINER/PANEL (EXAMINER 1 / PANEL 1 / EXAMINER 2 / PANEL 2 .. etc) [4]
+    // 4: COMMITTEE [5]
+    // 5: DEPUTY DEAN [5]
+    // 6: DEAN [5]
 }

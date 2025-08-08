@@ -462,7 +462,7 @@ class EvaluationController extends Controller
                             'studentId' => Crypt::encrypt($row->student_id),
                             'actId' => Crypt::encrypt($row->activity_id),
                             'semesterId' => Crypt::encrypt($row->semester_id),
-                            'mode' => 5
+                            'mode' => 6
                         ]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-edit f-20"></i>
                             </a>
