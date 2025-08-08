@@ -15,5 +15,6 @@ class StudentActivity extends Model
         'sa_signature_data',
         'student_id',
         'activity_id',
+        'semester_id'
     ];
 }

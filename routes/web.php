@@ -54,7 +54,7 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::post('/submit-document', [SubmissionController::class, 'submitDocument'])->name('student-submit-document-post');
     Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->name('student-remove-document-get');
     Route::post('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-post');
-    Route::get('/view-final-document/{actID}/{filename}/{opt}', [SubmissionController::class, 'viewFinalDocument'])->where('filename', '.*')->name('student-view-final-document-get');
+    Route::get('/view-final-document/{actID}/{semesterID}/{filename}/{opt}', [SubmissionController::class, 'viewFinalDocument'])->where('filename', '.*')->name('student-view-final-document-get');
 
     /* Correction Confirmation */
     Route::post('/confirm-correction-submission-{actID}', [SubmissionController::class, 'confirmStudentCorrection'])->name('student-confirm-correction-post');

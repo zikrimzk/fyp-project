@@ -180,6 +180,8 @@ class SubmissionController extends Controller
 
                     $activity->init_status = $correctionStatusMap[$activityCorrection->ac_status] ?? 10;
 
+                    $activity->ac_semester_id = $activityCorrection->semester_id;
+
                     // SEMESTER LABEL
                     $currsemester = Semester::find($activityCorrection->semester_id);
                     $rawLabel = $currsemester->sem_label;
@@ -194,6 +196,7 @@ class SubmissionController extends Controller
                     // Change status based on SA status
                     $activity->init_status = $studentAct->sa_status;
                     $activity->confirmed_document = $studentAct->sa_final_submission;
+                    $activity->sa_semester_id = $studentAct->semester_id;
                 } else {
                     // No confirmation yet
                     if ($activitySubmissions) {
@@ -395,96 +398,155 @@ class SubmissionController extends Controller
         }
     }
 
-    // ## SEND EMAIL - SV --> Partially done
+    /* Confirm Student Submission [Student] - Function | Email : Yes */
     public function confirmStudentSubmission(Request $req, $actID)
     {
         try {
+            /* INITIALIZE VARIABLES */
             $actID = decrypt($actID);
+
+            /* LOAD STUDENT DATA */
             $student = auth()->user();
 
             if (!$student) {
                 return back()->with('error', 'Unauthorized access : Student record is not found.');
             }
 
-            $activity = Activity::where('id', $actID)->first()->act_name;
-            $form = ActivityForm::where([
-                ['activity_id', $actID],
-                ['af_status', 1],
-                ['af_target', 1],
-            ])->first();
+            /* LOAD SEMESTER DATA */
+            $currentSemester = Semester::where('sem_status', 1)->first();
 
-            if (!$form) {
-                return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+            if (!$currentSemester) {
+                return back()->with('error', 'Semester not found. Submission could not be confirmed. Please contact administrator for further assistance.');
             }
 
-            $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $actID)->first()->act_name;
 
-            //---------------------------------------------------------------------------//
-            //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
-            //---------------------------------------------------------------------------//
+            if (!$activity) {
+                return back()->with('error', 'Activity not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+            }
 
+            /* ENCRYPT ACTIVITY ID */
+            $activityID = encrypt($actID);
+
+            /* SET SIGNATURE DATA */
             $signatureData = $req->input('signatureData');
 
-            // 1 - Signature Role [Student]
-            // 1 - Document Status [Pending]
-            $this->storeSignature($actID, $student, $form, $signatureData, $documentName, 1, null, 1);
+            /* STORE SIGNATURE
+                role - 1 = Student
+                status - 1 = Pending
+            */
+            $this->mergeStudentSubmission($activityID, $student, $currentSemester, $signatureData, 1, null, 1);
 
-            //---------------------------------------------------------------------------//
-            //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
-            //---------------------------------------------------------------------------//
 
-            // RETRIEVE ACTIVITY PATH
-            $progcode = strtoupper($student->programmes->prog_code);
-            $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
+            // /* LOAD ACTIVITY FORM DATA */
+            // $form = ActivityForm::where([
+            //     ['activity_id', $actID],
+            //     ['af_status', 1],
+            //     ['af_target', 1],
+            // ])->first();
 
-            if (!File::exists($basePath)) {
-                return back()->with('error', 'Activity folder not found.');
-            }
+            // if (!$form) {
+            //     return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+            // }
 
-            // CREATE A NEW FOLDER (FINAL DOCUMENT)
-            $finalDocPath = $basePath . '/Final Document';
+            // /* LOAD PROCEDURE DATA */
+            // $procedure = Procedure::where([
+            //     'activity_id' => $actID,
+            //     'programme_id' => $student->programme_id
+            // ])->first();
 
-            if (!File::exists($finalDocPath)) {
-                File::makeDirectory($finalDocPath, 0755, true);
-            }
+            // if (!$procedure) {
+            //     return back()->with('error', 'Procedure not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+            // }
 
-            $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
+            // /* SEMESTER LABEL CONVERSION */
+            // $rawLabel = $currentSemester->sem_label;
+            // $semesterlabel = str_replace('/', '', $rawLabel);
+            // $semesterlabel = trim($semesterlabel);
 
-            $this->generateActivityForm($actID, $student, $form, $relativePath);
+            // /* SET DOCUMENT NAME */
+            // if ($procedure->is_repeatable == 1) {
+            //     $documentName = $semesterlabel . '/' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+            // } else {
+            //     $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+            // }
 
-            //---------------------------------------------------------------------------//
-            //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
-            //---------------------------------------------------------------------------//
+            // //---------------------------------------------------------------------------//
+            // //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
+            // //---------------------------------------------------------------------------//
 
-            // RETRIEVE PDF FILES
-            $pdfFiles = File::files($basePath);
+            // /* SET SIGNATURE DATA */
+            // $signatureData = $req->input('signatureData');
 
-            $pdfFiles = array_filter($pdfFiles, function ($file) {
-                return strtolower($file->getExtension()) === 'pdf';
-            });
+            // /* STORE SIGNATURE
+            //     1 - Signature Role [Student]
+            //     1 - Document Status [Pending]
+            // */
+            // $this->storeSignature($actID, $student, $currentSemester, $form, $signatureData, $documentName, 1, null, 1);
 
-            if (empty($pdfFiles)) {
-                return back()->with('error', 'No PDF documents found in the activity folder.' .  $basePath);
-            }
+            // //---------------------------------------------------------------------------//
+            // //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
+            // //---------------------------------------------------------------------------//
 
-            $pdf = new Fpdi();
+            // /* LOAD ACTIVITY DIRECTORY */
+            // $progcode = strtoupper($student->programmes->prog_code);
 
-            foreach ($pdfFiles as $file) {
-                $pageCount = $pdf->setSourceFile(StreamReader::createByFile($file->getPathname()));
-                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $template = $pdf->importPage($pageNo);
-                    $size = $pdf->getTemplateSize($template);
+            // if ($procedure->is_repeatable == 1) {
+            //     $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/{$semesterlabel}");
+            //     $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/{$semesterlabel}/";
+            // } else {
+            //     $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
+            //     $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
+            // }
 
-                    $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                    $pdf->useTemplate($template);
-                }
-            }
+            // if (!File::exists($basePath)) {
+            //     return back()->with('error', 'Activity folder not found.');
+            // }
 
-            // SAVE THE MERGED PDF
-            $mergedPath =  $finalDocPath . '/' . $documentName;
-            $pdf->Output($mergedPath, 'F');
+            // /* CREATE NEW DIRECTORY - FINAL DOCUMENT */
+            // $finalDocPath = $basePath . '/Final Document';
 
-            // SEND EMAIL SECTION
+            // if (!File::exists($finalDocPath)) {
+            //     File::makeDirectory($finalDocPath, 0755, true);
+            // }
+
+            // /* GENERATE ACTIVITY FORM FUNCTION */
+            // $this->generateActivityForm($actID, $student, $currentSemester, $form, $relativePath);
+
+            // //---------------------------------------------------------------------------//
+            // //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
+            // //---------------------------------------------------------------------------//
+
+            // /* LOAD PDF FILES */
+            // $pdfFiles = File::files($basePath);
+            // $pdfFiles = array_filter($pdfFiles, function ($file) {
+            //     return strtolower($file->getExtension()) === 'pdf';
+            // });
+
+            // if (empty($pdfFiles)) {
+            //     return back()->with('error', 'No PDF documents found in the activity folder.' .  $basePath);
+            // }
+
+            // /* LOAD FPDI LIBRARY FOR MERGING */
+            // $pdf = new Fpdi();
+
+            // foreach ($pdfFiles as $file) {
+            //     $pageCount = $pdf->setSourceFile(StreamReader::createByFile($file->getPathname()));
+            //     for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+            //         $template = $pdf->importPage($pageNo);
+            //         $size = $pdf->getTemplateSize($template);
+
+            //         $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            //         $pdf->useTemplate($template);
+            //     }
+            // }
+
+            // /* SAVE MERGED FILE */
+            // $mergedPath =  $finalDocPath . '/' . $documentName;
+            // $pdf->Output($mergedPath, 'F');
+
+            /* SEND EMAIL CONFIRMATION TO SUPERVISOR */
             $supervision = DB::table('supervisions as a')
                 ->join('staff as b', 'a.staff_id', '=', 'b.id')
                 ->where('a.student_id', $student->id)
@@ -500,27 +562,41 @@ class SubmissionController extends Controller
                     'staff_name' => $supervision->staff_name,
                     'staff_email' => $supervision->staff_email,
                 ];
-                // dd($data);
                 $this->sendSubmissionNotification((object)$data, 2, $activity, 2, null);
             }
 
-            return back()->with('success', 'Submission has been confirmed successfully.');
+            return back()->with('success', 'Submission for ' . $activity . ' has been confirmed successfully. An email has been sent to the supervisor. If there are any issues, please contact the administrator.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
         }
     }
 
-    /* Document [Activity Form] Handler Function [Start] */
-    public function mergeStudentSubmission($actID, $student, $signatureData, $role, $userName, $status)
+    /* Merge and Handle Activity Form Document [Student] - Function */
+    public function mergeStudentSubmission($actID, $student, $semester, $signatureData, $role, $userName, $status)
     {
         try {
-            $actID = decrypt($actID);
 
+            /* HANDLE UNAUTHORIZED ACCESS */
             if (!$student) {
                 return back()->with('error', 'Unauthorized access : Student record is not found.');
             }
 
+            /* LOAD ACTIVITY DATA */
+            $actID = decrypt($actID);
             $activity = Activity::where('id', $actID)->first()->act_name;
+
+            if (!$activity) {
+                return back()->with('error', 'Activity not found. Could not merge submission. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD SEMESTER DATA */
+            $currentSemester = Semester::where('sem_status', 1)->first();
+
+            if (!$currentSemester) {
+                return back()->with('error', 'Semester not found. Could not merge submission. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD ACTIVITY FORM DATA */
             $form = ActivityForm::where([
                 ['activity_id', $actID],
                 ['af_status', 1],
@@ -528,49 +604,76 @@ class SubmissionController extends Controller
             ])->first();
 
             if (!$form) {
-                return back()->with('error', 'Activity form not found. Submission could not be confirmed. Please contact administrator for further assistance.');
+                return back()->with('error', 'Activity form not found. Could not merge submission. Please contact administrator for further assistance.');
             }
 
-            $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+            /* LOAD PROCEDURE DATA */
+            $procedure = Procedure::where([
+                'activity_id' => $actID,
+                'programme_id' => $student->programme_id
+            ])->first();
+
+            if (!$procedure) {
+                return back()->with('error', 'Procedure not found. Could not merge submission. Please contact administrator for further assistance.');
+            }
+
+            /* SEMESTER LABEL CONVERSION */
+            $rawLabel = $currentSemester->sem_label;
+            $semesterlabel = str_replace('/', '', $rawLabel);
+            $semesterlabel = trim($semesterlabel);
+
+            /* SET DOCUMENT NAME */
+            if ($procedure->is_repeatable == 1) {
+                $documentName = $semesterlabel . '-' . $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+            } else {
+                $documentName = $student->student_matricno . '_' . str_replace(' ', '_', $activity) . '.pdf';
+            }
 
             //---------------------------------------------------------------------------//
             //------------------- SAVE SIGNATURE TO STUDENT_ACTIVITY --------------------//
             //---------------------------------------------------------------------------//
 
-            // 1 - Signature Role [Student]
-            // 1 - Document Status [Pending]
-            $this->storeSignature($actID, $student, $form, $signatureData, $documentName, $role, $userName, $status);
+            /* STORE SIGNATURE
+                role - Signature Role
+                status- Document Status
+            */
+            $this->storeSignature($actID, $student, $semester, $form, $signatureData, $documentName, $role, $userName, $status);
 
             //---------------------------------------------------------------------------//
             //--------------------------GENERATE ACTIVITY FORM CODE----------------------//
             //---------------------------------------------------------------------------//
 
-            // RETRIEVE ACTIVITY PATH
+            /* LOAD ACTIVITY DIRECTORY */
             $progcode = strtoupper($student->programmes->prog_code);
-            $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
+
+            if ($procedure->is_repeatable == 1) {
+                $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/{$semesterlabel}");
+                $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/{$semesterlabel}/";
+            } else {
+                $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
+                $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
+            }
 
             if (!File::exists($basePath)) {
                 return back()->with('error', 'Activity folder not found.');
             }
 
-            // CREATE A NEW FOLDER (FINAL DOCUMENT)
+            /* CREATE NEW DIRECTORY - FINAL DOCUMENT */
             $finalDocPath = $basePath . '/Final Document';
 
             if (!File::exists($finalDocPath)) {
                 File::makeDirectory($finalDocPath, 0755, true);
             }
 
-            $relativePath = "{$student->student_directory}/{$progcode}/{$activity}/";
-
-            $this->generateActivityForm($actID, $student, $form, $relativePath);
+            /* GENERATE ACTIVITY FORM FUNCTION */
+            $this->generateActivityForm($actID, $student, $currentSemester, $form, $relativePath);
 
             //---------------------------------------------------------------------------//
             //--------------------------MERGE PDF DOCUMENTS CODE-------------------------//
             //---------------------------------------------------------------------------//
 
-            // RETRIEVE PDF FILES
+            /* LOAD PDF FILES */
             $pdfFiles = File::files($basePath);
-
             $pdfFiles = array_filter($pdfFiles, function ($file) {
                 return strtolower($file->getExtension()) === 'pdf';
             });
@@ -579,6 +682,7 @@ class SubmissionController extends Controller
                 return back()->with('error', 'No PDF documents found in the activity folder.' .  $basePath);
             }
 
+            /* LOAD FPDI LIBRARY FOR MERGING */
             $pdf = new Fpdi();
 
             foreach ($pdfFiles as $file) {
@@ -592,81 +696,35 @@ class SubmissionController extends Controller
                 }
             }
 
-            // SAVE THE MERGED PDF
+            /* SAVE MERGED FILE */
             $mergedPath =  $finalDocPath . '/' . $documentName;
-            return $pdf->Output($mergedPath, 'F');
+            $pdf->Output($mergedPath, 'F');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error occurred during handling activity form: ' . $e->getMessage());
         }
     }
 
-    public function generateActivityForm($actID, $student, $form, $finalDocRelativePath)
-    {
-        try {
-
-            $act = Activity::where('id', $actID)->first();
-
-            if (!$act) {
-                return back()->with('error', 'Activity not found.');
-            }
-
-            $formfields = FormField::where('af_id', $form->id)
-                ->orderBy('ff_order')
-                ->get();
-
-            $faculty = Faculty::where('fac_status', 3)->first();
-            $signatures = $formfields->where('ff_category', 6);
-
-            $signatureRecord = StudentActivity::where([
-                ['activity_id', $actID],
-                ['student_id', $student->id]
-            ])->select('sa_signature_data')->first();
-
-            $signatureData = $signatureRecord ? json_decode($signatureRecord->sa_signature_data) : null;
-
-            $userData = [];
-
-            $fhc = new FormHandlerController();
-            $userData = $fhc->joinMap($formfields, $student, $act);
-
-            $pdf = Pdf::loadView('student.programme.form-template.activity-document', [
-                'title' => $act->act_name . " Document",
-                'act' => $act,
-                'form_title' => $form->af_title,
-                'formfields' => $formfields,
-                'userData' => $userData,
-                'faculty' => $faculty,
-                'signatures' => $signatures,
-                'signatureData' => $signatureData
-            ]);
-
-            $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';
-            $relativePath = $finalDocRelativePath . '/' . $fileName;
-
-            Storage::disk('public')->put($relativePath, $pdf->output());
-
-            return $pdf->stream($fileName . '.pdf');
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error generating activity form: ' . $e->getMessage());
-        }
-    }
-
-    public function storeSignature($actID, $student, $form, $signatureData, $documentName, $signatureRole, $userData, $status)
+    /* Store Activity Form Signature [Student] - Function */
+    public function storeSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status)
     {
         try {
             if ($signatureData) {
 
+                /* LOAD SIGNATURE FIELD DATA */
                 $signatureField = FormField::where([
                     ['af_id', $form->id],
                     ['ff_category', 6],
                     ['ff_signature_role', $signatureRole]
                 ])->first();
 
+                /* INITIALIZE STUDENT ACTIVITY */
                 $studentActivity = StudentActivity::firstOrNew([
                     'activity_id' => $actID,
-                    'student_id' => $student->id
+                    'student_id' => $student->id,
+                    'semester_id' => $semester->id
                 ]);
 
+                /* STORE SIGNATURE LOGIC */
                 $existingSignatureData = [];
                 if ($studentActivity->sa_signature_data) {
                     $existingSignatureData = json_decode($studentActivity->sa_signature_data, true);
@@ -720,7 +778,7 @@ class SubmissionController extends Controller
                         ];
                     }
 
-                    // Merge and save
+
                     if ($signatureRole == 1) {
                         $mergedSignatureData = $newSignatureData;
                     } else {
@@ -737,36 +795,151 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Document [Activity Form] Handler Function [End] */
-
-
-    public function viewFinalDocument($actID, $filename, $opt)
+    /* Generate Activity Form Document [Student] - Function */
+    public function generateActivityForm($actID, $student, $semester, $form, $finalDocRelativePath)
     {
+        try {
+
+            /* LOAD ACTIVITY DATA */
+            $act = Activity::where('id', $actID)->first();
+
+            if (!$act) {
+                return back()->with('error', 'Activity not found. Document could not be generated. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD FACULTY DATA */
+            $faculty = Faculty::where('fac_status', 3)->first();
+
+            if (!$faculty) {
+                return back()->with('error', 'Faculty not found. Document could not be generated. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD FORM FIELD DATA */
+            $formfields = FormField::where('af_id', $form->id)
+                ->orderBy('ff_order')
+                ->get();
+
+            $signatures = $formfields->where('ff_category', 6);
+
+            /* LOAD SIGNATURE DATA */
+            $signatureRecord = StudentActivity::where([
+                ['activity_id', $actID],
+                ['student_id', $student->id],
+                ['semester_id', $semester->id],
+            ])->select('sa_signature_data')->first();
+
+            $signatureData = $signatureRecord ? json_decode($signatureRecord->sa_signature_data) : null;
+
+            /* DATA MAPPING LOGIC */
+            $userData = [];
+            $fhc = new FormHandlerController();
+            $userData = $fhc->joinMap($formfields, $student, $act);
+
+            /* RETURN PDF VIEW */
+            $pdf = Pdf::loadView('student.programme.form-template.activity-document', [
+                'title' => $act->act_name . " Document",
+                'act' => $act,
+                'form_title' => $form->af_title,
+                'formfields' => $formfields,
+                'userData' => $userData,
+                'faculty' => $faculty,
+                'signatures' => $signatures,
+                'signatureData' => $signatureData
+            ]);
+
+            /* SET DOCUMENT NAME */
+            $fileName = 'Activity_Form_' . $student->student_matricno . '_' . '.pdf';
+
+            /* SAVING DOCUMENT */
+            $relativePath = $finalDocRelativePath . '/' . $fileName;
+            Storage::disk('public')->put($relativePath, $pdf->output());
+
+            /* RETURN PDF STREAM */
+            return $pdf->stream($fileName . '.pdf');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error generating activity form: ' . $e->getMessage());
+        }
+    }
+
+    /* View Final Document [Student] - Route */
+    public function viewFinalDocument($actID, $semesterID, $filename, $opt)
+    {
+        /* GLOBAL VARIABLE */
+        $basePath = null;
+        $finalPath = null;
+
+        /* DECRYPT PROCESS */
         $actID = decrypt($actID);
+        $semesterID = decrypt($semesterID);
         $filename = Crypt::decrypt($filename);
 
         try {
+
+            /* LOAD STUDENT DATA */
             $student = auth()->user();
+
+            if (!$student) {
+                return back()->with('error', 'Unauthorized access : Student record is not found.');
+            }
+
+            /* LOAD SEMESTER DATA */
+            $currentSemester = Semester::where('id', $semesterID)->first();
+
+            if (!$currentSemester) {
+                return back()->with('error', 'Semester not found. Could not view submission. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD ACTIVITY DATA */
             $activity = Activity::where('id', $actID)->first()->act_name;
+
+            if (!$activity) {
+                return back()->with('error', 'Activity not found. Could not view submission. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD PROCEDURE DATA */
+            $procedure = Procedure::where([
+                'activity_id' => $actID,
+                'programme_id' => $student->programme_id
+            ])->first();
+
+            if (!$procedure) {
+                return back()->with('error', 'Procedure not found. Could not view submission. Please contact administrator for further assistance.');
+            }
+
+            /* HANDLE NECCESSARY ATTRIBUTES */
             $progcode = strtoupper($student->programmes->prog_code);
+
+            $rawLabel = $currentSemester->sem_label;
+            $semesterlabel = str_replace('/', '', $rawLabel);
+            $semesterlabel = trim($semesterlabel);
+
+            /* IDENTIFY BASE PATH */
+            if ($procedure->is_repeatable == 1) {
+                $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/{$semesterlabel}");
+            } else {
+                $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}");
+            }
+
+            /* SET FINAL PATH BASED ON OPTION */
             if ($opt == 1) {
-                $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/Final Document/{$filename}");
+                $finalPath = $basePath . '/Final Document/' . $filename;
             } else if ($opt == 2) {
-                $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/Evaluation/{$filename}");
+                $finalPath = $basePath . '/Evaluation/' . $filename;
             } else if ($opt == 3) {
-                $basePath = storage_path("app/public/{$student->student_directory}/{$progcode}/{$activity}/Correction/{$filename}");
+                $finalPath = $basePath . '/Correction/' . $filename;
             }
 
-            if (!file_exists($basePath)) {
-                abort(404, 'File not found.');
+            /* HANDLE FILE NOT FOUND */
+            if (!file_exists($finalPath)) {
+                abort(404, 'File not found. Please try again.');
             }
 
-            return response()->file($basePath);
+            /* RETURN FILE STREAM */
+            return response()->file($finalPath);
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
         }
     }
-
 
     /* Journal Publication Management [Student] - Route */
     public function journalPublicationManagement(Request $req)
@@ -1767,7 +1940,7 @@ class SubmissionController extends Controller
                     $data->where('programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('semester_id', $req->input('semester'));
+                    $data->where('ss.semester_id', $req->input('semester'));
                 }
                 if ($req->has('activity') && !empty($req->input('activity'))) {
                     $data->where('activity_id', $req->input('activity'));
@@ -2061,133 +2234,71 @@ class SubmissionController extends Controller
         }
     }
 
-    private function determineApprovalRoleStatus($supervision, $evaluator, $staffRole, $option)
-    {
-        // === SUBMISSION APPROVAL (option 1) — leave unchanged ===
-        if ($option === 1) {
-            if (! $supervision) {
-                return match ($staffRole) {
-                    1 => [4, 3], // Committee → status 3
-                    3 => [5, 3], // Deputy Dean → status 3
-                    4 => [6, 3], // Dean → status 3
-                    default => [0, 1],
-                };
-            }
-            return match ($supervision->supervision_role) {
-                1 => [2, 1], // SV → status 1
-                2 => [3, 1], // CoSV → status 1
-                default => [0, 1],
-            };
-        }
-
-        // === CORRECTION APPROVAL (option 2) ===
-        if ($option === 2) {
-            // 1) Supervisor / CoSV approval first
-            if ($supervision) {
-                return match ($supervision->supervision_role) {
-                    1 => [2, 3], // SV 
-                    2 => [3, 3], // CoSV
-                    default => [0, 2],
-                };
-            }
-            // 2) Examiner(s)
-            if ($evaluator) {
-                return [8, 4];   // Examiner
-            }
-            // 3) Committee / Deputy Dean / Dean
-            return match ($staffRole) {
-                1 => [4, 5],   // Committee 
-                3 => [5, 5],   // Deputy Dean 
-                4 => [6, 5],   // Dean 
-                default => [0, 4],
-            };
-        }
-
-        // fallback
-        return [0, 2];
-    }
-
-    private function determineRejectionRoleStatus($supervision, $evaluator, $staffRole, $option)
-    {
-
-        /* ACTIVITY SUBMISSION REJECTION */
-        if ($option == 1) {
-            if (!$supervision) {
-                return match ($staffRole) {
-                    1 => [4, 5], // Committee
-                    3 => [5, 5], // Deputy Dean
-                    4 => [6, 5], // Dean
-                    default => [0, 1],
-                };
-            }
-
-            return match ($supervision->supervision_role) {
-                1 => [2, 4], // SV
-                2 => [3, 4], // CoSV
-                default => [0, 1],
-            };
-        }
-        /* ACTIVITY CORRECTION REJECTION */ elseif ($option == 2) {
-            // 1) Supervisor / CoSV approval first
-            if ($supervision) {
-                return match ($supervision->supervision_role) {
-                    1 => [2, 6], // SV 
-                    2 => [3, 6], // CoSV
-                    default => [0, 6],
-                };
-            }
-            // 2) Examiner(s)
-            if ($evaluator) {
-                return [8, 7];   // Examiner
-            }
-            // 3) Committee / Deputy Dean / Dean
-            return match ($staffRole) {
-                1 => [4, 8],   // Committee 
-                3 => [5, 8],   // Deputy Dean 
-                4 => [6, 8],   // Dean 
-                default => [0, 8],
-            };
-        }
-    }
-
-    public function finalizeSubmission($student, $activityId)
-    {
-        DB::table('submissions as a')
-            ->join('documents as b', 'a.document_id', '=', 'b.id')
-            ->join('activities as c', 'b.activity_id', '=', 'c.id')
-            ->where('a.student_id', $student->id)
-            ->where('c.id', $activityId)
-            ->update(['a.submission_status' => 5]);
-    }
-
+    /* Submission Approval Handler [Staff] [Committee/DD/DEAN] - Function */
     public function studentActivitySubmissionApproval(Request $request, $stuActID, $option)
     {
+
+        /* DECRYPT PROCESS */
         $stuActID = Crypt::decrypt($stuActID);
 
         try {
-            // Load core data
-            $studentActivity = StudentActivity::findOrFail($stuActID);
-            $actID = Crypt::encrypt($studentActivity->activity_id);
-            $student = Student::findOrFail($studentActivity->student_id);
-            $activity = Activity::whereId($studentActivity->activity_id)->first();
+
+            /* LOAD USER DATA */
             $authUser = auth()->user();
+
+            if (!$authUser) {
+                return back()->with('error', 'Unauthorized access : Staff record is not found.');
+            }
+
+            /* LOAD STUDENT ACTIVITY DATA */
+            $studentActivity = StudentActivity::where('id', $stuActID)->first();
+
+            if (!$studentActivity) {
+                return back()->with('error', 'Student confirmation record not found. Approval could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $studentActivity->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Student record not found. Approval could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $studentActivity->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Activity record not found. Approval could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD SEMESTER DATA */
+            $semester = Semester::where('id', $studentActivity->semester_id)->first();
+
+            if (!$semester) {
+                return back()->with('error', 'Semester record not found. Approval could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* GET ACTIVITY FORM ID */
             $afID = ActivityForm::where('activity_id', $studentActivity->activity_id)->where('af_target', 1)->first()?->id;
 
             if (!$afID) {
-                return back()->with('error', 'Activity form not found for this activity.');
+                return back()->with('error', 'Activity form not found. Approval could not be processed. Please contact administrator for further assistance.');
             }
 
-            // Check supervision role (SV or CoSV)
+            /* ENCRYPT ACTIVITY ID */
+            $actID = Crypt::encrypt($studentActivity->activity_id);
+
+            /* CHECK SUPERVISOR ROLE (SV or CoSV) */
             $supervision = Supervision::where('student_id', $student->id)
                 ->where('staff_id', $authUser->id)->first();
 
-            // Check procedure for is_haveEva
+            /* CHECK PROCEDURE FOR IS_HAVEEVA */
             $procedure = Procedure::where('activity_id', $activity->id)
                 ->where('programme_id', $student->programme_id)
                 ->first();
             $isHaveEvaluation = $procedure?->is_haveEva == 1;
 
-            // Check if CoSV required in form
+            /* CHECK IF SV IS REQUIRED */
             $hasSvfield = DB::table('activity_forms as a')
                 ->join('form_fields as b', 'a.id', '=', 'b.af_id')
                 ->where('a.activity_id', $studentActivity->activity_id)
@@ -2196,6 +2307,7 @@ class SubmissionController extends Controller
                 ->where('a.id', $afID)
                 ->exists();
 
+            /* CHECK IF CO-SV IS REQUIRED */
             $hasCoSvfield = DB::table('activity_forms as a')
                 ->join('form_fields as b', 'a.id', '=', 'b.af_id')
                 ->where('a.activity_id', $studentActivity->activity_id)
@@ -2206,19 +2318,19 @@ class SubmissionController extends Controller
 
             $hasCoSv = $hasSvfield && $hasCoSvfield;
 
-            // Decode current signature data
+            /* DECODE EXISTING SIGNATURE DATA */
             $signatureData = json_decode($studentActivity->sa_signature_data ?? '[]', true);
 
-            // === APPROVAL === //
             if ($option == 1) {
+                /* APPROVE LOGIC */
 
-                // Determine role and status code
+                /* DETERMINE APPROVAL ROLE AND STATUS */
                 [$role, $status] = $this->determineApprovalRoleStatus($supervision, null, $authUser->staff_role, 1);
 
-                // Merge signature
-                $this->mergeStudentSubmission($actID, $student, $request->input('signatureData'), $role, $authUser, $status);
+                /* MERGE AND HANDLE ACTIVITY FORM */
+                $this->mergeStudentSubmission($actID, $student, $semester, $request->input('signatureData'), $role, $authUser, $status);
 
-                // Save review comment if present
+                /* HANDLE REVIEW PROCESS */
                 if ($request->filled('comment')) {
                     SubmissionReview::create([
                         'student_activity_id' => $stuActID,
@@ -2228,108 +2340,104 @@ class SubmissionController extends Controller
                     ]);
                 }
 
-                // Reload latest updated data
-                $updatedActivity = StudentActivity::findOrFail($stuActID);
+                /* RELOAD STUDENT ACTIVITY DATA */
+                $updatedActivity = StudentActivity::where('id', $studentActivity->id)->first();
+
+                if (!$updatedActivity) {
+                    return back()->with('error', 'Student activity record not found. Approval could not be processed. Please contact administrator for further assistance.');
+                }
+
+                /* DECODE UPDATED SIGNATURE DATA */
                 $updatedSignatureData = json_decode($updatedActivity->sa_signature_data ?? '[]', true);
 
-                // Handle SV / CoSV logic
-                if (in_array($role, [2, 3])) {
-                    $formRoles = DB::table('activity_forms as a')
-                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                        ->where('a.activity_id', $studentActivity->activity_id)
-                        ->where('b.ff_category', 6)
-                        ->where('a.id', $afID)
-                        ->pluck('b.ff_signature_role')
-                        ->unique()
-                        ->toArray();
+                /* HANDLE SIGNATURE LOGIC */
+                $this->handleSignatureApprovalStatus($student, $updatedActivity, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation);
 
-                    $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
+                // if (in_array($role, [2, 3])) {
+                //     /* HANDLE SUPERVISOR LOGIC */
+                //     $formRoles = DB::table('activity_forms as a')
+                //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                //         ->where('a.activity_id', $updatedActivity->activity_id)
+                //         ->where('b.ff_category', 6)
+                //         ->where('a.id', $afID)
+                //         ->where('a.af_target', 1)
+                //         ->pluck('b.ff_signature_role')
+                //         ->unique()
+                //         ->toArray();
 
-                    $hasSvSignature = isset($updatedSignatureData['sv_signature']);
-                    $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
+                //     $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
 
-                    if ($hasCoSv) {
-                        $allSigned = $hasSvSignature && $hasCoSvSignature;
-                    } else {
-                        $allSigned = $hasSvSignature;
-                    }
+                //     $hasSvSignature = isset($updatedSignatureData['sv_signature']);
+                //     $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
 
-                    if ($allSigned) {
-                        if (!$hasHigherRoles) {
-                            $finalStatus = $isHaveEvaluation ? 7 : 3;
-                        } else {
-                            $finalStatus = 2;
-                        }
-                    } else {
-                        $finalStatus = 1;
-                    }
+                //     if ($hasCoSv) {
+                //         $allSigned = $hasSvSignature && $hasCoSvSignature;
+                //     } else {
+                //         $allSigned = $hasSvSignature;
+                //     }
 
-                    $updatedActivity->update(['sa_status' => $finalStatus]);
+                //     if ($allSigned) {
+                //         if (!$hasHigherRoles) {
+                //             $finalStatus = $isHaveEvaluation ? 7 : 3;
+                //         } else {
+                //             $finalStatus = 2;
+                //         }
+                //     } else {
+                //         $finalStatus = 1;
+                //     }
 
-                    if ($finalStatus == 3) {
-                        $this->finalizeSubmission($student, $studentActivity->activity_id);
-                        $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
-                    }
-                }
+                //     $updatedActivity->update(['sa_status' => $finalStatus]);
 
-                // Handle Committee / Deputy Dean / Dean logic
-                else {
+                //     if ($finalStatus == 3) {
+                //         $this->finalizeSubmission($student, $updatedActivity->activity_id);
+                //         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                //     }
+                // } else {
+                //     /* HANDLE COMMITTEE/ DEPUTY DEAN / DEAN LOGIC */
+                //     $formRoles = DB::table('activity_forms as a')
+                //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                //         ->where('a.activity_id', $updatedActivity->activity_id)
+                //         ->where('b.ff_category', 6)
+                //         ->pluck('b.ff_signature_role')
+                //         ->where('a.id', $afID)
+                //         ->where('a.af_target', 1)
+                //         ->unique()->toArray();
 
-                    $formRoles = DB::table('activity_forms as a')
-                        ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                        ->where('a.activity_id', $studentActivity->activity_id)
-                        ->where('b.ff_category', 6)
-                        ->pluck('b.ff_signature_role')
-                        ->where('a.id', $afID)
-                        ->unique()->toArray();
+                //     $roleSignatures = [
+                //         4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
+                //         5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
+                //         6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
+                //     ];
 
-                    $roleSignatures = [
-                        4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
-                        5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
-                        6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
-                    ];
+                //     $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
 
-                    $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
+                //     $finalStatus = $allSigned ? ($isHaveEvaluation ? 7 : 3) : 2;
+                //     $updatedActivity->update(['sa_status' => $finalStatus]);
 
-                    $finalStatus = $allSigned ? ($isHaveEvaluation ? 7 : 3) : 2;
-                    $updatedActivity->update(['sa_status' => $finalStatus]);
+                //     if ($finalStatus == 3) {
+                //         $this->finalizeSubmission($student, $updatedActivity->activity_id);
+                //         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                //     }
+                // }
 
-                    if ($finalStatus == 3) {
-                        $this->finalizeSubmission($student, $studentActivity->activity_id);
-                        $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
-                    }
-                }
-
+                /* SEND EMAIL NOTIFICATION TO STUDENT */
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
-                return back()->with('success', 'Submission has been approved successfully.');
-            }
 
-            // === REJECTION === //
-            elseif ($option == 2) {
+                /* RETURN SUCCESS */
+                return back()->with('success', $student->student_name . ' submission for ' . $activity->act_name . ' has been approved. An email notification has been sent to the student.');
+            } elseif ($option == 2) {
+                /* REJECTION LOGIC */
+
+                /* DETERMINE REJECTION ROLE AND STATUS */
                 [$role, $status] = $this->determineRejectionRoleStatus($supervision, null, $authUser->staff_role, 1);
 
-                $signatureData = json_decode($studentActivity->sa_signature_data ?? '[]', true);
-                $keysToRemove = [
-                    'sv_signature',
-                    'sv_signature_date',
-                    'cosv_signature',
-                    'cosv_signature_date',
-                    'comm_signature',
-                    'comm_signature_date',
-                    'deputy_dean_signature',
-                    'deputy_dean_signature_date',
-                    'dean_signature',
-                    'dean_signature_date',
-                ];
-                foreach ($keysToRemove as $key) {
-                    unset($signatureData[$key]);
-                }
-
+                /* UPDATE STATUS */
                 StudentActivity::whereId($stuActID)->update([
                     'sa_status' => $status,
-                    'sa_signature_data' => json_encode($signatureData)
+                    'sa_signature_data' => json_encode([]),
                 ]);
 
+                /* HANDLE REVIEW PROCESS */
                 if ($request->filled('comment')) {
                     SubmissionReview::create([
                         'student_activity_id' => $stuActID,
@@ -2339,54 +2447,238 @@ class SubmissionController extends Controller
                     ]);
                 }
 
+                /* SEND EMAIL NOTIFICATION TO STUDENT */
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 4, $role);
-                return back()->with('success', 'Submission has been rejected successfully.');
-            }
 
-            // === REVERT === //
-            elseif ($option == 3) {
+                /* RETURN SUCCESS */
+                return back()->with('success', $student->student_name . ' submission for ' . $activity->act_name . ' has been rejected. An email notification has been sent to the student.');
+            } elseif ($option == 3) {
+                /* REVERT LOGIC */
+
+                /* REMOVE NECCESSARY RECORDS */
                 SubmissionReview::where('student_activity_id', $stuActID)->delete();
                 StudentActivity::whereId($stuActID)->delete();
 
+                /* SEND EMAIL NOTIFICATION TO STUDENT */
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 5, 0);
-                return back()->with('success', 'The student submission has been successfully reverted.');
+
+                /* RETURN SUCCESS */
+                return back()->with('success', $student->student_name . ' submission for ' . $activity->act_name . ' has been reverted. An email notification has been sent to the student.');
             }
 
-            return back()->with('error', 'Oops! Invalid option.');
+            return back()->with('error', 'Oops! Something went wrong. Cannot process your request. Please try again. If the problem persists, please contact the system administrator.');
         } catch (Exception $e) {
             return back()->with('error', 'Error occurred: ' . $e->getMessage());
         }
     }
 
+    /* Determine Approval Role and Status [Staff] [Committee/DD/DEAN] - Function */
+    private function determineApprovalRoleStatus($supervision, $evaluator, $staffRole, $option)
+    {
+        if ($option === 1) {
+            /* SUBMISSION APPROVAL */
+
+            /* COMMITTEE/ DEPUTY DEAN / DEAN */
+            if (! $supervision) {
+                return match ($staffRole) {
+                    1 => [4, 3], // Committee
+                    3 => [5, 3], // Deputy Dean
+                    4 => [6, 3], // Dean
+                    default => [0, 1],
+                };
+            }
+
+            /* SUPERVISOR(s) */
+            return match ($supervision->supervision_role) {
+                1 => [2, 1], // SV 
+                2 => [3, 1], // CoSV
+                default => [0, 1],
+            };
+        }
+
+        if ($option === 2) {
+            /* CORRECTION APPROVAL */
+
+            /* SUPERVISOR(s) */
+            if ($supervision) {
+                return match ($supervision->supervision_role) {
+                    1 => [2, 3], // SV 
+                    2 => [3, 3], // CoSV
+                    default => [0, 2],
+                };
+            }
+
+            /* EXAMINER(s) */
+            if ($evaluator) {
+                return [8, 4];   // Examiner
+            }
+
+            /* COMMITTEE/ DEPUTY DEAN / DEAN */
+            return match ($staffRole) {
+                1 => [4, 5],   // Committee 
+                3 => [5, 5],   // Deputy Dean 
+                4 => [6, 5],   // Dean 
+                default => [0, 4],
+            };
+        }
+
+        /* FALLBACK */
+        return [0, 2];
+    }
+
+    /* Determine Rejection Role and Status [Staff] [Committee/DD/DEAN] - Function */
+    private function determineRejectionRoleStatus($supervision, $evaluator, $staffRole, $option)
+    {
+        if ($option == 1) {
+            /* ACTIVITY SUBMISSION REJECTION */
+
+            /* COMMITTEE/ DEPUTY DEAN / DEAN */
+            if (!$supervision) {
+                return match ($staffRole) {
+                    1 => [4, 5], // Committee
+                    3 => [5, 5], // Deputy Dean
+                    4 => [6, 5], // Dean
+                    default => [0, 1],
+                };
+            }
+
+            /* SUPERVISOR(s) */
+            return match ($supervision->supervision_role) {
+                1 => [2, 4], // SV
+                2 => [3, 4], // CoSV
+                default => [0, 1],
+            };
+        } elseif ($option == 2) {
+            /* ACTIVITY CORRECTION REJECTION */
+
+            /* SUPERVISOR(s) */
+            if ($supervision) {
+                return match ($supervision->supervision_role) {
+                    1 => [2, 6], // SV 
+                    2 => [3, 6], // CoSV
+                    default => [0, 6],
+                };
+            }
+
+            /* EXAMINER(s) */
+            if ($evaluator) {
+                return [8, 7];   // Examiner
+            }
+
+            /* COMMITTEE/ DEPUTY DEAN / DEAN */
+            return match ($staffRole) {
+                1 => [4, 8],   // Committee 
+                3 => [5, 8],   // Deputy Dean 
+                4 => [6, 8],   // Dean 
+                default => [0, 8],
+            };
+        }
+    }
+
+    /* Handle Signature And Status [Staff] [Committee/DD/DEAN] - Function */
+    private function handleSignatureApprovalStatus($student, $updatedActivity, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation)
+    {
+        /** FIND FORM ROLES **/
+        $formRoles = DB::table('activity_forms as a')
+            ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+            ->where('a.activity_id', $updatedActivity->activity_id)
+            ->where('a.id', $afID)
+            ->where('a.af_target', 1)
+            ->where('b.ff_category', 6)
+            ->pluck('b.ff_signature_role')
+            ->unique()
+            ->toArray();
+
+        if (in_array($role, [2, 3])) {
+            /** HANDLE SUPERVISOR / CO-SUPERVISOR **/
+
+            $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
+            $hasSvSignature = isset($updatedSignatureData['sv_signature']);
+            $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
+
+            $allSigned = $hasCoSv ? ($hasSvSignature && $hasCoSvSignature) : $hasSvSignature;
+
+            if ($allSigned) {
+                $finalStatus = !$hasHigherRoles
+                    ? ($isHaveEvaluation ? 7 : 3)
+                    : 2;
+            } else {
+                $finalStatus = 1;
+            }
+        } else {
+            /** HANDLE COMMITTEE / DEPUTY DEAN / DEAN **/
+
+            $roleSignatures = [
+                4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
+                5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
+                6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
+            ];
+
+            $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
+
+            $finalStatus = $allSigned
+                ? ($isHaveEvaluation ? 7 : 3)
+                : 2;
+        }
+
+        /** UPDATE STUDENT ACTIVITY STATUS **/
+        $updatedActivity->update(['sa_status' => $finalStatus]);
+
+        /** HANDLE FINAL STATUS OF SUBMISSION **/
+        if ($finalStatus == 3) {
+            $this->finalizeSubmission($student, $updatedActivity->activity_id);
+            $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+        }
+    }
+
+    /* Archive Submission [Staff] [Committee/DD/DEAN] - Function */
+    public function finalizeSubmission($student, $activityId)
+    {
+        DB::table('submissions as a')
+            ->join('documents as b', 'a.document_id', '=', 'b.id')
+            ->join('activities as c', 'b.activity_id', '=', 'c.id')
+            ->where('a.student_id', $student->id)
+            ->where('c.id', $activityId)
+            ->update(['a.submission_status' => 5]);
+    }
+
+    /* Download Final Document [Staff] [Committee/DD/DEAN] - Function */
     public function downloadMultipleFinalDocument(Request $req)
     {
         try {
+            /* FETCHING IDs FROM REQUEST */
             $submissionIds = json_decode($req->query('ids'), true);
-
             $option = $req->query('option');
 
+            /* HANDLE UNSELECTED STUDENTS */
             if (!$submissionIds || count($submissionIds) === 0) {
                 return back()->with('error', 'No students selected.');
             }
 
-            // Create ZIP file
+            /* ESTABISHING ZIP FILE */
             $zipFile = storage_path('app/public/ePGS_SELECTED_STUDENT_FINAL_DOCUMENT.zip');
 
             if (File::exists($zipFile)) {
                 File::delete($zipFile);
             }
 
+            /* ZIP FILE LOGIC USING ZIPARCHIVE */
             $zip = new ZipArchive;
             if ($zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
                 return back()->with('error', 'Failed to create ZIP file.');
             }
 
             if ($option == 1) {
+                /* ZIP ACTIVITY FINAL SUBMISSION DOCUMENT */
+
                 foreach ($submissionIds as $id) {
+
+                    /* FETCHING DATA FROM DATABASE */
                     $submission = DB::table('students as a')
                         ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                         ->join('student_activities as g', 'g.student_id', '=', 'a.id')
                         ->join('activities as f', 'f.id', '=', 'g.activity_id')
+                        ->join('semesters as e', 'e.id', '=', 'g.semester_id')
                         ->select(
                             'a.*',
                             'c.prog_code',
@@ -2395,18 +2687,37 @@ class SubmissionController extends Controller
                             'f.act_name as activity_name',
                             'g.id as student_activity_id',
                             'g.sa_final_submission',
+                            'e.sem_label'
                         )
                         ->where('g.id', $id)
                         ->first();
 
-                    // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $submission->student_directory . '/' . $submission->prog_code . '/' . $submission->activity_name . '/Final Document';
+                    /* LOAD PROCEDURE DATA */
+                    $procedure = Procedure::where('activity_id', $submission->activity_id)
+                        ->where('programme_id', $submission->programme_id)
+                        ->first();
 
+                    /* REPEATABLE PROCESS */
+                    if ($procedure && $procedure->is_repeatable == 1) {
 
+                        /* SET SEMESTER LABEL FORMAT */
+                        $rawLabel = $submission->sem_label;
+                        $semesterlabel = str_replace('/', '', $rawLabel);
+                        $semesterlabel = trim($semesterlabel);
+
+                        /* STUDENT SUBMISSION DIRECTORY */
+                        $submission_dir = $submission->student_directory . '/' . $submission->prog_code . '/' . $submission->activity_name . '/' . $semesterlabel . '/Final Document';
+                    } else {
+                        /* STUDENT SUBMISSION DIRECTORY */
+                        $submission_dir = $submission->student_directory . '/' . $submission->prog_code . '/' . $submission->activity_name . '/Final Document';
+                    }
+
+                    /* HANDLE EMPTY FOLDER OR FILE */
                     if (!$submission || empty($submission->sa_final_submission)) {
                         continue;
                     }
 
+                    /* LOAD FOLDER PATH */
                     $folderPath = public_path("storage/" . $submission_dir);
 
                     if (!File::exists($folderPath)) {
@@ -2424,7 +2735,11 @@ class SubmissionController extends Controller
                     }
                 }
             } elseif ($option == 2) {
+                /* ZIP CORECTION FINAL SUBMISSION DOCUMENT */
+
                 foreach ($submissionIds as $id) {
+
+                    /* FETCHING DATA FROM DATABASE */
                     $submission = DB::table('students as a')
                         ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                         ->join('activity_corrections as g', 'g.student_id', '=', 'a.id')
@@ -2443,20 +2758,21 @@ class SubmissionController extends Controller
                         ->first();
 
 
-                    // SEMESTER LABEL
+                    /* SET SEMESTER LABEL FORMAT */
                     $currsemester = Semester::find($submission->semester_id);
                     $rawLabel = $currsemester->sem_label;
                     $semesterlabel = str_replace('/', '', $rawLabel);
                     $semesterlabel = trim($semesterlabel);
 
-                    // STUDENT SUBMISSION DIRECTORY
+                    /* STUDENT SUBMISSION DIRECTORY */
                     $submission_dir = $submission->student_directory . '/' . $submission->prog_code . '/' . $submission->activity_name . '/Correction/' . $semesterlabel;
 
-
+                    /* HANDLE EMPTY FOLDER OR FILE */
                     if (!$submission || empty($submission->ac_final_submission)) {
                         continue;
                     }
 
+                    /* LOAD FOLDER PATH */
                     $folderPath = public_path("storage/" . $submission_dir);
 
                     if (!File::exists($folderPath)) {
@@ -2477,6 +2793,7 @@ class SubmissionController extends Controller
 
             $zip->close();
 
+            /* ZIP FILE DOWNLOAD */
             return response()->download($zipFile)->deleteFileAfterSend(true);
         } catch (Exception $e) {
             return back()->with('error', 'Error generating ZIP: ' . $e->getMessage());

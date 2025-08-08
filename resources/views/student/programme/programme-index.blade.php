@@ -156,7 +156,7 @@
                                 @if (isset($act->confirmed_document))
                                     <div class="mt-4 mb-4">
                                         <h6 class="fw-semibold mb-2">Final Document</h6>
-                                        <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'filename' => Crypt::encrypt($act->confirmed_document), 'opt' => 1]) }}"
+                                        <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'semesterID' => Crypt::encrypt($act->sa_semester_id), 'filename' => Crypt::encrypt($act->confirmed_document), 'opt' => 1]) }}"
                                             target="_blank"
                                             class="text-decoration-none d-inline-flex align-items-center gap-2 text-primary">
                                             <i class="ti ti-file-check"></i> View Final Document
@@ -168,7 +168,7 @@
                                 @if (isset($act->confirmed_corrected_document))
                                     <div class="mt-4 mb-4">
                                         <h6 class="fw-semibold mb-2">Final Document</h6>
-                                        <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'filename' => Crypt::encrypt($act->confirmed_corrected_document), 'opt' => 3]) }}"
+                                        <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'semesterID' => Crypt::encrypt($act->ac_semester_id), 'filename' => Crypt::encrypt($act->confirmed_corrected_document), 'opt' => 3]) }}"
                                             target="_blank"
                                             class="text-decoration-none d-inline-flex align-items-center gap-2 text-primary">
                                             <i class="ti ti-file-check"></i> View Final Document (Correction)
@@ -197,7 +197,7 @@
 
                                                     $file = $semesterlabel . '/' . $report->evaluation_document;
                                                 @endphp
-                                                <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'filename' => Crypt::encrypt($file), 'opt' => 2]) }}"
+                                                <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'semesterID' => Crypt::encrypt($currsemester->id), 'filename' => Crypt::encrypt($file), 'opt' => 2]) }}"
                                                     target="_blank"
                                                     class="text-decoration-none d-flex align-items-center gap-2 text-primary">
                                                     <i

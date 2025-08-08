@@ -18,6 +18,7 @@ return new class extends Migration
             $table->json('sa_signature_data')->comment('will store the respected signature_key: signature_data , signature_date:Date');
             $table->foreignId('student_id')->constrained('students');
             $table->foreignId('activity_id')->constrained('activities');
+            $table->foreignId('semester_id')->constrained('semesters');
             $table->timestamps();
         });
     }
