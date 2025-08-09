@@ -165,9 +165,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/create-renomination-data/{nominationId}', [NominationController::class, 'reNominatedStudent'])->name('renomination-data-get');
 
     // Evaluation
-    Route::get('/evaluation-{studentId}-{actId}-{semesterId}-{mode}', [EvaluationController::class, 'evaluationStudent'])->name('evaluation-student');
+    Route::get('/evaluation-student-{evaluationID}-{mode}', [EvaluationController::class, 'evaluationStudent'])->name('evaluation-student');
     Route::get('/view-evaluation-form', [EvaluationController::class, 'viewEvaluationForm'])->name('view-evaluation-form-get');
-    Route::post('/submit-evaluation-{studentId}-{mode}', [EvaluationController::class, 'submitEvaluation'])->name('submit-evaluation-post');
+    Route::post('/submit-evaluation-{evaluationID}-{mode}', [EvaluationController::class, 'submitEvaluation'])->name('submit-evaluation-post');
 
 
     // Standard Operation Procedure (SOP)
@@ -285,6 +285,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Nomination */
     Route::get('/mysupervision-nomination-{name}', [SupervisorController::class, 'mySupervisionNomination'])->name('my-supervision-nomination');
+
+    /* Evaluation Approval */
+    Route::get('/mysupervision-evaluation-approval-{name}', [SupervisorController::class, 'mySupervisionEvaluationApproval'])->name('my-supervision-evaluation-approval');
 
 
     // ---------------------------------------------------------------------------------------------------------------------//

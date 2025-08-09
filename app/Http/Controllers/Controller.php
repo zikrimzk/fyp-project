@@ -1657,4 +1657,399 @@ class Controller extends BaseController
     // 4: COMMITTEE [5]
     // 5: DEPUTY DEAN [5]
     // 6: DEAN [5]
+
+
+    /* Store Activity Form Signature [Staff] - Function */
+    // public function storeEvaluationSignature($student, $form, $signatureData, $evaluation, $nomination, $mode)
+    // {
+    //     try {
+    //         if ($signatureData) {
+
+    //             /* LOAD SIGNATURE FIELD DATA */
+    //             $signatureFields = FormField::where('af_id', $form->id)
+    //                 ->where('ff_category', 6)
+    //                 ->get();
+
+    //             /* LOAD EXISTING SIGNATURE FIELD */
+    //             $existingData = $evaluation->evaluation_signature_data
+    //                 ? json_decode($evaluation->evaluation_signature_data, true)
+    //                 : [];
+
+    //             /* LOAD EVALUATOR DATA */
+    //             $evaluators = Evaluator::where('nom_id', $nomination->id)
+    //                 ->where('eva_status', 3)
+    //                 ->with('staff')
+    //                 ->orderBy('id')
+    //                 ->get();
+
+    //             /* LOAD CHAIRMAN DATA */
+    //             $chairman = $evaluators->where('eva_role', 2)->first();
+
+    //             /* LOAD EXAMINER/PANEL DATA */
+    //             $otherEvaluators = $evaluators->where('eva_role', 1)->values();
+
+    //             /* STORE SIGNATURE LOGIC */
+    //             foreach ($signatureFields as $signatureField) {
+    //                 $signatureKey = $signatureField->ff_signature_key;
+    //                 $dateKey = $signatureField->ff_signature_date_key;
+
+    //                 if (!isset($signatureData[$signatureKey]) || empty($signatureData[$signatureKey])) {
+    //                     continue;
+    //                 }
+
+    //                 $role = null;
+    //                 $signerName = null;
+
+    //                 if ($signatureField->ff_signature_role == 1) {
+    //                     /* STUDENT SIGNATURE LOGIC */
+    //                     $role = 'Student';
+    //                     $signerName = $student->student_name;
+    //                 } else {
+    //                     if ($mode == 6) {
+    //                         /* CHAIRMAN FORM MODE [MASS SIGN MODE] */
+
+    //                         if (str_contains(strtolower($signatureKey), 'chair')) {
+    //                             if ($chairman && $chairman->staff) {
+    //                                 $role = $signatureField->ff_label;
+    //                                 $signerName = $chairman->staff->staff_name;
+    //                             } else {
+    //                                 continue;
+    //                             }
+    //                         } elseif (preg_match('/(examiner|panel|reviewer|evaluator|assessor)(?:_(\d+))?/i', $signatureKey, $matches)) {
+    //                             $keyword = strtolower($matches[1]);
+    //                             $index = isset($matches[2]) ? intval($matches[2]) - 1 : 0;
+
+    //                             if (isset($otherEvaluators[$index]) && $otherEvaluators[$index]->staff) {
+    //                                 $role = $signatureField->ff_label;
+    //                                 $signerName = $otherEvaluators[$index]->staff->staff_name;
+    //                             } else {
+    //                                 continue;
+    //                             }
+    //                         } else {
+    //                             continue;
+    //                         }
+    //                     } elseif ($mode == 5) {
+    //                         /* EXAMINER/PANEL FORM MODE [INDIVIDUAL SIGN MODE] */
+
+    //                         $currentStaff = auth()->user();
+
+    //                         /* CHECK STAFF IS ASSIGNED TO THE EVALUATION */
+    //                         $matchedEvaluator = $evaluators->first(function ($eva) use ($currentStaff) {
+    //                             return $eva->staff_id == $currentStaff->id;
+    //                         });
+
+    //                         if (!$matchedEvaluator) {
+    //                             continue; // not assigned → skip
+    //                         }
+
+    //                         // Allow chairman also to sign in his own form part
+    //                         if (str_contains(strtolower($signatureKey), 'chair') && $matchedEvaluator->eva_role == 2) {
+    //                             $role = $signatureField->ff_label;
+    //                             $signerName = $matchedEvaluator->staff->staff_name;
+    //                         }
+    //                         // For examiner/panel fields
+    //                         elseif (preg_match('/(examiner|panel|reviewer|evaluator|assessor)/i', $signatureKey)) {
+    //                             if ($matchedEvaluator->eva_role == 1) {
+    //                                 $role = $signatureField->ff_label;
+    //                                 $signerName = $matchedEvaluator->staff->staff_name;
+    //                             } else {
+    //                                 continue;
+    //                             }
+    //                         } else {
+    //                             continue;
+    //                         }
+    //                     }
+
+    //                     // Other unknown mode → ignore
+    //                     else {
+    //                         continue;
+    //                     }
+    //                 }
+
+    //                 $newSignatureData = [
+    //                     $signatureKey => $signatureData[$signatureKey],
+    //                     $dateKey => now()->format('d M Y'),
+    //                     $signatureKey . '_is_cross_approval' => false,
+    //                     $signatureKey . '_name' => $signerName,
+    //                     $signatureKey . '_role' => $role
+    //                 ];
+
+    //                 $existingData = array_merge($existingData, $newSignatureData);
+    //             }
+
+    //             $evaluation->evaluation_signature_data = json_encode($existingData);
+    //             $evaluation->save();
+    //         }
+    //     } catch (Exception $e) {
+    //         throw new Exception('Signature storage error: ' . $e->getMessage());
+    //     }
+    // }
+
+
+     // public function storeEvaluationSignature($student, $form, $signatureData, $evaluation, $nomination, $mode)
+    // {
+    //     try {
+    //         if (!$signatureData) {
+    //             return;
+    //         }
+
+    //         // 1) LOAD SIGNATURE FIELD DEFINITIONS (all signatures on this form)
+    //         $signatureFields = FormField::where('af_id', $form->id)
+    //             ->where('ff_category', 6)
+    //             ->get();
+
+    //         // 2) LOAD EXISTING SIGNATURE PAYLOAD (JSON → array)
+    //         $existingData = $evaluation->evaluation_signature_data
+    //             ? json_decode($evaluation->evaluation_signature_data, true)
+    //             : [];
+
+    //         // 3) LOAD EVALUATORS (examiners & chairman) FOR THIS NOMINATION
+    //         $evaluators = Evaluator::where('nom_id', $nomination->id)
+    //             ->where('eva_status', 3)
+    //             ->with('staff')
+    //             ->orderBy('id')
+    //             ->get();
+
+    //         $chairman        = $evaluators->where('eva_role', 2)->first();
+    //         $otherEvaluators = $evaluators->where('eva_role', 1)->values();
+
+    //         // Helper: do not overwrite an already-signed field
+    //         $isAlreadySigned = function ($key) use ($existingData) {
+    //             return isset($existingData[$key]) && !empty($existingData[$key]);
+    //         };
+
+    //         // Helper: readable role labels (fallback if you don't want ff_label)
+    //         $roleLabelMap = [
+    //             1 => 'Student',
+    //             2 => 'Supervisor',
+    //             3 => 'Co-Supervisor',
+    //             4 => 'Committee',
+    //             5 => 'Deputy Dean',
+    //             6 => 'Dean',
+    //             8 => 'Examiner/Panel',
+    //         ];
+
+    //         if ($mode == 6) {
+    //             // ===== KEEP YOUR EXISTING MODE 6 LOGIC AS-IS =====
+    //             foreach ($signatureFields as $signatureField) {
+    //                 $signatureKey = $signatureField->ff_signature_key;
+    //                 $dateKey      = $signatureField->ff_signature_date_key;
+
+    //                 if (empty($signatureData[$signatureKey])) {
+    //                     continue;
+    //                 }
+    //                 if ($isAlreadySigned($signatureKey)) {
+    //                     continue;
+    //                 }
+
+    //                 $role       = null;
+    //                 $signerName = null;
+
+    //                 if ($signatureField->ff_signature_role == 1) {
+    //                     $role       = 'Student';
+    //                     $signerName = $student->student_name;
+    //                 } else {
+    //                     // Mass sign: chairman & all examiners (your original patterns)
+    //                     if (str_contains(strtolower($signatureKey), 'chair')) {
+    //                         if ($chairman && $chairman->staff) {
+    //                             $role       = $signatureField->ff_label ?: 'Chairman';
+    //                             $signerName = $chairman->staff->staff_name;
+    //                         } else {
+    //                             continue;
+    //                         }
+    //                     } elseif (preg_match('/(examiner|panel|reviewer|evaluator|assessor)(?:_(\d+))?/i', $signatureKey, $m)) {
+    //                         $index = isset($m[2]) ? max(0, intval($m[2]) - 1) : 0;
+    //                         if (isset($otherEvaluators[$index]) && $otherEvaluators[$index]->staff) {
+    //                             $role       = $signatureField->ff_label ?: 'Examiner/Panel';
+    //                             $signerName = $otherEvaluators[$index]->staff->staff_name;
+    //                         } else {
+    //                             continue;
+    //                         }
+    //                     } else {
+    //                         // Allow committee/DD/Dean too in mass mode, driven by role id
+    //                         if (in_array($signatureField->ff_signature_role, [4, 5, 6])) {
+    //                             // No specific person lookup was provided here. If you
+    //                             // maintain role holders, inject lookups. Otherwise skip.
+    //                             continue;
+    //                         }
+    //                         continue;
+    //                     }
+    //                 }
+
+    //                 $newSignatureData = [
+    //                     $signatureKey                         => $signatureData[$signatureKey],
+    //                     $dateKey                              => now()->format('d M Y'),
+    //                     $signatureKey . '_is_cross_approval'  => false,
+    //                     $signatureKey . '_name'               => $signerName,
+    //                     $signatureKey . '_role'               => $role,
+    //                 ];
+    //                 $existingData = array_merge($existingData, $newSignatureData);
+    //             }
+
+    //             $evaluation->evaluation_signature_data = json_encode($existingData);
+    //             $evaluation->save();
+    //             return;
+    //         }
+
+    //         // ===== MODE 5: INDIVIDUAL SIGN (ROBUST) =====
+
+    //         $currentStaff = auth()->user();
+
+    //         // 4) Determine current staff’s relationship to this student/evaluation
+
+    //         // 4a) Is current staff one of the assigned evaluators?
+    //         $matchedEvaluator = $evaluators->first(fn($eva) => $eva->staff_id == $currentStaff->id);
+    //         $isChairman       = $matchedEvaluator && $matchedEvaluator->eva_role == 2;
+    //         $isExaminer       = $matchedEvaluator && $matchedEvaluator->eva_role == 1;
+
+    //         // 4b) Is current staff a Supervisor or Co-Supervisor of this student?
+    //         // Adjust the column name used to store SV type if needed.
+    //         $supervision = Supervision::where('student_id', $student->id)
+    //             ->where('staff_id', $currentStaff->id)
+    //             ->first();
+
+    //         $svTypeRaw = $supervision->supervisor_role ?? null;
+
+    //         $isSV   = $supervision && intval($svTypeRaw) === 1;
+    //         $isCoSV = $supervision && intval($svTypeRaw) === 2;
+    //         $isAnySV = $supervision !== null;
+
+    //         // 4c) Committee / DD / Dean via staff_role (match your mapping)
+    //         // If your app uses a different attribute, adjust here.
+    //         $staffRole = intval($currentStaff->staff_role ?? 0); // 1=Committee, 3=DD, 4=Dean (per your note)
+    //         $isCommittee  = $staffRole === 1;
+    //         $isDeputyDean = $staffRole === 3;
+    //         $isDean       = $staffRole === 4;
+
+    //         // Helper: can current staff sign a field of role R?
+    //         $canSignByRole = function (int $sigRole, string $sigKey) use (
+    //             $isExaminer,
+    //             $isChairman,
+    //             $otherEvaluators,
+    //             $currentStaff,
+    //             $isSV,
+    //             $isCoSV,
+    //             $isAnySV,
+    //             $isCommittee,
+    //             $isDeputyDean,
+    //             $isDean
+    //         ) {
+    //             switch ($sigRole) {
+    //                 case 1: // Student – not a staff; block here
+    //                     return [false, null, null, false];
+
+    //                 case 2: // Supervisor
+    //                     if ($isSV)   return [true, $currentStaff->staff_name, 'Supervisor', false];
+    //                     if ($isCoSV) return [true, $currentStaff->staff_name, 'Co-Supervisor', true]; // cross (CoSV signing SV slot)
+    //                     return [false, null, null, false];
+
+    //                 case 3: // Co-Supervisor
+    //                     if ($isCoSV) return [true, $currentStaff->staff_name, 'Co-Supervisor', false];
+    //                     if ($isSV)   return [true, $currentStaff->staff_name, 'Supervisor', true];    // cross (SV signing CoSV slot)
+    //                     return [false, null, null, false];
+
+    //                 case 4: // Committee
+    //                     return $isCommittee ? [true, $currentStaff->staff_name, 'Committee', false] : [false, null, null, false];
+
+    //                 case 5: // Deputy Dean
+    //                     return $isDeputyDean ? [true, $currentStaff->staff_name, 'Deputy Dean', false] : [false, null, null, false];
+
+    //                 case 6: // Dean
+    //                     return $isDean ? [true, $currentStaff->staff_name, 'Dean', false] : [false, null, null, false];
+
+    //                 case 8: // Examiner/Panel (with possible index in key)
+    //                     if (!$isExaminer && !$isChairman) {
+    //                         return [false, null, null, false];
+    //                     }
+
+    //                     // Examiner field usually comes as examiner_1, panel_2, etc.
+    //                     if (preg_match('/(?:examiner|panel|reviewer|evaluator|assessor)_(\d+)/i', $sigKey, $m)) {
+    //                         $idx = max(0, intval($m[1]) - 1);
+    //                         if (!isset($otherEvaluators[$idx])) {
+    //                             return [false, null, null, false];
+    //                         }
+    //                         $eva = $otherEvaluators[$idx];
+    //                         // Only the matching examiner can sign this indexed field
+    //                         if ($eva->staff_id == $currentStaff->id) {
+    //                             return [true, $currentStaff->staff_name, 'Examiner/Panel', false];
+    //                         }
+    //                         return [false, null, null, false];
+    //                     } else {
+    //                         // Non-indexed examiner key: allow any assigned examiner
+    //                         if ($isExaminer) {
+    //                             return [true, $currentStaff->staff_name, 'Examiner/Panel', false];
+    //                         }
+    //                         return [false, null, null, false];
+    //                     }
+
+    //                 default:
+    //                     return [false, null, null, false];
+    //             }
+    //         };
+
+    //         // 5) Iterate fields & store signatures the user actually provided
+    //         foreach ($signatureFields as $signatureField) {
+    //             $signatureKey = $signatureField->ff_signature_key;
+    //             $dateKey      = $signatureField->ff_signature_date_key;
+    //             $sigRoleId    = intval($signatureField->ff_signature_role);
+
+    //             // Skip if user didn't submit this field
+    //             if (empty($signatureData[$signatureKey])) {
+    //                 continue;
+    //             }
+
+    //             // Do not overwrite an existing signature
+    //             if ($isAlreadySigned($signatureKey)) {
+    //                 continue;
+    //             }
+
+    //             // Student signatures (role 1) – allow if the form collects it here.
+    //             if ($sigRoleId === 1) {
+    //                 $newSignatureData = [
+    //                     $signatureKey                        => $signatureData[$signatureKey],
+    //                     $dateKey                             => now()->format('d M Y'),
+    //                     $signatureKey . '_is_cross_approval' => false,
+    //                     $signatureKey . '_name'              => $student->student_name,
+    //                     $signatureKey . '_role'              => $roleLabelMap[1],
+    //                 ];
+    //                 $existingData = array_merge($existingData, $newSignatureData);
+    //                 continue;
+    //             }
+
+    //             // Staff roles: verify permission to sign this exact slot
+    //             [$allowed, $signerName, $roleText, $isCross] = $canSignByRole($sigRoleId, $signatureKey);
+
+    //             // Additionally, keep your chairman self-sign on MODE 5 (if field key mentions chair)
+    //             if (!$allowed && $isChairman && str_contains(strtolower($signatureKey), 'chair')) {
+    //                 $allowed    = true;
+    //                 $signerName = $currentStaff->staff_name;
+    //                 $roleText   = 'Chairman';
+    //                 $isCross    = false;
+    //             }
+
+    //             if (!$allowed) {
+    //                 continue;
+    //             }
+
+    //             // Use field label if you prefer exact form wording; otherwise roleText fallback
+    //             $roleLabel = $signatureField->ff_label ?: ($roleLabelMap[$sigRoleId] ?? $roleText);
+
+    //             $newSignatureData = [
+    //                 $signatureKey                        => $signatureData[$signatureKey],
+    //                 $dateKey                             => now()->format('d M Y'),
+    //                 $signatureKey . '_is_cross_approval' => (bool) $isCross,
+    //                 $signatureKey . '_name'              => $signerName,
+    //                 $signatureKey . '_role'              => $roleLabel,
+    //             ];
+
+    //             $existingData = array_merge($existingData, $newSignatureData);
+    //         }
+
+    //         // 6) Persist
+    //         $evaluation->evaluation_signature_data = json_encode($existingData);
+    //         $evaluation->save();
+    //     } catch (Exception $e) {
+    //         throw new Exception('Signature storage error: ' . $e->getMessage());
+    //     }
+    // }
 }

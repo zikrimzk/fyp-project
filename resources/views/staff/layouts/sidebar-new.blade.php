@@ -380,6 +380,22 @@
                     ->where('id', auth()->user()->id)
                     ->whereIn('staff_role', [1, 3, 4])
                     ->exists();
+
+                $evaluationApproval = DB::table('procedures as a')
+                    ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                    ->join('activity_forms as c', 'b.id', '=', 'c.activity_id')
+                    ->join('form_fields as d', 'c.id', '=', 'd.af_id')
+                    ->where('a.is_haveEva', 1)
+                    ->where('a.evaluation_mode', 2)
+                    ->whereIn('c.af_target', [4, 5])
+                    ->where('d.ff_category', 6)
+                    ->whereIn('d.ff_signature_role', [2, 3, 4, 5, 6])
+                    ->select('b.id as activity_id', 'b.act_name as activity_name', 'd.ff_signature_role')
+                    ->distinct()
+                    ->get();
+
+                // dd($evaluationApproval);
+
             @endphp
 
             <ul class="pc-navbar">
@@ -457,6 +473,29 @@
                             @endforeach
                         </ul>
                     </li>
+
+                    @if ($evaluationApproval)
+                        <li class="pc-item pc-hasmenu">
+                            <a href="javascript:void(0)" class="pc-link">
+                                <span class="pc-micon">
+                                    <i class="fas fa-pen pc-icon"></i>
+                                </span>
+                                <span class="pc-mtext">Evaluation</span>
+                                <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                            </a>
+                            <ul class="pc-submenu">
+                                @foreach ($evaluationApproval as $ea)
+                                    <li class="pc-item">
+                                        <a class="pc-link"
+                                            href="{{ route('my-supervision-evaluation-approval', strtolower(str_replace(' ', '-', $ea->activity_name))) }}">
+                                            {{ $ea->activity_name }}
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </li>
+                    @endif
+
                 @endif
 
                 @if ($iscommittee)

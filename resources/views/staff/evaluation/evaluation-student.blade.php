@@ -70,15 +70,14 @@
                 <!-- [ Evaluation Student ] start -->
                 <div class="col-sm-12">
                     <form
-                        action="{{ route('submit-evaluation-post', ['studentId' => Crypt::encrypt($data->id), 'mode' => $mode]) }}"
+                        action="{{ route('submit-evaluation-post', ['evaluationID' => Crypt::encrypt($evaluationID), 'mode' => $mode]) }}"
                         method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="card p-3">
                             <div class="card-body">
-                                <input type="hidden" name="activity_id" value="{{ $act->id }}">
-                                <input type="hidden" name="semester_id" value="{{ $semId }}">
-                                <input type="hidden" name="opt" id="opt-hidden">
                                 <!-- [1] - FOR SAVE DRAFT [2] CONFIRMED DRAFT -->
+                                <input type="hidden" name="opt" id="opt-hidden">
+
                                 <div class="container">
                                     <div id="formContainer"></div>
                                 </div>
@@ -88,7 +87,7 @@
                                 <button type="button" data-bs-toggle="modal" data-bs-target="#confirmEvaluationModal"
                                     class="btn btn-danger">Confirmed & Submit
                                     Evaluation</button>
-                                <button type="submit" id= "submitBtn" class="btn btn-primary">Save Changes (Draft)</button>
+                                <button type="submit" id= "submitBtn" class="btn btn-primary">Save as Draft</button>
                             </div>
                         </div>
                     </form>
@@ -247,10 +246,8 @@
                 type: "GET",
                 data: {
                     _token: "{{ csrf_token() }}",
-                    actid: "{{ $act->id }}",
+                    evaid: "{{ $evaluationID }}",
                     afid: "{{ $actform->id }}",
-                    studentid: "{{ $data->student_id }}",
-                    semid:"{{ $semId }}",
                     mode: "{{ $mode }}"
                 },
                 beforeSend: function() {
@@ -267,7 +264,7 @@
                 }
             });
         }
-        
+
 
         /*********************************************************/
         /******************FORM SUBMIT FUNCTION*******************/
@@ -432,6 +429,5 @@
                 $(this).removeClass('error-field');
             });
         });
-
     </script>
 @endsection
