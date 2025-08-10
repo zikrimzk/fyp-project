@@ -168,6 +168,8 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/evaluation-student-{evaluationID}-{mode}', [EvaluationController::class, 'evaluationStudent'])->name('evaluation-student');
     Route::get('/view-evaluation-form', [EvaluationController::class, 'viewEvaluationForm'])->name('view-evaluation-form-get');
     Route::post('/submit-evaluation-{evaluationID}-{mode}', [EvaluationController::class, 'submitEvaluation'])->name('submit-evaluation-post');
+    Route::post('/approve-evaluation-{evaluationID}-{option}', [EvaluationController::class, 'approvePanelEvaluation'])->name('approve-evaluation-post');
+
 
 
     // Standard Operation Procedure (SOP)
@@ -288,6 +290,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Evaluation Approval */
     Route::get('/mysupervision-evaluation-approval-{name}', [SupervisorController::class, 'mySupervisionEvaluationApproval'])->name('my-supervision-evaluation-approval');
+    Route::get('/mysupervision-student-evaluation-approval-{activityID}-{studentID}', [SupervisorController::class, 'mySupervisionStudentEvaluationApproval'])->name('my-supervision-student-evaluation-approval');
 
 
     // ---------------------------------------------------------------------------------------------------------------------//

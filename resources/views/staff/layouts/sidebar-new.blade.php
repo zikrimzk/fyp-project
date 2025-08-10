@@ -474,7 +474,7 @@
                         </ul>
                     </li>
 
-                    @if ($evaluationApproval)
+                    @if ($evaluationApproval->isNotEmpty())
                         <li class="pc-item pc-hasmenu">
                             <a href="javascript:void(0)" class="pc-link">
                                 <span class="pc-micon">

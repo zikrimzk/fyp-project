@@ -2052,4 +2052,72 @@ class Controller extends BaseController
     //         throw new Exception('Signature storage error: ' . $e->getMessage());
     //     }
     // }
+
+
+     // if (in_array($role, [2, 3])) {
+                //     /* HANDLE SUPERVISOR LOGIC */
+                //     $formRoles = DB::table('activity_forms as a')
+                //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                //         ->where('a.activity_id', $updatedActivity->activity_id)
+                //         ->where('b.ff_category', 6)
+                //         ->where('a.id', $afID)
+                //         ->where('a.af_target', 1)
+                //         ->pluck('b.ff_signature_role')
+                //         ->unique()
+                //         ->toArray();
+
+                //     $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
+
+                //     $hasSvSignature = isset($updatedSignatureData['sv_signature']);
+                //     $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
+
+                //     if ($hasCoSv) {
+                //         $allSigned = $hasSvSignature && $hasCoSvSignature;
+                //     } else {
+                //         $allSigned = $hasSvSignature;
+                //     }
+
+                //     if ($allSigned) {
+                //         if (!$hasHigherRoles) {
+                //             $finalStatus = $isHaveEvaluation ? 7 : 3;
+                //         } else {
+                //             $finalStatus = 2;
+                //         }
+                //     } else {
+                //         $finalStatus = 1;
+                //     }
+
+                //     $updatedActivity->update(['sa_status' => $finalStatus]);
+
+                //     if ($finalStatus == 3) {
+                //         $this->finalizeSubmission($student, $updatedActivity->activity_id);
+                //         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                //     }
+                // } else {
+                //     /* HANDLE COMMITTEE/ DEPUTY DEAN / DEAN LOGIC */
+                //     $formRoles = DB::table('activity_forms as a')
+                //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                //         ->where('a.activity_id', $updatedActivity->activity_id)
+                //         ->where('b.ff_category', 6)
+                //         ->pluck('b.ff_signature_role')
+                //         ->where('a.id', $afID)
+                //         ->where('a.af_target', 1)
+                //         ->unique()->toArray();
+
+                //     $roleSignatures = [
+                //         4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
+                //         5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
+                //         6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
+                //     ];
+
+                //     $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
+
+                //     $finalStatus = $allSigned ? ($isHaveEvaluation ? 7 : 3) : 2;
+                //     $updatedActivity->update(['sa_status' => $finalStatus]);
+
+                //     if ($finalStatus == 3) {
+                //         $this->finalizeSubmission($student, $updatedActivity->activity_id);
+                //         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
+                //     }
+                // }
 }

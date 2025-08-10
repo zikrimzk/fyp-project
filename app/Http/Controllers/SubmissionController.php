@@ -28,11 +28,9 @@ use App\Models\SubmissionReview;
 use App\Models\ActivityCorrection;
 use App\Models\JournalPublication;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
@@ -869,6 +867,12 @@ class SubmissionController extends Controller
     {
         try {
 
+            /* 
+             * TYPE OF FORM
+             * 1 : ACTIVIRY FORM
+             * 2 : CORRECTION FORM
+             */
+
             /* LOAD ACTIVITY DATA */
             $act = Activity::where('id', $actID)->first();
 
@@ -888,6 +892,7 @@ class SubmissionController extends Controller
                 ->orderBy('ff_order')
                 ->get();
 
+            /* GET SIGNATURE FIELD */
             $signatures = $formfields->where('ff_category', 6);
 
             /* SIGNATURE & DOCUMENT NAME LOGIC */
@@ -1010,6 +1015,9 @@ class SubmissionController extends Controller
             if ($opt == 1) {
                 $finalPath = $basePath . '/Final Document/' . $filename;
             } else if ($opt == 2) {
+                if ($procedure->is_repeatable != 1) {
+                    $finalPath = $basePath . '/Evaluation/' . $semesterlabel . '/' . $filename;
+                }
                 $finalPath = $basePath . '/Evaluation/' . $filename;
             } else if ($opt == 3) {
                 $finalPath = $basePath . '/Correction/' . $filename;
@@ -1085,7 +1093,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Get Journal Publication [Student] [UNUSED] - Function */
+    /* Get Journal Publication [Student] - Function */
     public function getJournalPublication()
     {
         try {
@@ -2403,9 +2411,6 @@ class SubmissionController extends Controller
 
             $hasCoSv = $hasSvfield && $hasCoSvfield;
 
-            /* DECODE EXISTING SIGNATURE DATA */
-            $signatureData = json_decode($studentActivity->sa_signature_data ?? '[]', true);
-
             if ($option == 1) {
                 /* APPROVE LOGIC */
 
@@ -2437,73 +2442,6 @@ class SubmissionController extends Controller
 
                 /* HANDLE SIGNATURE LOGIC */
                 $this->handleSignatureApprovalStatus($student, $updatedActivity, null, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, 1);
-
-                // if (in_array($role, [2, 3])) {
-                //     /* HANDLE SUPERVISOR LOGIC */
-                //     $formRoles = DB::table('activity_forms as a')
-                //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                //         ->where('a.activity_id', $updatedActivity->activity_id)
-                //         ->where('b.ff_category', 6)
-                //         ->where('a.id', $afID)
-                //         ->where('a.af_target', 1)
-                //         ->pluck('b.ff_signature_role')
-                //         ->unique()
-                //         ->toArray();
-
-                //     $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
-
-                //     $hasSvSignature = isset($updatedSignatureData['sv_signature']);
-                //     $hasCoSvSignature = isset($updatedSignatureData['cosv_signature']);
-
-                //     if ($hasCoSv) {
-                //         $allSigned = $hasSvSignature && $hasCoSvSignature;
-                //     } else {
-                //         $allSigned = $hasSvSignature;
-                //     }
-
-                //     if ($allSigned) {
-                //         if (!$hasHigherRoles) {
-                //             $finalStatus = $isHaveEvaluation ? 7 : 3;
-                //         } else {
-                //             $finalStatus = 2;
-                //         }
-                //     } else {
-                //         $finalStatus = 1;
-                //     }
-
-                //     $updatedActivity->update(['sa_status' => $finalStatus]);
-
-                //     if ($finalStatus == 3) {
-                //         $this->finalizeSubmission($student, $updatedActivity->activity_id);
-                //         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
-                //     }
-                // } else {
-                //     /* HANDLE COMMITTEE/ DEPUTY DEAN / DEAN LOGIC */
-                //     $formRoles = DB::table('activity_forms as a')
-                //         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                //         ->where('a.activity_id', $updatedActivity->activity_id)
-                //         ->where('b.ff_category', 6)
-                //         ->pluck('b.ff_signature_role')
-                //         ->where('a.id', $afID)
-                //         ->where('a.af_target', 1)
-                //         ->unique()->toArray();
-
-                //     $roleSignatures = [
-                //         4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
-                //         5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
-                //         6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
-                //     ];
-
-                //     $allSigned = collect($roleSignatures)->only($formRoles)->every(fn($signed) => $signed);
-
-                //     $finalStatus = $allSigned ? ($isHaveEvaluation ? 7 : 3) : 2;
-                //     $updatedActivity->update(['sa_status' => $finalStatus]);
-
-                //     if ($finalStatus == 3) {
-                //         $this->finalizeSubmission($student, $updatedActivity->activity_id);
-                //         $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
-                //     }
-                // }
 
                 /* SEND EMAIL NOTIFICATION TO STUDENT */
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);

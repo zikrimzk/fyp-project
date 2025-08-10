@@ -12,8 +12,8 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">Examiner / Panel</a></li>
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluations</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Supervisor</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">My Supervision</a></li>
                                 <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management
                                 </li>
                             </ul>
@@ -160,8 +160,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th scope="col">Student</th>
-                                            <th scope="col">Evaluation</th>
-                                            <th scope="col">Date</th>
+                                            <th scope="col">Activity Document</th>
                                             <th scope="col">Semester</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>
@@ -213,20 +212,16 @@
                         name: 'student_photo',
                     },
                     {
-                        data: 'evaluation_document',
-                        name: 'evaluation_document'
+                        data: 'sa_final_document',
+                        name: 'sa_final_document'
                     },
                     {
-                        data: 'evaluation_date',
-                        name: 'evaluation_date'
+                        data: 'semester',
+                        name: 'semester'
                     },
                     {
-                        data: 'evaluation_semester',
-                        name: 'evaluation_semester'
-                    },
-                    {
-                        data: 'evaluation_status',
-                        name: 'evaluation_status'
+                        data: 'approval_status',
+                        name: 'approval_status'
                     },
                     {
                         data: 'action',

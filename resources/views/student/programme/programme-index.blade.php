@@ -195,7 +195,7 @@
                                                     $semesterlabel = str_replace('/', '', $rawLabel);
                                                     $semesterlabel = trim($semesterlabel);
 
-                                                    $file = $semesterlabel . '/' . $report->evaluation_document;
+                                                    $file = $report->evaluation_document;
                                                 @endphp
                                                 <a href="{{ route('student-view-final-document-get', ['actID' => Crypt::encrypt($act->activity_id), 'semesterID' => Crypt::encrypt($currsemester->id), 'filename' => Crypt::encrypt($file), 'opt' => 2]) }}"
                                                     target="_blank"
