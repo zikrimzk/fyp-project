@@ -160,7 +160,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th scope="col">Student</th>
-                                            <th scope="col">Activity Document</th>
+                                            <th scope="col">Activity</th>
                                             <th scope="col">Semester</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>

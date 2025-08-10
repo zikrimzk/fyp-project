@@ -14,6 +14,7 @@ use App\Models\Procedure;
 use App\Models\Programme;
 use App\Models\Evaluation;
 use App\Models\Nomination;
+use App\Models\Supervision;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
 use App\Models\StudentActivity;
@@ -1325,7 +1326,7 @@ class EvaluationController extends Controller
     private function generateEvaluationFilename($student, $nomination, $evaluation, $mode)
     {
         /* HANDLE FILENAMES IF EXISTS */
-        if ($evaluation && !empty($evaluation->evaluation_document)) {
+        if ($evaluation && $evaluation->evaluation_document != '-') {
             return $evaluation->evaluation_document;
         }
 
@@ -1637,7 +1638,7 @@ class EvaluationController extends Controller
         }
     }
 
-    /* Evaluation Report Approval - Function [Staff] | Email : Yes With Works | [NOT YET IMPLEMENTED] */
+    /* Evaluation Report Approval - Function [Staff] | Email : Yes With Works | [HIGH ATTENTION - IN PROGRESS] */
     public function approvePanelEvaluation(Request $req, $evaluationID, $option)
     {
         try {
@@ -1650,10 +1651,11 @@ class EvaluationController extends Controller
             if (!$evaluation) {
                 return back()->with('error', 'Evaluation not found. Operation could not be processed. Please try again.');
             }
-            /* LOAD USER DATA */
-            $staffId = auth()->user()->id;
 
-            if (!$staffId) {
+            /* LOAD USER DATA */
+            $authUser = auth()->user();
+
+            if (!$authUser) {
                 return back()->with('error', 'Unauthorized access : Staff record is not found.');
             }
 
@@ -1717,60 +1719,148 @@ class EvaluationController extends Controller
                 return back()->with('error', 'Semester record not found. Operation could not be processed. Please contact administrator for further assistance.');
             }
 
-            /* ESTABLISHED FORM META DATA */
-            $formData = $req->except(['_token', 'signatureData', 'opt', 'semester_id']);
-            $scoreData = $this->extractScoreData($formData);
-            $evaluationMeta = $formData;
-            $evaluationMeta['Score'] = $scoreData;
-
-            /* STORE EVALUATION SIGNATURE */
-            if ($req->has('signatureData')) {
-                // $this->storeEvaluationSignature($student, $form, $req->signatureData, $evaluation, $nomination, $mode);
-            }
-
             /* GENERATE FILENAME BASED ON ROLES */
             $fileName = $this->generateEvaluationFilename($student, $nomination, $evaluation, 5);
+
+            /* CHECK SUPERVISOR ROLE (SV or CoSV) */
+            $supervision = Supervision::where('student_id', $student->id)
+                ->where('staff_id', $authUser->id)->first();
+
+            /* CHECK IF SV IS REQUIRED */
+            $hasSvfield = DB::table('activity_forms as a')
+                ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                ->where('a.activity_id', $evaluation->activity_id)
+                ->where('b.ff_category', 6)
+                ->where('b.ff_signature_role', 2)
+                ->where('a.id', $form->id)
+                ->exists();
+
+            /* CHECK IF CO-SV IS REQUIRED */
+            $hasCoSvfield = DB::table('activity_forms as a')
+                ->join('form_fields as b', 'a.id', '=', 'b.af_id')
+                ->where('a.activity_id', $evaluation->activity_id)
+                ->where('b.ff_category', 6)
+                ->where('b.ff_signature_role', 3)
+                ->where('a.id', $form->id)
+                ->exists();
+
+            $hasCoSv = $hasSvfield && $hasCoSvfield;
+
+            /* SUBMISSION CONTROLLER INSTANCE */
+            $sc = new SubmissionController();
 
             /* UPDATE EVALUATION RECORDS */
             if ($option == 1) {
                 /* EVALUATION REPORT APPROVED */
+
+                /* DETERMINE APPROVAL ROLE AND STATUS */
+                [$role, $status] = $sc->determineApprovalRoleStatus($supervision, null, $authUser->staff_role, 3);
+
+                /* STORE EVALUATION SIGNATURE */
+                $sc->storeSignature($evaluation->activity_id, $student, $currsemester, $form, $req->signatureData, $fileName, $role, $authUser, $status, 3, null, $evaluation);
+
+                /* RELOAD STUDENT ACTIVITY DATA */
+                $updatedEvaluation = Evaluation::where('id', $evaluation->id)->first();
+
+                if (!$updatedEvaluation) {
+                    return back()->with('error', 'Evaluation record not found. Approval could not be processed. Please contact administrator for further assistance.');
+                }
+
+                /* DECODE UPDATED SIGNATURE DATA */
+                $updatedSignatureData = json_decode($updatedEvaluation->evaluation_signature_data ?? '[]', true);
+
+                /* GENERATE EVALUATION FORM DOCUMENT */
+                $progcode = strtoupper($student->programmes->prog_code);
+                $activityName = str_replace(['/', '\\'], '-', $activity->act_name);
+
+                /* SET RELATIVE DIRECTORY */
+                $rawLabel = $currsemester->sem_label;
+                $semesterlabel = str_replace('/', '', $rawLabel);
+                $semesterlabel = trim($semesterlabel);
+
+                if ($procedure->is_repeatable == 1) {
+                    $relativeDir = "{$student->student_directory}/{$progcode}/{$activityName}/{$semesterlabel}/Evaluation";
+                } else {
+                    $relativeDir = "{$student->student_directory}/{$progcode}/{$activityName}/Evaluation/{$semesterlabel}";
+                }
+
+                /* LOAD FINAL DIRECTORY */
+                $fullPath = storage_path("app/public/{$relativeDir}");
+
+                if (!File::exists($fullPath)) {
+                    File::ensureDirectoryExists($fullPath, 0755, true);
+                }
+
+                /* GENERATE EVALUATION FORM */
+                $this->generateEvaluationForm($updatedEvaluation, $student, $activity, $form, 5, $relativeDir, $fileName);
+
+                /* HANDLE SIGNATURE LOGIC */
+
+                /* HANDLE FORM ROLES */
+                $formRoles = DB::table('form_fields as b')
+                    ->where('b.af_id', $form->id)
+                    ->where('b.ff_category', 6)
+                    ->pluck('b.ff_signature_role')
+                    ->unique()
+                    ->toArray();
+
+                if (in_array($role, [2, 3])) {
+                    /* SUPERVISOR / CO-SUPERVISOR LOGIC */
+
+                    $hasHigherRoles   = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
+                    $hasSvSignature   = isset($updatedSignatureData['sv_signature']);
+                    $hasCoSvSignature = isset($updatedSignatureData['cosv_s2ignature']);
+                    $allSigned        = $hasCoSv
+                        ? ($hasSvSignature && $hasCoSvSignature)
+                        : $hasSvSignature;
+
+                    if ($allSigned) {
+                        if (! $hasHigherRoles) {
+                            $finalStatus = 8;
+                        } else {
+                            $finalStatus = 9;
+                        }
+                    } else {
+                        $finalStatus = 9;
+                    }
+                } elseif (in_array($role, [4, 5, 6])) {
+                    /* COMMITTEE / DEPUTY-DEAN / DEAN LOGIC */
+
+                    $roleSignatures = [
+                        4 => in_array(4, $formRoles)
+                            ? isset($updatedSignatureData['comm_signature_date'])
+                            : true,
+                        5 => in_array(5, $formRoles)
+                            ? isset($updatedSignatureData['deputy_dean_signature_date'])
+                            : true,
+                        6 => in_array(6, $formRoles)
+                            ? isset($updatedSignatureData['dean_signature_date'])
+                            : true,
+                    ];
+
+                    $allSigned = collect($roleSignatures)
+                        ->only($formRoles)
+                        ->every(fn($signed) => $signed);
+
+                    $finalStatus = $allSigned ? 8 : 9;
+                }
+
+                /* UPDATE STATUS */
+                $evaluation->evaluation_status = $finalStatus;
+
+                /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO PANEL */
+                if ($finalStatus == 8) {
+                    $evaluation->evaluation_isFinal = 1;
+                }
+
+                /* UPDATE EVALUATION */
+                $evaluation->save();
+
+                /* RETURN SUCCESS */
+                return back()->with('success', $student->student_name . ' evaluation report for ' . $activity->act_name . ' has been approved.');
             } elseif ($option == 2) {
                 /* EVALUATOR REPORT REJECTED */
             }
-
-            /* SET AND UPDATE EVALUATION DATA */
-            $evaluation->evaluation_date = now();
-            $evaluation->evaluation_meta_data = json_encode($evaluationMeta);
-            $evaluation->evaluation_document = $fileName;
-            $evaluation->save();
-
-            /* GENERATE EVALUATION FORM DOCUMENT */
-            $progcode = strtoupper($student->programmes->prog_code);
-            $activityName = str_replace(['/', '\\'], '-', $activity->act_name);
-
-            /* SET RELATIVE DIRECTORY */
-            $rawLabel = $currsemester->sem_label;
-            $semesterlabel = str_replace('/', '', $rawLabel);
-            $semesterlabel = trim($semesterlabel);
-
-            if ($procedure->is_repeatable == 1) {
-                $relativeDir = "{$student->student_directory}/{$progcode}/{$activityName}/{$semesterlabel}/Evaluation";
-            } else {
-                $relativeDir = "{$student->student_directory}/{$progcode}/{$activityName}/Evaluation/{$semesterlabel}";
-            }
-
-            /* LOAD FINAL DIRECTORY */
-            $fullPath = storage_path("app/public/{$relativeDir}");
-
-            if (!File::exists($fullPath)) {
-                File::ensureDirectoryExists($fullPath, 0755, true);
-            }
-
-            /* GENERATE EVALUATION FORM */
-            $this->generateEvaluationForm($evaluation, $student, $activity, $form, 5, $relativeDir, $fileName);
-
-            /* REDIRECT IF SUCCESS */
-            return back()->with('success', 'Evaluation submitted successfully!');
 
             /* RETURN ABORT */
             return abort(404, 'Inavalid request. Please try again.');

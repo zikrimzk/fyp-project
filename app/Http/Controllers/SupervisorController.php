@@ -1256,7 +1256,7 @@ class SupervisorController extends Controller
         }
     }
 
-    /* My Supervision Evaluation Approval [IN PROGRESS] - Route */
+    /* My Supervision Evaluation Approval [HIGH ATTENTION - IN PROGRESS] - Route */
     public function mySupervisionEvaluationApproval(Request $req, $name)
     {
         try {
@@ -1538,6 +1538,22 @@ class SupervisorController extends Controller
                         $btnClass = '';
                     } elseif (!$pendingExists && !$allCompleted) {
                         $btnClass = 'disabled-a';
+                    } elseif ($allCompleted) {
+                        return '
+                            <form method="POST" action="" class="d-flex flex-column gap-1" style="min-width:180px;">
+                                ' . csrf_field() . '
+                                <div class="fw-semibold mb-1">Select Status</div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="radio" name="evaluation_type" id="eval_progress_' . $row->sa_id . '" value="progress" required>
+                                    <label class="form-check-label small" for="eval_progress_' . $row->sa_id . '">Progress Presentation</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="radio" name="evaluation_type" id="eval_mock_' . $row->sa_id . '" value="mock">
+                                    <label class="form-check-label small" for="eval_mock_' . $row->sa_id . '">Mock Viva</label>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary mt-1">Submit</button>
+                            </form>
+                        ';
                     } else {
                         return '<div class="fst-italic text-muted">No action required</div>';
                     }
@@ -1573,7 +1589,7 @@ class SupervisorController extends Controller
         }
     }
 
-    /* My Supervision Evaluation Approval [IN PROGRESS] - Route */
+    /* My Supervision Evaluation Approval [HIGH ATTENTION - IN PROGRESS] - Route */
     public function mySupervisionStudentEvaluationApproval(Request $req, $activityID, $studentID)
     {
         try {
@@ -1952,7 +1968,6 @@ class SupervisorController extends Controller
                 return $table->make(true);
             }
 
-
             return view('staff.supervisor.evaluation-student-approval', [
                 'title' => $student->student_name . ' - Evaluation Approval',
                 'student' => $student,
@@ -1961,7 +1976,6 @@ class SupervisorController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            dd($e);
             return abort(500, $e->getMessage());
         }
     }

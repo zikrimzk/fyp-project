@@ -688,7 +688,7 @@ class SubmissionController extends Controller
     }
 
     /* Store Activity Form Signature [Student] - Function */
-    public function storeSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status, $type, $evaluatorIndex = null)
+    public function storeSignature($actID, $student, $semester, $form, $signatureData, $documentName, $signatureRole, $userData, $status, $type, $evaluatorIndex = null, $evaluation = null)
     {
         try {
             if ($signatureData) {
@@ -763,7 +763,6 @@ class SubmissionController extends Controller
                                 $signatureKey . '_is_cross_approval' => $isCrossApproval
                             ];
                         }
-
 
                         if ($signatureRole == 1) {
                             $mergedSignatureData = $newSignatureData;
@@ -855,6 +854,82 @@ class SubmissionController extends Controller
                     $correction->ac_final_submission  = $documentName;
                     $correction->ac_status            = $status;
                     $correction->save();
+                } elseif ($type == 3) {
+                    /* EVALUATION REPORT SIGNATURE */
+
+                    /* LOAD SIGNATURE FIELD DATA */
+                    $signatureField = FormField::where([
+                        ['af_id', $form->id],
+                        ['ff_category', 6],
+                        ['ff_signature_role', $signatureRole]
+                    ])->first();
+
+                    /* STORE SIGNATURE LOGIC */
+                    $existingSignatureData = [];
+                    if ($evaluation->evaluation_signature_data) {
+                        $existingSignatureData = json_decode($evaluation->evaluation_signature_data, true);
+                    }
+
+                    $isCrossApproval = false;
+
+                    if (!$signatureField) {
+                        $allSignatureFields = FormField::where([
+                            ['af_id', $form->id],
+                            ['ff_category', 6],
+                        ])->get();
+
+                        foreach ($allSignatureFields as $field) {
+                            $key = $field->ff_signature_key;
+
+                            if (in_array($field->ff_signature_role, [2, 3]) && empty($existingSignatureData[$key])) {
+                                $signatureField = $field;
+                                $isCrossApproval = true;
+                            }
+                        }
+                    }
+
+                    if ($signatureField) {
+                        $signatureKey = $signatureField->ff_signature_key;
+                        $dateKey = $signatureField->ff_signature_date_key;
+
+                        if ($signatureRole == 1) {
+                            $newSignatureData = [
+                                $signatureKey => $signatureData,
+                                $dateKey => now()->format('d M Y'),
+                                $signatureKey . '_name' => $student->student_name,
+                                $signatureKey . '_role' => 'Student',
+                                $signatureKey . '_is_cross_approval' => $isCrossApproval
+                            ];
+                        } else {
+                            $role = match ($userData->staff_role) {
+                                1 => "Committee",
+                                2 => "Lecturer",
+                                3 => "Deputy Dean",
+                                4 => "Dean",
+                                default => "N/A",
+                            };
+
+                            $newSignatureData = [
+                                $signatureKey => $signatureData,
+                                $dateKey => now()->format('d M Y'),
+                                $signatureKey . '_name' => $userData->staff_name,
+                                $signatureKey . '_role' => $role,
+                                $signatureKey . '_is_cross_approval' => $isCrossApproval
+                            ];
+                        }
+
+
+                        if ($signatureRole == 1) {
+                            $mergedSignatureData = $newSignatureData;
+                        } else {
+                            $mergedSignatureData = array_merge($existingSignatureData, $newSignatureData);
+                        }
+
+                        /* MERGE AND STORE SIGNATURE DATA */
+                        $evaluation->evaluation_signature_data = json_encode($mergedSignatureData);
+                        $evaluation->evaluation_document = $documentName;
+                        $evaluation->save();
+                    }
                 }
             }
         } catch (Exception $e) {
@@ -2496,7 +2571,7 @@ class SubmissionController extends Controller
     }
 
     /* Determine Approval Role and Status [Staff] - Function */
-    private function determineApprovalRoleStatus($supervision, $evaluator, $staffRole, $option)
+    public function determineApprovalRoleStatus($supervision, $evaluator, $staffRole, $option)
     {
         if ($option === 1) {
             /* SUBMISSION APPROVAL */
@@ -2545,12 +2620,33 @@ class SubmissionController extends Controller
             };
         }
 
+        if ($option === 3) {
+            /* EVALUATION REPORT APPROVAL */
+
+            /* COMMITTEE/ DEPUTY DEAN / DEAN */
+            if (! $supervision) {
+                return match ($staffRole) {
+                    1 => [4, 8], // Committee
+                    3 => [5, 8], // Deputy Dean
+                    4 => [6, 8], // Dean
+                    default => [0, 1],
+                };
+            }
+
+            /* SUPERVISOR(s) */
+            return match ($supervision->supervision_role) {
+                1 => [2, 8], // SV 
+                2 => [3, 8], // CoSV
+                default => [0, 1],
+            };
+        }
+
         /* FALLBACK */
         return [0, 2];
     }
 
     /* Determine Rejection Role and Status [Staff] - Function */
-    private function determineRejectionRoleStatus($supervision, $evaluator, $staffRole, $option)
+    public function determineRejectionRoleStatus($supervision, $evaluator, $staffRole, $option)
     {
         if ($option == 1) {
             /* ACTIVITY SUBMISSION REJECTION */
@@ -2571,7 +2667,9 @@ class SubmissionController extends Controller
                 2 => [3, 4], // CoSV
                 default => [0, 1],
             };
-        } elseif ($option == 2) {
+        }
+
+        if ($option == 2) {
             /* ACTIVITY CORRECTION REJECTION */
 
             /* SUPERVISOR(s) */
@@ -2594,6 +2692,27 @@ class SubmissionController extends Controller
                 3 => [5, 8],   // Deputy Dean 
                 4 => [6, 8],   // Dean 
                 default => [0, 8],
+            };
+        }
+
+        if ($option == 3) {
+            /* EVALUATION REPORT REJECTION */
+
+            /* SUPERVISOR(s) */
+            if ($supervision) {
+                return match ($supervision->supervision_role) {
+                    1 => [2, 10], // SV 
+                    2 => [3, 10], // CoSV
+                    default => [0, 10],
+                };
+            }
+
+            /* COMMITTEE/ DEPUTY DEAN / DEAN */
+            return match ($staffRole) {
+                1 => [4, 10],   // Committee 
+                3 => [5, 10],   // Deputy Dean 
+                4 => [6, 10],   // Dean 
+                default => [0, 10],
             };
         }
     }
