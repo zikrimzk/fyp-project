@@ -12,14 +12,15 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">Supervisor</a></li>
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">Nomination</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Nomination Management</li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluation</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Approval</a></li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} </li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">{{ $act->act_name }} - Nomination Management</h2>
+                                <h2 class="mb-0">{{ $act->act_name }} - Evaluation Approval</h2>
                             </div>
                         </div>
                     </div>
@@ -59,7 +60,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Activity Nomination ] start -->
+                <!-- [ Evaluation Approval ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
@@ -139,11 +140,9 @@
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
-                                            <option value="1" selected>Pending</option>
-                                            <option value="2">Nominated - SV</option>
-                                            <option value="3">Reviewed - Committee</option>
-                                            <option value="4">Approved</option>
-                                            <option value="5">Rejected</option>
+                                            <option value="7" selected>Pending</option>
+                                            <option value="13">Passed & Continue</option>
+                                            <option value="3">Approved & Completed</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
@@ -161,8 +160,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th scope="col">Student</th>
-                                            <th scope="col">Nomination</th>
-                                            <th scope="col">Date</th>
+                                            <th scope="col">Activity</th>
                                             <th scope="col">Semester</th>
                                             <th scope="col">Status</th>
                                             <th scope="col">Action</th>
@@ -174,23 +172,24 @@
                         </div>
                     </div>
                 </div>
-                <!-- [ Activity Nomination ] end -->
+                <!-- [ Evaluation Approval  ] end -->
 
             </div>
             <!-- [ Main Content ] end -->
         </div>
     </div>
+
     <script type="text/javascript">
         $(document).ready(function() {
 
-            // DATATABLE : STUDENT
+            // DATATABLE : EVALUATION 
             var table = $('.data-table').DataTable({
                 processing: true,
                 serverSide: true,
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('my-supervision-nomination', strtolower(str_replace(' ', '-', $act->act_name))) }}",
+                    url: "{{ route('evaluation-approval', strtolower(str_replace(' ', '-', $act->act_name))) }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id')
                             .val();
@@ -213,20 +212,16 @@
                         name: 'student_photo',
                     },
                     {
-                        data: 'nom_document',
-                        name: 'nom_document'
+                        data: 'sa_final_document',
+                        name: 'sa_final_document'
                     },
                     {
-                        data: 'nom_date',
-                        name: 'nom_date'
+                        data: 'semester',
+                        name: 'semester'
                     },
                     {
-                        data: 'nom_semester',
-                        name: 'nom_semester'
-                    },
-                    {
-                        data: 'nom_status',
-                        name: 'nom_status'
+                        data: 'approval_status',
+                        name: 'approval_status',
                     },
                     {
                         data: 'action',
@@ -235,7 +230,7 @@
                         searchable: false
                     }
                 ],
-                
+
 
             });
 
@@ -282,4 +277,3 @@
         });
     </script>
 @endsection
-

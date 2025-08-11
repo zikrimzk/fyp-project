@@ -14,7 +14,6 @@
                         <div class="col-md-12">
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervisor</a></li>
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">My Supervision</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Submission</a></li>
                                 <li class="breadcrumb-item" aria-current="page">Submission Management</li>
                             </ul>

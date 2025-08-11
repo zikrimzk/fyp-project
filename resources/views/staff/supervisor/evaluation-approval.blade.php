@@ -13,14 +13,13 @@
                         <div class="col-md-12">
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervisor</a></li>
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">My Supervision</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management
-                                </li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluation</a></li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }}</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">{{ $act->act_name }} - Evaluation Management</h2>
+                                <h2 class="mb-0">{{ $act->act_name }} - Evaluation Approval</h2>
                             </div>
                         </div>
                     </div>
@@ -60,7 +59,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Examiner-Panel Evaluation Management ] start -->
+                <!-- [ Evaluation Approval ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
@@ -140,9 +139,9 @@
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
-                                            <option value="1">Pending</option>
-                                            <option value="7">Submitted [Draft]</option>
-                                            <option value="10">Final & Confirmed</option>
+                                            <option value="7" selected>Pending</option>
+                                            <option value="13">Passed & Continue</option>
+                                            <option value="3">Approved & Completed</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
@@ -172,7 +171,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- [ Examiner-Panel Evaluation Management ] end -->
+                <!-- [ Evaluation Approval ] end -->
 
             </div>
             <!-- [ Main Content ] end -->
@@ -182,7 +181,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            // DATATABLE : STUDENT
+            // DATATABLE : EVALUATION
             var table = $('.data-table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -221,7 +220,7 @@
                     },
                     {
                         data: 'approval_status',
-                        name: 'approval_status'
+                        name: 'approval_status',
                     },
                     {
                         data: 'action',

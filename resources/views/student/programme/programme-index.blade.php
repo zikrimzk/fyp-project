@@ -95,22 +95,26 @@
                                         @elseif($act->init_status == 11)
                                             <span class="badge bg-danger">Locked</span>
                                         @elseif ($act->init_status == 12)
+                                            <span class="badge bg-danger">Evaluation : Failed</span>
+                                        @elseif ($act->init_status == 13)
+                                            <span class="badge bg-light-success">Evaluation : Passed & Continue</span>
+                                        @elseif ($act->init_status == 14)
                                             <span class="badge bg-light-warning">Correction : Pending Supervisor
                                                 Approval</span>
-                                        @elseif ($act->init_status == 13)
+                                        @elseif ($act->init_status == 15)
                                             <span class="badge bg-light-warning">Correction : Pending Examiners/Panels
                                                 Approval </span>
-                                        @elseif ($act->init_status == 14)
+                                        @elseif ($act->init_status == 16)
                                             <span class="badge bg-light-warning">Correction : Pending Committee / Deputy
                                                 Dean / Dean Approval </span>
-                                        @elseif ($act->init_status == 15)
-                                            <span class="badge bg-success">Correction : Approve & Completed</span>
-                                        @elseif ($act->init_status == 16)
-                                            <span class="badge bg-light-danger">Correction : Rejected by Supervisor</span>
                                         @elseif ($act->init_status == 17)
+                                            <span class="badge bg-success">Correction : Approve & Completed</span>
+                                        @elseif ($act->init_status == 18)
+                                            <span class="badge bg-light-danger">Correction : Rejected by Supervisor</span>
+                                        @elseif ($act->init_status == 19)
                                             <span class="badge bg-light-danger">Correction : Rejected by
                                                 Examiners/Panels</span>
-                                        @elseif ($act->init_status == 18)
+                                        @elseif ($act->init_status == 20)
                                             <span class="badge bg-light-danger">Correction : Rejected by Committee / Deputy
                                                 Dean / Dean Approval</span>
                                         @else
@@ -335,7 +339,7 @@
                             @if (
                                 ($act->required_document > 0 &&
                                     $act->submitted_required_document == $act->required_document &&
-                                    !in_array($act->init_status, [1, 2, 3, 7, 8, 12, 13, 14, 15, 16, 17, 18])) ||
+                                    !in_array($act->init_status, [1, 2, 3, 7, 8, 14, 15, 16, 17, 18, 19, 20])) ||
                                     ($act->required_document == 0 &&
                                         $act->optional_document > 0 &&
                                         $act->submitted_optional_document >= 1 &&
@@ -358,7 +362,7 @@
                                         <span class="me-2">Confirm Submission</span>
                                     </button>
                                 </div>
-                            @elseif(in_array($act->init_status, [8, 16, 17, 18]))
+                            @elseif(in_array($act->init_status, [8, 18, 19, 20]))
                                 @php
                                     $modalCorrectionAppear = true;
                                 @endphp

@@ -287,6 +287,8 @@
             </div>
 
             @php
+
+                /* CHECK FOR CURRENT SEMESTER STUDENT FOR SUPERVISION */
                 $supervision = DB::table('supervisions')
                     ->where('staff_id', auth()->user()->id)
                     ->whereExists(function ($query) {
@@ -305,7 +307,10 @@
                     })
                     ->exists();
 
+                /* CHECK EACH ROLE */
                 $iscommittee = auth()->user()->staff_role == 1;
+                $isDD = auth()->user()->staff_role == 3;
+                $isDean = auth()->user()->staff_role == 4;
 
                 $showDeputyDeanNomination = false;
                 $deputyDeanNominations = collect();
@@ -345,6 +350,7 @@
                     $showDeanNomination = $deanNominations->isNotEmpty();
                 }
 
+                /* LOAD NOMINATION DATA */
                 $nomination = DB::table('procedures as a')
                     ->join('activities as b', 'a.activity_id', '=', 'b.id')
                     ->where('a.is_haveEva', 1)
@@ -352,7 +358,7 @@
                     ->distinct()
                     ->get();
 
-                // Examiner/Panel Activities
+                /* LOAD EXAMINER/PANEL ACTIVITIES */
                 $examinerpanelActivity = DB::table('evaluators as a')
                     ->join('staff as b', 'a.staff_id', '=', 'b.id')
                     ->join('nominations as c', 'a.nom_id', '=', 'c.id')
@@ -364,7 +370,7 @@
                     ->distinct()
                     ->get();
 
-                // Chairman Activities
+                /* LOAD CHAIRMAN ACTIVITIES */
                 $chairmanActivity = DB::table('evaluators as a')
                     ->join('staff as b', 'a.staff_id', '=', 'b.id')
                     ->join('nominations as c', 'a.nom_id', '=', 'c.id')
@@ -376,25 +382,46 @@
                     ->distinct()
                     ->get();
 
+                /* CHECK IF USER IS HIGHER UP */
                 $higherUps = DB::table('staff')
                     ->where('id', auth()->user()->id)
                     ->whereIn('staff_role', [1, 3, 4])
                     ->exists();
 
-                $evaluationApproval = DB::table('procedures as a')
-                    ->join('activities as b', 'a.activity_id', '=', 'b.id')
-                    ->join('activity_forms as c', 'b.id', '=', 'c.activity_id')
-                    ->join('form_fields as d', 'c.id', '=', 'd.af_id')
-                    ->where('a.is_haveEva', 1)
-                    ->where('a.evaluation_mode', 2)
-                    ->whereIn('c.af_target', [4, 5])
-                    ->where('d.ff_category', 6)
-                    ->whereIn('d.ff_signature_role', [2, 3, 4, 5, 6])
-                    ->select('b.id as activity_id', 'b.act_name as activity_name', 'd.ff_signature_role')
+                /* EVALUATION APPROVAL CONFIG */
+                $evalConfig = DB::table('procedures as p')
+                    ->join('activities as a', 'p.activity_id', '=', 'a.id')
+                    ->join('activity_forms as af', 'a.id', '=', 'af.activity_id')
+                    ->join('form_fields as ff', 'af.id', '=', 'ff.af_id')
+                    ->where('p.is_haveEva', 1)
+                    ->where('p.evaluation_mode', 2)
+                    ->whereIn('af.af_target', [4, 5])
+                    ->where('ff.ff_category', 6)
+                    ->whereIn('ff.ff_signature_role', [2, 3, 4, 5, 6])
+                    ->select('a.id as activity_id', 'a.act_name as activity_name', 'ff.ff_signature_role as role')
                     ->distinct()
-                    ->get();
+                    ->get()
+                    ->groupBy('activity_id')
+                    ->map(function ($rows) {
+                        $first = $rows->first();
+                        return [
+                            'activity_id' => $first->activity_id,
+                            'activity_name' => $first->activity_name,
+                            'roles' => $rows->pluck('role')->unique()->values()->all(),
+                        ];
+                    })
+                    ->values();
 
-                // dd($evaluationApproval);
+                $slugify = fn($name) => Str::of($name)->lower()->replace(' ', '-');
+
+                $supervisorActs = $evalConfig->filter(
+                    fn($x) => collect($x['roles'])
+                        ->intersect([2, 3])
+                        ->isNotEmpty(),
+                );
+                $committeeActs = $evalConfig->filter(fn($x) => in_array(4, $x['roles']));
+                $ddActs = $evalConfig->filter(fn($x) => in_array(5, $x['roles']));
+                $deanActs = $evalConfig->filter(fn($x) => in_array(6, $x['roles']));
 
             @endphp
 
@@ -423,7 +450,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-user-graduate pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">My Students</span>
+                            <span class="pc-mtext">My Student</span>
                         </a>
                     </li>
 
@@ -432,7 +459,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-file-upload pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">Submissions</span>
+                            <span class="pc-mtext">Submission</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
@@ -459,7 +486,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-clipboard-list pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">Nominations</span>
+                            <span class="pc-mtext">Nomination</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
@@ -474,21 +501,20 @@
                         </ul>
                     </li>
 
-                    @if ($evaluationApproval->isNotEmpty())
+                    @if ($supervisorActs->isNotEmpty())
                         <li class="pc-item pc-hasmenu">
                             <a href="javascript:void(0)" class="pc-link">
-                                <span class="pc-micon">
-                                    <i class="fas fa-pen pc-icon"></i>
-                                </span>
+                                <span class="pc-micon"><i class="fas fa-pen pc-icon"></i></span>
                                 <span class="pc-mtext">Evaluation</span>
                                 <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                             </a>
                             <ul class="pc-submenu">
-                                @foreach ($evaluationApproval as $ea)
+                                <!-- Submodule: Approval (role-based) -->
+                                @foreach ($supervisorActs as $act)
                                     <li class="pc-item">
                                         <a class="pc-link"
-                                            href="{{ route('my-supervision-evaluation-approval', strtolower(str_replace(' ', '-', $ea->activity_name))) }}">
-                                            {{ $ea->activity_name }}
+                                            href="{{ route('my-supervision-evaluation-approval', $slugify($act['activity_name'])) }}">
+                                            {{ $act['activity_name'] }}
                                         </a>
                                     </li>
                                 @endforeach
@@ -508,7 +534,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-clipboard-list pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">Nominations</span>
+                            <span class="pc-mtext">Nomination</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
@@ -522,78 +548,63 @@
                             @endforeach
                         </ul>
                     </li>
-
-                    <li class="pc-item pc-hasmenu">
-                        <a href="javascript:void(0)" class="pc-link">
-                            <span class="pc-micon">
-                                <i class="fas fa-pen pc-icon"></i>
-                            </span>
-                            <span class="pc-mtext">Evaluation</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                        <ul class="pc-submenu">
-                            @foreach ($nomination as $nom)
-                                <li class="pc-item">
-                                    <a class="pc-link"
-                                        href="{{ route('committee-evaluation', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                        {{ $nom->activity_name }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </li>
                 @endif
 
-                @if ($showDeputyDeanNomination)
+                @if ($isDD)
                     <!-- Deputy Dean Section -->
-                    <li class="pc-item pc-caption">
-                        <label>Deputy Dean</label>
-                    </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="javascript:void(0)" class="pc-link">
-                            <span class="pc-micon">
-                                <i class="fas fa-clipboard-list pc-icon"></i>
-                            </span>
-                            <span class="pc-mtext">Nominations</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                        <ul class="pc-submenu">
-                            @foreach ($deputyDeanNominations as $nom)
-                                <li class="pc-item">
-                                    <a class="pc-link"
-                                        href="{{ route('deputydean-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                        {{ $nom->activity_name }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </li>
+                    <li class="pc-item pc-caption"><label>Deputy Dean</label></li>
+
+                    @if ($showDeputyDeanNomination)
+                        <li class="pc-item pc-hasmenu">
+                            <a href="javascript:void(0)" class="pc-link">
+                                <span class="pc-micon">
+                                    <i class="fas fa-clipboard-list pc-icon"></i>
+                                </span>
+                                <span class="pc-mtext">Nomination</span>
+                                <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                            </a>
+                            <ul class="pc-submenu">
+                                @foreach ($deputyDeanNominations as $nom)
+                                    <li class="pc-item">
+                                        <a class="pc-link"
+                                            href="{{ route('deputydean-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
+                                            {{ $nom->activity_name }}
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </li>
+                    @endif
                 @endif
 
-                @if ($showDeanNomination)
+                @if ($isDean)
                     <!-- Dean Section -->
-                    <li class="pc-item pc-caption">
-                        <label>Dean</label>
-                    </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="javascript:void(0)" class="pc-link">
-                            <span class="pc-micon">
-                                <i class="fas fa-clipboard-list pc-icon"></i>
-                            </span>
-                            <span class="pc-mtext">Nominations</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                        <ul class="pc-submenu">
-                            @foreach ($deanNominations as $nom)
-                                <li class="pc-item">
-                                    <a class="pc-link"
-                                        href="{{ route('dean-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                        {{ $nom->activity_name }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </li>
+                    <li class="pc-item pc-caption"><label>Dean</label></li>
+
+                    @if ($showDeanNomination)
+                        <li class="pc-item pc-caption">
+                            <label>Dean</label>
+                        </li>
+                        <li class="pc-item pc-hasmenu">
+                            <a href="javascript:void(0)" class="pc-link">
+                                <span class="pc-micon">
+                                    <i class="fas fa-clipboard-list pc-icon"></i>
+                                </span>
+                                <span class="pc-mtext">Nomination</span>
+                                <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                            </a>
+                            <ul class="pc-submenu">
+                                @foreach ($deanNominations as $nom)
+                                    <li class="pc-item">
+                                        <a class="pc-link"
+                                            href="{{ route('dean-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
+                                            {{ $nom->activity_name }}
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </li>
+                    @endif
                 @endif
 
                 @if ($chairmanActivity->isNotEmpty())
@@ -606,7 +617,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-pen pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">Evaluations</span>
+                            <span class="pc-mtext">Evaluation</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
@@ -632,7 +643,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-pen pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">Evaluations</span>
+                            <span class="pc-mtext">Evaluation</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
@@ -652,7 +663,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-file-upload pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">Submissions</span>
+                            <span class="pc-mtext">Submission</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
@@ -687,7 +698,7 @@
                             </li>
                             <li class="pc-item pc-hasmenu">
                                 <a class="pc-link" href="javascript:void(0)">
-                                    <span class="pc-mtext">Students</span>
+                                    <span class="pc-mtext">Student</span>
                                     <span class="pc-arrow">
                                         <i data-feather="chevron-right"></i>
                                     </span>
@@ -718,7 +729,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-file-upload pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">Submissions</span>
+                            <span class="pc-mtext">Submission</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
@@ -742,6 +753,93 @@
                                     Submission Suggestion
                                 </a>
                             </li>
+                        </ul>
+                    </li>
+
+                    <li class="pc-item pc-hasmenu">
+                        <a href="javascript:void(0)" class="pc-link">
+                            <span class="pc-micon">
+                                <i class="fas fa-pen pc-icon"></i>
+                            </span>
+                            <span class="pc-mtext">Evaluation</span>
+                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                        </a>
+                        <ul class="pc-submenu">
+
+                            <li class="pc-item pc-hasmenu">
+                                <a href="javascript:void(0)" class="pc-link">
+                                    <span class="pc-mtext">Final Report</span>
+                                    <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                                </a>
+                                <ul class="pc-submenu">
+                                    @foreach ($nomination as $nom)
+                                        <li class="pc-item">
+                                            <a class="pc-link"
+                                                href="{{ route('final-evaluation-report', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
+                                                {{ $nom->activity_name }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </li>
+
+                            @if ($iscommittee && $committeeActs->isNotEmpty())
+                                <li class="pc-item pc-hasmenu">
+                                    <a href="javascript:void(0)" class="pc-link">
+                                        <span class="pc-mtext">Approval</span>
+                                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                                    </a>
+                                    <ul class="pc-submenu">
+                                        @foreach ($committeeActs as $act)
+                                            <li class="pc-item">
+                                                <a class="pc-link"
+                                                    href="{{ route('evaluation-approval', $slugify($act['activity_name'])) }}">
+                                                    {{ $act['activity_name'] }}
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @endif
+
+                            @if ($isDD && $ddActs->isNotEmpty())
+                                <li class="pc-item pc-hasmenu">
+                                    <a href="javascript:void(0)" class="pc-link">
+                                        <span class="pc-mtext">Approval</span>
+                                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                                    </a>
+                                    <ul class="pc-submenu">
+                                        @foreach ($ddActs as $act)
+                                            <li class="pc-item">
+                                                <a class="pc-link"
+                                                    href="{{ route('evaluation-approval', $slugify($act['activity_name'])) }}">
+                                                    {{ $act['activity_name'] }}
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @endif
+
+                            @if ($isDean && $deanActs->isNotEmpty())
+                                <li class="pc-item pc-hasmenu">
+                                    <a href="javascript:void(0)" class="pc-link">
+                                        <span class="pc-mtext">Approval</span>
+                                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                                    </a>
+                                    <ul class="pc-submenu">
+                                        @foreach ($deanActs as $act)
+                                            <li class="pc-item">
+                                                <a class="pc-link"
+                                                    href="{{ route('evaluation-approval', $slugify($act['activity_name'])) }}">
+                                                    {{ $act['activity_name'] }}
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @endif
+
                         </ul>
                     </li>
 
@@ -777,7 +875,7 @@
                             <span class="pc-micon">
                                 <i class="fas fa-cog pc-icon"></i>
                             </span>
-                            <span class="pc-mtext">System Settings</span>
+                            <span class="pc-mtext">System Setting</span>
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">

@@ -167,13 +167,13 @@ class SubmissionController extends Controller
                 if ($activityCorrection) {
                     $correctionStatusMap = [
                         1 => 8,  // Evaluation : Minor / Major Correction
-                        2 => 12, // Correction: Pending SV 
-                        3 => 13, // Correction: Pending Examiners/Panels 
-                        4 => 14, // Correction: Pending Committee/Dean/Deputy Dean
-                        5 => 15, // Approved & Completed
-                        6 => 16, // Correction: Rejected by Supervisor
-                        7 => 17, // Correction: Rejected by Examiners/Panels
-                        8 => 18, // Correction: Rejected by Committee/Dean/Deputy Dean
+                        2 => 14, // Correction: Pending SV 
+                        3 => 15, // Correction: Pending Examiners/Panels 
+                        4 => 16, // Correction: Pending Committee/Dean/Deputy Dean
+                        5 => 17, // Approved & Completed
+                        6 => 18, // Correction: Rejected by Supervisor
+                        7 => 19, // Correction: Rejected by Examiners/Panels
+                        8 => 20, // Correction: Rejected by Committee/Dean/Deputy Dean
                     ];
 
                     $activity->init_status = $correctionStatusMap[$activityCorrection->ac_status] ?? 10;
@@ -190,7 +190,12 @@ class SubmissionController extends Controller
                     if ($activityCorrection->ac_final_submission != null) {
                         $activity->confirmed_corrected_document = $semesterlabel . '/' . $activityCorrection->ac_final_submission;
                     }
-                } elseif ($studentAct) {
+                } elseif ($studentAct && $activity->is_repeatable != 1) {
+                    // Change status based on SA status
+                    $activity->init_status = $studentAct->sa_status;
+                    $activity->confirmed_document = $studentAct->sa_final_submission;
+                    $activity->sa_semester_id = $studentAct->semester_id;
+                } elseif ($studentAct && $activity->is_repeatable == 1 && $studentAct->semester_id == Semester::where('sem_status', 1)->first()->id) {
                     // Change status based on SA status
                     $activity->init_status = $studentAct->sa_status;
                     $activity->confirmed_document = $studentAct->sa_final_submission;
@@ -2213,7 +2218,8 @@ class SubmissionController extends Controller
                         7 => "<span class='badge bg-light-warning d-block mb-1'>Pending: <br> Evaluation</span>",
                         8 => "<span class='badge bg-light-warning d-block mb-1'>Evaluation: <br> Minor/Major Correction</span>",
                         9 => "<span class='badge bg-light-danger d-block mb-1'>Evaluation: <br> Resubmit/Represent</span>",
-
+                        12 => "<span class='badge bg-danger d-block mb-1'>Evaluation: <br> Failed</span>",
+                        13 => "<span class='badge bg-light-success d-block mb-1'>Evaluation: <br> Passed & Continue Activity</span>",
                         default => "N/A",
                     };
 
@@ -2701,18 +2707,18 @@ class SubmissionController extends Controller
             /* SUPERVISOR(s) */
             if ($supervision) {
                 return match ($supervision->supervision_role) {
-                    1 => [2, 10], // SV 
-                    2 => [3, 10], // CoSV
-                    default => [0, 10],
+                    1 => [2, 11], // SV 
+                    2 => [3, 11], // CoSV
+                    default => [0, 11],
                 };
             }
 
             /* COMMITTEE/ DEPUTY DEAN / DEAN */
             return match ($staffRole) {
-                1 => [4, 10],   // Committee 
-                3 => [5, 10],   // Deputy Dean 
-                4 => [6, 10],   // Dean 
-                default => [0, 10],
+                1 => [4, 11],   // Committee 
+                3 => [5, 11],   // Deputy Dean 
+                4 => [6, 11],   // Dean 
+                default => [0, 11],
             };
         }
     }

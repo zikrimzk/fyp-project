@@ -165,10 +165,18 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/create-renomination-data/{nominationId}', [NominationController::class, 'reNominatedStudent'])->name('renomination-data-get');
 
     // Evaluation
+
+    /* Evaluation Management */
+    Route::get('/final-evaluation-report-{name}', [EvaluationController::class, 'finalEvaluationReport'])->name('final-evaluation-report');
     Route::get('/evaluation-student-{evaluationID}-{mode}', [EvaluationController::class, 'evaluationStudent'])->name('evaluation-student');
     Route::get('/view-evaluation-form', [EvaluationController::class, 'viewEvaluationForm'])->name('view-evaluation-form-get');
     Route::post('/submit-evaluation-{evaluationID}-{mode}', [EvaluationController::class, 'submitEvaluation'])->name('submit-evaluation-post');
+
+    /* Evaluation Approval */
+    Route::get('/evaluation-approval-{name}', [EvaluationController::class, 'evaluationApproval'])->name('evaluation-approval');
+    Route::get('/student-evaluation-approval-{activityID}-{studentID}', [EvaluationController::class, 'studentEvaluationApproval'])->name('student-evaluation-approval');
     Route::post('/approve-evaluation-{evaluationID}-{option}', [EvaluationController::class, 'approvePanelEvaluation'])->name('approve-evaluation-post');
+    Route::post('/finalize-evaluation-{studentActID}', [EvaluationController::class, 'finalizeEvaluation'])->name('finalize-evaluation-post');
 
 
 
@@ -247,10 +255,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     // Nomination
     Route::get('/committee-nomination-{name}', [NominationController::class, 'committeeNomination'])->name('committee-nomination');
-
-    // Evaluation
-    Route::get('/committee-evaluation-{name}', [EvaluationController::class, 'committeeEvaluation'])->name('committee-evaluation');
-
 
     // ---------------------------------------------------------------------------------------------------------------------//
     // ------------------------------------------------ DEPUTY DEAN --------------------------------------------------------//

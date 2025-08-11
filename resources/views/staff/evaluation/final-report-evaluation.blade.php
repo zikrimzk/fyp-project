@@ -12,8 +12,8 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">Commiitee</a></li>
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluations</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluation</a></li>
                                 <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management
                                 </li>
                             </ul>
@@ -183,7 +183,7 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
-    
+
     <script type="text/javascript">
         $(document).ready(function() {
 
@@ -194,7 +194,7 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('committee-evaluation', strtolower(str_replace(' ', '-', $act->act_name))) }}",
+                    url: "{{ route('final-evaluation-report', strtolower(str_replace(' ', '-', $act->act_name))) }}",
                     data: function(d) {
                         d.faculty = $('#fil_faculty_id')
                             .val();
@@ -223,7 +223,7 @@
                     {
                         data: 'confirmed_by',
                         name: 'confirmed_by',
-                    }, 
+                    },
                     {
                         data: 'evaluation_date',
                         name: 'evaluation_date'

@@ -12,18 +12,23 @@
                     <div class="row align-items-center">
                         <div class="col-md-12">
                             <ul class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="javascript: void(0)">Supervisor</a></li>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluation</a></li>
-                                <li class="breadcrumb-item"><a
-                                        href="{{ route('my-supervision-evaluation-approval', strtolower(str_replace(' ', '-', $activity->act_name))) }}">{{ $activity->act_name }}</a>
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Approval</a></li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $activity->act_name }} - Evaluation Approval
                                 </li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $student->student_name }}</li>
+                                <li class="breadcrumb-item"><a
+                                        href="{{ route('evaluation-approval', strtolower(str_replace(' ', '-', $activity->act_name))) }}">{{ $activity->act_name }}
+                                    </a></li>
+                                <li class="breadcrumb-item" aria-current="page">
+                                    {{ $student->student_name }}
+                                </li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
                                 <h3 class="mb-0 d-flex align-items-center ">
-                                    <a href="{{ route('my-supervision-evaluation-approval', strtolower(str_replace(' ', '-', $activity->act_name))) }}"
+                                    <a href="{{ route('evaluation-approval', strtolower(str_replace(' ', '-', $activity->act_name))) }}"
                                         class="btn me-2">
                                         <span class="f-18">
                                             <i class="ti ti-arrow-left"></i>
@@ -398,7 +403,7 @@
                 responsive: true,
                 autoWidth: true,
                 ajax: {
-                    url: "{{ route('my-supervision-student-evaluation-approval', ['activityID' => Crypt::encrypt($activity->id), 'studentID' => Crypt::encrypt($student->id)]) }}",
+                    url: "{{ route('student-evaluation-approval', ['activityID' => Crypt::encrypt($activity->id), 'studentID' => Crypt::encrypt($student->id)]) }}",
                     data: function(d) {
                         d.semester = $('#fil_semester_id')
                             .val();
