@@ -1345,6 +1345,483 @@ class SubmissionController extends Controller
         }
     }
 
+    /* Get Student Activity Eligibility [Staff] - DSS Function */
+    public function getStudentSubmissionEligibility($matricno, $activityid)
+    {
+        try {
+
+            /* LOAD LATEST SEMESTER DATA */
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            /* SUGGESTION CODE */
+            $data = DB::table('students as s')
+                ->select([
+                    's.id as student_id',
+                    's.student_name',
+                    's.student_matricno',
+                    's.student_email',
+                    's.student_directory',
+                    's.student_photo',
+                    's.student_semcount',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'c.fac_id',
+                    'p.timeline_sem',
+                    'p.programme_id',
+                    'a.id as activity_id',
+                    'a.act_name as activity_name',
+                    'p.act_seq',
+                    'p.init_status',
+                    DB::raw("
+                    CASE
+                        -- Already completed this semester
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                            AND sa_current.sa_status = 3
+                        ) THEN 5
+
+                        -- Submission archived this semester
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status = 5
+                            AND sub.semester_id = latest.latest_semester_id
+                        ) THEN 6
+
+                        -- In progress this semester
+                        WHEN EXISTS (
+                            SELECT 1 FROM student_activities sa_current
+                            WHERE sa_current.student_id = s.id
+                            AND sa_current.activity_id = p.activity_id
+                            AND sa_current.semester_id = latest.latest_semester_id
+                        ) THEN 4
+
+                        -- Submission pending this semester (no student_activity yet)
+                        WHEN EXISTS (
+                            SELECT 1 FROM documents d
+                            JOIN submissions sub ON sub.document_id = d.id
+                            WHERE d.activity_id = p.activity_id
+                            AND sub.student_id = s.id
+                            AND sub.submission_status IN (1, 4)
+                            AND sub.semester_id = latest.latest_semester_id
+                        )
+                        AND NOT EXISTS (
+                            SELECT 1 FROM student_activities sa
+                            WHERE sa.student_id = s.id
+                            AND sa.activity_id = p.activity_id
+                            AND sa.semester_id = latest.latest_semester_id
+                        ) THEN 2
+
+
+                        -- Eligible
+                        ELSE 1
+                    END as suggestion_status
+                ")
+                ])
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('s.id', '=', 'latest.student_id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 's.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('procedures as p', function ($join) {
+                    $join->on('s.programme_id', '=', 'p.programme_id')
+                        ->whereRaw('s.student_semcount >= p.timeline_sem')
+                        ->where('p.is_repeatable', '=', 1);
+                })
+                ->join('activities as a', 'p.activity_id', '=', 'a.id')
+                ->join('programmes as c', 'c.id', '=', 's.programme_id')
+                ->where('s.student_matricno', '=', $matricno)
+                ->where('a.id', '=', $activityid)
+                ->where('s.student_status', '=', 1)
+                ->orderBy('s.student_matricno')
+                ->orderBy('p.act_seq')
+                ->first();
+
+            return $data ? $data->suggestion_status : 0;
+        } catch (Exception) {
+            return 0;
+        }
+    }
+
+    /* Assign Submission to All Student [Staff] - Function */
+    public function assignSubmission()
+    {
+        try {
+            $decision = 0;
+            /** LOAD CURRENT SEMESTER **/
+            $currsemester = Semester::where('sem_status', 1)->first();
+
+            if (!$currsemester) {
+                return back()->with('error', 'No current semester found.');
+            }
+
+            /** LOAD PROCEDURES DATA **/
+            $data = DB::table('procedures as a')
+                ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                ->join('documents as c', 'b.id', '=', 'c.activity_id')
+                ->join('programmes as d', 'a.programme_id', '=', 'd.id')
+                ->join('students as e', 'd.id', '=', 'e.programme_id')
+                ->where('e.student_status', '=', 1)
+                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'a.is_haveEva', 'a.evaluation_mode', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
+                ->get();
+
+            /** ASSIGNING SUBMISSION **/
+            foreach ($data as $sub) {
+                $createdSubmission = null;
+
+                if ($sub->is_repeatable == 1) {
+                    /** ACTIVITY REPEATABLE LOGIC **/
+
+                    $checkExists = Submission::where('student_id', $sub->student_id)
+                        ->where('document_id', $sub->document_id)
+                        ->where('semester_id', $currsemester->id)
+                        ->exists();
+                } else {
+                    /** ACTIVITY NOT REPEATABLE LOGIC **/
+
+                    $checkExists = Submission::where('student_id', $sub->student_id)
+                        ->where('document_id', $sub->document_id)
+                        ->exists();
+                }
+
+                /** IF SUBMISSION NOT EXIST **/
+                if (!$checkExists) {
+
+                    /** SUBMISSION ASSIGNING LOGIC **/
+                    $days = $sub->timeline_week * 7;
+                    $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($days);
+
+                    if ($sub->init_status == 2) {
+                        $status = 2;
+                    } elseif ($sub->init_status == 1) {
+                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
+                    } else {
+                        $status = $sub->init_status;
+                    }
+
+                    /** CREATE NEW SUBMISSION **/
+                    $createdSubmission = Submission::create([
+                        'submission_document' => '-',
+                        'submission_duedate' => $submissionDate,
+                        'submission_status' => $status,
+                        'student_id' => $sub->student_id,
+                        'document_id' => $sub->document_id,
+                        'semester_id' => $currsemester->id
+                    ]);
+                }
+
+                /** LOAD THE CREATED SUBMISSION DATA **/
+                $createdSubmission = Submission::where('student_id', $sub->student_id)
+                    ->where('document_id', $sub->document_id)
+                    ->where('semester_id', $currsemester->id)
+                    ->first();
+
+                /** IF ACTIVITY IS REPEATABLE AND SUBMISSION CREATED **/
+                if ($sub->is_repeatable == 1 && $createdSubmission) {
+
+                    /** CHECK FOR STUDENT ELIGIBILITY **/
+                    $decision = $this->getStudentSubmissionEligibility($sub->student_matricno, $sub->activity_id);
+
+                    /** LOAD PREVIOUS EVALUATOR **/
+                    $previousEvaluator = DB::table('evaluators as a')
+                        ->join('nominations as b', 'a.nom_id', '=', 'b.id')
+                        ->where('b.student_id', $sub->student_id)
+                        ->where('b.activity_id', $sub->activity_id)
+                        ->where('a.eva_status', 3)
+                        ->get();
+
+                    /** IF STUDENT IS ELIGIBILE **/
+                    if ($decision == 1) {
+
+                        /** ASSIGN SUBMISSION LOGIC**/
+                        $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($sub->timeline_week * 7);
+                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
+
+                        /** UPDATE SUBMISSION **/
+                        $createdSubmission->update([
+                            'submission_status' => $status,
+                            'submission_duedate' => $submissionDate
+                        ]);
+
+                        /** IF ACTIVITY HAS EVALUATION **/
+                        if ($sub->is_haveEva == 1) {
+
+                            if ($previousEvaluator->count() > 0) {
+                                foreach ($previousEvaluator as $eva) {
+                                    if ($sub->evaluation_mode == 1) {
+                                        $evaluation = new Evaluation();
+                                        $evaluation->student_id = $sub->student_id;
+                                        $evaluation->staff_id = $eva->staff_id;
+                                        $evaluation->activity_id = $sub->activity_id;
+                                        $evaluation->semester_id = $currsemester->id;
+                                        $evaluation->evaluation_status = 1;
+                                        $evaluation->save();
+                                    } elseif ($sub->evaluation_mode == 2 && $eva->eva_role == 1) {
+
+                                        $evaluation = new Evaluation();
+                                        $evaluation->student_id = $sub->student_id;
+                                        $evaluation->staff_id = $eva->staff_id;
+                                        $evaluation->activity_id = $sub->activity_id;
+                                        $evaluation->semester_id = $currsemester->id;
+                                        $evaluation->evaluation_status = 1;
+                                        $evaluation->save();
+                                    }
+                                }
+                            } else {
+                                /** CREATE OR UPDATE NOMINATION **/
+                                Nomination::firstOrCreate(
+                                    [
+                                        'student_id' => $sub->student_id,
+                                        'activity_id' => $sub->activity_id,
+                                        'semester_id' => $currsemester->id
+                                    ],
+                                    [
+                                        'nom_status' => 1
+                                    ]
+                                );
+                            }
+                        }
+                    } else {
+                        /** FALLBACK - NECCESSARY DATA **/
+
+                        /** LOAD STUDENT ACTIVITY DATA **/
+                        $confirmSubmission = StudentActivity::where('student_id', $sub->student_id)
+                            ->where('activity_id', $sub->activity_id)
+                            ->where('semester_id', $currsemester->id)
+                            ->first();
+
+                        /** REMOVE SUBMISSION REVIEW DATA **/
+                        SubmissionReview::where('student_activity_id', $confirmSubmission->id)
+                            ->delete();
+
+                        /** REMOVE STUDENT ACTIVITY DATA **/
+                        $confirmSubmission->delete();
+
+                        /** REMOVE SUBMISSION DATA **/
+                        $createdSubmission->delete();
+
+                        /** REMOVE NOMINATION DATA **/
+                        Nomination::where('student_id', $sub->student_id)
+                            ->where('activity_id', $sub->activity_id)
+                            ->where('semester_id', $currsemester->id)
+                            ->delete();
+
+                        /** REMOVE EVALUATION DATA **/
+                        if ($previousEvaluator->count() > 0) {
+                            foreach ($previousEvaluator as $eva) {
+                                Evaluation::where('student_id', $sub->student_id)
+                                    ->where('staff_id', $eva->staff_id)
+                                    ->where('activity_id', $sub->activity_id)
+                                    ->where('semester_id', $currsemester->id)
+                                    ->delete();
+                            }
+                        }
+                    }
+                }
+            }
+
+            return $decision;
+            return back()->with('success', 'Submission has been assigned successfully. Decision: ' . $decision);
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error assigning students with submission: ' . $e->getMessage());
+        }
+    }
+
+    /* Assign Submission to Individual Student [Staff] - Function */
+    public function assignStudentSubmission($matricno)
+    {
+        try {
+            $decision = 0;
+            /** LOAD CURRENT SEMESTER **/
+            $currsemester = Semester::where('sem_status', 1)->first();
+
+            if (!$currsemester) {
+                return back()->with('error', 'No current semester found.');
+            }
+
+            /** LOAD PROCEDURES DATA **/
+            $data = DB::table('procedures as a')
+                ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                ->join('documents as c', 'b.id', '=', 'c.activity_id')
+                ->join('programmes as d', 'a.programme_id', '=', 'd.id')
+                ->join('students as e', 'd.id', '=', 'e.programme_id')
+                ->where('e.student_status', '=', 1)
+                ->where('e.student_matricno', '=', $matricno)
+                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'a.is_haveEva', 'a.evaluation_mode', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
+                ->get();
+
+            /** ASSIGNING SUBMISSION **/
+            foreach ($data as $sub) {
+                $createdSubmission = null;
+
+                if ($sub->is_repeatable == 1) {
+                    /** ACTIVITY REPEATABLE LOGIC **/
+
+                    $checkExists = Submission::where('student_id', $sub->student_id)
+                        ->where('document_id', $sub->document_id)
+                        ->where('semester_id', $currsemester->id)
+                        ->exists();
+                } else {
+                    /** ACTIVITY NOT REPEATABLE LOGIC **/
+
+                    $checkExists = Submission::where('student_id', $sub->student_id)
+                        ->where('document_id', $sub->document_id)
+                        ->exists();
+                }
+
+                /** IF SUBMISSION NOT EXIST **/
+                if (!$checkExists) {
+
+                    /** SUBMISSION ASSIGNING LOGIC **/
+                    $days = $sub->timeline_week * 7;
+                    $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($days);
+
+                    if ($sub->init_status == 2) {
+                        $status = 2;
+                    } elseif ($sub->init_status == 1) {
+                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
+                    } else {
+                        $status = $sub->init_status;
+                    }
+
+                    /** CREATE NEW SUBMISSION **/
+                    $createdSubmission = Submission::create([
+                        'submission_document' => '-',
+                        'submission_duedate' => $submissionDate,
+                        'submission_status' => $status,
+                        'student_id' => $sub->student_id,
+                        'document_id' => $sub->document_id,
+                        'semester_id' => $currsemester->id
+                    ]);
+                }
+
+                /** LOAD THE CREATED SUBMISSION DATA **/
+                $createdSubmission = Submission::where('student_id', $sub->student_id)
+                    ->where('document_id', $sub->document_id)
+                    ->where('semester_id', $currsemester->id)
+                    ->first();
+
+                /** IF ACTIVITY IS REPEATABLE AND SUBMISSION CREATED **/
+                if ($sub->is_repeatable == 1 && $createdSubmission) {
+
+                    /** CHECK FOR STUDENT ELIGIBILITY **/
+                    $decision = $this->getStudentSubmissionEligibility($sub->student_matricno, $sub->activity_id);
+
+                    /** LOAD PREVIOUS EVALUATOR **/
+                    $previousEvaluator = DB::table('evaluators as a')
+                        ->join('nominations as b', 'a.nom_id', '=', 'b.id')
+                        ->where('b.student_id', $sub->student_id)
+                        ->where('b.activity_id', $sub->activity_id)
+                        ->where('a.eva_status', 3)
+                        ->get();
+
+                    /** IF STUDENT IS ELIGIBILE **/
+                    if ($decision == 1) {
+
+                        /** ASSIGN SUBMISSION LOGIC**/
+                        $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($sub->timeline_week * 7);
+                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
+
+                        /** UPDATE SUBMISSION **/
+                        $createdSubmission->update([
+                            'submission_status' => $status,
+                            'submission_duedate' => $submissionDate
+                        ]);
+
+                        /** IF ACTIVITY HAS EVALUATION **/
+                        if ($sub->is_haveEva == 1) {
+
+                            if ($previousEvaluator->count() > 0) {
+                                foreach ($previousEvaluator as $eva) {
+                                    if ($sub->evaluation_mode == 1) {
+                                        $evaluation = new Evaluation();
+                                        $evaluation->student_id = $sub->student_id;
+                                        $evaluation->staff_id = $eva->staff_id;
+                                        $evaluation->activity_id = $sub->activity_id;
+                                        $evaluation->semester_id = $currsemester->id;
+                                        $evaluation->evaluation_status = 1;
+                                        $evaluation->save();
+                                    } elseif ($sub->evaluation_mode == 2 && $eva->eva_role == 1) {
+
+                                        $evaluation = new Evaluation();
+                                        $evaluation->student_id = $sub->student_id;
+                                        $evaluation->staff_id = $eva->staff_id;
+                                        $evaluation->activity_id = $sub->activity_id;
+                                        $evaluation->semester_id = $currsemester->id;
+                                        $evaluation->evaluation_status = 1;
+                                        $evaluation->save();
+                                    }
+                                }
+                            } else {
+                                /** CREATE OR UPDATE NOMINATION **/
+                                Nomination::firstOrCreate(
+                                    [
+                                        'student_id' => $sub->student_id,
+                                        'activity_id' => $sub->activity_id,
+                                        'semester_id' => $currsemester->id
+                                    ],
+                                    [
+                                        'nom_status' => 1
+                                    ]
+                                );
+                            }
+                        }
+                    } else {
+                        /** FALLBACK - NECCESSARY DATA **/
+
+                        /** LOAD STUDENT ACTIVITY DATA **/
+                        $confirmSubmission = StudentActivity::where('student_id', $sub->student_id)
+                            ->where('activity_id', $sub->activity_id)
+                            ->where('semester_id', $currsemester->id)
+                            ->first();
+
+                        /** REMOVE SUBMISSION REVIEW DATA **/
+                        SubmissionReview::where('student_activity_id', $confirmSubmission->id)
+                            ->delete();
+
+                        /** REMOVE STUDENT ACTIVITY DATA **/
+                        $confirmSubmission->delete();
+
+                        /** REMOVE SUBMISSION DATA **/
+                        $createdSubmission->delete();
+
+                        /** REMOVE NOMINATION DATA **/
+                        Nomination::where('student_id', $sub->student_id)
+                            ->where('activity_id', $sub->activity_id)
+                            ->where('semester_id', $currsemester->id)
+                            ->delete();
+
+                        /** REMOVE EVALUATION DATA **/
+                        if ($previousEvaluator->count() > 0) {
+                            foreach ($previousEvaluator as $eva) {
+                                Evaluation::where('student_id', $sub->student_id)
+                                    ->where('staff_id', $eva->staff_id)
+                                    ->where('activity_id', $sub->activity_id)
+                                    ->where('semester_id', $currsemester->id)
+                                    ->delete();
+                            }
+                        }
+                    }
+                }
+            }
+
+            return $decision;
+            return back()->with('success', 'Submission has been assigned successfully. Decision: ' . $decision);
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error assigning students with submission: ' . $e->getMessage());
+        }
+    }
+    
     /* Submission Management [Staff] [Committee/DD/DEAN] */
     public function submissionManagement(Request $req)
     {
@@ -1550,406 +2027,6 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             dd($e->getMessage());
             return abort(500);
-        }
-    }
-
-    public function getStudentSubmissionEligibility($matricno, $activityid)
-    {
-        try {
-            // Get latest semester per student
-            $latestSemesterSub = DB::table('student_semesters')
-                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
-                ->groupBy('student_id');
-
-            $data = DB::table('students as s')
-                ->select([
-                    's.id as student_id',
-                    's.student_name',
-                    's.student_matricno',
-                    's.student_email',
-                    's.student_directory',
-                    's.student_photo',
-                    's.student_semcount',
-                    'b.sem_label',
-                    'c.prog_code',
-                    'c.prog_mode',
-                    'c.fac_id',
-                    'p.timeline_sem',
-                    'p.programme_id',
-                    'a.id as activity_id',
-                    'a.act_name as activity_name',
-                    'p.act_seq',
-                    'p.init_status',
-                    DB::raw("
-                    CASE
-                        -- Already completed this semester
-                        WHEN EXISTS (
-                            SELECT 1 FROM student_activities sa_current
-                            WHERE sa_current.student_id = s.id
-                            AND sa_current.activity_id = p.activity_id
-                            AND sa_current.sa_status = 3
-                        ) THEN 5
-
-                        -- Submission archived this semester
-                        WHEN EXISTS (
-                            SELECT 1 FROM documents d
-                            JOIN submissions sub ON sub.document_id = d.id
-                            WHERE d.activity_id = p.activity_id
-                            AND sub.student_id = s.id
-                            AND sub.submission_status = 5
-                            AND sub.semester_id = latest.latest_semester_id
-                        ) THEN 6
-
-                        -- In progress this semester
-                        WHEN EXISTS (
-                            SELECT 1 FROM student_activities sa_current
-                            WHERE sa_current.student_id = s.id
-                            AND sa_current.activity_id = p.activity_id
-                            AND sa_current.semester_id = latest.latest_semester_id
-                        ) THEN 4
-
-                        -- Submission pending this semester (no student_activity yet)
-                        WHEN EXISTS (
-                            SELECT 1 FROM documents d
-                            JOIN submissions sub ON sub.document_id = d.id
-                            WHERE d.activity_id = p.activity_id
-                            AND sub.student_id = s.id
-                            AND sub.submission_status IN (1, 4)
-                            AND sub.semester_id = latest.latest_semester_id
-                        )
-                        AND NOT EXISTS (
-                            SELECT 1 FROM student_activities sa
-                            WHERE sa.student_id = s.id
-                            AND sa.activity_id = p.activity_id
-                            AND sa.semester_id = latest.latest_semester_id
-                        ) THEN 2
-
-
-                        -- Eligible
-                        ELSE 1
-                    END as suggestion_status
-                ")
-                ])
-                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
-                    $join->on('s.id', '=', 'latest.student_id');
-                })
-                ->leftJoin('student_semesters as ss', function ($join) {
-                    $join->on('ss.student_id', '=', 's.id')
-                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
-                })
-                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
-                ->join('procedures as p', function ($join) {
-                    $join->on('s.programme_id', '=', 'p.programme_id')
-                        ->whereRaw('s.student_semcount >= p.timeline_sem')
-                        ->where('p.is_repeatable', '=', 1);
-                })
-                ->join('activities as a', 'p.activity_id', '=', 'a.id')
-                ->join('programmes as c', 'c.id', '=', 's.programme_id')
-                ->where('s.student_matricno', '=', $matricno)
-                ->where('a.id', '=', $activityid)
-                ->where('s.student_status', '=', 1)
-                ->orderBy('s.student_matricno')
-                ->orderBy('p.act_seq')
-                ->first();
-
-            return $data ? $data->suggestion_status : 0;
-        } catch (Exception $e) {
-            return 0;
-        }
-    }
-
-    public function assignSubmission()
-    {
-        try {
-            /** LOAD CURRENT SEMESTER **/
-            $currsemester = Semester::where('sem_status', 1)->first();
-
-            if (!$currsemester) {
-                return back()->with('error', 'No current semester found.');
-            }
-
-            /** LOAD PROCEDURES DATA **/
-            $data = DB::table('procedures as a')
-                ->join('activities as b', 'a.activity_id', '=', 'b.id')
-                ->join('documents as c', 'b.id', '=', 'c.activity_id')
-                ->join('programmes as d', 'a.programme_id', '=', 'd.id')
-                ->join('students as e', 'd.id', '=', 'e.programme_id')
-                ->where('e.student_status', '=', 1)
-                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'a.is_haveEva', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
-                ->get();
-
-            /** ASSIGNING SUBMISSION **/
-            foreach ($data as $sub) {
-                $createdSubmission = null;
-
-                if ($sub->is_repeatable == 1) {
-                    /** ACTIVITY REPEATABLE LOGIC **/
-
-                    $checkExists = Submission::where('student_id', $sub->student_id)
-                        ->where('document_id', $sub->document_id)
-                        ->where('semester_id', $currsemester->id)
-                        ->exists();
-                } else {
-                    /** ACTIVITY NOT REPEATABLE LOGIC **/
-
-                    $checkExists = Submission::where('student_id', $sub->student_id)
-                        ->where('document_id', $sub->document_id)
-                        ->exists();
-                }
-
-                /** IF SUBMISSION NOT EXIST **/
-                if (!$checkExists) {
-
-                    /** SUBMISSION ASSIGNING LOGIC **/
-                    $days = $sub->timeline_week * 7;
-                    $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($days);
-
-                    if ($sub->init_status == 2) {
-                        $status = 2;
-                    } elseif ($sub->init_status == 1) {
-                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
-                    } else {
-                        $status = $sub->init_status;
-                    }
-
-                    /** CREATE NEW SUBMISSION **/
-                    $createdSubmission = Submission::create([
-                        'submission_document' => '-',
-                        'submission_duedate' => $submissionDate,
-                        'submission_status' => $status,
-                        'student_id' => $sub->student_id,
-                        'document_id' => $sub->document_id,
-                        'semester_id' => $currsemester->id
-                    ]);
-                }
-
-                /** LOAD THE CREATED SUBMISSION DATA **/
-                $createdSubmission = Submission::where('student_id', $sub->student_id)
-                    ->where('document_id', $sub->document_id)
-                    ->where('semester_id', $currsemester->id)
-                    ->first();
-
-                /** IF ACTIVITY IS REPEATABLE AND SUBMISSION CREATED **/
-                if ($sub->is_repeatable == 1 && $createdSubmission) {
-
-                    /** CHECK FOR STUDENT ELIGIBILITY **/
-                    $decision = $this->getStudentSubmissionEligibility($sub->student_matricno, $sub->activity_id);
-
-                    /** IF STUDENT IS ELIGIBILE **/
-                    if ($decision == 1) {
-
-                        /** ASSIGN SUBMISSION LOGIC**/
-                        $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($sub->timeline_week * 7);
-                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
-
-                        /** UPDATE SUBMISSION **/
-                        $createdSubmission->update([
-                            'submission_status' => $status,
-                            'submission_duedate' => $submissionDate
-                        ]);
-
-                        /** IF ACTIVITY HAS EVALUATION **/
-                        if ($sub->is_haveEva == 1) {
-
-                            /** CREATE OR UPDATE NOMINATION **/
-                            Nomination::firstOrCreate(
-                                [
-                                    'student_id' => $sub->student_id,
-                                    'activity_id' => $sub->activity_id,
-                                    'semester_id' => $currsemester->id
-                                ],
-                                [
-                                    'nom_status' => 1
-                                ]
-                            );
-                        }
-                    } else {
-                        /** FALLBACK - REMOVE SUBMISSION **/
-                        $createdSubmission->delete();
-                        Nomination::where('student_id', $sub->student_id)
-                            ->where('activity_id', $sub->activity_id)
-                            ->where('semester_id', $currsemester->id)
-                            ->delete();
-                    }
-                }
-            }
-
-            return back()->with('success', 'Submission has been assigned successfully.');
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error assigning students with submission: ' . $e->getMessage());
-        }
-    }
-
-    public function assignStudentSubmission($matricno)
-    {
-        try {
-            $decision = 0;
-            /** LOAD CURRENT SEMESTER **/
-            $currsemester = Semester::where('sem_status', 1)->first();
-
-            if (!$currsemester) {
-                return back()->with('error', 'No current semester found.');
-            }
-
-            /** LOAD PROCEDURES DATA **/
-            $data = DB::table('procedures as a')
-                ->join('activities as b', 'a.activity_id', '=', 'b.id')
-                ->join('documents as c', 'b.id', '=', 'c.activity_id')
-                ->join('programmes as d', 'a.programme_id', '=', 'd.id')
-                ->join('students as e', 'd.id', '=', 'e.programme_id')
-                ->where('e.student_status', '=', 1)
-                ->where('e.student_matricno', '=', $matricno)
-                ->select('e.student_matricno', 'a.timeline_week', 'a.init_status', 'a.is_repeatable', 'a.is_haveEva', 'a.evaluation_mode', 'e.id as student_id', 'c.id as document_id', 'b.id as activity_id')
-                ->get();
-
-            /** ASSIGNING SUBMISSION **/
-            foreach ($data as $sub) {
-                $createdSubmission = null;
-
-                if ($sub->is_repeatable == 1) {
-                    /** ACTIVITY REPEATABLE LOGIC **/
-
-                    $checkExists = Submission::where('student_id', $sub->student_id)
-                        ->where('document_id', $sub->document_id)
-                        ->where('semester_id', $currsemester->id)
-                        ->exists();
-                } else {
-                    /** ACTIVITY NOT REPEATABLE LOGIC **/
-
-                    $checkExists = Submission::where('student_id', $sub->student_id)
-                        ->where('document_id', $sub->document_id)
-                        ->exists();
-                }
-
-                /** IF SUBMISSION NOT EXIST **/
-                if (!$checkExists) {
-
-                    /** SUBMISSION ASSIGNING LOGIC **/
-                    $days = $sub->timeline_week * 7;
-                    $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($days);
-
-                    if ($sub->init_status == 2) {
-                        $status = 2;
-                    } elseif ($sub->init_status == 1) {
-                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
-                    } else {
-                        $status = $sub->init_status;
-                    }
-
-                    /** CREATE NEW SUBMISSION **/
-                    $createdSubmission = Submission::create([
-                        'submission_document' => '-',
-                        'submission_duedate' => $submissionDate,
-                        'submission_status' => $status,
-                        'student_id' => $sub->student_id,
-                        'document_id' => $sub->document_id,
-                        'semester_id' => $currsemester->id
-                    ]);
-                }
-
-                /** LOAD THE CREATED SUBMISSION DATA **/
-                $createdSubmission = Submission::where('student_id', $sub->student_id)
-                    ->where('document_id', $sub->document_id)
-                    ->where('semester_id', $currsemester->id)
-                    ->first();
-
-                /** IF ACTIVITY IS REPEATABLE AND SUBMISSION CREATED **/
-                if ($sub->is_repeatable == 1 && $createdSubmission) {
-
-                    /** CHECK FOR STUDENT ELIGIBILITY **/
-                    $decision = $this->getStudentSubmissionEligibility($sub->student_matricno, $sub->activity_id);
-
-                    /** LOAD PREVIOUS EVALUATOR **/
-                    $previousEvaluator = DB::table('evaluators as a')
-                        ->join('nominations as b', 'a.nom_id', '=', 'b.id')
-                        ->where('b.student_id', $sub->student_id)
-                        ->where('b.activity_id', $sub->activity_id)
-                        ->where('a.eva_status', 3)
-                        ->get();
-
-                    /** IF STUDENT IS ELIGIBILE **/
-                    if ($decision == 1) {
-
-                        /** ASSIGN SUBMISSION LOGIC**/
-                        $submissionDate = Carbon::parse($currsemester->sem_startdate)->addDays($sub->timeline_week * 7);
-                        $status = $submissionDate->lt(Carbon::today()) ? 4 : 1;
-
-                        /** UPDATE SUBMISSION **/
-                        $createdSubmission->update([
-                            'submission_status' => $status,
-                            'submission_duedate' => $submissionDate
-                        ]);
-
-                        /** IF ACTIVITY HAS EVALUATION **/
-                        if ($sub->is_haveEva == 1) {
-
-                            if ($previousEvaluator->count() > 0) {
-                                foreach ($previousEvaluator as $eva) {
-                                    if ($sub->evaluation_mode == 1) {
-                                        $evaluation = new Evaluation();
-                                        $evaluation->student_id = $sub->student_id;
-                                        $evaluation->staff_id = $eva->staff_id;
-                                        $evaluation->activity_id = $sub->activity_id;
-                                        $evaluation->semester_id = $currsemester->id;
-                                        $evaluation->evaluation_status = 1;
-                                        $evaluation->save();
-                                    } elseif ($sub->evaluation_mode == 2 && $eva->eva_role == 1) {
-
-                                        $evaluation = new Evaluation();
-                                        $evaluation->student_id = $sub->student_id;
-                                        $evaluation->staff_id = $eva->staff_id;
-                                        $evaluation->activity_id = $sub->activity_id;
-                                        $evaluation->semester_id = $currsemester->id;
-                                        $evaluation->evaluation_status = 1;
-                                        $evaluation->save();
-                                    }
-                                }
-                            } else {
-                                /** CREATE OR UPDATE NOMINATION **/
-                                Nomination::firstOrCreate(
-                                    [
-                                        'student_id' => $sub->student_id,
-                                        'activity_id' => $sub->activity_id,
-                                        'semester_id' => $currsemester->id
-                                    ],
-                                    [
-                                        'nom_status' => 1
-                                    ]
-                                );
-                            }
-                        }
-                    } else {
-                        /** FALLBACK - NECCESSARY DATA **/
-
-                        StudentActivity::where('student_id', $sub->student_id)
-                            ->where('activity_id', $sub->activity_id)
-                            ->where('semester_id', $currsemester->id)
-                            ->delete();
-
-                        $createdSubmission->delete();
-
-                        Nomination::where('student_id', $sub->student_id)
-                            ->where('activity_id', $sub->activity_id)
-                            ->where('semester_id', $currsemester->id)
-                            ->delete();
-
-                        if ($previousEvaluator->count() > 0) {
-                            foreach ($previousEvaluator as $eva) {
-                                Evaluation::where('student_id', $sub->student_id)
-                                    ->where('staff_id', $eva->staff_id)
-                                    ->where('activity_id', $sub->activity_id)
-                                    ->where('semester_id', $currsemester->id)
-                                    ->delete();
-                            }
-                        }
-                    }
-                }
-            }
-
-            return $decision;
-            return back()->with('success', 'Submission has been assigned successfully. Decision: ' . $decision);
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error assigning students with submission: ' . $e->getMessage());
         }
     }
 
@@ -2706,7 +2783,7 @@ class SubmissionController extends Controller
                 $updatedSignatureData = json_decode($updatedActivity->sa_signature_data ?? '[]', true);
 
                 /* HANDLE SIGNATURE LOGIC */
-                $this->handleSignatureApprovalStatus($student, $updatedActivity, null, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation , $isRepeatable, 1);
+                $this->handleSignatureApprovalStatus($student, $updatedActivity, null, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, $isRepeatable, 1);
 
                 /* SEND EMAIL NOTIFICATION TO STUDENT */
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
@@ -2908,7 +2985,8 @@ class SubmissionController extends Controller
     }
 
     /* Handle Signature And Status [Staff] - Function | Email : Yes With Works */
-    private function handleSignatureApprovalStatus($student, $updatedActivity, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, $isRepeatable, $type) {
+    private function handleSignatureApprovalStatus($student, $updatedActivity, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, $isRepeatable, $type)
+    {
         /* HANDLE TARGET */
         $target = $type === 1 ? 1 : 2;
 
