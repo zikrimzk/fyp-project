@@ -164,8 +164,7 @@
                                         <tr>
                                             <th>#</th>
                                             <th scope="col">Student</th>
-                                            <th scope="col">Evaluation</th>
-                                            <th scope="col">Confirmed By</th>
+                                            <th scope="col">Evaluator Report</th>
                                             <th scope="col">Date</th>
                                             <th scope="col">Semester</th>
                                             <th scope="col">Status</th>
@@ -217,12 +216,8 @@
                         name: 'student_photo',
                     },
                     {
-                        data: 'evaluation_document',
-                        name: 'evaluation_document'
-                    },
-                    {
-                        data: 'confirmed_by',
-                        name: 'confirmed_by',
+                        data: 'evaluator',
+                        name: 'evaluator'
                     },
                     {
                         data: 'evaluation_date',

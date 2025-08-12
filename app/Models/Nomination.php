@@ -19,4 +19,9 @@ class Nomination extends Model
         'activity_id',
         'semester_id',
     ];
+
+    public function evaluators()
+    {
+        return $this->hasMany(Evaluator::class, 'nom_id');
+    }
 }

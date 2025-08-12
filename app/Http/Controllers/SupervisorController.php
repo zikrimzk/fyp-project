@@ -412,6 +412,8 @@ class SupervisorController extends Controller
     public function mySupervisionSubmissionApproval(Request $req)
     {
         try {
+
+            /* LOAD DATATABLE DATA */
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
                 ->groupBy('student_id');
@@ -442,6 +444,7 @@ class SupervisorController extends Controller
                     'c.sa_signature_data',
                     'c.activity_id',
                     'c.updated_at',
+                    'c.semester_id',
                     'e.supervision_role',
                     'sem.sem_label'
                 )
@@ -451,7 +454,6 @@ class SupervisorController extends Controller
 
             if ($req->ajax()) {
 
-                // Apply filters
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
                     $data->where('fac_id', $req->input('faculty'));
                 }
@@ -459,7 +461,7 @@ class SupervisorController extends Controller
                     $data->where('programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('ss.semester_id', $req->input('semester'));
+                    $data->where('c.semester_id', $req->input('semester'));
                 }
                 if ($req->has('activity') && !empty($req->input('activity'))) {
                     $data->where('activity_id', $req->input('activity'));
@@ -532,26 +534,54 @@ class SupervisorController extends Controller
                 });
 
                 $table->addColumn('sa_final_submission', function ($row) {
-                    // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Final Document';
 
-                    $final_submission =
+                    /* HANDLE EMPTY FINAL DOCUMENT */
+                    if (empty($row->sa_final_submission)) {
+                        return '-';
+                    }
+
+                    /* LOAD PROCEDURE DATA */
+                    $procedure = Procedure::where('programme_id', $row->programme_id)
+                        ->where('activity_id', $row->activity_id)
+                        ->first();
+
+                    /* LOAD SEMESTER DATA */
+                    $currsemester = Semester::where('id', $row->semester_id)->first();
+
+                    /* FORMAT SEMESTER LABEL */
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
+                    /* LOOK UP FOR DOCUMENT DIRECTORY */
+                    if ($procedure->is_repeatable == 1) {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/' . $semesterlabel . '/Final Document';
+                    } else {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Final Document';
+                    }
+
+                    /* HTML OUTPUT */
+                    $final_doc =
                         '
                         <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->sa_final_submission)]) . '" 
-                            target="_blank" class="link-dark d-flex align-items-center mb-2">
+                            target="_blank" class="link-dark d-flex align-items-center">
                             <i class="fas fa-file-pdf me-2 text-danger"></i>
                             <span class="fw-semibold">View Document</span>
                         </a>
                     ';
-                    return $final_submission;
+
+                    /* RETURN HTML */
+                    return $final_doc;
                 });
 
                 $table->addColumn('confirm_date', function ($row) {
+                    /* HANDLE CONFIRMATION DATE */
                     return  $row->updated_at == null ? '-' : Carbon::parse($row->updated_at)->format('d M Y g:i A');
                 });
 
                 $table->addColumn('sa_status', function ($row) {
 
+                    /* HANDLE STUDENT ACTIVITY STATUS */
                     $confirmation_status = match ($row->sa_status) {
                         1 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval: <br> Supervisor</span>",
                         2 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval: <br> (Comm/DD/Dean)</span>",
@@ -567,14 +597,16 @@ class SupervisorController extends Controller
                     };
 
 
+                    /* LOAD SIGNATURE DATA */
                     $signatureData = !empty($row->sa_signature_data)
                         ? json_decode($row->sa_signature_data, true)
                         : [];
 
-                    // Get required signature roles for the activity
+                    /* LOAD REQUIRED SIGNATURE ROLE DATA */
                     $formRoles = DB::table('activity_forms as a')
                         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
                         ->where('a.activity_id', $row->activity_id)
+                        ->where('a.af_target', 1)
                         ->where('b.ff_category', 6)
                         ->pluck('b.ff_signature_role')
                         ->unique()
@@ -582,8 +614,7 @@ class SupervisorController extends Controller
                         ->values()
                         ->toArray();
 
-                    // All roles involved in approvals (SV, Co-SV, Comm, DD, Dean)
-
+                    /* MAP SIGNATURE ROLE */
                     if ($row->sa_status == 1) {
                         $roleMap = [
                             2 => 'Main Supervisor',
@@ -594,14 +625,11 @@ class SupervisorController extends Controller
                             3 => 'cosv_signature',
                         ];
                     } elseif ($row->sa_status == 2) {
-
                         $roleMap = [
                             4 => 'Committee',
                             5 => 'Deputy Dean',
                             6 => 'Dean'
                         ];
-
-                        // Signature key for each role
                         $signatureKeys = [
                             4 => 'comm_signature_date',
                             5 => 'deputy_dean_signature_date',
@@ -612,11 +640,11 @@ class SupervisorController extends Controller
                         $signatureKeys = [];
                     }
 
-
+                    /* MAPPING LOGIC */
                     $statusFragments = [];
 
                     foreach ($formRoles as $role) {
-                        // Skip if not mapped properly
+                        /* SKIP IF NO ROLE */
                         if (!isset($roleMap[$role]) || !isset($signatureKeys[$role])) {
                             continue;
                         }
@@ -630,63 +658,63 @@ class SupervisorController extends Controller
                             : '<span class="badge bg-light-danger d-block mb-1">Required: ' . $roleName . '</span>';
                     }
 
+                    /* RETURN STATUS */
                     return $confirmation_status . implode('', $statusFragments);
                 });
 
                 $table->addColumn('action', function ($row) {
-                    $activityId = $row->activity_id;
-
-                    // Query only once and cache the result
+                    /* LOAD FORM FIELD CONFIGURATION FOR THIS ACTIVITY */
                     $formFields = DB::table('activity_forms as a')
                         ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                        ->where('a.activity_id', $activityId)
+                        ->where('a.activity_id', $row->activity_id)
                         ->where('b.ff_category', 6)
                         ->select('b.ff_signature_role')
                         ->pluck('ff_signature_role')
                         ->toArray();
 
-                    $hasSvfield = in_array(2, $formFields);
-                    $hasCoSvfield = in_array(3, $formFields);
-                    $hasCoSv = ($hasSvfield && $hasCoSvfield);
+                    /* CHECK WHICH SIGNATURE ROLES ARE REQUIRED */
+                    $requiresSv = in_array(2, $formFields);  // Supervisor required
+                    $requiresCoSv = in_array(3, $formFields);  // Co-Supervisor required
+                    $requiresBothSignatures = ($requiresSv && $requiresCoSv);
 
-                    // Check signatures
-                    $hasSvSignature = false;
-                    $hasCoSvSignature = false;
-
+                    /* CHECK EXISTING SIGNATURES IN STUDENT ACTIVITY */
+                    $hasSvSigned = false;
+                    $hasCoSvSigned = false;
                     if (!empty($row->sa_signature_data)) {
-                        $signatureData = json_decode($row->sa_signature_data, true);
-                        $hasSvSignature = isset($signatureData['sv_signature']);
-                        $hasCoSvSignature = isset($signatureData['cosv_signature']);
+                        $signatures = json_decode($row->sa_signature_data, true);
+                        $hasSvSigned = isset($signatures['sv_signature']);
+                        $hasCoSvSigned = isset($signatures['cosv_signature']);
                     }
+                    $hasAllRequiredSignatures = ($requiresBothSignatures && $hasSvSigned && $hasCoSvSigned);
 
-                    $signatureExists = ($hasCoSv && $hasSvSignature && $hasCoSvSignature);
+                    /* DETERMINE USER PERMISSIONS AND ACTIONS */
+                    $isSupervisor = ($row->supervision_role == 1);
+                    $isCoSupervisor = ($row->supervision_role == 2);
 
-                    $svNoBtn = ($row->supervision_role == 1 && $hasSvSignature);
-                    $cosvNoBtn = ($row->supervision_role == 2 && $hasCoSvSignature);
+                    $svCannotAct = ($isSupervisor && !$requiresSv);
+                    $cosvCannotAct = ($isCoSupervisor && !$requiresCoSv);
+                    $userHasAlreadySigned = ($isSupervisor && $hasSvSigned) || ($isCoSupervisor && $hasCoSvSigned);
 
-                    $svNoPermission = ($row->supervision_role == 1 && !$hasSvfield);
-                    $cosvNoPermission = ($row->supervision_role == 2 && !$hasCoSvfield);
-
-                    $studentActivityId = $row->student_activity_id;
-
-                    if ($signatureExists) {
+                    /* RETURN APPROPRIATE ACTION BUTTONS */
+                    if ($hasAllRequiredSignatures) {
+                        // Case 1: All required signatures exist - show only review button
                         return '
                             <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
-                               onclick="loadReviews(' . $row->student_activity_id . ')">
+                            onclick="loadReviews(' . $row->student_activity_id . ')">
                                 <i class="ti ti-eye me-2"></i>
                                 <span class="me-2">Review</span>
                             </button>
                         ';
                     }
 
-                    if (!$signatureExists && $row->sa_status == 1) {
-
-                        if ($svNoPermission || $cosvNoPermission) {
+                    if ($row->sa_status == 1) {
+                        // Case 2: Activity is active but not fully signed
+                        if ($svCannotAct || $cosvCannotAct) {
                             return '<div class="fst-italic text-muted">No action to proceed</div>';
                         }
 
-                        if ($svNoBtn || $cosvNoBtn) {
-                            return ' 
+                        if ($userHasAlreadySigned) {
+                            return '
                                 <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
                                     onclick="loadReviews(' . $row->student_activity_id . ')">
                                     <i class="ti ti-eye me-2"></i>
@@ -695,34 +723,36 @@ class SupervisorController extends Controller
                             ';
                         }
 
+                        // Case 3: Show full action buttons for approver
                         return '
                             <button type="button" class="btn btn-light-success btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
-                                data-bs-toggle="modal" data-bs-target="#approveModal-' . $studentActivityId . '">
+                                data-bs-toggle="modal" data-bs-target="#approveModal-' . $row->student_activity_id . '">
                                 <i class="ti ti-circle-check me-2"></i>
                                 <span class="me-2">Approve</span>
                             </button>
 
                             <button type="button" class="btn btn-light-danger btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
-                                data-bs-toggle="modal" data-bs-target="#rejectModal-' . $studentActivityId . '">
+                                data-bs-toggle="modal" data-bs-target="#rejectModal-' . $row->student_activity_id . '">
                                 <i class="ti ti-circle-x me-2"></i>
                                 <span class="me-2">Reject</span>
                             </button>
 
                             <button type="button" class="btn btn-light-warning btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
-                                data-bs-toggle="modal" data-bs-target="#revertModal-' . $studentActivityId . '">
+                                data-bs-toggle="modal" data-bs-target="#revertModal-' . $row->student_activity_id . '">
                                 <i class="ti ti-rotate me-2"></i>
                                 <span class="me-2">Revert</span>
                             </button>
                         ';
                     }
 
+                    // Default case: Show review button
                     return '
-                            <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
-                               onclick="loadReviews(' . $row->student_activity_id . ')">
-                                <i class="ti ti-eye me-2"></i>
-                                <span class="me-2">Review</span>
-                            </button>
-                        ';
+                        <button type="button" class="btn btn-light btn-sm d-flex justify-content-center align-items-center w-100 mb-2"
+                        onclick="loadReviews(' . $row->student_activity_id . ')">
+                            <i class="ti ti-eye me-2"></i>
+                            <span class="me-2">Review</span>
+                        </button>
+                    ';
                 });
 
                 $table->rawColumns(['checkbox', 'student_photo', 'sa_final_submission', 'confirm_date', 'sa_status', 'action']);
@@ -744,7 +774,7 @@ class SupervisorController extends Controller
         }
     }
 
-    /* My Supervision Correction Approval - Route */
+    /* My Supervision Correction Approval - Route ## */
     public function mySupervisionCorrectionApproval(Request $req)
     {
         try {
@@ -1051,7 +1081,7 @@ class SupervisorController extends Controller
         }
     }
 
-    /* My Supervision Nomination - Route */
+    /* My Supervision Nomination ## - Route */
     public function mySupervisionNomination(Request $req, $name)
     {
         try {
@@ -1276,6 +1306,7 @@ class SupervisorController extends Controller
                 return abort(404, 'Activity not found. Please try again.');
             }
 
+            /* LOAD DATATABLE DATA */
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
                 ->groupBy('student_id');
@@ -1496,7 +1527,7 @@ class SupervisorController extends Controller
 
                     /* LOAD STUDENT ACTIVITY DATA */
                     $submissionInProgress = StudentActivity::where('id', $row->sa_id)
-                        ->whereBetween('sa_status', [1, 5])
+                        ->whereIn('sa_status', [1, 2, 4, 5])
                         ->exists();
 
                     if ($submissionInProgress) {
@@ -1585,20 +1616,22 @@ class SupervisorController extends Controller
                         $btnClass = 'disabled-a';
                     } elseif ($allCompleted && !$haveHigherUp) {
 
+                        /* LOAD EVALUATIONS DATA */
                         $evaluations = Evaluation::where('activity_id', $row->activity_id)
                             ->where('student_id', $row->student_id)
                             ->where('semester_id', $row->semester_id)
                             ->where('evaluation_status', 8)
                             ->get();
 
+                        /* LOAD EVALUATION CONTROLLER */
+                        $ec = new EvaluationController();
+
+                        /* GET PROGRESS AND MOCK COUNT */
                         $progressCount = 0;
                         $mockCount = 0;
 
-                        $ec = new EvaluationController();
-
                         foreach ($evaluations as $evaluation) {
                             $statusType = $ec->extractEvaluationStatus($evaluation->evaluation_meta_data);
-
                             if ($statusType === 1) {
                                 $progressCount++;
                             } elseif ($statusType === 2) {
@@ -1606,7 +1639,7 @@ class SupervisorController extends Controller
                             }
                         }
 
-                        // Priority: progress > mock
+                        /* CHECK IF CONTINUE OR END */
                         $continueChecked = $progressCount > 0;
                         $endChecked = !$continueChecked && $mockCount > 0;
 
@@ -1682,6 +1715,7 @@ class SupervisorController extends Controller
                 return abort(404, 'Student not found. Please try again.');
             }
 
+            /* LOAD DATATABLE DATA */
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
                 ->groupBy('student_id');
@@ -1733,15 +1767,11 @@ class SupervisorController extends Controller
             if ($req->ajax()) {
 
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('ss.semester_id', $req->input('semester'));
+                    $data->where('f.semester_id', $req->input('semester'));
                 }
 
                 if ($req->has('status') && !empty($req->input('status'))) {
-                    if ($req->input('status') == 10) {
-                        $data->where('f.evaluation_isFinal', 1);
-                    } else {
-                        $data->where('f.evaluation_status', $req->input('status'));
-                    }
+                    $data->where('f.evaluation_status', $req->input('status'));
                 }
 
                 $data = $data->get();
@@ -1916,7 +1946,7 @@ class SupervisorController extends Controller
                     }
 
                     /* EVALUATION STATUS 11 : APPROVAL REJECTED BY SUPERVISOR */ elseif ($row->evaluation_status == 11) {
-                        $statusLines[] = '<span class="badge bg-light-danger">Rjected : Supervisor</span>';
+                        $statusLines[] = '<span class="badge bg-light-danger">Rejected : Supervisor</span>';
                     }
 
                     /* EVALUATION STATUS 12 : APPROVAL REJECTED BY COMMITTEE/DD/DEAN */ elseif ($row->evaluation_status == 12) {
@@ -1985,78 +2015,18 @@ class SupervisorController extends Controller
                     return $semesters->sem_label;
                 });
 
-                // $table->addColumn('action', function ($row) {
-
-                //     /* LOAD CURRENT SEMESTER */
-                //     $currsemester = Semester::where('sem_status', 1)->first();
-
-                //     /* LOAD STUDENT ACTIVITY DATA */
-                //     $submissionInProgress = StudentActivity::where('activity_id', $row->activity_id)
-                //         ->where('student_id', $row->student_id)
-                //         ->whereBetween('sa_status', [1, 5])
-                //         ->exists();
-
-                //     if ($submissionInProgress) {
-                //         return '<span class="badge bg-light-danger p-2">Student submission process <br> not yet completed.</span>';
-                //     }
-
-                //     /* CHECK IF SUPERVISOR OR CO-SV HAS SIGNED (BY KEY) */
-                //     $signatureData = json_decode($row->evaluation_signature_data, true);
-                //     $hasSigned = false;
-
-                //     if (is_array($signatureData) && !empty($signatureData)) {
-                //         $supervisorKeys = DB::table('activity_forms as a')
-                //             ->join('form_fields as b', 'a.id', '=', 'b.af_id')
-                //             ->where('a.activity_id', $row->activity_id)
-                //             ->where('a.af_target', 5)
-                //             ->where('b.ff_category', 6)
-                //             ->whereIn('b.ff_signature_role', [2, 3])
-                //             ->pluck('b.ff_signature_key')
-                //             ->toArray();
-
-                //         foreach ($supervisorKeys as $key) {
-                //             if (!empty($signatureData[$key]) && !empty($signatureData[$key]) && $signatureData[$key] === true) {
-                //                 $hasSigned = true;
-                //                 break;
-                //             }
-                //         }
-                //     }
-
-                //     /* SHOW BUTTON LOGIC */
-                //     if (
-                //         $row->evaluation_status == 9 &&
-                //         $row->evaluation_isFinal != 1 &&
-                //         $row->semester_id == $currsemester->id &&
-                //         !$hasSigned
-                //     ) {
-                //         return '
-                //             <div class="d-flex flex-column gap-2 text-start p-1">
-                //                 <button type="button" class="btn btn-light-success btn-sm w-100"
-                //                     data-bs-toggle="modal" data-bs-target="#approveModal-' . $row->evaluation_id  . '">
-                //                     <i class="ti ti-circle-check me-2"></i> Approve
-                //                 </button>
-
-                //                 <button type="button" class="btn btn-light-danger btn-sm w-100"
-                //                     data-bs-toggle="modal" data-bs-target="#rejectModal-' . $row->evaluation_id . '">
-                //                     <i class="ti ti-circle-x me-2"></i> Reject
-                //                 </button>
-                //             </div>
-                //         ';
-                //     }
-
-                //     /* FALLBACK : NO ACTION */
-                //     return '<div class="fst-italic text-muted">No action required</div>';
-                // });
-
                 $table->addColumn('action', function ($row) {
-                    // Status constants
+                    /* SET GLOBAL VARIABLE */
                     $PENDING_SUPERVISOR = 9;
 
+                    /* GET EACH ATTRIBUTE IDs */
                     $activityId = $row->activity_id;
                     $evaluationId = $row->evaluation_id;
+
+                    /* GET ROLE FROM DB */
                     $myRole = $row->supervision_role; // 1 = SV, 2 = CoSV
 
-                    // 1) Which signature roles does the form require?
+                    /* LOAD REQUIRED ROLES */
                     $requiredRoles = DB::table('activity_forms as a')
                         ->join('form_fields as f', 'a.id', '=', 'f.af_id')
                         ->where('a.activity_id', $activityId)
@@ -2069,26 +2039,27 @@ class SupervisorController extends Controller
                     $svRequired   = in_array(2, $requiredRoles, true);
                     $cosvRequired = in_array(3, $requiredRoles, true);
 
-                    // 2) What’s already signed?
+                    /* LOAD SIGNED DATA */
                     $sigData    = json_decode($row->evaluation_signature_data ?? '[]', true);
                     $svSigned   = !empty($sigData['sv_signature']);
                     $cosvSigned = !empty($sigData['cosv_signature']);
 
-                    // 3) Has this level fully completed?
+                    /* CHECK IF THIS LEVEL IS COMPLETE */
                     $levelComplete = (
                         ($svRequired && $cosvRequired && $svSigned && $cosvSigned)
                         || ($svRequired && !$cosvRequired && $svSigned)
                         || (!$svRequired && $cosvRequired && $cosvSigned)
                     );
 
-                    // 4) Is my signature required? And have I already signed?
+                    /* AM I REQUIRED TO SIGN? */
                     $iAmRequired = ($myRole === 1 && $svRequired)
                         || ($myRole === 2 && $cosvRequired);
 
+                    /* HAVE I ALREADY SIGNED? */
                     $iHaveSigned = ($myRole === 1 && $svSigned)
                         || ($myRole === 2 && $cosvSigned);
 
-                    // 5) Show action buttons only if:
+                    /* SHOW ACTION BUTTONS ONLY IF */
                     if (
                         $row->evaluation_status === $PENDING_SUPERVISOR &&
                         $iAmRequired &&
@@ -2109,7 +2080,7 @@ class SupervisorController extends Controller
                         ';
                     }
 
-                    // 6) No action
+                    /* FALLBACK */
                     return '<div class="fst-italic text-muted">No action required</div>';
                 });
 

@@ -142,6 +142,10 @@
                                             <option value="">-- Select Status --</option>
                                             <option value="1">Pending</option>
                                             <option value="7">Submitted [Draft]</option>
+                                            <option value="9">Pending : Supervisor Approval</option>
+                                            <option value="10">Pending : Committee/DD/Dean Approval</option>
+                                            <option value="11">Rejected : Supervisor</option>
+                                            <option value="12">Rejected : Committee/DD/Dean</option>
                                             <option value="10">Final & Confirmed</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
@@ -183,7 +187,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            // DATATABLE : STUDENT
+            // DATATABLE : EVALUATION
             var table = $('.data-table').DataTable({
                 processing: true,
                 serverSide: true,

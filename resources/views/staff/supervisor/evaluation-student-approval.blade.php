@@ -106,9 +106,11 @@
                                     <div class="input-group">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
-                                            <option value="1">Pending</option>
-                                            <option value="7">Submitted [Draft]</option>
-                                            <option value="10">Final & Confirmed</option>
+                                            <option value="9">Pending : Supervisor Approval</option>
+                                            <option value="10">Pending : Committee/DD/Dean Approval</option>
+                                            <option value="11">Rejected : Supervisor</option>
+                                            <option value="12">Rejected : Committee/DD/Dean</option>
+                                            <option value="8">Confirmed</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
                                             id="clearStatusFilter">
