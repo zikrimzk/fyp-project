@@ -299,6 +299,7 @@
                 <li class="pc-item pc-caption">
                     <label>Main</label>
                 </li>
+
                 <li class="pc-item">
                     <a href="{{ route('student-home') }}" class="pc-link">
                         <span class="pc-micon">
@@ -312,6 +313,7 @@
                 <li class="pc-item pc-caption">
                     <label>Course</label>
                 </li>
+
                 <li class="pc-item">
                     <a href="{{ route('student-programme-overview') }}" class="pc-link">
                         <span class="pc-micon">
@@ -320,6 +322,17 @@
                         <span class="pc-mtext">
                             {{ auth()->user()->programmes->prog_code }}
                             ({{ auth()->user()->programmes->prog_mode }})
+                        </span>
+                    </a>
+                </li>
+
+                <li class="pc-item">
+                    <a href="{{ route('student-journal-publication') }}" class="pc-link">
+                        <span class="pc-micon">
+                            <i class="fas fa-bookmark pc-icon"></i>
+                        </span>
+                        <span class="pc-mtext">
+                            Journal Publication
                         </span>
                     </a>
                 </li>

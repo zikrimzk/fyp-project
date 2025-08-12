@@ -359,7 +359,7 @@
                                     @if ($act->is_haveJournalPublication == 1)
                                         <a href="{{ route('student-journal-publication') }}"
                                             class="btn btn-sm btn-light-primary">
-                                            <i class="fas fa-journal-whills ms-2 me-2"></i>
+                                            <i class="fas fa-bookmark ms-2 me-2"></i>
                                             <span class="me-2">Manage Journal Publication</span>
                                         </a>
                                     @endif
@@ -376,7 +376,7 @@
                                 @if ($act->is_haveJournalPublication == 1)
                                     <a href="{{ route('student-journal-publication') }}"
                                         class="btn btn-sm btn-light-primary">
-                                        <i class="fas fa-journal-whills ms-2 me-2"></i>
+                                        <i class="fas fa-bookmark ms-2 me-2"></i>
                                         <span class="me-2">Manage Journal Publication</span>
                                     </a>
                                 @endif

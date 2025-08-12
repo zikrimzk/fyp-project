@@ -66,6 +66,7 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::post('/update-journal-publication', [SubmissionController::class, 'updateJournalPublication'])->name('student-update-journal-publication-post');
     Route::post('/delete-journal-publication', [SubmissionController::class, 'deleteJournalPublication'])->name('student-delete-journal-publication-post');
 
+    /* Student Activity Eligibility Check [WILL BE REMOVED] */
     Route::get('/student-activity-elibility-check/{matricno}/{activityid}', [SubmissionController::class, 'getStudentSubmissionEligibility'])->name('student-eligibility-check');
 
 });

@@ -2706,7 +2706,7 @@ class SubmissionController extends Controller
                 $updatedSignatureData = json_decode($updatedActivity->sa_signature_data ?? '[]', true);
 
                 /* HANDLE SIGNATURE LOGIC */
-                $this->handleSignatureApprovalStatus($student, $updatedActivity, null, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, 1);
+                $this->handleSignatureApprovalStatus($student, $updatedActivity, null, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation , $isRepeatable, 1);
 
                 /* SEND EMAIL NOTIFICATION TO STUDENT */
                 $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
@@ -2908,8 +2908,7 @@ class SubmissionController extends Controller
     }
 
     /* Handle Signature And Status [Staff] - Function | Email : Yes With Works */
-    private function handleSignatureApprovalStatus($student, $updatedActivity, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, $type)
-    {
+    private function handleSignatureApprovalStatus($student, $updatedActivity, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, $isRepeatable, $type) {
         /* HANDLE TARGET */
         $target = $type === 1 ? 1 : 2;
 
@@ -2937,7 +2936,8 @@ class SubmissionController extends Controller
                 /* ACTIVITY FORM */
                 if ($allSigned) {
                     if (! $hasHigherRoles) {
-                        $finalStatus = $isHaveEvaluation ? 7 : 3;
+                        // BEFORE: $finalStatus = $isHaveEvaluation ? 7 : 3;
+                        $finalStatus = $isHaveEvaluation ? 7 : ($isRepeatable ? 13 : 3);
                     } else {
                         $finalStatus = 2;
                     }
@@ -2954,31 +2954,23 @@ class SubmissionController extends Controller
                     $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
                 }
             } else {
-                /* CORRECTION FORM */
+                /* CORRECTION FORM (unchanged) */
                 if ($allSigned) {
                     $finalStatus = $hasHigherRoles ? 3 : 5;
                 } else {
                     $finalStatus = 2;
                 }
-
-                /* UPDATE STATUS */
                 $updatedCorrection->update(['ac_status' => $finalStatus]);
-
-                /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO STUDENT */
                 if ($finalStatus === 5) {
                     $this->finalizeCorrection($student, $updatedCorrection);
-                    // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
                 }
             }
             return;
         }
 
         if ($role === 8 && $type === 2) {
-            /* EXAMINER / PANEL LOGIC - ONLY CORRECTION */
-            $hasHigherRoles = collect($formRoles)
-                ->intersect([4, 5, 6])
-                ->isNotEmpty();
-
+            /* EXAMINER / PANEL LOGIC - ONLY CORRECTION (unchanged) */
+            $hasHigherRoles = collect($formRoles)->intersect([4, 5, 6])->isNotEmpty();
             $examKeys = DB::table('form_fields')
                 ->where('af_id', $afID)
                 ->where('ff_category', 6)
@@ -2986,28 +2978,15 @@ class SubmissionController extends Controller
                 ->pluck('ff_signature_key')
                 ->toArray();
 
-            $allSigned = collect($examKeys)
-                ->every(
-                    fn($key) =>
-                    isset($updatedSignatureData[$key]) &&
-                        ! empty($updatedSignatureData[$key])
-                );
+            $allSigned = collect($examKeys)->every(
+                fn($key) =>
+                isset($updatedSignatureData[$key]) && ! empty($updatedSignatureData[$key])
+            );
 
-            if (! $allSigned) {
-                $newStatus = 3;
-            } elseif ($hasHigherRoles) {
-                $newStatus = 4;
-            } else {
-                $newStatus = 5;
-            }
-
-            /* UPDATE STATUS */
+            $newStatus = ! $allSigned ? 3 : ($hasHigherRoles ? 4 : 5);
             $updatedCorrection->update(['ac_status' => $newStatus]);
-
-            /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO STUDENT */
             if ($newStatus === 5) {
                 $this->finalizeCorrection($student, $updatedCorrection);
-                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
             }
             return;
         }
@@ -3016,15 +2995,9 @@ class SubmissionController extends Controller
             /* COMMITTEE / DEPUTY-DEAN / DEAN LOGIC */
 
             $roleSignatures = [
-                4 => in_array(4, $formRoles)
-                    ? isset($updatedSignatureData['comm_signature_date'])
-                    : true,
-                5 => in_array(5, $formRoles)
-                    ? isset($updatedSignatureData['deputy_dean_signature_date'])
-                    : true,
-                6 => in_array(6, $formRoles)
-                    ? isset($updatedSignatureData['dean_signature_date'])
-                    : true,
+                4 => in_array(4, $formRoles) ? isset($updatedSignatureData['comm_signature_date']) : true,
+                5 => in_array(5, $formRoles) ? isset($updatedSignatureData['deputy_dean_signature_date']) : true,
+                6 => in_array(6, $formRoles) ? isset($updatedSignatureData['dean_signature_date']) : true,
             ];
 
             $allSigned = collect($roleSignatures)
@@ -3033,28 +3006,23 @@ class SubmissionController extends Controller
 
             if ($type === 1) {
                 /* ACTIVITY FORM */
+                // BEFORE: $finalStatus = $allSigned ? ($isHaveEvaluation ? 7 : 3) : 2;
+                $finalStatus = $allSigned
+                    ? ($isHaveEvaluation ? 7 : ($isRepeatable ? 13 : 3))
+                    : 2;
 
-                $finalStatus = $allSigned ? ($isHaveEvaluation ? 7 : 3) : 2;
-
-                /* UPDATE STATUS */
                 $updatedActivity->update(['sa_status' => $finalStatus]);
 
-                /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO STUDENT */
                 if ($finalStatus === 3) {
                     $this->finalizeSubmission($student, $updatedActivity->activity_id);
                     $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
                 }
             } else {
-                /* CORRECTION FORM */
+                /* CORRECTION FORM (unchanged) */
                 $finalStatus = $allSigned ? 5 : 4;
-
-                /* UPDATE STATUS */
                 $updatedCorrection->update(['ac_status' => $finalStatus]);
-
-                /* FINALIZE PROCESS WITH EMAIL NOTIFICATION TO STUDENT */
                 if ($finalStatus === 5) {
                     $this->finalizeCorrection($student, $updatedCorrection);
-                    // $this->sendSubmissionNotification($student, 1, $activity->act_name, 6, $role);
                 }
             }
         }
@@ -4024,7 +3992,7 @@ class SubmissionController extends Controller
                 $updatedSignatureData = json_decode($updatedCorrection->ac_signature_data ?? '[]', true);
 
                 /* HANDLE SIGNATURE LOGIC */
-                $this->handleSignatureApprovalStatus($student, null, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, null, 2);
+                $this->handleSignatureApprovalStatus($student, null, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, null, null, 2);
 
                 /* SEND EMAIL NOTIFICATION TO STUDENT [NOT DONE] */
                 // $this->sendSubmissionNotification($student, 1, $activity->act_name, 3, $role);
