@@ -2088,15 +2088,9 @@ class EvaluationController extends Controller
                     /* GET REQUIRED ROLES */
                     $rolesRequired = DB::table('form_fields as ff')
                         ->join('activity_forms as af', 'ff.af_id', '=', 'af.id')
+                        ->where('af.activity_id', $row->activity_id)
+                        ->where('af.af_target', 5)
                         ->whereIn('ff.ff_signature_role', [4, 5, 6])
-                        ->where('af.id', function ($q) use ($row) {
-                            $q->select('af_id')
-                                ->from('evaluations')
-                                ->where('activity_id', $row->activity_id)
-                                ->where('student_id', $row->student_id)
-                                ->where('semester_id', $row->semester_id)
-                                ->limit(1);
-                        })
                         ->pluck('ff.ff_signature_role')
                         ->unique()
                         ->toArray();
@@ -2607,14 +2601,16 @@ class EvaluationController extends Controller
                         : [];
 
                     /* LOOP THROUGH REQUIRED ROLES */
-                    foreach ($requiredRoles as $role) {
-                        $roleName = $roleLabels[$role->ff_signature_role] ?? 'Unknown Role';
-                        $sigKey = $role->ff_signature_key;
+                    if ($row->evaluation_status == 9 || $row->evaluation_status == 10) {
+                        foreach ($requiredRoles as $role) {
+                            $roleName = $roleLabels[$role->ff_signature_role] ?? 'Unknown Role';
+                            $sigKey = $role->ff_signature_key;
 
-                        if (!empty($signatureData[$sigKey])) {
-                            $statusLines[] = '<span class="badge bg-light-success">Approved : ' . $roleName . '</span>';
-                        } else {
-                            $statusLines[] = '<span class="badge bg-light-danger">Required : ' . $roleName . '</span>';
+                            if (!empty($signatureData[$sigKey])) {
+                                $statusLines[] = '<span class="badge bg-light-success">Approved : ' . $roleName . '</span>';
+                            } else {
+                                $statusLines[] = '<span class="badge bg-light-danger">Required : ' . $roleName . '</span>';
+                            }
                         }
                     }
 
@@ -2745,7 +2741,7 @@ class EvaluationController extends Controller
     }
 
     /* Evaluation Report Approval - Function [Staff] | Email : Yes With Works | [HIGH ATTENTION - IN PROGRESS] */
-    public function approvePanelEvaluation(Request $req, $evaluationID, $option)
+    public function panelEvaluationApproval(Request $req, $evaluationID, $option)
     {
         try {
             /* DECRYPT PROCESS */
@@ -2756,6 +2752,13 @@ class EvaluationController extends Controller
 
             if (!$evaluation) {
                 return back()->with('error', 'Evaluation not found. Operation could not be processed. Please try again.');
+            }
+
+            /* LOAD STAFF DATA */
+            $evaluator = Staff::where('id', $evaluation->staff_id)->first();
+
+            if (!$evaluator) {
+                return back()->with('error', 'Evaluator not found. Operation could not be processed. Please try again.');
             }
 
             /* LOAD USER DATA */
@@ -2965,10 +2968,29 @@ class EvaluationController extends Controller
                 /* UPDATE EVALUATION */
                 $evaluation->save();
 
+                /* SEND EMAIL NOTIFICATION TO PANEL */
+                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 4, $role);
+
                 /* RETURN SUCCESS */
-                return back()->with('success', $student->student_name . ' evaluation report for ' . $activity->act_name . ' has been approved.');
+                return back()->with('success', $student->student_name . ' evaluation report by ' . $evaluator->staff_name . ' for ' . $activity->act_name . ' has been approved.');
             } elseif ($option == 2) {
                 /* EVALUATOR REPORT REJECTED */
+
+                /* DETERMINE APPROVAL ROLE AND STATUS */
+                [$role, $status] = $sc->determineRejectionRoleStatus($supervision, null, $authUser->staff_role, 3);
+
+                /* UPDATE STATUS */
+                $evaluation->evaluation_status = $status;
+                $evaluation->evaluation_signature_data = json_encode([]);
+
+                /* UPDATE EVALUATION */
+                $evaluation->save();
+
+                /* SEND EMAIL NOTIFICATION TO PANEL */
+                // $this->sendSubmissionNotification($student, 1, $activity->act_name, 4, $role);
+
+                /* RETURN SUCCESS */
+                return back()->with('success', $student->student_name . ' evaluation report by ' . $evaluator->staff_name . ' for ' . $activity->act_name . ' has been rejected.');
             }
 
             /* RETURN ABORT */

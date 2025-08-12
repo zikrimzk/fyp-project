@@ -1543,15 +1543,9 @@ class SupervisorController extends Controller
                     /* GET REQUIRED ROLES */
                     $rolesRequired = DB::table('form_fields as ff')
                         ->join('activity_forms as af', 'ff.af_id', '=', 'af.id')
-                        ->whereIn('ff.ff_signature_role', [2, 3])
-                        ->where('af.id', function ($q) use ($row) {
-                            $q->select('af_id')
-                                ->from('evaluations')
-                                ->where('activity_id', $row->activity_id)
-                                ->where('student_id', $row->student_id)
-                                ->where('semester_id', $row->semester_id)
-                                ->limit(1);
-                        })
+                        ->where('af.activity_id', $row->activity_id)
+                        ->where('af.af_target', 5)
+                        ->whereIn('ff.ff_signature_role', [2,3])
                         ->pluck('ff.ff_signature_role')
                         ->unique()
                         ->toArray();
@@ -1559,15 +1553,9 @@ class SupervisorController extends Controller
                     /* GET HIGHER UPS REQUIRED ROLES */
                     $rolesHURequired = DB::table('form_fields as ff')
                         ->join('activity_forms as af', 'ff.af_id', '=', 'af.id')
+                        ->where('af.activity_id', $row->activity_id)
+                        ->where('af.af_target', 5)
                         ->whereIn('ff.ff_signature_role', [4, 5, 6])
-                        ->where('af.id', function ($q) use ($row) {
-                            $q->select('af_id')
-                                ->from('evaluations')
-                                ->where('activity_id', $row->activity_id)
-                                ->where('student_id', $row->student_id)
-                                ->where('semester_id', $row->semester_id)
-                                ->limit(1);
-                        })
                         ->pluck('ff.ff_signature_role')
                         ->unique()
                         ->toArray();
@@ -1981,14 +1969,16 @@ class SupervisorController extends Controller
                         : [];
 
                     /* LOOP THROUGH REQUIRED ROLES */
-                    foreach ($requiredRoles as $role) {
-                        $roleName = $roleLabels[$role->ff_signature_role] ?? 'Unknown Role';
-                        $sigKey = $role->ff_signature_key;
+                    if ($row->evaluation_status == 9 || $row->evaluation_status == 10) {
+                        foreach ($requiredRoles as $role) {
+                            $roleName = $roleLabels[$role->ff_signature_role] ?? 'Unknown Role';
+                            $sigKey = $role->ff_signature_key;
 
-                        if (!empty($signatureData[$sigKey])) {
-                            $statusLines[] = '<span class="badge bg-light-success">Approved : ' . $roleName . '</span>';
-                        } else {
-                            $statusLines[] = '<span class="badge bg-light-danger">Required : ' . $roleName . '</span>';
+                            if (!empty($signatureData[$sigKey])) {
+                                $statusLines[] = '<span class="badge bg-light-success">Approved : ' . $roleName . '</span>';
+                            } else {
+                                $statusLines[] = '<span class="badge bg-light-danger">Required : ' . $roleName . '</span>';
+                            }
                         }
                     }
 

@@ -65,6 +65,9 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::post('/add-journal-publication', [SubmissionController::class, 'addJournalPublication'])->name('student-add-journal-publication-post');
     Route::post('/update-journal-publication', [SubmissionController::class, 'updateJournalPublication'])->name('student-update-journal-publication-post');
     Route::post('/delete-journal-publication', [SubmissionController::class, 'deleteJournalPublication'])->name('student-delete-journal-publication-post');
+
+    Route::get('/student-activity-elibility-check/{matricno}/{activityid}', [SubmissionController::class, 'getStudentSubmissionEligibility'])->name('student-eligibility-check');
+
 });
 
 
@@ -175,7 +178,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     /* Evaluation Approval */
     Route::get('/evaluation-approval-{name}', [EvaluationController::class, 'evaluationApproval'])->name('evaluation-approval');
     Route::get('/student-evaluation-approval-{activityID}-{studentID}', [EvaluationController::class, 'studentEvaluationApproval'])->name('student-evaluation-approval');
-    Route::post('/approve-evaluation-{evaluationID}-{option}', [EvaluationController::class, 'approvePanelEvaluation'])->name('approve-evaluation-post');
+    Route::post('/approve-evaluation-{evaluationID}-{option}', [EvaluationController::class, 'panelEvaluationApproval'])->name('approve-evaluation-post');
     Route::post('/finalize-evaluation-{studentActID}', [EvaluationController::class, 'finalizeEvaluation'])->name('finalize-evaluation-post');
 
 

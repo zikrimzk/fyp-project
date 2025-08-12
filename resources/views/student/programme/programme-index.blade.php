@@ -121,9 +121,16 @@
                                             <span class="badge bg-secondary">N/A</span>
                                         @endif
                                     </div>
+
+                                    <div>
+                                        <a href="{{ route('student-eligibility-check', ['matricno' => auth()->user()->student_matricno, 'activityid' => $act->activity_id]) }}"
+                                            class="btn btn-sm btn-primary">
+                                            <i class="ti ti-info-circle me-2"></i> Check Eligibility
+                                        </a>
+                                    </div>
                                 </div>
 
-                                @if ($act->is_haveJournalPublication == 1 && $act->init_status != 11)
+                                @if ($act->is_haveJournalPublication == 1 && in_array($act->init_status, [4, 5, 10, 18, 19, 20]))
                                     <div class="alert alert-light text-dark rounded-3" role="alert">
                                         <div class="d-flex align-items-center">
                                             <i class="ti ti-info-circle fs-4 text-danger me-3 mt-1"></i>

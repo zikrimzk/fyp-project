@@ -1588,7 +1588,6 @@ class SubmissionController extends Controller
                             WHERE sa_current.student_id = s.id
                             AND sa_current.activity_id = p.activity_id
                             AND sa_current.sa_status = 3
-                            AND sa_current.semester_id = latest.latest_semester_id
                         ) THEN 5
 
                         -- Submission archived this semester
@@ -1625,18 +1624,6 @@ class SubmissionController extends Controller
                             AND sa.semester_id = latest.latest_semester_id
                         ) THEN 2
 
-                        -- Previous sequence activity not completed this semester
-                        WHEN EXISTS (
-                            SELECT 1 FROM procedures p_prev
-                            WHERE p_prev.programme_id = s.programme_id
-                            AND p_prev.act_seq < p.act_seq
-                            AND NOT EXISTS (
-                                SELECT 1 FROM student_activities sa_prev
-                                WHERE sa_prev.student_id = s.id
-                                AND sa_prev.activity_id = p_prev.activity_id
-                                AND sa_prev.sa_status = 3
-                            )
-                        ) THEN 3
 
                         -- Eligible
                         ELSE 1
@@ -1654,7 +1641,7 @@ class SubmissionController extends Controller
                 ->join('procedures as p', function ($join) {
                     $join->on('s.programme_id', '=', 'p.programme_id')
                         ->whereRaw('s.student_semcount >= p.timeline_sem')
-                        ->where('p.init_status', '=', 2);
+                        ->where('p.is_repeatable', '=', 1);
                 })
                 ->join('activities as a', 'p.activity_id', '=', 'a.id')
                 ->join('programmes as c', 'c.id', '=', 's.programme_id')
@@ -1872,6 +1859,14 @@ class SubmissionController extends Controller
                     /** CHECK FOR STUDENT ELIGIBILITY **/
                     $decision = $this->getStudentSubmissionEligibility($sub->student_matricno, $sub->activity_id);
 
+                    /** LOAD PREVIOUS EVALUATOR **/
+                    $previousEvaluator = DB::table('evaluators as a')
+                        ->join('nominations as b', 'a.nom_id', '=', 'b.id')
+                        ->where('b.student_id', $sub->student_id)
+                        ->where('b.activity_id', $sub->activity_id)
+                        ->where('a.eva_status', 3)
+                        ->get();
+
                     /** IF STUDENT IS ELIGIBILE **/
                     if ($decision == 1) {
 
@@ -1887,13 +1882,6 @@ class SubmissionController extends Controller
 
                         /** IF ACTIVITY HAS EVALUATION **/
                         if ($sub->is_haveEva == 1) {
-
-                            $previousEvaluator = DB::table('evaluators as a')
-                                ->join('nominations as b', 'a.nom_id', '=', 'b.id')
-                                ->where('b.student_id', $sub->student_id)
-                                ->where('b.activity_id', $sub->activity_id)
-                                ->where('a.eva_status', 3)
-                                ->get();
 
                             if ($previousEvaluator->count() > 0) {
                                 foreach ($previousEvaluator as $eva) {
@@ -1931,12 +1919,29 @@ class SubmissionController extends Controller
                             }
                         }
                     } else {
-                        /** FALLBACK - REMOVE SUBMISSION **/
+                        /** FALLBACK - NECCESSARY DATA **/
+
+                        StudentActivity::where('student_id', $sub->student_id)
+                            ->where('activity_id', $sub->activity_id)
+                            ->where('semester_id', $currsemester->id)
+                            ->delete();
+
                         $createdSubmission->delete();
+
                         Nomination::where('student_id', $sub->student_id)
                             ->where('activity_id', $sub->activity_id)
                             ->where('semester_id', $currsemester->id)
                             ->delete();
+
+                        if ($previousEvaluator->count() > 0) {
+                            foreach ($previousEvaluator as $eva) {
+                                Evaluation::where('student_id', $sub->student_id)
+                                    ->where('staff_id', $eva->staff_id)
+                                    ->where('activity_id', $sub->activity_id)
+                                    ->where('semester_id', $currsemester->id)
+                                    ->delete();
+                            }
+                        }
                     }
                 }
             }
@@ -2649,6 +2654,7 @@ class SubmissionController extends Controller
                 ->where('programme_id', $student->programme_id)
                 ->first();
             $isHaveEvaluation = $procedure?->is_haveEva == 1;
+            $isRepeatable = $procedure?->is_repeatable == 1;
 
             /* CHECK IF SV IS REQUIRED */
             $hasSvfield = DB::table('activity_forms as a')
@@ -2893,10 +2899,10 @@ class SubmissionController extends Controller
 
             /* COMMITTEE/ DEPUTY DEAN / DEAN */
             return match ($staffRole) {
-                1 => [4, 11],   // Committee 
-                3 => [5, 11],   // Deputy Dean 
-                4 => [6, 11],   // Dean 
-                default => [0, 11],
+                1 => [4, 12],   // Committee 
+                3 => [5, 12],   // Deputy Dean 
+                4 => [6, 12],   // Dean 
+                default => [0, 12],
             };
         }
     }
