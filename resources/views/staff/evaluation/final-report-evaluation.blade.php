@@ -14,13 +14,14 @@
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Evaluation</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Evaluation Management
+                                <li class="breadcrumb-item"><a href="javascript: void(0)">Final Report</a></li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }}
                                 </li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">{{ $act->act_name }} - Evaluation Management</h2>
+                                <h2 class="mb-0">{{ $act->act_name }} - Final Report</h2>
                             </div>
                         </div>
                     </div>

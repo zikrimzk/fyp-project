@@ -733,6 +733,26 @@
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
+                            <li class="pc-item pc-hasmenu">
+                                <a class="pc-link" href="javascript:void(0)">
+                                    Final Overview
+                                    <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+
+                                </a>
+                                <ul class="pc-submenu">
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('submission-management') }}">
+                                            Submission
+                                        </a>
+                                    </li>
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('submission-management') }}">
+                                            Correction
+                                        </a>
+                                    </li>
+                                </ul>
+
+                            </li>
                             <li class="pc-item">
                                 <a class="pc-link" href="{{ route('submission-management') }}">
                                     Submission Management
