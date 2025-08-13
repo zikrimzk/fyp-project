@@ -1461,27 +1461,16 @@ class EvaluationController extends Controller
             ->join('activities as c', 'b.activity_id', '=', 'c.id')
             ->where('a.student_id', $student->id)
             ->where('c.id', $activityId)
-            ->where('a.submission_status', 5)
             ->select('a.id as submission_id', 'a.submission_document')
             ->get();
 
         /* CHANGE SUBMISSION STATUS */
         foreach ($submissions as $submission) {
-            if ($submission->submission_document !== '-') {
-                DB::table('submissions')
-                    ->where('id', $submission->submission_id)
-                    ->update([
-                        'submission_status' => 3,
-                        'submission_duedate' => $newduedate,
-                    ]);
-            } else {
-                DB::table('submissions')
-                    ->where('id', $submission->submission_id)
-                    ->update([
-                        'submission_status' => 1,
-                        'submission_duedate' => $newduedate,
-                    ]);
-            }
+            DB::table('submissions')
+                ->where('id', $submission->submission_id)
+                ->update([
+                    'submission_duedate' => $newduedate,
+                ]);
         }
     }
 
@@ -3045,7 +3034,7 @@ class EvaluationController extends Controller
             }
 
             /* FINALIZE SUBMISSION */
-            $sc->finalizeSubmission($student, $studentactivity->activity_id);
+            $sc->finalizeSubmission($student, $studentactivity);
 
             /* RETURN IF SUCCESS */
             return back()->with('success', $message);

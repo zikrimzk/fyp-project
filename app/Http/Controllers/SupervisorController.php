@@ -199,6 +199,7 @@ class SupervisorController extends Controller
     {
         try {
 
+            /* LOAD DATATABLE DATA */
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
                 ->groupBy('student_id');
@@ -227,6 +228,7 @@ class SupervisorController extends Controller
                     'd.submission_date',
                     'd.submission_duedate',
                     'd.submission_document',
+                    'd.semester_id',
                     'e.id as document_id',
                     'e.doc_name as document_name',
                     'f.id as activity_id',
@@ -237,7 +239,6 @@ class SupervisorController extends Controller
 
             if ($req->ajax()) {
 
-                // Apply filters
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
                     $data->where('fac_id', $req->input('faculty'));
                 }
@@ -245,7 +246,7 @@ class SupervisorController extends Controller
                     $data->where('programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('ss.semester_id', $req->input('semester'));
+                    $data->where('d.semester_id', $req->input('semester'));
                 }
                 if ($req->has('activity') && !empty($req->input('activity'))) {
                     $data->where('activity_id', $req->input('activity'));
@@ -254,10 +255,8 @@ class SupervisorController extends Controller
                     $data->where('document_id', $req->input('document'));
                 }
                 if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
-                    // If a status is selected (even status 5), show it
                     $data->where('submission_status', $req->input('status'));
                 } else {
-                    // Default: exclude status 5
                     $data->where('submission_status', '!=', 5);
                 }
 
@@ -296,99 +295,114 @@ class SupervisorController extends Controller
                 });
 
                 $table->addColumn('submission_duedate', function ($row) {
+                    /* FORMAT DATE TO 'd M Y g:i A' OR RETURN '-' IF NULL */
                     return Carbon::parse($row->submission_duedate)->format('d M Y g:i A') ?? '-';
                 });
 
                 $table->addColumn('submission_date', function ($row) {
-                    return  $row->submission_date == null ? '-' : Carbon::parse($row->submission_date)->format('d M Y g:i A');
+                    /* RETURN '-' IF NULL, OTHERWISE FORMAT DATE */
+                    return $row->submission_date == null ? '-' : Carbon::parse($row->submission_date)->format('d M Y g:i A');
+                });
+
+                $table->addColumn('submission_semester', function ($row) {
+                    /* LOAD SEMESTER DATA */
+                    $semester = Semester::where('id', $row->semester_id)->first();
+
+                    /* RETURN SEMESTER LABEL */
+                    return $semester->sem_label;
                 });
 
                 $table->addColumn('submission_status', function ($row) {
                     $status = '';
 
+                    /* CHECK STATUS AND RETURN CORRESPONDING BADGE */
                     if ($row->submission_status == 1) {
-                        $status = '<span class="badge bg-light-warning">' . 'No Attempt' . '</span>';
+                        $status = '<span class="badge bg-light-warning">No Attempt</span>';
                     } elseif ($row->submission_status == 2) {
-                        $status = '<span class="badge bg-danger">' . 'Locked' . '</span>';
+                        $status = '<span class="badge bg-danger">Locked</span>';
                     } elseif ($row->submission_status == 3) {
-                        $status = '<span class="badge bg-light-success">' . 'Submitted' . '</span>';
+                        $status = '<span class="badge bg-light-success">Submitted</span>';
                     } elseif ($row->submission_status == 4) {
-                        $status = '<span class="badge bg-light-danger">' . 'Overdue' . '</span>';
+                        $status = '<span class="badge bg-light-danger">Overdue</span>';
                     } elseif ($row->submission_status == 5) {
-                        $status = '<span class="badge bg-secondary">' . 'Archive' . '</span>';
+                        $status = '<span class="badge bg-secondary">Archive</span>';
                     } else {
-                        $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
+                        $status = '<span class="badge bg-light-danger">N/A</span>';
                     }
 
                     return $status;
                 });
 
                 $table->addColumn('action', function ($row) {
-                    // STUDENT SUBMISSION DIRECTORY
+                    /* SETUP STUDENT SUBMISSION DIRECTORY PATH */
                     $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name;
-                    $htmlOne =
-                        '
-                            <div class="dropdown">
-                                <a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none"
-                                    href="javascript: void(0)" data-bs-toggle="dropdown" 
-                                    aria-haspopup="true" aria-expanded="false">
-                                    <i class="material-icons-two-tone f-18">more_vert</i>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-end">
-                        ';
+
+                    /* BUILD DROPDOWN MENU BASE HTML */
+                    $htmlOne = '
+                        <div class="dropdown">
+                            <a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none"
+                                href="javascript: void(0)" data-bs-toggle="dropdown" 
+                                aria-haspopup="true" aria-expanded="false">
+                                <i class="material-icons-two-tone f-18">more_vert</i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end">
+                    ';
+
+                    /* DETERMINE MENU OPTIONS BASED ON SUBMISSION STATUS */
                     if ($row->submission_document != '-' && $row->submission_status != 5) {
-                        $htmlTwo =
-                            '          
-                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
-                                        data-bs-target="#settingModal-' . $row->submission_id . '">
-                                        Setting 
-                                    </a>
-                                    <a class="dropdown-item" href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->submission_document)]) . '" download="' . $row->submission_document . '">Download</a> 
-                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal-' . $row->submission_id . '">
-                                        Archive
-                                    </a> 
-                            ';
+                        /* SHOW SETTING, DOWNLOAD AND ARCHIVE OPTIONS */
+                        $htmlTwo = '          
+                            <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                data-bs-target="#settingModal-' . $row->submission_id . '">
+                                Setting 
+                            </a>
+                            <a class="dropdown-item" href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->submission_document)]) . '" download="' . $row->submission_document . '">Download</a> 
+                            <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                data-bs-target="#archiveModal-' . $row->submission_id . '">
+                                Archive
+                            </a> 
+                        ';
                     } elseif ($row->submission_status == 5 && $row->submission_document != '-') {
+                        /* SHOW DOWNLOAD AND UNARCHIVE OPTIONS FOR ARCHIVED WITH DOCUMENT */
                         $htmlTwo = '
-                                    <a class="dropdown-item" href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->submission_document)]) . '" download="' . $row->submission_document . '">Download</a>  
-                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
-                                        data-bs-target="#unarchiveModal-' . $row->submission_id . '">
-                                        Unarchive 
-                                    </a>
+                            <a class="dropdown-item" href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->submission_document)]) . '" download="' . $row->submission_document . '">Download</a>  
+                            <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                data-bs-target="#unarchiveModal-' . $row->submission_id . '">
+                                Unarchive 
+                            </a>
                         ';
                     } elseif ($row->submission_status == 5 && $row->submission_document == '-') {
+                        /* SHOW ONLY UNARCHIVE OPTION FOR ARCHIVED WITHOUT DOCUMENT */
                         $htmlTwo = '
-                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
-                                        data-bs-target="#unarchiveModal-' . $row->submission_id . '">
-                                        Unarchive 
-                                    </a>
+                            <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                data-bs-target="#unarchiveModal-' . $row->submission_id . '">
+                                Unarchive 
+                            </a>
                         ';
                     } else {
-                        $htmlTwo =
-                            '           
-                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
-                                        data-bs-target="#settingModal-' . $row->submission_id . '">
-                                        Setting 
-                                    </a>
-                                    <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal-' . $row->submission_id . '">
-                                        Archive
-                                    </a>
-                            ';
+                        /* DEFAULT OPTIONS (SETTING AND ARCHIVE) */
+                        $htmlTwo = '           
+                            <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                data-bs-target="#settingModal-' . $row->submission_id . '">
+                                Setting 
+                            </a>
+                            <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                data-bs-target="#archiveModal-' . $row->submission_id . '">
+                                Archive
+                            </a>
+                        ';
                     }
 
-                    $htmlThree =
-                        '
-                                </div>
+                    /* CLOSE DROPDOWN MENU TAGS */
+                    $htmlThree = '
                             </div>
-                        ';
+                        </div>
+                    ';
 
                     return $htmlOne . $htmlTwo . $htmlThree;
                 });
 
-
-                $table->rawColumns(['checkbox', 'student_photo', 'submission_duedate', 'submission_date', 'submission_status', 'action']);
+                $table->rawColumns(['checkbox', 'student_photo', 'submission_duedate', 'submission_date', 'submission_semester', 'submission_status', 'action']);
 
                 return $table->make(true);
             }
@@ -1274,7 +1288,7 @@ class SupervisorController extends Controller
             }
 
             return view('staff.supervisor.nomination-management', [
-                'title' => 'Supervisors - Nomination Management',
+                'title' => 'My Supervision - Nomination Management',
                 'studs' => Student::all(),
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
@@ -1288,7 +1302,7 @@ class SupervisorController extends Controller
         }
     }
 
-    /* My Supervision Evaluation Approval [HIGH ATTENTION - IN PROGRESS] - Route */
+    /* My Supervision Evaluation Approval - Route */
     public function mySupervisionEvaluationApproval(Request $req, $name)
     {
         try {
@@ -1545,7 +1559,7 @@ class SupervisorController extends Controller
                         ->join('activity_forms as af', 'ff.af_id', '=', 'af.id')
                         ->where('af.activity_id', $row->activity_id)
                         ->where('af.af_target', 5)
-                        ->whereIn('ff.ff_signature_role', [2,3])
+                        ->whereIn('ff.ff_signature_role', [2, 3])
                         ->pluck('ff.ff_signature_role')
                         ->unique()
                         ->toArray();
@@ -1680,7 +1694,7 @@ class SupervisorController extends Controller
         }
     }
 
-    /* My Supervision Each Student Evaluation Approval [HIGH ATTENTION - IN PROGRESS] - Route */
+    /* My Supervision Each Student Evaluation Approval - Route */
     public function mySupervisionStudentEvaluationApproval(Request $req, $activityID, $studentID)
     {
         try {
@@ -2080,7 +2094,7 @@ class SupervisorController extends Controller
             }
 
             return view('staff.supervisor.evaluation-student-approval', [
-                'title' => $student->student_name . ' - Evaluation Approval',
+                'title' => 'My Supervision - '. $student->student_name . ' - Evaluation Approval',
                 'student' => $student,
                 'sems' => Semester::all(),
                 'activity' => $activity,

@@ -97,7 +97,7 @@
                                         @elseif ($act->init_status == 12)
                                             <span class="badge bg-danger">Evaluation : Failed</span>
                                         @elseif ($act->init_status == 13)
-                                            <span class="badge bg-light-success">Evaluation : Passed & Continue</span>
+                                            <span class="badge bg-light-success">Passed & Continue</span>
                                         @elseif ($act->init_status == 14)
                                             <span class="badge bg-light-warning">Correction : Pending Supervisor
                                                 Approval</span>
@@ -346,7 +346,7 @@
                             @if (
                                 ($act->required_document > 0 &&
                                     $act->submitted_required_document == $act->required_document &&
-                                    !in_array($act->init_status, [1, 2, 3, 7, 8, 14, 15, 16, 17, 18, 19, 20])) ||
+                                    !in_array($act->init_status, [1, 2, 3, 7, 8, 13, 14, 15, 16, 17, 18, 19, 20])) ||
                                     ($act->required_document == 0 &&
                                         $act->optional_document > 0 &&
                                         $act->submitted_optional_document >= 1 &&

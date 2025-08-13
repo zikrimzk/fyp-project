@@ -1360,35 +1360,6 @@ class SOPController extends Controller
         }
     }
 
-    // public function previewActivityDocumentbyHTMLDynamic(Request $req)
-    // {
-    //     try {
-
-    //         $act = Activity::where('id', $req->actid)->first();
-    //         $actform = ActivityForm::where('id',  $req->af_id)->first();
-    //         $formfield = FormField::where('af_id',  $req->af_id)->orderby('ff_order')->get();
-    //         $signatures = $formfield->where('ff_category', 6);
-    //         $faculty = Faculty::where('fac_status', 3)->first();
-    //         $student = Student::where('id', $req->studentid)->first();
-
-    //         $html = view('staff.sop.template.activity-document-dynamic', [
-    //             'title' => $act->act_name . " Document",
-    //             'act' => $act,
-    //             'form_title' => $req->title,
-    //             'actform' => $actform,
-    //             'formfields' => $formfield,
-    //             'faculty' => $faculty,
-    //             'signatures' => $signatures,
-    //             'student' => $student
-    //         ])->render();
-
-    //         return response()->json(['html' => $html]);
-
-    //     } catch (Exception $e) {
-    //         return response()->json(['error' => $e->getMessage()]);
-    //     }
-    // }
-
     public function previewActivityDocumentbyHTML(Request $req)
     {
         try {
@@ -1449,7 +1420,7 @@ class SOPController extends Controller
             'ff_component_type' => 'nullable|string',
             'ff_placeholder' => 'nullable|string',
             'ff_component_required' => 'nullable|in:1,2',
-            'ff_component_required_role' => 'nullable|in:0,1,2,3,4,5',
+            'ff_component_required_role' => 'nullable|in:0,1,2,3,4,5,6',
             'ff_value_options' => 'nullable|json',
             'ff_append_text' => 'nullable|string',
             'ff_table' => 'nullable|string',
@@ -1578,7 +1549,7 @@ class SOPController extends Controller
             'ff_component_type' => 'nullable|string',
             'ff_placeholder' => 'nullable|string',
             'ff_component_required' => 'nullable|in:1,2',
-            'ff_component_required_role' => 'nullable|in:0,1,2,3,4,5',
+            'ff_component_required_role' => 'nullable|in:0,1,2,3,4,5,6',
             'ff_value_options' => 'nullable|json',
             'ff_append_text' => 'nullable|string',
             'ff_table' => 'nullable|string',
