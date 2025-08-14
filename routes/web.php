@@ -153,6 +153,8 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-multiple-submission', [SubmissionController::class, 'updateMultipleSubmission'])->name('update-multiple-submission-post');
     Route::post('/archive-multiple-submission', [SubmissionController::class, 'archiveMultipleSubmission'])->name('archive-multiple-submission-post');
     Route::get('/download-multiple-submission', [SubmissionController::class, 'downloadMultipleSubmission'])->name('download-multiple-submission-get');
+    Route::get('/export-submission-data', [SubmissionController::class, 'exportSubmission'])->name('export-submission-data-get');
+
 
     /* Submission Approval */
     Route::get('/submission-approval', [SubmissionController::class, 'submissionApproval'])->name('submission-approval');

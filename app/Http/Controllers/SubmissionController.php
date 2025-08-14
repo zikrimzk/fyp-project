@@ -2674,10 +2674,7 @@ class SubmissionController extends Controller
                     $data->where('d.semester_id', $req->input('semester'));
                 }
                 if ($req->has('activity') && !empty($req->input('activity'))) {
-                    $data->where('activity_id', $req->input('activity'));
-                }
-                if ($req->has('document') && !empty($req->input('document'))) {
-                    $data->where('document_id', $req->input('document'));
+                    $data->where('f.id', $req->input('activity'));
                 }
                 if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
                     $data->where('submission_status', $req->input('status'));
@@ -2720,12 +2717,12 @@ class SubmissionController extends Controller
                 });
 
                 $table->addColumn('submission_duedate', function ($row) {
-                    /* FORMAT DATE TO 'd M Y g:i A' OR RETURN '-' IF NULL */
+                    /* HANDLE AND FORMAT SUBMISSION DUE DATE */
                     return Carbon::parse($row->submission_duedate)->format('d M Y g:i A') ?? '-';
                 });
 
                 $table->addColumn('submission_date', function ($row) {
-                    /* RETURN '-' IF NULL, OTHERWISE FORMAT DATE */
+                    /* HANDLE AND FORMAT SUBMISSION DATE */
                     return $row->submission_date == null ? '-' : Carbon::parse($row->submission_date)->format('d M Y g:i A');
                 });
 
@@ -2738,7 +2735,6 @@ class SubmissionController extends Controller
                 });
 
                 $table->addColumn('submission_status', function ($row) {
-                    $status = '';
 
                     /* CHECK STATUS AND RETURN CORRESPONDING BADGE */
                     if ($row->submission_status == 1) {
@@ -2755,6 +2751,7 @@ class SubmissionController extends Controller
                         $status = '<span class="badge bg-light-danger">N/A</span>';
                     }
 
+                    /* RETURN STATUS */
                     return $status;
                 });
 
@@ -2839,7 +2836,6 @@ class SubmissionController extends Controller
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
                 'acts' => Activity::all(),
-                'docs' => Document::all(),
                 'subs' => $data->get()
             ]);
         } catch (Exception $e) {
@@ -3100,6 +3096,87 @@ class SubmissionController extends Controller
             return response()->download($zipFile)->deleteFileAfterSend(true);
         } catch (Exception $e) {
             return back()->with('error', 'Error generating ZIP: ' . $e->getMessage());
+        }
+    }
+
+    /* Export Submission - Function | [WORK IN PROGRESS] */
+    public function exportSubmission(Request $req)
+    {
+        try {
+            /* LOAD SUBMISSION DATA */
+            $submissions = DB::table('submissions as a')
+                ->join('documents as b', 'b.id', '=', 'a.document_id')
+                ->join('activities as c', 'c.id', '=', 'b.activity_id')
+                ->join('students as d', 'd.id', '=', 'a.student_id')
+                ->join('semesters as e', 'e.id', '=', 'a.semester_id')
+                ->select(
+                    'c.act_name',
+                    'd.student_name',
+                    'd.student_matricno',
+                    'b.doc_name',
+                    'e.sem_label',
+                    'a.submission_status',
+                    'a.submission_document',
+                    'a.submission_duedate'
+                );
+
+            /* CONDITION FILTER - SEMESTER */
+            if ($req->ex_semester_id) {
+                $submissions->where('semester_id', $req->ex_semester_id);
+            }
+
+            /* CONDITION FILTER - STATUS */
+            if ($req->ex_submission_status == 1) {
+                $submissions->whereIn('a.submission_status', [1, 4, 5])
+                    ->where('a.submission_document', '=', '-');
+                $type = "Not Submitted Submissions List";
+            } elseif ($req->ex_submission_status == 2) {
+                $submissions->whereIn('a.submission_status', [3, 5])
+                    ->where('a.submission_document', '!=', '-');
+                $type = "Submitted Submissions List";
+            } else {
+                $submissions->whereIn('a.submission_status', [1, 3, 4, 5]);
+                $type = "All Submissions List";
+            }
+
+            /* GET THE DATA */
+            $submissions = $submissions->get();
+
+            /* MAP STATUS CODES TO LABELS - DYNAMIC HANDLING FOR STATUS 5 */
+            $submissions->transform(function ($item) {
+                if ($item->submission_status == 1) {
+                    $item->submission_status_label = 'No Attempt';
+                } elseif ($item->submission_status == 3) {
+                    $item->submission_status_label = 'Submitted';
+                } elseif ($item->submission_status == 4) {
+                    $item->submission_status_label = 'Overdue';
+                } elseif ($item->submission_status == 5) {
+                    $item->submission_status_label = ($item->submission_document != '-') ? 'Submitted' : 'No Attempt';
+                } else {
+                    $item->submission_status_label = 'Unknown';
+                }
+                return $item;
+            });
+
+            /* GROUP AFTER LABELING */
+            $groupedData = $submissions->groupBy('act_name');
+
+            $fc = new FormHandlerController();
+
+            /* EXPORT */
+            if ($req->export_opt_id == 1) {
+                /* GENERATE REPORT */
+                $generatedReport = $fc->generateReport('SUBMISSION LIST', $groupedData, $type, 'landscape', 'E-PGS_SUBMISSION_LIST.pdf', 1, 1);
+
+                /* RETURN GENERATED REPORT */
+                return $generatedReport;
+            } elseif ($req->export_opt_id == 2) {
+                return $this->exportAsExcel($groupedData);
+            } else {
+                return back()->with('error', 'Invalid export format.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
         }
     }
 

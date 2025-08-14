@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Carbon\Carbon;
+use App\Models\Faculty;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -270,5 +273,46 @@ class FormHandlerController extends Controller
         }
 
         return $userData;
+    }
+
+    public function generateReport($title, $data, $type, $orientation, $filename, $option, $reportModule)
+    {
+        try {
+
+            /* REPORT MODULE
+             * 1 : SUBMISSION
+             * 2 : -
+            */
+
+            /* LOAD FACULTY DATA */
+            $faculty = Faculty::where('fac_status', 3)->first();
+
+            if (!$faculty) {
+                return back()->with('error', 'Faculty not found. Failed to generate report. Please contact administrator for further assistance.');
+            }
+
+            /* INITIALIZE PDF */
+            $pdf = PDF::loadView('staff.report.report-template', [
+                'title' => $title,
+                'groupedData' => $data,
+                'faculty' => $faculty,
+                'report_type' => $type,
+                'report_module' => $reportModule
+            ])->setPaper('a4', $orientation);
+
+            /* RETURN PDF 
+             * 1 : Download
+             * 2 : View
+            */
+            if ($option == 1) {
+                return $pdf->download($filename);
+            } elseif ($option == 2) {
+                return $pdf->stream($filename);
+            }
+
+            return abort(404, 'Failed to generate report. Please contact administrator for further assistance.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Failed to generate report. Please contact administrator for further assistance.');
+        }
     }
 }
