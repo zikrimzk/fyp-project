@@ -67,7 +67,6 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
 
     /* Student Activity Eligibility Check [WILL BE REMOVED] */
     Route::get('/student-activity-elibility-check/{matricno}/{activityid}', [SubmissionController::class, 'getStudentSubmissionEligibility'])->name('student-eligibility-check');
-
 });
 
 
@@ -133,7 +132,18 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/export-student-semester-enrollment-data', [SupervisionController::class, 'exportStudentSemester'])->name('export-student-semester-enrollment-get');
 
 
-    // Submission
+
+    /* Submission */
+
+    /* Submission Final Overview */
+    Route::get('/submission-final-overview', [SubmissionController::class, 'submissionFinalOverview'])->name('submission-final-overview');
+    Route::post('/update-submission-final/{id}', [SubmissionController::class, 'updateFinalSubmission'])->name('update-final-submission-post');
+    Route::get('/delete-submission-final/{id}', [SubmissionController::class, 'deleteFinalSubmission'])->name('delete-final-submission-get');
+
+    /* Correction Final Overview */
+    Route::get('/correction-final-overview', [SubmissionController::class, 'correctionFinalOverview'])->name('correction-final-overview');
+    Route::post('/update-correction-final/{id}', [SubmissionController::class, 'updateFinalCorrection'])->name('update-final-correction-post');
+    Route::get('/delete-correction-final/{id}', [SubmissionController::class, 'deleteFinalCorrection'])->name('delete-final-correction-get');
 
     /* Submission Management */
     Route::get('/submission-management', [SubmissionController::class, 'submissionManagement'])->name('submission-management');
@@ -167,10 +177,14 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/submit-nomination-{studentId}-{mode}', [NominationController::class, 'submitNomination'])->name('submit-nomination-post');
     Route::get('/create-renomination-data/{nominationId}', [NominationController::class, 'reNominatedStudent'])->name('renomination-data-get');
 
-    // Evaluation
+    /* Evaluation */
+
+    /* Evaluation Final Overview */
+    Route::get('/evaluation-final-overview-{name}', [EvaluationController::class, 'evaluationFinalOverview'])->name('evaluation-final-overview');
+    Route::post('/update-evaluation-final/{id}', [EvaluationController::class, 'updateFinalEvaluation'])->name('update-final-evaluation-post');
+    Route::get('/delete-evaluation-final/{id}', [EvaluationController::class, 'deleteFinalEvaluation'])->name('delete-final-evaluation-get');
 
     /* Evaluation Management */
-    Route::get('/final-evaluation-report-{name}', [EvaluationController::class, 'finalEvaluationReport'])->name('final-evaluation-report');
     Route::get('/evaluation-student-{evaluationID}-{mode}', [EvaluationController::class, 'evaluationStudent'])->name('evaluation-student');
     Route::get('/view-evaluation-form', [EvaluationController::class, 'viewEvaluationForm'])->name('view-evaluation-form-get');
     Route::post('/submit-evaluation-{evaluationID}-{mode}', [EvaluationController::class, 'submitEvaluation'])->name('submit-evaluation-post');

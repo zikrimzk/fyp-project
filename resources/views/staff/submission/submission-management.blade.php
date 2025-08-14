@@ -572,6 +572,7 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
+    
     <script type="text/javascript">
         $(document).ready(function() {
 
@@ -640,7 +641,6 @@
                                 '</span></td>');
                     }
                 }
-
             });
 
             var modalToShow = "{{ session('modal') }}";

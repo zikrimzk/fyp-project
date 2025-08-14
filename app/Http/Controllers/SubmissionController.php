@@ -1907,6 +1907,720 @@ class SubmissionController extends Controller
         }
     }
 
+    /* Submission Final Overview [Staff] - Route */
+    public function submissionFinalOverview(Request $req)
+    {
+        try {
+            /* LOAD DATATABLE DATA */
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as a')
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('latest.student_id', '=', 'a.id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+                ->join('student_activities as d', 'd.student_id', '=', 'a.id')
+                ->join('activities as e', 'e.id', '=', 'd.activity_id')
+                ->select(
+                    'a.*',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'd.id as sa_id',
+                    'd.sa_status',
+                    'd.sa_final_submission',
+                    'd.created_at',
+                    'd.semester_id',
+                    'e.id as activity_id',
+                    'e.act_name as activity_name'
+                )
+                ->orderBy('e.act_name');
+
+            if ($req->ajax()) {
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('d.semester_id', $req->input('semester'));
+                }
+                if ($req->has('activity') && !empty($req->input('activity'))) {
+                    $data->where('e.id', $req->input('activity'));
+                }
+                if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
+                    $data->where('d.sa_status', $req->input('status'));
+                }
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('sa_activity', function ($row) {
+                    /* RETURN ACTIVITY NAME */
+                    return $row->activity_name;
+                });
+
+                $table->addColumn('sa_final_submission', function ($row) {
+
+                    /* HANDLE EMPTY FINAL DOCUMENT */
+                    if (empty($row->sa_final_submission)) {
+                        return '-';
+                    }
+
+                    /* LOAD PROCEDURE DATA */
+                    $procedure = Procedure::where('programme_id', $row->programme_id)
+                        ->where('activity_id', $row->activity_id)
+                        ->first();
+
+                    /* LOAD SEMESTER DATA */
+                    $currsemester = Semester::where('id', $row->semester_id)->first();
+
+                    /* FORMAT SEMESTER LABEL */
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
+                    /* LOOK UP FOR DOCUMENT DIRECTORY */
+                    if ($procedure->is_repeatable == 1) {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/' . $semesterlabel . '/Final Document';
+                    } else {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Final Document';
+                    }
+
+                    /* HTML OUTPUT */
+                    $final_doc =
+                        '
+                        <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->sa_final_submission)]) . '" 
+                            target="_blank" class="link-dark d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                            <span class="fw-semibold">View Document</span>
+                        </a>
+                    ';
+
+                    /* RETURN HTML */
+                    return $final_doc;
+                });
+
+                $table->addColumn('sa_date', function ($row) {
+                    /* FORMAT DATE TO 'd M Y g:i A' OR RETURN '-' IF NULL */
+                    return Carbon::parse($row->created_at)->format('d M Y g:i A') ?? '-';
+                });
+
+                $table->addColumn('sa_semester', function ($row) {
+                    /* LOAD SEMESTER DATA */
+                    $semester = Semester::where('id', $row->semester_id)->first();
+
+                    /* RETURN SEMESTER LABEL */
+                    return $semester->sem_label;
+                });
+
+                $table->addColumn('sa_status', function ($row) {
+
+                    /* CHECK STATUS AND RETURN CORRESPONDING BADGE */
+                    if ($row->sa_status == 1) {
+                        $status = '<span class="badge bg-light-warning">Pending Approval : Supervisor</span>';
+                    } elseif ($row->sa_status == 2) {
+                        $status = '<span class="badge bg-light-warning">Pending Approval : Committee / Deputy Dean / Dean</span>';
+                    } elseif ($row->sa_status == 3) {
+                        $status = '<span class="badge bg-success">Approved & Completed</span>';
+                    } elseif ($row->sa_status == 4) {
+                        $status = '<span class="badge bg-light-danger">Rejected : Supervisor</span>';
+                    } elseif ($row->sa_status == 5) {
+                        $status = '<span class="badge bg-light-danger">Rejected : Committee / Deputy Dean / Dean</span>';
+                    } elseif ($row->sa_status == 7) {
+                        $status = '<span class="badge bg-light-warning">Pending : Evaluation</span>';
+                    } elseif ($row->sa_status == 8) {
+                        $status = '<span class="badge bg-light-warning">Evaluation : Minor/Major Correction</span>';
+                    } elseif ($row->sa_status == 9) {
+                        $status = '<span class="badge bg-light-danger">Evaluation : Represent/Resubmit</span>';
+                    } elseif ($row->sa_status == 12) {
+                        $status = '<span class="badge bg-danger">Evaluation : Failed</span>';
+                    } elseif ($row->sa_status == 13) {
+                        $status = '<span class="badge bg-light-success">Passed & Continue</span>';
+                    } else {
+                        $status = '<span class="badge bg-light-danger">N/A</span>';
+                    }
+
+                    /* RETURN STATUS */
+                    return $status;
+                });
+
+                $table->addColumn('action', function ($row) {
+                    /* BUILD DROPDOWN MENU BASE HTML */
+                    $htmlOne = '
+                        <div class="dropdown">
+                            <a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none"
+                                href="javascript: void(0)" data-bs-toggle="dropdown" 
+                                aria-haspopup="true" aria-expanded="false">
+                                <i class="material-icons-two-tone f-18">more_vert</i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end">
+                    ';
+
+                    /* SETTING - ALWAYS AVAILABLE */
+                    $htmlTwo = '          
+                        <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                            data-bs-target="#settingModal-' . $row->sa_id . '">
+                            Setting 
+                        </a>
+                    ';
+
+                    /* DELETE - ONLY IF sa_status NOT IN RESTRICTED LIST */
+                    $restrictedStatuses = [3, 4, 5, 7, 8, 9, 12, 13];
+                    if (!in_array($row->sa_status, $restrictedStatuses)) {
+                        $htmlTwo .= '
+                            <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                data-bs-target="#deleteModal-' . $row->sa_id . '">
+                                Delete
+                            </a> 
+                        ';
+                    }
+
+                    /* CLOSE DROPDOWN MENU TAGS */
+                    $htmlThree = '
+                            </div>
+                        </div>
+                    ';
+
+                    /* RETURN HTML */
+                    return $htmlOne . $htmlTwo . $htmlThree;
+                });
+
+                $table->rawColumns(['student_photo', 'sa_activity', 'sa_final_submission', 'sa_date', 'sa_semester', 'sa_status', 'action']);
+
+                return $table->make(true);
+            }
+
+            /* RETURN VIEW */
+            return view('staff.submission.submission-final-overview', [
+                'title' => 'Final Overview - Submission',
+                'current_sem' => Semester::where('sem_status', 1)->first()->sem_label ?? 'N/A',
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'acts' => Activity::all(),
+                'studentActivity' => $data->get()
+            ]);
+        } catch (Exception $e) {
+            dd($e);
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    /* Update Final Submission [Staff] - Function */
+    public function updateFinalSubmission(Request $req, $id)
+    {
+        /* DECRYPT ID */
+        $id = decrypt($id);
+
+        $validator = Validator::make($req->all(), [
+            'sa_status_up' => 'required|integer|in:1,2,3,4,5,7,8,9,12,13',
+        ], [], [
+            'sa_status_up' => 'final submission status',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('modal', 'settingModal-' . $id);
+        }
+
+        try {
+
+            $validated = $validator->validated();
+
+            /* LOAD STUDENT ACTIVITY DATA */
+            $studentActivity = StudentActivity::where('id', $id)->first();
+
+            if (!$studentActivity) {
+                return back()->with('error', 'Error occurred: Student activity not found.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $studentActivity->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Error occurred: Student not found.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $studentActivity->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Error occurred: Activity not found.');
+            }
+
+            /* UPDATE STUDENT ACTIVITY DATA */
+            StudentActivity::where('id', $id)->update([
+                'sa_status' =>  $validated['sa_status_up']
+            ]);
+
+            /* RETURN SUCCESS */
+            return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final submission successfully updated.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error updating final submission: ' . $e->getMessage());
+        }
+    }
+
+    /* Delete Final Submission [Staff] - Function | Email : Yes  */
+    public function deleteFinalSubmission($id)
+    {
+        /* DECRYPT ID */
+        $id = decrypt($id);
+        try {
+
+            /* LOAD STUDENT ACTIVITY DATA */
+            $studentActivity = StudentActivity::where('id', $id)->first();
+
+            if (!$studentActivity) {
+                return back()->with('error', 'Error occurred: Student activity not found.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $studentActivity->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Error occurred: Student not found.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $studentActivity->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Error occurred: Activity not found.');
+            }
+
+            /* LOAD PROCEDURE DATA */
+            $procedure = Procedure::where('activity_id', $activity->id)
+                ->where('programme_id', $student->programme_id)
+                ->first();
+
+            if (!$procedure) {
+                return back()->with('error', 'Error occurred: Procedure not found.');
+            }
+
+            /* LOAD SEMESTER DATA */
+            $semester = Semester::where('id', $studentActivity->semester_id)->first();
+
+            if (!$semester) {
+                return back()->with('error', 'Error occurred: Semester not found.');
+            }
+
+            $programme = Programme::where('id', $student->programme_id)->first();
+
+            if (!$programme) {
+                return back()->with('error', 'Error occurred: Programme not found.');
+            }
+
+            /* LOAD FINAL SUBMISSION PATH */
+            $basepath = $student->student_directory . '/' . strtoupper($programme->prog_code) . '/' . $activity->act_name;
+
+            if (!Storage::exists($basepath)) {
+                return back()->with('error', 'Error occurred: Activity Directory not found.');
+            }
+
+            if ($procedure->is_repeatable == 1) {
+                $finalSubmissionPath = $basepath . '/' . str_replace('/', '', $semester->sem_label)  . '/Final Document';
+            }
+
+            if ($procedure->is_repeatable == 0) {
+                $finalSubmissionPath = $basepath . '/Final Document/';
+            }
+
+            /* DELETE FINAL SUBMISSION */
+            Storage::disk('public')->deleteDirectory($finalSubmissionPath);
+
+            /* LOAD STUDENT ACTIVITY REVIEW DATA */
+            $studentActivityReview = SubmissionReview::where('student_activity_id', $studentActivity->id)->first();
+
+            /* DELETE STUDENT ACTIVITY REVIEW */
+            if ($studentActivityReview) {
+                $studentActivityReview->delete();
+            }
+
+            /* DELETE STUDENT ACTIVITY */
+            $studentActivity->delete();
+
+            /* SEND EMAIL NOTIFICATION TO STUDENT */
+            $this->sendSubmissionNotification($student, 1, $activity->act_name, 5, 0);
+
+            /* RETURN SUCCESS */
+            return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final submission successfully deleted. An email notification has been sent to the student.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error deleting final submission: ' . $e->getMessage());
+        }
+    }
+
+    /* Correction Final Overview [Staff] - Route */
+    public function correctionFinalOverview(Request $req)
+    {
+        try {
+            /* LOAD DATATABLE DATA */
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as a')
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('latest.student_id', '=', 'a.id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+                ->join('activity_corrections as d', 'd.student_id', '=', 'a.id')
+                ->join('activities as e', 'e.id', '=', 'd.activity_id')
+                ->select(
+                    'a.*',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'd.id as ac_id',
+                    'd.ac_status',
+                    'd.ac_final_submission',
+                    'd.ac_startdate',
+                    'd.ac_duedate',
+                    'd.semester_id',
+                    'e.id as activity_id',
+                    'e.act_name as activity_name'
+                )
+                ->orderBy('e.act_name');
+
+            if ($req->ajax()) {
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('d.semester_id', $req->input('semester'));
+                }
+                if ($req->has('activity') && !empty($req->input('activity'))) {
+                    $data->where('e.id', $req->input('activity'));
+                }
+                if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
+                    $data->where('d.ac_status', $req->input('status'));
+                }
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('ac_activity', function ($row) {
+                    /* RETURN ACTIVITY NAME */
+                    return $row->activity_name;
+                });
+
+                $table->addColumn('ac_final_submission', function ($row) {
+
+                    /* HANDLE EMPTY FINAL DOCUMENT */
+                    if (empty($row->ac_final_submission)) {
+                        return '-';
+                    }
+
+                    /* LOAD PROCEDURE DATA */
+                    $procedure = Procedure::where('programme_id', $row->programme_id)
+                        ->where('activity_id', $row->activity_id)
+                        ->first();
+
+                    /* LOAD SEMESTER DATA */
+                    $currsemester = Semester::where('id', $row->semester_id)->first();
+
+                    /* FORMAT SEMESTER LABEL */
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
+                    /* LOOK UP FOR DOCUMENT DIRECTORY */
+                    if ($procedure->is_repeatable == 1) {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/' . $semesterlabel . '/Correction';
+                    } else {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Correction/' . $semesterlabel;
+                    }
+
+                    /* HTML OUTPUT */
+                    $final_doc =
+                        '
+                        <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->ac_final_submission)]) . '" 
+                            target="_blank" class="link-dark d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                            <span class="fw-semibold">View Document</span>
+                        </a>
+                    ';
+
+                    /* RETURN HTML */
+                    return $final_doc;
+                });
+
+                $table->addColumn('ac_date', function ($row) {
+                    /* RETURN DATE HTML */
+                    return '
+                        <div style="line-height:1.2; font-size: 12px;">
+                            <div><strong>Correction Start:</strong><br>' . Carbon::parse($row->ac_startdate)->format('d M Y g:i A') . '</div>
+                            <div class="mt-1"><strong>Correction Due:</strong><br>' . Carbon::parse($row->ac_duedate)->format('d M Y g:i A') . '</div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('ac_semester', function ($row) {
+                    /* LOAD SEMESTER DATA */
+                    $semester = Semester::where('id', $row->semester_id)->first();
+
+                    /* RETURN SEMESTER LABEL */
+                    return $semester->sem_label;
+                });
+
+                $table->addColumn('ac_status', function ($row) {
+
+                    /* CORECTION STATUS MAP */
+                    $correctionStatusMap = [
+                        1 => '<span class="badge bg-light-warning">Correction : Pending Student Action</span>',
+                        2 => '<span class="badge bg-light-warning">Correction : Pending Supervisor Approval</span>',
+                        3 => '<span class="badge bg-light-warning">Correction : Pending Examiners / Panels Approval</span>',
+                        4 => '<span class="badge bg-light-warning">Correction : Pending Committee / <br/>Deputy Dean / Dean Approval</span>',
+                        5 => '<span class="badge bg-success">Correction : Approve & Completed</span>',
+                        6 => '<span class="badge bg-light-danger">Correction : Rejected by Supervisor</span>',
+                        7 => '<span class="badge bg-light-danger">Correction : Rejected by Examiners/Panels</span>',
+                        8 => '<span class="badge bg-light-danger">Correction : Rejected by Committee / <br/>Deputy Dean / Dean</span>',
+                    ];
+
+                    /* RETURN CORECTION STATUS */
+                    return $correctionStatusMap[$row->ac_status] ?? '<span class="badge bg-light-danger">N/A</span>';
+                });
+
+                $table->addColumn('action', function ($row) {
+                    /* BUILD DROPDOWN MENU BASE HTML */
+                    $htmlOne = '
+                        <div class="dropdown">
+                            <a class="avtar avtar-xs btn-link-secondary dropdown-toggle arrow-none"
+                                href="javascript: void(0)" data-bs-toggle="dropdown" 
+                                aria-haspopup="true" aria-expanded="false">
+                                <i class="material-icons-two-tone f-18">more_vert</i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end">
+                    ';
+
+                    /* SETTING - ALWAYS AVAILABLE */
+                    $htmlTwo = '          
+                        <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                            data-bs-target="#settingModal-' . $row->ac_id . '">
+                            Setting 
+                        </a>
+                    ';
+
+                    /* DELETE - ONLY IF ac_status IS 1 */
+                    if ($row->ac_status == 1) {
+                        $htmlTwo .= '
+                            <a href="javascript: void(0)" class="dropdown-item" data-bs-toggle="modal"
+                                data-bs-target="#deleteModal-' . $row->ac_id . '">
+                                Delete
+                            </a> 
+                        ';
+                    }
+
+                    /* CLOSE DROPDOWN MENU TAGS */
+                    $htmlThree = '
+                            </div>
+                        </div>
+                    ';
+
+                    /* RETURN HTML */
+                    return $htmlOne . $htmlTwo . $htmlThree;
+                });
+
+                $table->rawColumns(['student_photo', 'ac_activity', 'ac_final_submission', 'ac_date', 'ac_semester', 'ac_status', 'action']);
+
+                return $table->make(true);
+            }
+
+            /* RETURN VIEW */
+            return view('staff.submission.correction-final-overview', [
+                'title' => 'Final Overview - Correction',
+                'current_sem' => Semester::where('sem_status', 1)->first()->sem_label ?? 'N/A',
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'acts' => Activity::all(),
+                'correction' => $data->get()
+            ]);
+        } catch (Exception $e) {
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    /* Update Final Correction [Staff] - Function */
+    public function updateFinalCorrection(Request $req, $id)
+    {
+        /* DECRYPT ID */
+        $id = decrypt($id);
+
+        $validator = Validator::make($req->all(), [
+            'ac_startdate_up' => 'required|date_format:Y-m-d\TH:i',
+            'ac_duedate_up'   => 'required|date_format:Y-m-d\TH:i|after:ac_startdate_up',
+            'ac_status_up'    => 'required|integer|in:1,2,3,4,5,6,7,8',
+        ], [], [
+            'ac_startdate_up' => 'correction start date',
+            'ac_duedate_up'   => 'correction due date',
+            'ac_status_up'    => 'correction status',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('modal', 'settingModal-' . $id);
+        }
+
+        try {
+
+            $validated = $validator->validated();
+
+            /* LOAD STUDENT ACTIVITY DATA */
+            $correction = ActivityCorrection::where('id', $id)->first();
+
+            if (!$correction) {
+                return back()->with('error', 'Error occurred: Student correction not found.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $correction->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Error occurred: Student not found.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $correction->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Error occurred: Activity not found.');
+            }
+
+            /* INITIATE EVALUATION CONTROLLER */
+            $ec = new EvaluationController();
+
+            /* UPDATE STUDENT CORRECTION DATA */
+            $update = ActivityCorrection::where('id', $id)->update([
+                'ac_startdate' => $validated['ac_startdate_up'],
+                'ac_duedate' => $validated['ac_duedate_up'],
+                'ac_status' =>  $validated['ac_status_up']
+            ]);
+
+            if ($update) {
+                $ec->restoreSubmission($student, $activity, $validated['ac_duedate_up']);
+            }
+
+            /* RETURN SUCCESS */
+            return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final correction successfully updated.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error updating final submission: ' . $e->getMessage());
+        }
+    }
+
+    /* Delete Final Correction [Staff] - Function  */
+    public function deleteFinalCorrection($id)
+    {
+        /* DECRYPT ID */
+        $id = decrypt($id);
+        try {
+
+            /* LOAD STUDENT ACTIVITY DATA */
+            $correction = ActivityCorrection::where('id', $id)->first();
+
+            if (!$correction) {
+                return back()->with('error', 'Error occurred: Student correction not found.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $correction->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Error occurred: Student not found.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $correction->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Error occurred: Activity not found.');
+            }
+
+            /* DELETE STUDENT ACTIVITY */
+            $correction->delete();
+
+            /* RETURN SUCCESS */
+            return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final correctiom successfully deleted.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error deleting final correction: ' . $e->getMessage());
+        }
+    }
 
     /* Submission Management [Staff] - Route */
     public function submissionManagement(Request $req)

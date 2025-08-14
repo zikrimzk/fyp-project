@@ -741,12 +741,12 @@
                                 </a>
                                 <ul class="pc-submenu">
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('submission-management') }}">
+                                        <a class="pc-link" href="{{ route('submission-final-overview') }}">
                                             Submission
                                         </a>
                                     </li>
                                     <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('submission-management') }}">
+                                        <a class="pc-link" href="{{ route('correction-final-overview') }}">
                                             Correction
                                         </a>
                                     </li>
@@ -788,14 +788,14 @@
 
                             <li class="pc-item pc-hasmenu">
                                 <a href="javascript:void(0)" class="pc-link">
-                                    <span class="pc-mtext">Final Report</span>
+                                    <span class="pc-mtext">Final Overview</span>
                                     <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                                 </a>
                                 <ul class="pc-submenu">
                                     @foreach ($nomination as $nom)
                                         <li class="pc-item">
                                             <a class="pc-link"
-                                                href="{{ route('final-evaluation-report', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
+                                                href="{{ route('evaluation-final-overview', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
                                                 {{ $nom->activity_name }}
                                             </a>
                                         </li>

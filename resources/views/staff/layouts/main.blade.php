@@ -159,6 +159,10 @@
             color: white !important;
         }
 
+        .table-color {
+            background-color: rgba(52, 58, 64, 255) !important;
+        }
+
         /* button,
         .btn {
             border-radius: 6px !important;
