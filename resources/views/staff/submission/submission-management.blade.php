@@ -253,6 +253,7 @@
                             </div>
                             <!-- [ Option Section ] end -->
 
+                            <!-- [ Datatable ] start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -269,6 +270,7 @@
                                     </thead>
                                 </table>
                             </div>
+                            <!-- [ Datatable ] end -->
 
                         </div>
                     </div>
@@ -295,14 +297,13 @@
                                 <!-- Body -->
                                 <div class="modal-body">
                                     <div class="row g-3">
-
                                         <!-- Semester Input -->
                                         <div class="col-12">
                                             <label for="ex_semester_id" class="form-label fw-semibold">Semester *</label>
                                             <select id="ex_semester_id" name="ex_semester_id" class="form-select"
                                                 required>
                                                 <option value="">-- Select Semester --</option>
-                                                @foreach ($sems as $fil)
+                                                @foreach ($sems->whereIn('sem_status', [1, 3]) as $fil)
                                                     <option value="{{ $fil->id }}"
                                                         class="{{ $fil->sem_status == 1 ? 'bg-light-success' : '' }}"
                                                         {{ $fil->sem_status == 1 ? 'selected' : '' }}>
@@ -334,8 +335,8 @@
                                                 *</label>
                                             <select id="export_opt_id" name="export_opt_id" class="form-select" required>
                                                 <option value="">-- Select Format --</option>
-                                                <option value="1" selected>📄 PDF (.pdf)</option>
-                                                <option value="2" disabled>📊 Excel (.xlsx) <small>(Coming
+                                                <option value="1" selected>PDF (.pdf)</option>
+                                                <option value="2" disabled>Excel (.xlsx) <small>(Coming
                                                         Soon)</small></option>
                                             </select>
                                             <small class="text-muted">Choose the file format for export.</small>

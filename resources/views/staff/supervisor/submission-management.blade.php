@@ -37,8 +37,7 @@
                                 <i class="fas fa-check-circle"></i>
                                 Success
                             </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         <p class="mb-0">{{ session('success') }}</p>
                     </div>
@@ -50,8 +49,7 @@
                                 <i class="fas fa-info-circle"></i>
                                 Error
                             </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         <p class="mb-0">{{ session('error') }}</p>
                     </div>
@@ -61,8 +59,135 @@
 
             <!-- [ Main Content ] start -->
             <div class="row">
-
                 <!-- [ Submission Management ] start -->
+
+                <!-- [ Filter Section ] Start -->
+                <div class="col-sm-12">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header fw-semibold table-color text-white py-2">
+                            <i class="ti ti-filter me-1"></i> FILTERS
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-3 row-cols-1 row-cols-md-3 row-cols-lg-4 align-items-end">
+
+                                {{-- Faculty --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Faculty</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_faculty_id" class="form-select">
+                                            <option value="">-- Select Faculty --</option>
+                                            @foreach ($facs as $fil)
+                                                @if ($fil->fac_status == 1)
+                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
+                                                @elseif($fil->fac_status == 2)
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        {{ $fil->fac_code }} [Inactive]
+                                                    </option>
+                                                @elseif($fil->fac_status == 3)
+                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                        {{ $fil->fac_code }} [Default]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearFacFilter"
+                                            title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Semester --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Semester</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_semester_id" class="form-select">
+                                            <option value="">-- Select Semester --</option>
+                                            @foreach ($sems as $fil)
+                                                @if ($fil->sem_status == 1)
+                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                        {{ $fil->sem_label }} [Current]
+                                                    </option>
+                                                @elseif($fil->sem_status == 3)
+                                                    <option value="{{ $fil->id }}">{{ $fil->sem_label }}</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearSemFilter"
+                                            title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Programme --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Programme</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_programme_id" class="form-select">
+                                            <option value="">-- Select Programme --</option>
+                                            @foreach ($progs as $fil)
+                                                @if ($fil->prog_status == 1)
+                                                    <option value="{{ $fil->id }}">{{ $fil->prog_code }}
+                                                        ({{ $fil->prog_mode }})
+                                                    </option>
+                                                @elseif($fil->prog_status == 2)
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        {{ $fil->prog_code }} ({{ $fil->prog_mode }}) [Inactive]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearProgFilter"
+                                            title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Activity --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Activity</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_activity_id" class="form-select">
+                                            <option value="">-- Select Activity --</option>
+                                            @foreach ($acts as $fil)
+                                                <option value="{{ $fil->id }}">{{ $fil->act_name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearActivityFilter"
+                                            title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Status --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Status</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_status" class="form-select">
+                                            <option value="">-- Select Status --</option>
+                                            <option value="1">No Attempt</option>
+                                            <option value="2">Locked</option>
+                                            <option value="3">Submitted</option>
+                                            <option value="4">Overdue</option>
+                                            <option value="5">Archive</option>
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearStatusFilter"
+                                            title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Filter Section ] End -->
+
+                <!-- [ Datatable & Option ] Start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
@@ -108,140 +233,19 @@
                                         Download (.zip)
                                     </span>
                                 </button>
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2 mb-4"
+                                    data-bs-toggle="modal" data-bs-target="#exportModal" id="exportModalBtn"
+                                    title="Export Data">
+                                    <i class="ti ti-file-export f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Export Data
+                                    </span>
+                                </button>
                             </div>
                             <!-- [ Option Section ] end -->
 
-                            <!-- [ Filter Section ] Start -->
-                            <div class="row g-3 align-items-center mb-3">
 
-                                <div class="col-sm-12 col-md-4">
-                                    <div class="input-group">
-                                        <select id="fil_faculty_id" class="form-select">
-                                            <option value="">-- Select Faculty --</option>
-                                            @foreach ($facs as $fil)
-                                                @if ($fil->fac_status == 1)
-                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
-                                                @elseif($fil->fac_status == 2)
-                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->fac_code }} [Inactive]
-                                                    </option>
-                                                @elseif($fil->fac_status == 3)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success"
-                                                        selected>
-                                                        {{ $fil->fac_code }} [Default]
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearFacFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-4">
-                                    <div class="input-group">
-                                        <select id="fil_semester_id" class="form-select">
-                                            <option value="">-- Select Semester --</option>
-                                            @foreach ($sems as $fil)
-                                                @if ($fil->sem_status == 1)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success"
-                                                        selected>
-                                                        {{ $fil->sem_label }} [Current]
-                                                    </option>
-                                                @elseif($fil->sem_status == 3)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearSemFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-4">
-                                    <div class="input-group">
-                                        <select id="fil_programme_id" class="form-select">
-                                            <option value="">-- Select Programme --</option>
-                                            @foreach ($progs as $fil)
-                                                @if ($fil->prog_status == 1)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->prog_code }}
-                                                        ({{ $fil->prog_mode }})
-                                                    </option>
-                                                @elseif($fil->prog_status == 2)
-                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->prog_code }}
-                                                        ({{ $fil->prog_mode }}) [Inactive]</option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearProgFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-4">
-                                    <div class="input-group">
-                                        <select id="fil_activity_id" class="form-select">
-                                            <option value="">-- Select Activity --</option>
-                                            @foreach ($acts as $fil)
-                                                <option value="{{ $fil->id }}">{{ $fil->act_name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearActivityFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-4">
-                                    <div class="input-group">
-                                        <select id="fil_document_id" class="form-select">
-                                            <option value="">-- Select Document --</option>
-                                            @foreach ($docs as $fil)
-                                                @if ($fil->doc_status == 1)
-                                                    <option value="{{ $fil->id }}">{{ $fil->doc_name }}</option>
-                                                @elseif($fil->doc_status == 2)
-                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->doc_name }} [Inactive]
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearDocumentFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-4">
-                                    <div class="input-group">
-                                        <select id="fil_status" class="form-select">
-                                            <option value="">-- Select Status --</option>
-                                            <option value="1">No Attempt</option>
-                                            <option value="2">Locked</option>
-                                            <option value="3">Submitted</option>
-                                            <option value="4">Overdue</option>
-                                            <option value="5">Archive</option>
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearStatusFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                            </div>
-                            <!-- [ Filter Section ] End -->
-
+                            <!-- [ Datatable ] start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -258,10 +262,102 @@
                                     </thead>
                                 </table>
                             </div>
-
+                            <!-- [ Datatable ] end -->
                         </div>
                     </div>
                 </div>
+                <!-- [ Main Content ] end -->
+
+
+                <!-- [ Export Modal ] start -->
+                <form action="{{ route('export-my-supervision-submission-data-get') }}" method="GET" id="exportForm">
+                    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+
+                                <!-- Header -->
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold" id="exportModalLabel">
+                                        Export Submission Data
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+
+                                <!-- Body -->
+                                <div class="modal-body">
+                                    <div class="row g-3">
+                                        <!-- Semester Input -->
+                                        <div class="col-12">
+                                            <label for="ex_semester_id" class="form-label fw-semibold">Semester *</label>
+                                            <select id="ex_semester_id" name="ex_semester_id" class="form-select"
+                                                required>
+                                                <option value="">-- Select Semester --</option>
+                                                @foreach ($sems->whereIn('sem_status', [1, 3]) as $fil)
+                                                    <option value="{{ $fil->id }}"
+                                                        class="{{ $fil->sem_status == 1 ? 'bg-light-success' : '' }}"
+                                                        {{ $fil->sem_status == 1 ? 'selected' : '' }}>
+                                                        {{ $fil->sem_label }}
+                                                        {{ $fil->sem_status == 1 ? '[Current]' : '' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <small class="text-muted">Choose the semester you want to export data
+                                                for.</small>
+                                        </div>
+
+                                        <!-- Status Input -->
+                                        <div class="col-12">
+                                            <label for="ex_submission_status" class="form-label fw-semibold">Submission
+                                                Status</label>
+                                            <select id="ex_submission_status" name="ex_submission_status"
+                                                class="form-select">
+                                                <option value="">-- All Status --</option>
+                                                <option value="1">Not Submitted (No Attempt / Overdue)</option>
+                                                <option value="2">Submitted</option>
+                                            </select>
+                                            <small class="text-muted">Filter records by their submission status.</small>
+                                        </div>
+
+                                        <!-- Export Format Input -->
+                                        <div class="col-12">
+                                            <label for="export_opt_id" class="form-label fw-semibold">Export Format
+                                                *</label>
+                                            <select id="export_opt_id" name="export_opt_id" class="form-select" required>
+                                                <option value="">-- Select Format --</option>
+                                                <option value="1" selected>PDF (.pdf)</option>
+                                                <option value="2" disabled>Excel (.xlsx) <small>(Coming
+                                                        Soon)</small></option>
+                                            </select>
+                                            <small class="text-muted">Choose the file format for export.</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="modal-footer bg-light">
+                                    <div class="row w-100 g-2">
+                                        <div class="col-6">
+                                            <button type="button" class="btn btn-outline-secondary w-100"
+                                                data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button type="submit" class="btn btn-primary w-100 " id="exportBtn"
+                                                disabled>
+                                                Export Data
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!-- [ Export Modal ] end -->
 
                 <!-- [ Multiple Submission Update Modal ] start -->
                 <div class="modal fade" id="multipleSettingModal" tabindex="-1" aria-labelledby="multipleSettingModal"
@@ -572,6 +668,12 @@
     </div>
     <script type="text/javascript">
         $(document).ready(function() {
+
+            $('#export_opt_id').on('change', function() {
+                $('#exportBtn').prop('disabled', !$(this).val());
+            });
+
+            $('#export_opt_id').trigger('change');
 
             // DATATABLE : SUBMISSION
             var table = $('.data-table').DataTable({

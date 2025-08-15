@@ -86,7 +86,7 @@ class SupervisorController extends Controller
                             <div style="max-width: 200px;">
                                 <span class="mb-0 fw-medium">' . $row->student_name . '</span>
                                 <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
-                                <small class="text-muted d-block fw-medium"> Enrolled Semesters: ' . $row->student_semcount . '</small>
+                                <small class="text-muted d-block fw-medium"> Active Semesters: ' . $row->student_semcount . '</small>
                             </div>
                         </div>
                     ';
@@ -419,6 +419,89 @@ class SupervisorController extends Controller
             ]);
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
+        }
+    }
+
+    /* My Supervision Export Submission List - Function | [WORK IN PROGRESS] */
+    public function exportMySupervisionSubmission(Request $req)
+    {
+        try {
+            /* LOAD SUBMISSION DATA */
+            $submissions = DB::table('submissions as a')
+                ->join('documents as b', 'b.id', '=', 'a.document_id')
+                ->join('activities as c', 'c.id', '=', 'b.activity_id')
+                ->join('students as d', 'd.id', '=', 'a.student_id')
+                ->join('semesters as e', 'e.id', '=', 'a.semester_id')
+                ->join('supervisions as g', 'g.student_id', '=', 'd.id')
+                ->where('staff_id', auth()->user()->id)
+                ->select(
+                    'c.act_name',
+                    'd.student_name',
+                    'd.student_matricno',
+                    'b.doc_name',
+                    'e.sem_label',
+                    'a.submission_status',
+                    'a.submission_document',
+                    'a.submission_duedate',
+                );
+
+            /* CONDITION FILTER - SEMESTER */
+            if ($req->ex_semester_id) {
+                $submissions->where('semester_id', $req->ex_semester_id);
+            }
+
+            /* CONDITION FILTER - STATUS */
+            if ($req->ex_submission_status == 1) {
+                $submissions->whereIn('a.submission_status', [1, 4, 5])
+                    ->where('a.submission_document', '=', '-');
+                $type = "Not Submitted Submissions List";
+            } elseif ($req->ex_submission_status == 2) {
+                $submissions->whereIn('a.submission_status', [3, 5])
+                    ->where('a.submission_document', '!=', '-');
+                $type = "Submitted Submissions List";
+            } else {
+                $submissions->whereIn('a.submission_status', [1, 3, 4, 5]);
+                $type = "All Submissions List";
+            }
+
+            /* GET THE DATA */
+            $submissions = $submissions->get();
+
+            /* MAP STATUS CODES TO LABELS - DYNAMIC HANDLING FOR STATUS 5 */
+            $submissions->transform(function ($item) {
+                if ($item->submission_status == 1) {
+                    $item->submission_status_label = 'No Attempt';
+                } elseif ($item->submission_status == 3) {
+                    $item->submission_status_label = 'Submitted';
+                } elseif ($item->submission_status == 4) {
+                    $item->submission_status_label = 'Overdue';
+                } elseif ($item->submission_status == 5) {
+                    $item->submission_status_label = ($item->submission_document != '-') ? 'Submitted' : 'No Attempt';
+                } else {
+                    $item->submission_status_label = 'Unknown';
+                }
+                return $item;
+            });
+
+            /* GROUP AFTER LABELING */
+            $groupedData = $submissions->groupBy('act_name');
+
+            $fc = new FormHandlerController();
+
+            /* EXPORT */
+            if ($req->export_opt_id == 1) {
+                /* GENERATE REPORT */
+                $generatedReport = $fc->generateReport('SUBMISSION LIST', $groupedData, $type, 'landscape', 'E-PGS_MYSUPERVISION_SUBMISSION_LIST.pdf', 2, 1);
+
+                /* RETURN GENERATED REPORT */
+                return $generatedReport;
+            } elseif ($req->export_opt_id == 2) {
+                return $this->exportAsExcel($groupedData);
+            } else {
+                return back()->with('error', 'Invalid export format.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
         }
     }
 
@@ -2094,7 +2177,7 @@ class SupervisorController extends Controller
             }
 
             return view('staff.supervisor.evaluation-student-approval', [
-                'title' => 'My Supervision - '. $student->student_name . ' - Evaluation Approval',
+                'title' => 'My Supervision - ' . $student->student_name . ' - Evaluation Approval',
                 'student' => $student,
                 'sems' => Semester::all(),
                 'activity' => $activity,

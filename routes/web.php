@@ -301,6 +301,8 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Submission Management */
     Route::get('/mysupervision-submission-management', [SupervisorController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
+    Route::get('/export-mysupervision-submission-data', [SupervisorController::class, 'exportMySupervisionSubmission'])->name('export-my-supervision-submission-data-get');
+
 
     /* Submission Approval */
     Route::get('/mysupervision-submission-approval', [SupervisorController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
