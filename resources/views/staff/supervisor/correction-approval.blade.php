@@ -221,7 +221,7 @@
                         <div class="card-body">
 
                             <!-- Supervisor Correction Approval Guidelines -->
-                            <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
+                            {{-- <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
                                 <i class="ti ti-info-circle fs-3"></i>
                                 <div class="w-100">
                                     <h4 class="mb-3 fw-semibold">Correction Approval Guidelines</h4>
@@ -244,7 +244,7 @@
                                         </li>
                                     </ul>
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <!-- [ Option Section ] start -->
                             <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">

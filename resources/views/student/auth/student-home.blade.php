@@ -406,6 +406,7 @@
                                         ->join('staff as c', 'b.staff_id', '=', 'c.id')
                                         ->join('activities as e', 'a.activity_id', '=', 'e.id')
                                         ->where('b.eva_status', 3)
+                                        ->where('a.student_id', auth()->user()->id)
                                         ->whereNotExists(function ($query) {
                                             $query
                                                 ->select(DB::raw(1))

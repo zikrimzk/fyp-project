@@ -15,6 +15,7 @@ use App\Models\Programme;
 use App\Models\Evaluation;
 use Illuminate\Http\Request;
 use App\Models\StudentActivity;
+use App\Models\StudentSemester;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Crypt;
@@ -74,10 +75,16 @@ class SupervisorController extends Controller
                 });
 
                 $table->addColumn('student_photo', function ($row) {
+                    /* HANDLE PHOTO */
                     $photoUrl = empty($row->student_photo)
                         ? asset('assets/images/user/default-profile-1.jpg')
                         : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
 
+                    /* GET STUDENT SEMESTERS DETAILS */
+                    $totalsemester = StudentSemester::where('student_id', $row->id)->count();
+                    $totalactive = StudentSemester::where('student_id', $row->id)->whereIn('ss_status', [1, 4])->count();
+
+                    /* RETURN STUDENT DETAILS */
                     return '
                         <div class="d-flex align-items-center" >
                             <div class="me-3">
@@ -86,7 +93,8 @@ class SupervisorController extends Controller
                             <div style="max-width: 200px;">
                                 <span class="mb-0 fw-medium">' . $row->student_name . '</span>
                                 <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
-                                <small class="text-muted d-block fw-medium"> Active Semesters: ' . $row->student_semcount . '</small>
+                                <small class="text-muted d-block fw-medium"> Active Semester : ' . $totalactive  . '</small>
+                                <small class="text-muted d-block fw-medium"> Total Semester : ' . $totalsemester  . '</small>
                             </div>
                         </div>
                     ';
@@ -1554,7 +1562,7 @@ class SupervisorController extends Controller
                     }
 
                     if ($row->sa_status == 13) {
-                        return '<span class="badge bg-success">Passed & Continue</span>';
+                        return '<span class="badge bg-success">Continue Next Semester</span>';
                     }
 
                     if ($row->sa_status == 7) {

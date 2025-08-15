@@ -1960,489 +1960,6 @@ class EvaluationController extends Controller
         }
     }
 
-    /* Evaluation Approval [Staff] - Route */
-    public function evaluationApproval(Request $req, $name)
-    {
-        try {
-
-            /* GET ACTIVITY ID FROM ACTIVITY NAME */
-            $id = Activity::all()
-                ->first(function ($activity) use ($name) {
-                    return strtolower(str_replace(' ', '-', $activity->act_name)) === $name;
-                })?->id;
-
-            /* LOAD ACTIVITY DATA */
-            $activity = Activity::where('id', $id)->first();
-
-            if (!$activity) {
-                return abort(404, 'Activity not found. Please try again.');
-            }
-
-            /* LOAD DATATABLE DATA */
-            $latestSemesterSub = DB::table('student_semesters')
-                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
-                ->groupBy('student_id');
-
-            $data = DB::table('students as s')
-                ->select([
-                    's.id as student_id',
-                    's.student_name',
-                    's.student_matricno',
-                    's.student_email',
-                    's.student_directory',
-                    's.student_photo',
-                    'b.sem_label',
-                    'c.prog_code',
-                    'c.prog_mode',
-                    'c.fac_id',
-                    's.programme_id',
-                    'a.id as activity_id',
-                    'a.act_name as activity_name',
-                    'sa.id as sa_id',
-                    'sa.sa_status',
-                    'sa.sa_final_submission',
-                    'sa.semester_id',
-                ])
-                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
-                    $join->on('s.id', '=', 'latest.student_id');
-                })
-                ->leftJoin('student_semesters as ss', function ($join) {
-                    $join->on('ss.student_id', '=', 's.id')
-                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
-                })
-                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
-                ->join('student_activities as sa', 's.id', '=', 'sa.student_id')
-                ->join('activities as a', 'sa.activity_id', '=', 'a.id')
-                ->join('programmes as c', 'c.id', '=', 's.programme_id')
-                ->whereNotIn('s.id', function ($query) {
-                    $query->select('student_id')
-                        ->from('supervisions')
-                        ->where('staff_id', auth()->user()->id)
-                        ->whereIn('supervision_role', [1, 2]);
-                })
-                ->whereNotIn('s.id', function ($query) use ($id) {
-                    $query->select('w.student_id')
-                        ->from('nominations as w')
-                        ->join('evaluators as x', 'w.id', '=', 'x.nom_id')
-                        ->where('x.staff_id', auth()->user()->id)
-                        ->where('w.activity_id', $id)
-                        ->where('x.eva_status', 3)
-                        ->where('x.eva_role', 1);
-                })
-                ->where('s.student_status', 1)
-                ->where('sa.activity_id', $id)
-                ->orderBy('s.student_matricno');
-
-            if ($req->ajax()) {
-
-                if ($req->has('faculty') && !empty($req->input('faculty'))) {
-                    $data->where('c.fac_id', $req->input('faculty'));
-                }
-                if ($req->has('programme') && !empty($req->input('programme'))) {
-                    $data->where('s.programme_id', $req->input('programme'));
-                }
-                if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('sa.semester_id', $req->input('semester'));
-                }
-                if ($req->has('status') && !empty($req->input('status'))) {
-                    $data->where('sa.sa_status', $req->input('status'));
-                }
-
-                $data = $data->get();
-
-                $table = DataTables::of($data)->addIndexColumn();
-
-                $table->addColumn('student_photo', function ($row) {
-                    $mode = match ($row->prog_mode) {
-                        "FT" => "Full-Time",
-                        "PT" => "Part-Time",
-                        default => "N/A",
-                    };
-
-                    $photoUrl = empty($row->student_photo)
-                        ? asset('assets/images/user/default-profile-1.jpg')
-                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
-
-                    return '
-                        <div class="d-flex align-items-center" >
-                            <div class="me-3">
-                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
-                            </div>
-                            <div style="max-width: 200px;">
-                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
-                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
-                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
-                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
-                            </div>
-                        </div>
-                    ';
-                });
-
-                $table->addColumn('sa_final_document', function ($row) {
-
-                    /* HANDLE EMPTY FINAL DOCUMENT */
-                    if (empty($row->sa_final_submission)) {
-                        return '-';
-                    }
-
-                    /* LOAD PROCEDURE DATA */
-                    $procedure = Procedure::where('programme_id', $row->programme_id)
-                        ->where('activity_id', $row->activity_id)
-                        ->first();
-
-                    /* LOAD SEMESTER DATA */
-                    $currsemester = Semester::where('id', $row->semester_id)->first();
-
-                    /* FORMAT SEMESTER LABEL */
-                    $rawLabel = $currsemester->sem_label;
-                    $semesterlabel = str_replace('/', '', $rawLabel);
-                    $semesterlabel = trim($semesterlabel);
-
-                    /* LOOK UP FOR DOCUMENT DIRECTORY */
-                    if ($procedure->is_repeatable == 1) {
-                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/' . $semesterlabel . '/Final Document';
-                    } else {
-                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Final Document';
-                    }
-
-                    /* HTML OUTPUT */
-                    $final_doc =
-                        '
-                        <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->sa_final_submission)]) . '" 
-                            target="_blank" class="link-dark d-flex align-items-center">
-                            <i class="fas fa-file-pdf me-2 text-danger"></i>
-                            <span class="fw-semibold">View Document</span>
-                        </a>
-                    ';
-
-                    /* RETURN HTML */
-                    return $final_doc;
-                });
-
-                $table->addColumn('approval_status', function ($row) {
-
-                    /* LOAD FINAL STATUS */
-                    if ($row->sa_status == 3) {
-                        return '<span class="badge bg-success">Approved & Completed</span>';
-                    }
-
-                    if ($row->sa_status == 13) {
-                        return '<span class="badge bg-success">Passed & Continue</span>';
-                    }
-
-                    if ($row->sa_status == 7) {
-
-                        /* LOAD ALL EVALUATIONS FOR THIS STUDENT/ACTIVITY/SEMESTER */
-                        $evaluations = Evaluation::where('activity_id', $row->activity_id)
-                            ->where('student_id', $row->student_id)
-                            ->where('semester_id', $row->semester_id)
-                            ->get();
-
-                        /* CHECK STATUS CONDITIONS */
-                        $pendingSupervisorCount = $evaluations->where('evaluation_status', 9)->count();
-                        $pendingHigherUpCount = $evaluations->where('evaluation_status', 10)->count();
-                        $allCompleted = $evaluations->count() > 0 && $evaluations->where('evaluation_status', 8)->count() === $evaluations->count();
-
-                        /* GET HIGHER UPS REQUIRED ROLES */
-                        $rolesHURequired = DB::table('form_fields as ff')
-                            ->join('activity_forms as af', 'ff.af_id', '=', 'af.id')
-                            ->whereIn('ff.ff_signature_role', [4, 5, 6])
-                            ->where('af.id', function ($q) use ($row) {
-                                $q->select('af_id')
-                                    ->from('evaluations')
-                                    ->where('activity_id', $row->activity_id)
-                                    ->where('student_id', $row->student_id)
-                                    ->where('semester_id', $row->semester_id)
-                                    ->limit(1);
-                            })
-                            ->pluck('ff.ff_signature_role')
-                            ->unique()
-                            ->toArray();
-
-                        $haveHigherUp = count(array_intersect([4, 5, 6], $rolesHURequired)) > 0;
-
-                        /* HANDLE STATUS OUTPUT */
-                        if ($allCompleted && !$haveHigherUp) {
-                            /* ALL COMPLETED STATUS WITH PENDING FINAL STATUS */
-                            return '<span class="badge bg-light-warning">Pending Final Status</span>';
-                        } elseif ($allCompleted && $haveHigherUp) {
-                            /* ALL COMPLETED STATUS BUT ACTION REQUIRED*/
-                            return '<span class="badge bg-light-danger">Action Required</span>';
-                        } elseif ($pendingSupervisorCount > 0 || $pendingHigherUpCount > 0) {
-                            /* PENDING APPROVAL STATUS */
-                            $messages = [];
-                            if ($pendingSupervisorCount > 0) {
-                                $messages[] = '<div class="badge bg-light-warning p-2 mb-1 text-warning">
-                             ' . $pendingSupervisorCount . ' Report(s) Pending Supervisor Approval
-                           </div>';
-                            }
-                            if ($pendingHigherUpCount > 0) {
-                                $messages[] = '<div class="badge bg-light-warning p-2 mb-1 text-warning">
-                             ' . $pendingHigherUpCount . ' Report(s) Pending Administrative Approvals
-                           </div>';
-                            }
-                            return implode('', $messages);
-                        } else {
-                            /* DEFAULT STATUS */
-                            return '<span class="badge bg-secondary">Pending: Report Confirmation</span>';
-                        }
-                    }
-                });
-
-                $table->addColumn('semester', function ($row) {
-                    /* LOAD SEMESTER DATA */
-                    $semesters = Semester::where('id', $row->semester_id)->first();
-
-                    if (empty($semesters)) {
-                        return 'N/A';
-                    }
-
-                    /* RETURN SEMESTER LABEL */
-                    return $semesters->sem_label;
-                });
-
-                $table->addColumn('action', function ($row) {
-
-                    /* LOAD FINAL STATUS */
-                    if ($row->sa_status == 3 || $row->sa_status == 13) {
-                        return '<div class="fst-italic text-muted">No action required</div>';
-                    }
-
-                    /* LOAD STUDENT ACTIVITY DATA */
-                    $submissionInProgress = StudentActivity::where('id', $row->sa_id)
-                        ->whereIn('sa_status', [1, 2, 4, 5])
-                        ->exists();
-
-                    if ($submissionInProgress) {
-                        return '<span class="badge bg-light-danger p-2">Student submission process <br> not yet completed.</span>';
-                    }
-
-                    /* GET STAFF ROLE */
-                    $userRole = auth()->user()->staff_role;
-
-                    /* GET REQUIRED ROLES */
-                    $rolesRequired = DB::table('form_fields as ff')
-                        ->join('activity_forms as af', 'ff.af_id', '=', 'af.id')
-                        ->where('af.activity_id', $row->activity_id)
-                        ->where('af.af_target', 5)
-                        ->whereIn('ff.ff_signature_role', [4, 5, 6])
-                        ->pluck('ff.ff_signature_role')
-                        ->unique()
-                        ->toArray();
-
-                    /* MAP STAFF ROLE TO FF SIGNATURE ROLE */
-                    $mappedUserRole = [
-                        1 => 4,
-                        3 => 5,
-                        4 => 6,
-                    ];
-
-                    $mappedUserRole = $mappedUserRole[$userRole];
-
-                    /* HANDLE USER HAS NO ROLE */
-                    if (!$mappedUserRole || !in_array($mappedUserRole, $rolesRequired)) {
-                        return '<div class="fst-italic text-muted">No action required</div>';
-                    }
-
-                    /* CHECK PENDING EVALUATIONS */
-                    $pendingExists = Evaluation::where('activity_id', $row->activity_id)
-                        ->where('student_id', $row->student_id)
-                        ->where('semester_id', $row->semester_id)
-                        ->where('evaluation_status', 9)
-                        ->exists();
-
-                    /* CHECK PENDING HU EVALUATIONS */
-                    $pendingHUExists = Evaluation::where('activity_id', $row->activity_id)
-                        ->where('student_id', $row->student_id)
-                        ->where('semester_id', $row->semester_id)
-                        ->where('evaluation_status', 10)
-                        ->exists();
-
-                    /* CHECK ALL COMPLETED EVALUATIONS */
-                    $allCompleted = Evaluation::where('activity_id', $row->activity_id)
-                        ->where('student_id', $row->student_id)
-                        ->where('semester_id', $row->semester_id)
-                        ->where('evaluation_status', 8)
-                        ->count() > 0
-                        &&
-                        Evaluation::where('activity_id', $row->activity_id)
-                        ->where('student_id', $row->student_id)
-                        ->where('semester_id', $row->semester_id)
-                        ->whereIn('evaluation_status', [1, 2, 3, 4, 5, 6, 7, 9, 10])
-                        ->count() === 0;
-
-                    /* BUTTON RENDER LOGIC */
-                    if ($pendingExists || $pendingHUExists) {
-                        $btnClass = '';
-                    } elseif (!$pendingExists && !$allCompleted) {
-                        $btnClass = 'disabled-a';
-                    } elseif ($allCompleted) {
-
-                        /* LOAD EVALUATIONS DATA */
-                        $evaluations = Evaluation::where('activity_id', $row->activity_id)
-                            ->where('student_id', $row->student_id)
-                            ->where('semester_id', $row->semester_id)
-                            ->where('evaluation_status', 8)
-                            ->get();
-
-                        /* GET PROGRESS AND MOCK COUNT */
-                        $progressCount = 0;
-                        $mockCount = 0;
-
-                        foreach ($evaluations as $evaluation) {
-                            $statusType = $this->extractEvaluationStatus($evaluation->evaluation_meta_data);
-                            if ($statusType === 1) {
-                                $progressCount++;
-                            } elseif ($statusType === 2) {
-                                $mockCount++;
-                            }
-                        }
-
-                        /* CHECK IF CONTINUE OR END */
-                        $continueChecked = $progressCount > 0;
-                        $endChecked = !$continueChecked && $mockCount > 0;
-
-                        return '
-                            <form method="POST" action="' . route('finalize-evaluation-post', Crypt::encrypt($row->sa_id)) . '" class="d-flex flex-column gap-1" style="min-width:180px;">
-                                ' . csrf_field() . '
-                                <div class="fw-semibold mb-1">Select Status</div>
-                                <div class="form-check form-check-sm">
-                                    <input class="form-check-input" type="radio" name="evaluation_type" id="eval_progress_' . $row->sa_id . '" value="1" ' . ($continueChecked ? 'checked' : '') . ' required>
-                                    <label class="form-check-label small" for="eval_progress_' . $row->sa_id . '">Continue Next Semester</label>
-                                </div>
-                                <div class="form-check form-check-sm">
-                                    <input class="form-check-input" type="radio" name="evaluation_type" id="eval_mock_' . $row->sa_id . '" value="2" ' . ($endChecked ? 'checked' : '') . '>
-                                    <label class="form-check-label small" for="eval_mock_' . $row->sa_id . '">End This Semester</label>
-                                </div>
-                                <button type="submit" class="btn btn-sm btn-primary mt-1">Confirmed</button>
-                            </form>
-                        ';
-                    } else {
-                        return '<div class="fst-italic text-muted">No action required</div>';
-                    }
-
-                    /* RETURN HTML BUTTON */
-                    return '
-                        <a href="' . route('student-evaluation-approval', [
-                        'activityID' => encrypt($row->activity_id),
-                        'studentID' => encrypt($row->student_id)
-                    ]) . '" class="avtar avtar-xs btn-light-primary ' . $btnClass . '">
-                            <i class="ti ti-eye f-20"></i>
-                        </a>
-                    ';
-                });
-
-                $table->rawColumns(['student_photo', 'sa_final_document', 'approval_status', 'semester', 'action']);
-
-                return $table->make(true);
-            }
-
-            return view('staff.evaluation.evaluation-approval', [
-                'title' => 'Evaluation Approval',
-                'studs' => Student::all(),
-                'progs' => Programme::all(),
-                'facs' => Faculty::all(),
-                'sems' => Semester::all(),
-                'act' => $activity,
-                'data' => $data->get(),
-            ]);
-        } catch (Exception $e) {
-            return abort(500, $e->getMessage());
-        }
-    }
-
-    /* Extract Evaluation Status [Staff] - Function */
-    public function extractEvaluationStatus($evaluationMetaData)
-    {
-        /* DECODE JSON TO ARRAY */
-        $data = json_decode($evaluationMetaData, true);
-        if (!is_array($data)) {
-            return null;
-        }
-
-        /* LIST OF POSSIBLE STATUS KEYS */
-        $statusKeys = [
-            'status',
-            'stage',
-            'session',
-            'session_type',
-            'presentation_type',
-            'current_status',
-            'type',
-            'evaluation_status',
-            'eval_type'
-        ];
-
-        /* LIST OF POSSIBLE VALUE KEYS FOR PROGRESS */
-        $progressSynonyms = [
-            'progress presentation',
-            'progress pres',
-            'progress',
-            'pp',
-            'presentation progress',
-            'initial presentation'
-        ];
-
-        /* LIST OF POSSIBLE VALUE KEYS FOR MOCK */
-        $mockVivaSynonyms = [
-            'mock viva',
-            'mv',
-            'mock',
-            'mock v',
-            'mock exam',
-            'mock defense',
-            'mock defence',
-            'mock test'
-        ];
-
-        /* DECLARE VARIABLE */
-        $statusValue = null;
-
-        /* FIND THE STATUS LIKE FIELD */
-        foreach ($statusKeys as $key) {
-            foreach ($data as $jsonKey => $jsonValue) {
-                if (stripos($jsonKey, $key) !== false) {
-                    $statusValue = trim($jsonValue);
-                    break 2;
-                }
-            }
-        }
-
-        /* FIND THE STATUS LIKE FIELD ANOTHER WAY */
-        if (!$statusValue) {
-            foreach ($data as $jsonValue) {
-                if (is_string($jsonValue) && strlen($jsonValue) < 50) {
-                    if (preg_match('/progress/i', $jsonValue) || preg_match('/mock/i', $jsonValue)) {
-                        $statusValue = trim($jsonValue);
-                        break;
-                    }
-                }
-            }
-        }
-
-        /* MATCH WITH THE LIST OF SYNONYMS FOR VALUE */
-        if ($statusValue) {
-            $statusValueLower = strtolower($statusValue);
-
-            /* PROGRESS PRESENTATION */
-            foreach ($progressSynonyms as $syn) {
-                if (stripos($statusValueLower, strtolower($syn)) !== false) {
-                    return 1;
-                }
-            }
-
-            /* MOCK VIVA */
-            foreach ($mockVivaSynonyms as $syn) {
-                if (stripos($statusValueLower, strtolower($syn)) !== false) {
-                    return 2;
-                }
-            }
-        }
-
-        /* RETURN NULL */
-        return null;
-    }
-
     /* Correction Final Overview [Staff] - Route */
     public function correctionFinalOverview(Request $req)
     {
@@ -3575,6 +3092,489 @@ class EvaluationController extends Controller
         } catch (Exception $e) {
             return back()->with('error', 'Error occurred: ' . $e->getMessage());
         }
+    }
+
+    /* Evaluation Approval [Staff] - Route */
+    public function evaluationApproval(Request $req, $name)
+    {
+        try {
+
+            /* GET ACTIVITY ID FROM ACTIVITY NAME */
+            $id = Activity::all()
+                ->first(function ($activity) use ($name) {
+                    return strtolower(str_replace(' ', '-', $activity->act_name)) === $name;
+                })?->id;
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $id)->first();
+
+            if (!$activity) {
+                return abort(404, 'Activity not found. Please try again.');
+            }
+
+            /* LOAD DATATABLE DATA */
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as s')
+                ->select([
+                    's.id as student_id',
+                    's.student_name',
+                    's.student_matricno',
+                    's.student_email',
+                    's.student_directory',
+                    's.student_photo',
+                    'b.sem_label',
+                    'c.prog_code',
+                    'c.prog_mode',
+                    'c.fac_id',
+                    's.programme_id',
+                    'a.id as activity_id',
+                    'a.act_name as activity_name',
+                    'sa.id as sa_id',
+                    'sa.sa_status',
+                    'sa.sa_final_submission',
+                    'sa.semester_id',
+                ])
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('s.id', '=', 'latest.student_id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 's.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('student_activities as sa', 's.id', '=', 'sa.student_id')
+                ->join('activities as a', 'sa.activity_id', '=', 'a.id')
+                ->join('programmes as c', 'c.id', '=', 's.programme_id')
+                ->whereNotIn('s.id', function ($query) {
+                    $query->select('student_id')
+                        ->from('supervisions')
+                        ->where('staff_id', auth()->user()->id)
+                        ->whereIn('supervision_role', [1, 2]);
+                })
+                ->whereNotIn('s.id', function ($query) use ($id) {
+                    $query->select('w.student_id')
+                        ->from('nominations as w')
+                        ->join('evaluators as x', 'w.id', '=', 'x.nom_id')
+                        ->where('x.staff_id', auth()->user()->id)
+                        ->where('w.activity_id', $id)
+                        ->where('x.eva_status', 3)
+                        ->where('x.eva_role', 1);
+                })
+                ->where('s.student_status', 1)
+                ->where('sa.activity_id', $id)
+                ->orderBy('s.student_matricno');
+
+            if ($req->ajax()) {
+
+                if ($req->has('faculty') && !empty($req->input('faculty'))) {
+                    $data->where('c.fac_id', $req->input('faculty'));
+                }
+                if ($req->has('programme') && !empty($req->input('programme'))) {
+                    $data->where('s.programme_id', $req->input('programme'));
+                }
+                if ($req->has('semester') && !empty($req->input('semester'))) {
+                    $data->where('sa.semester_id', $req->input('semester'));
+                }
+                if ($req->has('status') && !empty($req->input('status'))) {
+                    $data->where('sa.sa_status', $req->input('status'));
+                }
+
+                $data = $data->get();
+
+                $table = DataTables::of($data)->addIndexColumn();
+
+                $table->addColumn('student_photo', function ($row) {
+                    $mode = match ($row->prog_mode) {
+                        "FT" => "Full-Time",
+                        "PT" => "Part-Time",
+                        default => "N/A",
+                    };
+
+                    $photoUrl = empty($row->student_photo)
+                        ? asset('assets/images/user/default-profile-1.jpg')
+                        : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
+
+                    return '
+                        <div class="d-flex align-items-center" >
+                            <div class="me-3">
+                                <img src="' . $photoUrl . '" alt="user-image" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <div style="max-width: 200px;">
+                                <span class="mb-0 fw-medium">' . $row->student_name . '</span>
+                                <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->student_matricno . '</small>
+                                <small class="text-muted d-block fw-medium">' . $row->prog_code . ' (' . $mode . ')</small>
+                            </div>
+                        </div>
+                    ';
+                });
+
+                $table->addColumn('sa_final_document', function ($row) {
+
+                    /* HANDLE EMPTY FINAL DOCUMENT */
+                    if (empty($row->sa_final_submission)) {
+                        return '-';
+                    }
+
+                    /* LOAD PROCEDURE DATA */
+                    $procedure = Procedure::where('programme_id', $row->programme_id)
+                        ->where('activity_id', $row->activity_id)
+                        ->first();
+
+                    /* LOAD SEMESTER DATA */
+                    $currsemester = Semester::where('id', $row->semester_id)->first();
+
+                    /* FORMAT SEMESTER LABEL */
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
+                    /* LOOK UP FOR DOCUMENT DIRECTORY */
+                    if ($procedure->is_repeatable == 1) {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/' . $semesterlabel . '/Final Document';
+                    } else {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Final Document';
+                    }
+
+                    /* HTML OUTPUT */
+                    $final_doc =
+                        '
+                        <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->sa_final_submission)]) . '" 
+                            target="_blank" class="link-dark d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i>
+                            <span class="fw-semibold">View Document</span>
+                        </a>
+                    ';
+
+                    /* RETURN HTML */
+                    return $final_doc;
+                });
+
+                $table->addColumn('approval_status', function ($row) {
+
+                    /* LOAD FINAL STATUS */
+                    if ($row->sa_status == 3) {
+                        return '<span class="badge bg-success">Approved & Completed</span>';
+                    }
+
+                    if ($row->sa_status == 13) {
+                        return '<span class="badge bg-success">Continue Next Semester</span>';
+                    }
+
+                    if ($row->sa_status == 7) {
+
+                        /* LOAD ALL EVALUATIONS FOR THIS STUDENT/ACTIVITY/SEMESTER */
+                        $evaluations = Evaluation::where('activity_id', $row->activity_id)
+                            ->where('student_id', $row->student_id)
+                            ->where('semester_id', $row->semester_id)
+                            ->get();
+
+                        /* CHECK STATUS CONDITIONS */
+                        $pendingSupervisorCount = $evaluations->where('evaluation_status', 9)->count();
+                        $pendingHigherUpCount = $evaluations->where('evaluation_status', 10)->count();
+                        $allCompleted = $evaluations->count() > 0 && $evaluations->where('evaluation_status', 8)->count() === $evaluations->count();
+
+                        /* GET HIGHER UPS REQUIRED ROLES */
+                        $rolesHURequired = DB::table('form_fields as ff')
+                            ->join('activity_forms as af', 'ff.af_id', '=', 'af.id')
+                            ->whereIn('ff.ff_signature_role', [4, 5, 6])
+                            ->where('af.id', function ($q) use ($row) {
+                                $q->select('af_id')
+                                    ->from('evaluations')
+                                    ->where('activity_id', $row->activity_id)
+                                    ->where('student_id', $row->student_id)
+                                    ->where('semester_id', $row->semester_id)
+                                    ->limit(1);
+                            })
+                            ->pluck('ff.ff_signature_role')
+                            ->unique()
+                            ->toArray();
+
+                        $haveHigherUp = count(array_intersect([4, 5, 6], $rolesHURequired)) > 0;
+
+                        /* HANDLE STATUS OUTPUT */
+                        if ($allCompleted && !$haveHigherUp) {
+                            /* ALL COMPLETED STATUS WITH PENDING FINAL STATUS */
+                            return '<span class="badge bg-light-warning">Pending Final Status</span>';
+                        } elseif ($allCompleted && $haveHigherUp) {
+                            /* ALL COMPLETED STATUS BUT ACTION REQUIRED*/
+                            return '<span class="badge bg-light-danger">Action Required</span>';
+                        } elseif ($pendingSupervisorCount > 0 || $pendingHigherUpCount > 0) {
+                            /* PENDING APPROVAL STATUS */
+                            $messages = [];
+                            if ($pendingSupervisorCount > 0) {
+                                $messages[] = '<div class="badge bg-light-warning p-2 mb-1 text-warning">
+                             ' . $pendingSupervisorCount . ' Report(s) Pending Supervisor Approval
+                           </div>';
+                            }
+                            if ($pendingHigherUpCount > 0) {
+                                $messages[] = '<div class="badge bg-light-warning p-2 mb-1 text-warning">
+                             ' . $pendingHigherUpCount . ' Report(s) Pending Administrative Approvals
+                           </div>';
+                            }
+                            return implode('', $messages);
+                        } else {
+                            /* DEFAULT STATUS */
+                            return '<span class="badge bg-secondary">Pending: Report Confirmation</span>';
+                        }
+                    }
+                });
+
+                $table->addColumn('semester', function ($row) {
+                    /* LOAD SEMESTER DATA */
+                    $semesters = Semester::where('id', $row->semester_id)->first();
+
+                    if (empty($semesters)) {
+                        return 'N/A';
+                    }
+
+                    /* RETURN SEMESTER LABEL */
+                    return $semesters->sem_label;
+                });
+
+                $table->addColumn('action', function ($row) {
+
+                    /* LOAD FINAL STATUS */
+                    if ($row->sa_status == 3 || $row->sa_status == 13) {
+                        return '<div class="fst-italic text-muted">No action required</div>';
+                    }
+
+                    /* LOAD STUDENT ACTIVITY DATA */
+                    $submissionInProgress = StudentActivity::where('id', $row->sa_id)
+                        ->whereIn('sa_status', [1, 2, 4, 5])
+                        ->exists();
+
+                    if ($submissionInProgress) {
+                        return '<span class="badge bg-light-danger p-2">Student submission process <br> not yet completed.</span>';
+                    }
+
+                    /* GET STAFF ROLE */
+                    $userRole = auth()->user()->staff_role;
+
+                    /* GET REQUIRED ROLES */
+                    $rolesRequired = DB::table('form_fields as ff')
+                        ->join('activity_forms as af', 'ff.af_id', '=', 'af.id')
+                        ->where('af.activity_id', $row->activity_id)
+                        ->where('af.af_target', 5)
+                        ->whereIn('ff.ff_signature_role', [4, 5, 6])
+                        ->pluck('ff.ff_signature_role')
+                        ->unique()
+                        ->toArray();
+
+                    /* MAP STAFF ROLE TO FF SIGNATURE ROLE */
+                    $mappedUserRole = [
+                        1 => 4,
+                        3 => 5,
+                        4 => 6,
+                    ];
+
+                    $mappedUserRole = $mappedUserRole[$userRole];
+
+                    /* HANDLE USER HAS NO ROLE */
+                    if (!$mappedUserRole || !in_array($mappedUserRole, $rolesRequired)) {
+                        return '<div class="fst-italic text-muted">No action required</div>';
+                    }
+
+                    /* CHECK PENDING EVALUATIONS */
+                    $pendingExists = Evaluation::where('activity_id', $row->activity_id)
+                        ->where('student_id', $row->student_id)
+                        ->where('semester_id', $row->semester_id)
+                        ->where('evaluation_status', 9)
+                        ->exists();
+
+                    /* CHECK PENDING HU EVALUATIONS */
+                    $pendingHUExists = Evaluation::where('activity_id', $row->activity_id)
+                        ->where('student_id', $row->student_id)
+                        ->where('semester_id', $row->semester_id)
+                        ->where('evaluation_status', 10)
+                        ->exists();
+
+                    /* CHECK ALL COMPLETED EVALUATIONS */
+                    $allCompleted = Evaluation::where('activity_id', $row->activity_id)
+                        ->where('student_id', $row->student_id)
+                        ->where('semester_id', $row->semester_id)
+                        ->where('evaluation_status', 8)
+                        ->count() > 0
+                        &&
+                        Evaluation::where('activity_id', $row->activity_id)
+                        ->where('student_id', $row->student_id)
+                        ->where('semester_id', $row->semester_id)
+                        ->whereIn('evaluation_status', [1, 2, 3, 4, 5, 6, 7, 9, 10])
+                        ->count() === 0;
+
+                    /* BUTTON RENDER LOGIC */
+                    if ($pendingExists || $pendingHUExists) {
+                        $btnClass = '';
+                    } elseif (!$pendingExists && !$allCompleted) {
+                        $btnClass = 'disabled-a';
+                    } elseif ($allCompleted) {
+
+                        /* LOAD EVALUATIONS DATA */
+                        $evaluations = Evaluation::where('activity_id', $row->activity_id)
+                            ->where('student_id', $row->student_id)
+                            ->where('semester_id', $row->semester_id)
+                            ->where('evaluation_status', 8)
+                            ->get();
+
+                        /* GET PROGRESS AND MOCK COUNT */
+                        $progressCount = 0;
+                        $mockCount = 0;
+
+                        foreach ($evaluations as $evaluation) {
+                            $statusType = $this->extractEvaluationStatus($evaluation->evaluation_meta_data);
+                            if ($statusType === 1) {
+                                $progressCount++;
+                            } elseif ($statusType === 2) {
+                                $mockCount++;
+                            }
+                        }
+
+                        /* CHECK IF CONTINUE OR END */
+                        $continueChecked = $progressCount > 0;
+                        $endChecked = !$continueChecked && $mockCount > 0;
+
+                        return '
+                            <form method="POST" action="' . route('finalize-evaluation-post', Crypt::encrypt($row->sa_id)) . '" class="d-flex flex-column gap-1" style="min-width:180px;">
+                                ' . csrf_field() . '
+                                <div class="fw-semibold mb-1">Select Status</div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="radio" name="evaluation_type" id="eval_progress_' . $row->sa_id . '" value="1" ' . ($continueChecked ? 'checked' : '') . ' required>
+                                    <label class="form-check-label small" for="eval_progress_' . $row->sa_id . '">Continue Next Semester</label>
+                                </div>
+                                <div class="form-check form-check-sm">
+                                    <input class="form-check-input" type="radio" name="evaluation_type" id="eval_mock_' . $row->sa_id . '" value="2" ' . ($endChecked ? 'checked' : '') . '>
+                                    <label class="form-check-label small" for="eval_mock_' . $row->sa_id . '">End This Semester</label>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary mt-1">Confirmed</button>
+                            </form>
+                        ';
+                    } else {
+                        return '<div class="fst-italic text-muted">No action required</div>';
+                    }
+
+                    /* RETURN HTML BUTTON */
+                    return '
+                        <a href="' . route('student-evaluation-approval', [
+                        'activityID' => encrypt($row->activity_id),
+                        'studentID' => encrypt($row->student_id)
+                    ]) . '" class="avtar avtar-xs btn-light-primary ' . $btnClass . '">
+                            <i class="ti ti-eye f-20"></i>
+                        </a>
+                    ';
+                });
+
+                $table->rawColumns(['student_photo', 'sa_final_document', 'approval_status', 'semester', 'action']);
+
+                return $table->make(true);
+            }
+
+            return view('staff.evaluation.evaluation-approval', [
+                'title' => 'Evaluation Approval',
+                'studs' => Student::all(),
+                'progs' => Programme::all(),
+                'facs' => Faculty::all(),
+                'sems' => Semester::all(),
+                'act' => $activity,
+                'data' => $data->get(),
+            ]);
+        } catch (Exception $e) {
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    /* Extract Evaluation Status [Staff] - Function */
+    public function extractEvaluationStatus($evaluationMetaData)
+    {
+        /* DECODE JSON TO ARRAY */
+        $data = json_decode($evaluationMetaData, true);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        /* LIST OF POSSIBLE STATUS KEYS */
+        $statusKeys = [
+            'status',
+            'stage',
+            'session',
+            'session_type',
+            'presentation_type',
+            'current_status',
+            'type',
+            'evaluation_status',
+            'eval_type'
+        ];
+
+        /* LIST OF POSSIBLE VALUE KEYS FOR PROGRESS */
+        $progressSynonyms = [
+            'progress presentation',
+            'progress pres',
+            'progress',
+            'pp',
+            'presentation progress',
+            'initial presentation'
+        ];
+
+        /* LIST OF POSSIBLE VALUE KEYS FOR MOCK */
+        $mockVivaSynonyms = [
+            'mock viva',
+            'mv',
+            'mock',
+            'mock v',
+            'mock exam',
+            'mock defense',
+            'mock defence',
+            'mock test'
+        ];
+
+        /* DECLARE VARIABLE */
+        $statusValue = null;
+
+        /* FIND THE STATUS LIKE FIELD */
+        foreach ($statusKeys as $key) {
+            foreach ($data as $jsonKey => $jsonValue) {
+                if (stripos($jsonKey, $key) !== false) {
+                    $statusValue = trim($jsonValue);
+                    break 2;
+                }
+            }
+        }
+
+        /* FIND THE STATUS LIKE FIELD ANOTHER WAY */
+        if (!$statusValue) {
+            foreach ($data as $jsonValue) {
+                if (is_string($jsonValue) && strlen($jsonValue) < 50) {
+                    if (preg_match('/progress/i', $jsonValue) || preg_match('/mock/i', $jsonValue)) {
+                        $statusValue = trim($jsonValue);
+                        break;
+                    }
+                }
+            }
+        }
+
+        /* MATCH WITH THE LIST OF SYNONYMS FOR VALUE */
+        if ($statusValue) {
+            $statusValueLower = strtolower($statusValue);
+
+            /* PROGRESS PRESENTATION */
+            foreach ($progressSynonyms as $syn) {
+                if (stripos($statusValueLower, strtolower($syn)) !== false) {
+                    return 1;
+                }
+            }
+
+            /* MOCK VIVA */
+            foreach ($mockVivaSynonyms as $syn) {
+                if (stripos($statusValueLower, strtolower($syn)) !== false) {
+                    return 2;
+                }
+            }
+        }
+
+        /* RETURN NULL */
+        return null;
     }
 
     /* Each Student Evaluation Approval [Staff] - Route */

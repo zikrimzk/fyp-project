@@ -30,28 +30,30 @@ use Illuminate\Support\Facades\Validator;
 
 class SupervisionController extends Controller
 {
-    /* Student Management [Checked : 20/5/2025] */
+    /* Student Management [Staff] - Route */
     public function studentManagement(Request $req)
     {
         try {
+
+            /* LOAD DATATABLE DATA */
+            $latestSemesterSub = DB::table('student_semesters')
+                ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                ->groupBy('student_id');
+
+            $data = DB::table('students as a')
+                ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
+                    $join->on('latest.student_id', '=', 'a.id');
+                })
+                ->leftJoin('student_semesters as ss', function ($join) {
+                    $join->on('ss.student_id', '=', 'a.id')
+                        ->on('ss.semester_id', '=', 'latest.latest_semester_id');
+                })
+                ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
+                ->join('programmes as c', 'c.id', '=', 'a.programme_id')
+                ->select('a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'ss.semester_id')
+                ->orderBy('a.student_name');
+                
             if ($req->ajax()) {
-
-                $latestSemesterSub = DB::table('student_semesters')
-                    ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
-                    ->groupBy('student_id');
-
-                $data = DB::table('students as a')
-                    ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
-                        $join->on('latest.student_id', '=', 'a.id');
-                    })
-                    ->leftJoin('student_semesters as ss', function ($join) {
-                        $join->on('ss.student_id', '=', 'a.id')
-                            ->on('ss.semester_id', '=', 'latest.latest_semester_id');
-                    })
-                    ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
-                    ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-                    ->select('a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'ss.semester_id')
-                    ->orderBy('a.student_name');
 
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
                     $data->where('fac_id', $req->input('faculty'));
@@ -77,10 +79,16 @@ class SupervisionController extends Controller
                 });
 
                 $table->addColumn('student_photo', function ($row) {
+                    /* HANDLE PHOTO */
                     $photoUrl = empty($row->student_photo)
                         ? asset('assets/images/user/default-profile-1.jpg')
                         : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
 
+                    /* GET STUDENT SEMESTERS DETAILS */
+                    $totalsemester = StudentSemester::where('student_id', $row->id)->count();
+                    $totalactive = StudentSemester::where('student_id', $row->id)->whereIn('ss_status', [1, 4])->count();
+                
+                    /* RETURN STUDENT DETAILS */
                     return '
                         <div class="d-flex align-items-center" >
                             <div class="me-3">
@@ -89,7 +97,8 @@ class SupervisionController extends Controller
                             <div style="max-width: 200px;">
                                 <span class="mb-0 fw-medium">' . $row->student_name . '</span>
                                 <small class="text-muted d-block fw-medium">' . $row->student_email . '</small>
-                                <small class="text-muted d-block fw-medium"> Enrolled Semesters: ' . $row->student_semcount . '</small>
+                                <small class="text-muted d-block fw-medium"> Active Semester : ' . $totalactive  . '</small>
+                                <small class="text-muted d-block fw-medium"> Total Semester : ' . $totalsemester  . '</small>
                             </div>
                         </div>
                     ';
