@@ -15,7 +15,6 @@
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Administrator</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Submission</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Final Overview</a></li>
-                                <li class="breadcrumb-item" aria-current="page">Submission</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
@@ -179,7 +178,7 @@
                                             <option value="8">Evaluation : Minor/Major Correction</option>
                                             <option value="9">Evaluation : Represent/Resubmit</option>
                                             <option value="12">Evaluation : Failed</option>
-                                            <option value="13">Passed & Continue</option>
+                                            <option value="13">Continue Next Semester</option>
                                         </select>
                                         <button type="button" class="btn btn-outline-secondary" id="clearStatusFilter"
                                             title="Clear">
@@ -312,7 +311,7 @@
                                                         </option>
                                                         <option value="13"
                                                             @if ($upd->sa_status == 13) selected @endif>
-                                                            Passed & Continue
+                                                            Continue Next Semester
                                                         </option>
                                                     </select>
                                                     @error('sa_status_up')

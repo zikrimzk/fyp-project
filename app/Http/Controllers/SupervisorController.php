@@ -689,7 +689,7 @@ class SupervisorController extends Controller
                         8 => "<span class='badge bg-light-warning d-block mb-1'>Evaluation: <br> Minor/Major Correction</span>",
                         9 => "<span class='badge bg-light-danger d-block mb-1'>Evaluation: <br> Resubmit/Represent</span>",
                         12 => "<span class='badge bg-danger d-block mb-1'>Evaluation: <br> Failed</span>",
-                        13 => "<span class='badge bg-light-success d-block mb-1'>Evaluation: <br> Passed & Continue Activity</span>",
+                        13 => "<span class='badge bg-light-success d-block mb-1'>Continue Next Semester</span>",
                         default => "N/A",
                     };
 
@@ -871,10 +871,11 @@ class SupervisorController extends Controller
         }
     }
 
-    /* My Supervision Correction Approval - Route ## */
+    /* My Supervision Correction Approval - Route */
     public function mySupervisionCorrectionApproval(Request $req)
     {
         try {
+            /* LOAD DATATABLE DATA */
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
                 ->groupBy('student_id');
@@ -914,8 +915,6 @@ class SupervisorController extends Controller
 
 
             if ($req->ajax()) {
-
-                // Apply filters
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
                     $data->where('fac_id', $req->input('faculty'));
                 }
@@ -927,9 +926,6 @@ class SupervisorController extends Controller
                 }
                 if ($req->has('activity') && !empty($req->input('activity'))) {
                     $data->where('activity_id', $req->input('activity'));
-                }
-                if ($req->has('document') && !empty($req->input('document'))) {
-                    $data->where('document_id', $req->input('document'));
                 }
                 if ($req->has('status') && $req->input('status') !== null && $req->input('status') !== '') {
                     $data->where('c.ac_status', $req->input('status'));
@@ -997,13 +993,27 @@ class SupervisorController extends Controller
 
                 $table->addColumn('ac_final_submission', function ($row) {
 
-                    $currsemester = Semester::find($row->semester_id);
+                    /* LOAD SEMESTER DATA */
+                    $currsemester = Semester::where('id', $row->semester_id)->first();
+
+                    /* LOAD PROCEDURE DATA */
+                    $procedure = Procedure::where('activity_id', $row->activity_id)
+                        ->where('programme_id', $row->programme_id)->first();
+
+
+                    /* HANDLE SEMESTER LABEL FORMAT FOR DIRECTORY */
                     $rawLabel = $currsemester->sem_label;
                     $semesterlabel = str_replace('/', '', $rawLabel);
                     $semesterlabel = trim($semesterlabel);
 
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Correction/' . $semesterlabel;
+                    /* CORRECTION DIRECTORY */
+                    if ($procedure->is_repeatable == 1) {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/' . $semesterlabel . '/Correction';
+                    } else {
+                        $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Correction/' . $semesterlabel;
+                    }
 
+                    /* FINAL CORRECTION DOCUMENT */
                     $final_submission =
                         '
                         <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->ac_final_submission)]) . '" 
@@ -1012,15 +1022,18 @@ class SupervisorController extends Controller
                             <span class="fw-semibold">View Document</span>
                         </a>
                     ';
+
+                    /* RETURN DATA */
                     return $final_submission;
                 });
 
                 $table->addColumn('confirm_date', function ($row) {
+                    /* HANDLE CONFIRM DATE */
                     return  $row->updated_at == null ? '-' : Carbon::parse($row->updated_at)->format('d M Y g:i A');
                 });
 
                 $table->addColumn('ac_status', function ($row) {
-                    // 1) Main status badge
+                    /* MAP STATUS IN HTML BADGE */
                     $confirmationBadge = match ($row->ac_status) {
                         1 => "<span class='badge bg-light-warning d-block mb-1'>Pending:<br>Student Action</span>",
                         2 => "<span class='badge bg-light-warning d-block mb-1'>Pending Approval:<br>Supervisor</span>",
@@ -1033,22 +1046,22 @@ class SupervisorController extends Controller
                         default => "<span class='badge bg-secondary d-block mb-1'>N/A</span>",
                     };
 
-                    // 2) Decode stored signatures
+                    /* DECODE STORED SIGNATURE */
                     $sigs = ! empty($row->ac_signature_data)
                         ? json_decode($row->ac_signature_data, true)
                         : [];
 
-                    // 3) Pull all signature‐fields once
+                    /* LOAD FORM FIELDS */
                     $formFields = DB::table('activity_forms as a')
                         ->join('form_fields as f', 'a.id', '=', 'f.af_id')
                         ->where('a.activity_id', $row->activity_id)
-                        ->where('a.af_target',   2)   // correction form
-                        ->where('f.ff_category', 6)   // signature fields
+                        ->where('a.af_target',   2)
+                        ->where('f.ff_category', 6)
                         ->select('f.ff_signature_role', 'f.ff_label', 'f.ff_signature_key')
                         ->orderBy('f.ff_order')
                         ->get();
 
-                    // 4) Which roles belong to this level?
+                    /* INDENTIFY LEVEL ROLES */
                     $levelRoles = match ($row->ac_status) {
                         2 => [2, 3],      // Supervisor + Co-Supervisor
                         3 => [8],         // Examiners/Panels
@@ -1056,7 +1069,7 @@ class SupervisorController extends Controller
                         default => [],
                     };
 
-                    // 5) Build sub-badges for *just* this level
+                    /* BUILD BADGE BASED ON LEVEL */
                     $subBadges = '';
                     if ($levelRoles) {
                         $fieldsThisLevel = $formFields
@@ -1081,18 +1094,23 @@ class SupervisorController extends Controller
                         }
                     }
 
+                    /* RETURN STATUS AND REQUIRED SIGNATURE */
                     return $confirmationBadge . $subBadges;
                 });
 
                 $table->addColumn('action', function ($row) {
-                    // Status constants
+
+                    /* DECLARE STATUS VARIABLE */
                     $PENDING_SUPERVISOR = 2;
 
+                    /* GET THE IDs */
                     $activityId      = $row->activity_id;
                     $correctionId    = $row->activity_correction_id;
+
+                    /* GET THE CURRENT STAFF ROLE (AS A SUPERVISOR) */
                     $myRole          = $row->supervision_role;   // 1 = SV, 2 = CoSV
 
-                    // 1) Which signature roles does the form require?
+                    /* GET REQUIRED SIGNATURE */
                     $requiredRoles = DB::table('activity_forms as a')
                         ->join('form_fields as f', 'a.id', '=', 'f.af_id')
                         ->where('a.activity_id', $activityId)
@@ -1105,31 +1123,26 @@ class SupervisorController extends Controller
                     $svRequired   = in_array(2, $requiredRoles, true);
                     $cosvRequired = in_array(3, $requiredRoles, true);
 
-                    // 2) What’s already signed?
+                    /* GET WHO HAS ALREADY SIGNED */
                     $sigData    = json_decode($row->ac_signature_data ?? '[]', true);
                     $svSigned   = ! empty($sigData['sv_signature']);
                     $cosvSigned = ! empty($sigData['cosv_signature']);
 
-                    // 3) Has this level fully completed?
-                    //    – if both required, both must sign
-                    //    – if only one required, that one alone suffices
+                    /* CHECK IF LEVEL IS COMPLETE */
                     $levelComplete = (
                         ($svRequired   && $cosvRequired && $svSigned && $cosvSigned)
                         || ($svRequired   && ! $cosvRequired && $svSigned)
                         || (! $svRequired && $cosvRequired   && $cosvSigned)
                     );
 
-                    // 4) Is my signature required? And have I already signed?
+                    /* CHECK IF I AM REQUIRED OR ALREADY SIGNED */
                     $iAmRequired = ($myRole === 1 && $svRequired)
                         || ($myRole === 2 && $cosvRequired);
 
                     $iHaveSigned = ($myRole === 1 && $svSigned)
                         || ($myRole === 2 && $cosvSigned);
 
-                    // 5) Only show buttons in PENDING_SUPERVISOR if:
-                    //    • I am one of the required signers
-                    //    • I haven't signed yet
-                    //    • The level is not already completed
+                    /* RETURN FINAL ACTION */
                     if (
                         $row->ac_status === $PENDING_SUPERVISOR
                         && $iAmRequired
@@ -1155,7 +1168,7 @@ class SupervisorController extends Controller
                         ';
                     }
 
-                    // 6) Everything else:
+                    /* RETURN NO ACTION */
                     return '<div class="fst-italic text-muted">No action to proceed</div>';
                 });
 

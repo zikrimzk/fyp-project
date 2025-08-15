@@ -140,11 +140,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-submission-final/{id}', [SubmissionController::class, 'updateFinalSubmission'])->name('update-final-submission-post');
     Route::get('/delete-submission-final/{id}', [SubmissionController::class, 'deleteFinalSubmission'])->name('delete-final-submission-get');
 
-    /* Correction Final Overview */
-    Route::get('/correction-final-overview', [SubmissionController::class, 'correctionFinalOverview'])->name('correction-final-overview');
-    Route::post('/update-correction-final/{id}', [SubmissionController::class, 'updateFinalCorrection'])->name('update-final-correction-post');
-    Route::get('/delete-correction-final/{id}', [SubmissionController::class, 'deleteFinalCorrection'])->name('delete-final-correction-get');
-
     /* Submission Management */
     Route::get('/submission-management', [SubmissionController::class, 'submissionManagement'])->name('submission-management');
     Route::get('/assign-student-submission', [SubmissionController::class, 'assignSubmission'])->name('assign-student-submission');
@@ -155,7 +150,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/download-multiple-submission', [SubmissionController::class, 'downloadMultipleSubmission'])->name('download-multiple-submission-get');
     Route::get('/export-submission-data', [SubmissionController::class, 'exportSubmission'])->name('export-submission-data-get');
 
-
     /* Submission Approval */
     Route::get('/submission-approval', [SubmissionController::class, 'submissionApproval'])->name('submission-approval');
     Route::post('/student-submission-approval/{stuActID}-{option}', [SubmissionController::class, 'studentActivitySubmissionApproval'])->name('staff-submission-approval-post');
@@ -163,10 +157,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/get-submission-review', [SubmissionController::class, 'getReview'])->name('get-review-data-post');
     Route::post('/update-review-activity', [SubmissionController::class, 'updateReview'])->name('update-review-post');
     Route::post('/delete-review-activity', [SubmissionController::class, 'deleteReview'])->name('delete-review-post');
-
-    /* Correction Approval */
-    Route::get('/correction-approval', [SubmissionController::class, 'correctionApproval'])->name('correction-approval');
-    Route::post('/student-correction-approval/{actCorrID}-{option}', [SubmissionController::class, 'studentActivityCorrectionApproval'])->name('staff-correction-approval-post');
 
     /* Submission Suggestion */
     Route::get('/submission-suggestion', [SubmissionController::class, 'submissionSuggestion'])->name('submission-suggestion');
@@ -186,10 +176,19 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-evaluation-final/{id}', [EvaluationController::class, 'updateFinalEvaluation'])->name('update-final-evaluation-post');
     Route::get('/delete-evaluation-final/{id}', [EvaluationController::class, 'deleteFinalEvaluation'])->name('delete-final-evaluation-get');
 
+    /* Correction Final Overview */
+    Route::get('/correction-final-overview', [EvaluationController::class, 'correctionFinalOverview'])->name('correction-final-overview');
+    Route::post('/update-correction-final/{id}', [EvaluationController::class, 'updateFinalCorrection'])->name('update-final-correction-post');
+    Route::get('/delete-correction-final/{id}', [EvaluationController::class, 'deleteFinalCorrection'])->name('delete-final-correction-get');
+
     /* Evaluation Management */
     Route::get('/evaluation-student-{evaluationID}-{mode}', [EvaluationController::class, 'evaluationStudent'])->name('evaluation-student');
     Route::get('/view-evaluation-form', [EvaluationController::class, 'viewEvaluationForm'])->name('view-evaluation-form-get');
     Route::post('/submit-evaluation-{evaluationID}-{mode}', [EvaluationController::class, 'submitEvaluation'])->name('submit-evaluation-post');
+
+    /* Correction Approval */
+    Route::get('/correction-approval', [EvaluationController::class, 'correctionApproval'])->name('correction-approval');
+    Route::post('/student-correction-approval/{actCorrID}-{option}', [EvaluationController::class, 'studentActivityCorrectionApproval'])->name('staff-correction-approval-post');
 
     /* Evaluation Approval */
     Route::get('/evaluation-approval-{name}', [EvaluationController::class, 'evaluationApproval'])->name('evaluation-approval');
@@ -303,7 +302,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/mysupervision-submission-management', [SupervisorController::class, 'mySupervisionSubmissionManagement'])->name('my-supervision-submission-management');
     Route::get('/export-mysupervision-submission-data', [SupervisorController::class, 'exportMySupervisionSubmission'])->name('export-my-supervision-submission-data-get');
 
-
     /* Submission Approval */
     Route::get('/mysupervision-submission-approval', [SupervisorController::class, 'mySupervisionSubmissionApproval'])->name('my-supervision-submission-approval');
 
@@ -322,15 +320,21 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     // ---------------------------------------------- EXAMINER / PANEL -----------------------------------------------------//
     // ---------------------------------------------------------------------------------------------------------------------//
 
-    // Evaluation
+    /* Evaluation */
+
+    /* Evaluation Management */
     Route::get('/examiner-panel-evaluation-{name}', [EvaluationController::class, 'examinerPanelEvaluation'])->name('examiner-panel-evaluation');
-    Route::get('/examiner-panel-correction-approval', [SubmissionController::class, 'examinerPanelCorrectionApproval'])->name('examiner-panel-correction-approval');
+
+    /* Correction Approval */
+    Route::get('/examiner-panel-correction-approval', [EvaluationController::class, 'examinerPanelCorrectionApproval'])->name('examiner-panel-correction-approval');
 
 
     // ---------------------------------------------------------------------------------------------------------------------//
     // -------------------------------------------------- CHAIRMAN ---------------------------------------------------------//
     // ---------------------------------------------------------------------------------------------------------------------//
 
-    // Evaluation
+    /* Evaluation */
+
+    /* Evaluation Management */
     Route::get('/chairman-evaluation-{name}', [EvaluationController::class, 'chairmanEvaluation'])->name('chairman-evaluation');
 });

@@ -473,11 +473,6 @@
                                     Submission Approval
                                 </a>
                             </li>
-                            <li class="pc-item">
-                                <a class="pc-link" href="{{ route('my-supervision-correction-approval') }}">
-                                    Correction Approval
-                                </a>
-                            </li>
                         </ul>
                     </li>
 
@@ -518,6 +513,11 @@
                                         </a>
                                     </li>
                                 @endforeach
+                                <li class="pc-item">
+                                    <a class="pc-link" href="{{ route('my-supervision-correction-approval') }}">
+                                        Correction Approval
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     @endif
@@ -655,18 +655,7 @@
                                     </a>
                                 </li>
                             @endforeach
-                        </ul>
-                    </li>
 
-                    <li class="pc-item pc-hasmenu">
-                        <a href="javascript:void(0)" class="pc-link">
-                            <span class="pc-micon">
-                                <i class="fas fa-file-upload pc-icon"></i>
-                            </span>
-                            <span class="pc-mtext">Submission</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                        <ul class="pc-submenu">
                             <li class="pc-item">
                                 <a class="pc-link" href="{{ route('examiner-panel-correction-approval') }}">
                                     Correction Approval
@@ -733,25 +722,10 @@
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
-                            <li class="pc-item pc-hasmenu">
-                                <a class="pc-link" href="javascript:void(0)">
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('submission-final-overview') }}">
                                     Final Overview
-                                    <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-
                                 </a>
-                                <ul class="pc-submenu">
-                                    <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('submission-final-overview') }}">
-                                            Submission
-                                        </a>
-                                    </li>
-                                    <li class="pc-item">
-                                        <a class="pc-link" href="{{ route('correction-final-overview') }}">
-                                            Correction
-                                        </a>
-                                    </li>
-                                </ul>
-
                             </li>
                             <li class="pc-item">
                                 <a class="pc-link" href="{{ route('submission-management') }}">
@@ -761,11 +735,6 @@
                             <li class="pc-item">
                                 <a class="pc-link" href="{{ route('submission-approval') }}">
                                     Submission Approval
-                                </a>
-                            </li>
-                            <li class="pc-item">
-                                <a class="pc-link" href="{{ route('correction-approval') }}">
-                                    Correction Approval
                                 </a>
                             </li>
                             <li class="pc-item">
@@ -800,7 +769,18 @@
                                             </a>
                                         </li>
                                     @endforeach
+                                    <li class="pc-item">
+                                        <a class="pc-link" href="{{ route('correction-final-overview') }}">
+                                            Correction
+                                        </a>
+                                    </li>
                                 </ul>
+                            </li>
+
+                            <li class="pc-item">
+                                <a class="pc-link" href="{{ route('correction-approval') }}">
+                                    Correction Approval
+                                </a>
                             </li>
 
                             @if ($iscommittee && $committeeActs->isNotEmpty())

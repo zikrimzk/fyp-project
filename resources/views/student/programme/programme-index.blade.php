@@ -97,7 +97,7 @@
                                         @elseif ($act->init_status == 12)
                                             <span class="badge bg-danger">Evaluation : Failed</span>
                                         @elseif ($act->init_status == 13)
-                                            <span class="badge bg-light-success">Passed & Continue</span>
+                                            <span class="badge bg-light-success">Continue Next Semester</span>
                                         @elseif ($act->init_status == 14)
                                             <span class="badge bg-light-warning">Correction : Pending Supervisor
                                                 Approval</span>
