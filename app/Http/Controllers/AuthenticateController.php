@@ -483,21 +483,26 @@ class AuthenticateController extends Controller
         }
     }
 
+    /* Student Profile [Student] - Route | Last Checked: 16-08-2025 */
     public function studentProfile()
     {
         try {
+            /* RETURN VIEW */
             return view('student.auth.student-profile', [
                 'title' => 'My Profile',
             ]);
         } catch (Exception $e) {
-            return abort(500);
+            return abort(500, $e->getMessage());
         }
     }
 
+    /* Update Student Profile [Student] - Function | Last Checked: 16-08-2025 */
     public function updateStudentProfile(Request $req)
     {
+        /* KEEP THE TAB ACTIVE */
         session()->flash('active_tab', 'profile-1');
 
+        /* VALIDATE STUDENT DATA */
         $validator = Validator::make($req->all(), [
             'student_name' => 'required|string',
             'student_address' => 'nullable|string',
@@ -512,6 +517,7 @@ class AuthenticateController extends Controller
             'student_directory' => 'student directory',
         ]);
 
+        /* REDIRECT BACK IF VALIDATION FAILS */
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
@@ -519,22 +525,24 @@ class AuthenticateController extends Controller
         }
 
         try {
+            /* GET VALIDATED DATA */
             $validated = $validator->validated();
-            $student = Student::where('id', Auth::guard('student')->user()->id)->first() ?? null;
 
-            /* GET CURRENT SEMESTER */
-            $curr_sem = Semester::where('id', $student->semester_id)->first();
-            $curr_sem_label = $curr_sem ? $curr_sem->sem_label : null;
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', Auth::guard('student')->user()->id)->first();
 
+            if (!$student) {
+                return back()->with('error', 'Unauthorized access : Student record is not found.');
+            }
 
             /* GET STUDENT NAME */
             $student_name = Str::upper($validated['student_name']);
 
             /* MAKE STUDENT DIRECTORY PATH */
             $oldDirectory = $student->student_directory;
-            $validated['student_directory'] = "Student/" . ($curr_sem_label ? str_replace('/', '', $curr_sem_label) : 'Unknown') .
-                "/" . $student->student_matricno . "_" . str_replace(' ', '_', $student_name);
+            $validated['student_directory'] = "Student/" . $student->student_matricno . "_" . str_replace(' ', '_', $student_name);
 
+            /* HANDLE STUDENT DIRECTORY */
             if ($oldDirectory !== $validated['student_directory']) {
                 Storage::move($oldDirectory, $validated['student_directory']);
             } else {
@@ -574,6 +582,7 @@ class AuthenticateController extends Controller
                 ]);
             }
 
+            /* UPDATE STUDENT PROFILE */
             Student::where('id', $student->id)->update([
                 'student_name' => Str::headline($validated['student_name']),
                 'student_address' => $validated['student_address'] ?? null,
@@ -581,16 +590,20 @@ class AuthenticateController extends Controller
                 'student_directory' => $validated['student_directory'] ?? null,
             ]);
 
+            /* RETURN SUCCESS */
             return back()->with('success', 'Profile updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating profile: ' . $e->getMessage());
         }
     }
 
+    /* Update Student Password [Student] - Function | Last Checked: 16-08-2025 */
     public function updateStudentPassword(Request $req)
     {
+        /* KEEP THE TAB ACTIVE */
         session()->flash('active_tab', 'profile-2');
 
+        /* VALIDATE PASSWORD */
         $validator = Validator::make($req->all(), [
             'oldPass' => 'required | min:8',
             'newPass' => 'required | min:8',
@@ -601,7 +614,7 @@ class AuthenticateController extends Controller
             'renewPass' => 'Comfirm Password',
         ]);
 
-
+        /* REDIRECT BACK IF VALIDATION FAILS */
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
@@ -609,12 +622,25 @@ class AuthenticateController extends Controller
         }
 
         try {
+            /* GET VALIDATED DATA */
             $validated = $validator->validated();
+
+            /* CHECK OLD PASSWORD */
             $check = Hash::check($validated['oldPass'], Auth::guard('student')->user()->student_password, []);
+
+            /* IF PASSWORD IS CORRECT */
             if ($check) {
-                Student::where('id', Auth::guard('student')->user()->id)->update(['student_password' => bcrypt($validated['renewPass'])]);
+
+                /* UPDATE PASSWORD */
+                Student::where('id', Auth::guard('student')->user()->id)->update([
+                    'student_password' => bcrypt($validated['renewPass'])
+                ]);
+
+                /* RETURN SUCCESS */
                 return back()->with('success', 'Password has been updated successfully.');
             } else {
+                
+                /* RETURN ERROR */
                 return back()->with('error', 'Please enter the correct password.');
             }
         } catch (Exception $e) {

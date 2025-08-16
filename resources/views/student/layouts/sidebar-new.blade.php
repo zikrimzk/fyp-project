@@ -76,19 +76,6 @@
         margin-bottom: 1rem;
     }
 
-    .avatar-sidebar {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 3px solid #dee2e6;
-        transition: border-color 0.2s ease;
-    }
-
-    .avatar-sidebar:hover {
-        border-color: #adb5bd;
-    }
-
     .avatar-sidebar img {
         width: 100%;
         height: 100%;
@@ -284,12 +271,12 @@
                         alt="Profile Photo" />
                 </div>
                 <div class="user-info text-center">
-                    <h6>{{ auth()->user()->student_name ?? '-' }}</h6>
-                    <div class="programme-info">{{ auth()->user()->programmes->prog_name }}</div>
+                    <h6 class="text-uppercase">{{ auth()->user()->student_name ?? '-' }}</h6>
+                    <div class="programme-info text-uppercase">{{ auth()->user()->programmes->prog_name }}</div>
                     @if (auth()->user()->programmes->prog_mode == 'FT')
-                        <span class="user-role bg-info text-white">Full Time</span>
+                        <span class="badge bg-dark text-uppercase">Full Time</span>
                     @else
-                        <span class="user-role bg-warning text-white">Part Time</span>
+                        <span class="badge bg-secondary text-uppercase">Part Time</span>
                     @endif
                 </div>
             </div>

@@ -131,8 +131,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/import-student-semester-data', [SupervisionController::class, 'importStudentNewSemester'])->name('import-student-semester-post');
     Route::get('/export-student-semester-enrollment-data', [SupervisionController::class, 'exportStudentSemester'])->name('export-student-semester-enrollment-get');
 
-
-
     /* Submission */
 
     /* Submission Final Overview */
@@ -163,11 +161,19 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/submission-eligibility-approval/{studentID}/{activityID}/{opt}', [SubmissionController::class, 'studentSubmissionSuggestionApproval'])->name('submission-eligibility-approval-get');
     Route::post('/multiple-submission-eligibility-approval', [SubmissionController::class, 'multipleStudentSubmissionSuggestionApproval'])->name('multiple-submission-eligibility-approval-post');
 
-    // Nomination
-    Route::get('/nomination-{studentId}-{actId}-{semesterId}-{mode}', [NominationController::class, 'nominationStudent'])->name('nomination-student');
+    /* Nomination */
+
+    /* Nomination Final Overview */
+    Route::get('/nomination-final-overview-{name}', [NominationController::class, 'nominationFinalOverview'])->name('nomination-final-overview');
+    Route::get('/create-renomination-data/{nominationId}', [NominationController::class, 'renominatedStudent'])->name('renomination-data-get');
+    Route::post('/update-nomination-final/{id}', [NominationController::class, 'updateFinalNomination'])->name('update-final-nomination-post');
+    Route::get('/delete-nomination-final/{id}', [NominationController::class, 'deleteFinalNomination'])->name('delete-final-nomination-get');
+    
+    /* Nomination Management */
+    Route::get('/nomination-approval-{name}', [NominationController::class, 'nominationApproval'])->name('nomination-approval');
+    Route::get('/nomination-{nomID}-{mode}', [NominationController::class, 'nominationStudent'])->name('nomination-student');
     Route::get('/view-nomination-form', [NominationController::class, 'viewNominationForm'])->name('view-nomination-form-get');
-    Route::post('/submit-nomination-{studentId}-{mode}', [NominationController::class, 'submitNomination'])->name('submit-nomination-post');
-    Route::get('/create-renomination-data/{nominationId}', [NominationController::class, 'reNominatedStudent'])->name('renomination-data-get');
+    Route::post('/submit-nomination-{nomID}-{mode}', [NominationController::class, 'submitNomination'])->name('submit-nomination-post');
 
     /* Evaluation */
 
@@ -195,8 +201,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::get('/student-evaluation-approval-{activityID}-{studentID}', [EvaluationController::class, 'studentEvaluationApproval'])->name('student-evaluation-approval');
     Route::post('/approve-evaluation-{evaluationID}-{option}', [EvaluationController::class, 'panelEvaluationApproval'])->name('approve-evaluation-post');
     Route::post('/finalize-evaluation-{studentActID}', [EvaluationController::class, 'finalizeEvaluation'])->name('finalize-evaluation-post');
-
-
 
     // Standard Operation Procedure (SOP)
 
@@ -265,29 +269,6 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-semester/{id}', [SettingController::class, 'updateSemester'])->name('update-semester-post');
     Route::get('/delete-semester-{id}-{opt}', [SettingController::class, 'deleteSemester'])->name('delete-semester-get');
     Route::post('/change-current-semester', [SettingController::class, 'changeCurrentSemester'])->name('change-semester-post');
-
-
-    // ---------------------------------------------------------------------------------------------------------------------//
-    // -------------------------------------------------- COMMITTEE --------------------------------------------------------//
-    // ---------------------------------------------------------------------------------------------------------------------//
-
-    // Nomination
-    Route::get('/committee-nomination-{name}', [NominationController::class, 'committeeNomination'])->name('committee-nomination');
-
-    // ---------------------------------------------------------------------------------------------------------------------//
-    // ------------------------------------------------ DEPUTY DEAN --------------------------------------------------------//
-    // ---------------------------------------------------------------------------------------------------------------------//
-
-    // Nomination
-    Route::get('/deputydean-nomination-{name}', [NominationController::class, 'deputydeanNomination'])->name('deputydean-nomination');
-
-
-    // ---------------------------------------------------------------------------------------------------------------------//
-    // ----------------------------------------------------- DEAN ----------------------------------------------------------//
-    // ---------------------------------------------------------------------------------------------------------------------//
-
-    // Nomination
-    Route::get('/dean-nomination-{name}', [NominationController::class, 'deanNomination'])->name('dean-nomination');
 
 
     // ---------------------------------------------------------------------------------------------------------------------//

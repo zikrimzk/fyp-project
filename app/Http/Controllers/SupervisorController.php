@@ -1199,16 +1199,25 @@ class SupervisorController extends Controller
         }
     }
 
-    /* My Supervision Nomination ## - Route */
+    /* My Supervision Nomination - Route | Last Checked: 16-08-2025 */
     public function mySupervisionNomination(Request $req, $name)
     {
         try {
 
+            /* GET ACTIVITY ID FROM ACTIVITY NAME */
             $id = Activity::all()
                 ->first(function ($activity) use ($name) {
                     return strtolower(str_replace(' ', '-', $activity->act_name)) === $name;
                 })?->id;
 
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $id)->first();
+
+            if (!$activity) {
+                return abort(404, 'Activity not found. Please try again.');
+            }
+
+            /* LOAD DATATABLE DATA */
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
                 ->groupBy('student_id');
@@ -1232,7 +1241,7 @@ class SupervisorController extends Controller
                     'n.nom_status',
                     'n.nom_date',
                     'n.nom_document',
-                    'n.semester_id as nom_semester_id',
+                    'n.semester_id',
                 ])
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
                     $join->on('s.id', '=', 'latest.student_id');
@@ -1261,12 +1270,11 @@ class SupervisorController extends Controller
                     $data->where('s.programme_id', $req->input('programme'));
                 }
                 if ($req->has('semester') && !empty($req->input('semester'))) {
-                    $data->where('ss.semester_id', $req->input('semester'));
+                    $data->where('n.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
                     $data->where('n.nom_status', $req->input('status'));
                 }
-
 
                 $data = $data->get();
 
@@ -1299,19 +1307,24 @@ class SupervisorController extends Controller
                 });
 
                 $table->addColumn('nom_document', function ($row) {
-                    // SEMESTER LABEL
-                    $currsemester = Semester::find($row->nom_semester_id);
-                    $rawLabel = $currsemester->sem_label;
-                    $semesterlabel = str_replace('/', '', $rawLabel);
-                    $semesterlabel = trim($semesterlabel);
 
-                    // STUDENT SUBMISSION DIRECTORY
-                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination/' . $semesterlabel;
-
+                    /* HANDLE EMPTY FINAL DOCUMENT */
                     if (empty($row->nom_document)) {
                         return '-';
                     }
 
+                    /* LOAD SEMESTER DATA */
+                    $currsemester = Semester::where('id', $row->semester_id)->first();
+
+                    /* FORMAT SEMESTER LABEL */
+                    $rawLabel = $currsemester->sem_label;
+                    $semesterlabel = str_replace('/', '', $rawLabel);
+                    $semesterlabel = trim($semesterlabel);
+
+                    /* SET DOCUMENT DIRECTORY */
+                    $submission_dir = $row->student_directory . '/' . $row->prog_code . '/' . $row->activity_name . '/Nomination/' . $semesterlabel;
+
+                    /* HTML OUTPUT */
                     $final_doc =
                         '
                         <a href="' . route('view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $row->nom_document)]) . '" 
@@ -1320,20 +1333,25 @@ class SupervisorController extends Controller
                             <span class="fw-semibold">View Document</span>
                         </a>
                     ';
+
+                    /* RETURN HTML */
                     return $final_doc;
                 });
 
                 $table->addColumn('nom_date', function ($row) {
+
+                    /* HANDLE EMPTY DATE */
                     if (empty($row->nom_date)) {
                         return '-';
-                    } else {
-                        return Carbon::parse($row->nom_date)->format('d M Y h:i A');
                     }
+
+                    /* RETURN FORMATTED DATE */
+                    return Carbon::parse($row->nom_date)->format('d M Y h:i A');
                 });
 
                 $table->addColumn('nom_status', function ($row) {
-                    $status = '';
 
+                    /* HANDLE NOMINATION STATUS */
                     if ($row->nom_status == 1) {
                         $status = '<span class="badge bg-light-warning">' . 'Pending' . '</span>';
                     } elseif ($row->nom_status == 2) {
@@ -1341,32 +1359,37 @@ class SupervisorController extends Controller
                     } elseif ($row->nom_status == 3) {
                         $status = '<span class="badge bg-light-success">' . 'Reviewed - Committee' . '</span>';
                     } elseif ($row->nom_status == 4) {
-                        $status = '<span class="badge bg-success">' . 'Approved' . '</span>';
+                        $status = '<span class="badge bg-success">' . 'Approved & Active' . '</span>';
                     } elseif ($row->nom_status == 5) {
                         $status = '<span class="badge bg-light-danger">' . 'Rejected' . '</span>';
+                    } elseif ($row->nom_status == 6) {
+                        $status = '<span class="badge bg-secondary">' . 'Approve & Inactive' . '</span>';
                     } else {
                         $status = '<span class="badge bg-light-danger">' . 'N/A' . '</span>';
                     }
 
+                    /* RETURN STATUS */
                     return $status;
                 });
 
                 $table->addColumn('nom_semester', function ($row) {
-                    $semesters = Semester::where('id', $row->nom_semester_id)->first();
+                    /* LOAD SEMESTER DATA */
+                    $semesters = Semester::where('id', $row->semester_id)->first();
 
-                    if (!$semesters) {
+                    if (empty($semesters)) {
                         return 'N/A';
                     }
 
+                    /* RETURN SEMESTER LABEL */
                     return $semesters->sem_label;
                 });
 
                 $table->addColumn('action', function ($row) {
-                    $button = '';
 
+                    /* HANDLE ACTION BUTTON */
                     if ($row->nom_status == 1) {
                         $button = '
-                            <a href="' . route('nomination-student', ['studentId' => Crypt::encrypt($row->student_id), 'actId' => Crypt::encrypt($row->activity_id), 'semesterId' => Crypt::encrypt($row->nom_semester_id), 'mode' => 1]) . '" class="avtar avtar-xs btn-light-primary">
+                            <a href="' . route('nomination-student', ['nomID' => Crypt::encrypt($row->nomination_id), 'mode' => Crypt::encrypt(1)]) . '" class="avtar avtar-xs btn-light-primary">
                                 <i class="ti ti-user-plus f-20"></i>
                             </a>
                         ';
@@ -1374,6 +1397,7 @@ class SupervisorController extends Controller
                         $button = '<div class="fst-italic text-muted">No action required</div>';
                     }
 
+                    /* RETURN HTML BUTTON */
                     return $button;
                 });
 
@@ -1382,26 +1406,17 @@ class SupervisorController extends Controller
                 return $table->make(true);
             }
 
-            $act =  DB::table('activities as a')->join('procedures as b', 'a.id', '=', 'b.activity_id')
-                ->select('a.id', 'a.act_name')
-                ->where('a.id', '=', $id)
-                ->first();
-
-            if (!$act) {
-                abort(404, 'Activity not found');
-            }
-
-            return view('staff.supervisor.nomination-management', [
-                'title' => 'My Supervision - Nomination Management',
+            /* RETURN VIEW */
+            return view('staff.supervisor.nomination-approval', [
+                'title' => 'My Supervision - Nomination Approval',
                 'studs' => Student::all(),
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
-                'act' => $act,
+                'act' => $activity,
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
             return abort(500, $e->getMessage());
         }
     }

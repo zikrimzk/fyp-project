@@ -12,9 +12,9 @@
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">{{ $page }}</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Nomination</a></li>
-                                <li class="breadcrumb-item"><a href="{{ $link }}">{{ $act->act_name }}</a>
+                                <li class="breadcrumb-item"><a href="{{ $link }}">{{ $activity->act_name }}</a>
                                 </li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $data->student_name }}</li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $student->student_name }}</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
@@ -70,13 +70,11 @@
                 <!-- [ Nomination Student ] start -->
                 <div class="col-sm-12">
                     <form
-                        action="{{ route('submit-nomination-post', ['studentId' => Crypt::encrypt($data->id), 'mode' => $mode]) }}"
+                        action="{{ route('submit-nomination-post', ['nomID' => Crypt::encrypt($nomination->id), 'mode' => Crypt::encrypt($mode)]) }}"
                         method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="card p-3">
                             <div class="card-body">
-                                <input type="hidden" name="activity_id" value="{{ $act->id }}">
-                                <input type="hidden" name="semester_id" value="{{ $semid }}">
                                 <input type="hidden" name="opt" id="opt-hidden">
                                 <!-- [1] - FOR SUBMIT OR APPROVE [2] REJECT -->
                                 <div class="container">
@@ -100,7 +98,6 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
 
@@ -199,10 +196,7 @@
                 type: "GET",
                 data: {
                     _token: "{{ csrf_token() }}",
-                    actid: "{{ $act->id }}",
-                    afid: "{{ $actform->id }}",
-                    studentid: "{{ $data->student_id }}",
-                    semesterid: "{{ $semid }}",
+                    nomID: "{{ $nomination->id }}",
                     mode: "{{ $mode }}"
                 },
                 beforeSend: function() {

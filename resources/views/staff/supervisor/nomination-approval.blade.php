@@ -14,7 +14,7 @@
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervisor</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Nomination</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }} - Nomination Management</li>
+                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }}</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
@@ -58,17 +58,21 @@
 
             <!-- [ Main Content ] start -->
             <div class="row">
-
                 <!-- [ Activity Nomination ] start -->
+
+                <!-- [ Filter Section ] Start -->
                 <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header fw-semibold table-color text-white py-2">
+                            <i class="ti ti-filter me-1"></i> FILTERS
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-3 row-cols-1 row-cols-md-3 row-cols-lg-4 align-items-end">
 
-                            <!-- [ Filter Section ] Start -->
-                            <div class="row g-3 align-items-end">
-
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Faculty --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Faculty</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_faculty_id" class="form-select">
                                             <option value="">-- Select Faculty --</option>
                                             @foreach ($facs as $fil)
@@ -85,14 +89,17 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearFacFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Semester --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Semester</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_semester_id" class="form-select">
                                             <option value="">-- Select Semester --</option>
                                             @foreach ($sems as $fil)
@@ -101,60 +108,73 @@
                                                         {{ $fil->sem_label }} [Current]
                                                     </option>
                                                 @elseif($fil->sem_status == 3)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
-                                                    </option>
+                                                    <option value="{{ $fil->id }}">{{ $fil->sem_label }}</option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSemFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearSemFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Programme --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Programme</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_programme_id" class="form-select">
                                             <option value="">-- Select Programme --</option>
                                             @foreach ($progs as $fil)
                                                 @if ($fil->prog_status == 1)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->prog_code }}
+                                                    <option value="{{ $fil->id }}">{{ $fil->prog_code }}
                                                         ({{ $fil->prog_mode }})
                                                     </option>
                                                 @elseif($fil->prog_status == 2)
                                                     <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->prog_code }}
-                                                        ({{ $fil->prog_mode }}) [Inactive]</option>
+                                                        {{ $fil->prog_code }} ({{ $fil->prog_mode }}) [Inactive]
+                                                    </option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearProgFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Status --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Status</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
                                             <option value="1" selected>Pending</option>
                                             <option value="2">Nominated - SV</option>
                                             <option value="3">Reviewed - Committee</option>
-                                            <option value="4">Approved</option>
+                                            <option value="4">Approved & Active</option>
                                             <option value="5">Rejected</option>
+                                            <option value="6">Approved & Inactive</option>
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearStatusFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearStatusFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
                             </div>
-                            <!-- [ Filter Section ] End -->
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Filter Section ] End -->
 
+
+                <!-- [ Datatable ] Start -->
+                <div class="col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -170,12 +190,12 @@
                                     </thead>
                                 </table>
                             </div>
-
                         </div>
                     </div>
                 </div>
-                <!-- [ Activity Nomination ] end -->
+                <!-- [ Datatable ] End -->
 
+                <!-- [ Activity Nomination ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -183,7 +203,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            // DATATABLE : STUDENT
+            // DATATABLE : NOMINATION
             var table = $('.data-table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -235,7 +255,7 @@
                         searchable: false
                     }
                 ],
-                
+
 
             });
 
@@ -282,4 +302,3 @@
         });
     </script>
 @endsection
-

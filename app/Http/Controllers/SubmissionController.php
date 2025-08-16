@@ -23,6 +23,7 @@ use App\Mail\SubmissionMail;
 use App\Models\ActivityForm;
 use Illuminate\Http\Request;
 use App\Models\StudentActivity;
+use App\Models\StudentSemester;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\SubmissionReview;
 use App\Models\ActivityCorrection;
@@ -107,7 +108,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Programme Overview [Student] - Route */
+    /* Programme Overview [Student] - Route | Last Checked: 16-08-2025 */
     public function studentProgrammeOverview()
     {
         try {
@@ -116,6 +117,20 @@ class SubmissionController extends Controller
 
             if (!$currsemester) {
                 return abort(404, 'Semester not found. Could not process request. Please contact administrator for further assistance.');
+            }
+
+
+            /* LOAD STUDENT SEMESTER */
+            $studentsemester = StudentSemester::where('student_id', auth()->user()->id)
+                ->where('semester_id', $currsemester->id)
+                ->where('ss_status', 1)
+                ->first();
+
+            /* GET STUDENT ENROLLMENT STATUS */
+            $studentActive = false;
+
+            if ($studentsemester) {
+                $studentActive = true;
             }
 
             /* LOAD PROGRAMME ACTIVITY */
@@ -285,6 +300,7 @@ class SubmissionController extends Controller
             /* RETURN VIEW */
             return view('student.programme.programme-index', [
                 'title' => 'Programme Overview',
+                'studentActive' => $studentActive,
                 'acts' => $programmeActivity,
                 'docs' => $filtered_documents,
                 'sa' => $student_activity,
@@ -296,11 +312,15 @@ class SubmissionController extends Controller
         }
     }
 
+    /* Submission Area [Student] - Route */
     public function documentSubmission($id)
     {
         try {
 
+            /* DECRYPT IDs */
             $id = decrypt($id);
+
+            /* LOAD SUBMISSION DATA */
             $document = DB::table('procedures as a')
                 ->join('programmes as b', 'a.programme_id', '=', 'b.id')
                 ->join('activities as c', 'a.activity_id', '=', 'c.id')
@@ -322,10 +342,15 @@ class SubmissionController extends Controller
                 )
                 ->first();
 
-            // STUDENT SUBMISSION DIRECTORY
+            if (!$document) {
+                return abort(404, 'Error occurred: Document not found. Please try again.');
+            }
+
+            /* GET STUDENT SUBMISSION DIRECTORY */
             $submission_dir = auth()->user()->student_directory . '/' . auth()->user()->programmes->prog_code . '/' . $document->activity_name;
 
-            return view('student.programme.document-submission', [
+            /* RETURN VIEW */
+            return view('student.submission.document-submission', [
                 'title' => $document->document_name . ' Submission',
                 'doc' => $document,
                 'submission_dir' => $submission_dir
@@ -1233,7 +1258,7 @@ class SubmissionController extends Controller
 
                 return $table->make(true);
             }
-            return view('student.submission.journal-publication-management', [
+            return view('student.programme.journal-publication-management', [
                 'title' => 'Student Journal Publication',
                 'journals' => $data
             ]);
@@ -1907,7 +1932,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Submission Final Overview [Staff] - Route */
+    /* Submission Final Overview [Staff] - Route | Last Checked: 16-08-2025 */
     public function submissionFinalOverview(Request $req)
     {
         try {
@@ -2138,12 +2163,11 @@ class SubmissionController extends Controller
                 'studentActivity' => $data->get()
             ]);
         } catch (Exception $e) {
-            dd($e);
             return abort(500, $e->getMessage());
         }
     }
 
-    /* Update Final Submission [Staff] - Function */
+    /* Update Final Submission [Staff] - Function | Last Checked: 16-08-2025 */
     public function updateFinalSubmission(Request $req, $id)
     {
         /* DECRYPT ID */
@@ -2199,7 +2223,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Delete Final Submission [Staff] - Function | Email : Yes  */
+    /* Delete Final Submission [Staff] - Function | Email : Yes | Last Checked: 16-08-2025  */
     public function deleteFinalSubmission($id)
     {
         /* DECRYPT ID */

@@ -369,7 +369,7 @@ class EvaluationController extends Controller
 
             $validated = $validator->validated();
 
-            /* LOAD Evaluation DATA */
+            /* LOAD EVALUATION DATA */
             $evaluation = Evaluation::where('id', $id)->first();
 
             if (!$evaluation) {
@@ -404,7 +404,7 @@ class EvaluationController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' evaluation by ' . $evaluator->staff_name . ' successfully updated.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating final submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating final evaluation: ' . $e->getMessage());
         }
     }
 
@@ -415,7 +415,7 @@ class EvaluationController extends Controller
         $id = decrypt($id);
         try {
 
-            /* LOAD Evaluation DATA */
+            /* LOAD EVALUATION DATA */
             $evaluation = Evaluation::where('id', $id)->first();
 
             if (!$evaluation) {
@@ -449,7 +449,7 @@ class EvaluationController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' evaluation by ' . $evaluator->staff_name . ' successfully deleted.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting final correction: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting final evaluation: ' . $e->getMessage());
         }
     }
 
@@ -1127,7 +1127,7 @@ class EvaluationController extends Controller
         }
     }
 
-    /* View Evaluation Form - Function */
+    /* View Evaluation Form (Method: Input) - Function */
     public function viewEvaluationForm(Request $req)
     {
         try {
@@ -2249,7 +2249,7 @@ class EvaluationController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final correction successfully updated.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating final submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating final correction: ' . $e->getMessage());
         }
     }
 
