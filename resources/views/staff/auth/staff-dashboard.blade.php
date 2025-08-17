@@ -56,9 +56,18 @@
 
                 <!-- [ Main Content ] start -->
 
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Welcome Back {{ auth()->user()->staff_name }} !</h5>
+                    </div>
+
+                    <div class="card-body">
+                        <p class="mb-0">You are logged in as <b>Staff</b></p>
+                    </div>
+                </div>
 
                 <!-- [ Dashboard ] [FOR PSM PURPOSE] start -->
-                <div class="row">
+                {{-- <div class="row">
                     <!-- Total Students -->
                     <div class="col-lg-4 col-md-6">
                         <div class="card">
@@ -183,12 +192,12 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
                 <!-- [ Dashboard ] [FOR PSM PURPOSE] end -->
 
                 <!-- [FOR PSM PURPOSE] -->
 
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                {{-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
                 @if (!$studentBySemester->isEmpty())
                     <script>
@@ -327,7 +336,7 @@
                             }
                         });
                     </script>
-                @endif
+                @endif --}}
 
                 <!-- [FOR PSM PURPOSE] -->
             @endif

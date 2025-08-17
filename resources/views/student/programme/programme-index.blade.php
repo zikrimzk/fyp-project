@@ -171,16 +171,16 @@
                                     @if ($act->is_haveJournalPublication == 1 && in_array($act->init_status, [4, 5, 10, 18, 19, 20]))
                                         <div class="alert alert-light text-dark rounded-3" role="alert">
                                             <div class="d-flex align-items-center">
-                                                <i class="ti ti-info-circle fs-4 text-danger me-3 mt-1"></i>
+                                                <i class="ti ti-info-circle fs-4 text-primary me-3 mt-1"></i>
                                                 <div>
                                                     <p class="mb-0">
-                                                        This activity requires you to add <strong>journal publication
-                                                            details</strong>.
-                                                        Please ensure that the necessary information is provided.
+                                                        You may <strong>add journal publication details</strong> for this
+                                                        activity.
+                                                        Providing this information is optional but can strengthen your
+                                                        evaluation record.
                                                         <br>
-                                                        <span class="text-muted small">Failure to do so may impact your
-                                                            evaluation
-                                                            process.</span>
+                                                        <span class="text-muted small">Including additional details may
+                                                            support a more comprehensive assessment.</span>
                                                     </p>
                                                 </div>
                                             </div>

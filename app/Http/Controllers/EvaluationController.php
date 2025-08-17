@@ -625,7 +625,7 @@ class EvaluationController extends Controller
                 });
 
                 $table->addColumn('evaluation_status', function ($row) {
-                
+
                     /* DETERMINE STATUS BADGE BASED ON EVALUATION STATUS */
                     switch ($row->evaluation_status) {
                         case 1:
@@ -1029,7 +1029,6 @@ class EvaluationController extends Controller
                 'act' => $activity,
                 'data' => $data->get(),
             ]);
-            
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
         }
@@ -1470,7 +1469,7 @@ class EvaluationController extends Controller
         }
     }
 
-    /* Evaluation Report Submission [Evaluator] - Function | Email : Yes With Works */
+    /* Evaluation Report Submission [Evaluator] - Function | Email : Yes With Works | Last Checked : 17-08-2025 */
     public function submitEvaluation(Request $req, $evaluationID, $mode)
     {
         try {
@@ -1526,6 +1525,9 @@ class EvaluationController extends Controller
             if (!$procedure) {
                 return back()->with('error', 'Procedure not found. Operation could not be processed. Please contact administrator for further assistance.');
             }
+
+            /* LOAD SUBMISSION CONTROLLER */
+            $sc = new SubmissionController();
 
             /* 
              * LOAD ACTIVITY BASED ON MODE
@@ -1668,6 +1670,9 @@ class EvaluationController extends Controller
 
                         /* UPDATE STUDENT ACTIVITY STATUS TO CONFIRMED AND COMPLETE */
                         $studentActivity->sa_status = 3;
+
+                        /* FINALIZE SUBMISSSION */
+                        $sc->finalizeSubmission($student, $activity);
                     } elseif ($decisionStatus == 3 || $decisionStatus == 4) {
                         /* STATUS : PASS WITH MINOR/MAJOR CORRECTION LOGIC */
 
@@ -1704,8 +1709,9 @@ class EvaluationController extends Controller
                         /* STATUS : FAILED LOGIC [NOT YET CONFIRMED PROCESS] */
 
                         /* UPDATE STUDENT ACTIVITY STATUS TO FAILED */
-                        $studentActivity->sa_status = 5;
+                        $studentActivity->sa_status = 12;
                     } else {
+                        /* DEFAULT STATUS */
                         $studentActivity->sa_status = 5;
                     }
 

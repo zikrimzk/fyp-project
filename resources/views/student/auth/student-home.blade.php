@@ -412,9 +412,16 @@
                                                 ->select(DB::raw(1))
                                                 ->from('student_activities as d')
                                                 ->whereColumn('d.activity_id', 'a.activity_id')
+                                                ->where('d.student_id', auth()->user()->id)
                                                 ->where('d.sa_status', 3);
                                         })
-                                        ->select('c.staff_name', 'c.staff_email', 'b.eva_role', 'e.act_name')
+                                        ->select(
+                                            'c.staff_name',
+                                            'c.staff_email',
+                                            'b.eva_role',
+                                            'e.act_name',
+                                            'a.student_id',
+                                        )
                                         ->get()
                                         ->groupBy('act_name');
                                 @endphp

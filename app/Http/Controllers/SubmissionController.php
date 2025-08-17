@@ -2518,9 +2518,17 @@ class SubmissionController extends Controller
 
                 return $table->make(true);
             }
+
+            /* LOAD DOCUMENT DATA */
+            $document = DB::table('documents as a')
+                ->join('activities as b', 'b.id', '=', 'a.activity_id')
+                ->select('a.*', 'b.act_name')
+                ->get();
+
             return view('staff.submission.submission-management', [
                 'title' => 'Submission Management',
-                'studs' => Student::all(),
+                'studs' => Student::where('student_status', 1)->get(),
+                'docs' => $document,
                 'current_sem' => Semester::where('sem_status', 1)->first()->sem_label ?? 'N/A',
                 'progs' => Programme::all(),
                 'facs' => Faculty::all(),
@@ -2529,7 +2537,92 @@ class SubmissionController extends Controller
                 'subs' => $data->get()
             ]);
         } catch (Exception $e) {
+            dd($e);
             return abort(500);
+        }
+    }
+
+    /* Add Submission [Staff] - Function | Last Checked: 17-08-2025  */
+    public function addSubmission(Request $req)
+    {
+        /* VALIDATE DATA FROM REQUEST */
+        $validator = Validator::make($req->all(), [
+            'submission_status' => 'required|integer|in:1,2,3,4,5',
+            'submission_duedate' => 'required',
+            'student_id' => 'required',
+            'document_id' => 'required',
+
+        ], [], [
+            'submission_status' => 'submission status',
+            'submission_duedate' => 'submission due date',
+            'student_id' => 'student',
+            'document_id' => 'document',
+        ]);
+
+        /* RETURN ERROR IF VALIDATION FAILS */
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('modal', 'addSubmissionModal');
+        }
+
+        try {
+            /* LOAD CURRENT SEMESTER */
+            $currsemester = Semester::where('sem_status', 1)->first();
+
+            if (!$currsemester) {
+                return back()->with('error', 'Error occurred: No current semester found.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::find($req->student_id);
+            if (!$student) {
+                return back()->with('error', 'Error occurred: Student not found.');
+            }
+
+            /* LOAD DOCUMENT DATA */
+            $document = Document::find($req->document_id);
+            if (!$document) {
+                return back()->with('error', 'Error occurred: Document not found.');
+            }
+
+            /* CHECK IF EXISTING */
+            $checkExists = Submission::where('student_id', $req->student_id)
+                ->where('document_id', $req->document_id)
+                ->where('semester_id', $currsemester->id)
+                ->exists();
+
+            if ($checkExists) {
+                return back()->with('error', $student->student_name . ' submission for ' . $document->doc_name . ' has already been addded for this semester.');
+            }
+
+            /* DETERMINE AND SET SUBMISSION STATUS */
+            $sub_status = 1;
+            if (Carbon::parse($req->submission_duedate)->lessThan(now()) && ($req->submission_status == 1 || $req->submission_status == 4)) {
+                $sub_status = 4;
+            } elseif (Carbon::parse($req->submission_duedate)->greaterThan(now()) && ($req->submission_status == 1 || $req->submission_status == 4)) {
+                $sub_status = 1;
+            } elseif ($req->submission_status == 3) {
+                $sub_status = 3;
+            } else {
+                $sub_status = $req->submission_status;
+            }
+
+            /* CREATE SUBMISSION */
+            Submission::create([
+                'submission_document' =>  '-',
+                'submission_status' =>  $sub_status,
+                'submission_duedate' => $req->submission_duedate,
+                'student_id' => $req->student_id,
+                'document_id' => $req->document_id,
+                'semester_id' => $currsemester->id
+            ]);
+
+            /* RETURN SUCCESS */
+            return back()->with('success', $student->student_name . ' submission for ' . $document->doc_name . ' has been added successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error adding submission: ' . $e->getMessage());
         }
     }
 

@@ -198,14 +198,14 @@
                                     id="clearSelectionBtn">
                                     0 selected <i class="ti ti-x f-18"></i>
                                 </button>
-                                <a href="{{ route('assign-student-submission') }}"
+                                {{-- <a href="{{ route('assign-student-submission') }}"
                                     class="btn btn-outline-primary d-flex align-items-center gap-2"
                                     title="Re-assign Submission" id="reassignBtn">
                                     <i class="ti ti-refresh f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
                                         Re-assign Submission
                                     </span>
-                                </a>
+                                </a> --}}
                                 <button type="button"
                                     class="btn btn-outline-primary d-flex align-items-center gap-2 d-none"
                                     data-bs-toggle="modal" data-bs-target="#multipleSettingModal"
@@ -239,6 +239,15 @@
                                     <i class="ti ti-arrow-bar-to-down f-18"></i>
                                     <span class="d-none d-sm-inline me-2">
                                         Download (.zip)
+                                    </span>
+                                </button>
+
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#addSubmissionModal"
+                                    id="addSubmissionModalBtn" title="Add Submission">
+                                    <i class="ti ti-plus f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Add Submission
                                     </span>
                                 </button>
 
@@ -367,6 +376,132 @@
                     </div>
                 </form>
                 <!-- [ Export Modal ] end -->
+
+                <!-- [ Add Submission Modal ] start -->
+                <form action="{{ route('add-submission-post') }}" method="POST">
+                    @csrf
+                    <div class="modal fade" id="addSubmissionModal" tabindex="-1" aria-labelledby="addSubmissionModal"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+
+                                <div class="modal-header bg-light">
+                                    <h5 class="modal-title" id="addSubmissionModalLabel">Add Submission</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+
+                                        <!-- Student Input -->
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="student_id" class="form-label">
+                                                    Student <span class="fw-bold text-danger">*</span>
+                                                </label>
+
+                                                <!-- Search Box -->
+                                                <input type="text" id="studentSearch" class="form-control mb-2"
+                                                    placeholder="Search student...">
+
+                                                <select class="form-select @error('student_id') is-invalid @enderror"
+                                                    name="student_id" id="student_id" required>
+                                                    <option value ="" selected>- Select Student -</option>
+                                                    @foreach ($studs as $stud)
+                                                        <option value ="{{ $stud->id }}">
+                                                            [{{ $stud->student_matricno }}] - {{ $stud->student_name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                @error('student_id')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <!-- Document Input -->
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="document_id" class="form-label">
+                                                    Document <span class="fw-bold text-danger">*</span>
+                                                </label>
+                                                <select class="form-select @error('document_id') is-invalid @enderror"
+                                                    name="document_id" id="document_id" required>
+                                                    <option value ="" selected>- Select Student -</option>
+                                                    @foreach ($docs as $doc)
+                                                        @if ($doc->doc_status == 0)
+                                                            <option value ="{{ $doc->id }}" disabled>
+                                                                [{{ $doc->act_name }}] - {{ $doc->doc_name }} [Inactive]
+                                                            </option>
+                                                        @else
+                                                            <option value ="{{ $doc->id }}">
+                                                                [{{ $doc->act_name }}] - {{ $doc->doc_name }}
+                                                            </option>
+                                                        @endif
+                                                    @endforeach
+                                                </select>
+                                                @error('document_id')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <!-- Due Date Input -->
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="submission_duedate" class="form-label">
+                                                    Due Date <span class="fw-bold text-danger">*</span>
+                                                </label>
+                                                <input type="datetime-local"
+                                                    class="form-control @error('submission_duedate') is-invalid @enderror"
+                                                    id="submission_duedate" name="submission_duedate" required>
+                                                @error('submission_duedate')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <!-- Status Input -->
+                                        <div class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="submission_status" class="form-label">
+                                                    Status <span class="fw-bold text-danger">*</span>
+                                                </label>
+                                                <select
+                                                    class="form-select @error('submission_status') is-invalid @enderror"
+                                                    name="submission_status" id="submission_status" required>
+                                                    <option value ="" selected>- Select Status -</option>
+                                                    <option value ="1">Open Submission</option>
+                                                    <option value ="2">Locked</option>
+                                                </select>
+                                                @error('submission_status')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="modal-footer pt-2 bg-light">
+                                    <div class="row w-100 g-2">
+                                        <div class="col-12 col-md-6">
+                                            <button type="reset" class="btn btn-outline-secondary w-100"
+                                                data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                Add Submission
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!-- [ Add Submission Modal ] end -->
 
                 <!-- [ Multiple Submission Update Modal ] start -->
                 <div class="modal fade" id="multipleSettingModal" tabindex="-1" aria-labelledby="multipleSettingModal"
@@ -812,6 +947,38 @@
 
             $('#clearStatusFilter').click(function() {
                 $('#fil_status').val('').change();
+            });
+
+            $("#studentSearch").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                var firstMatch = null;
+
+                // Loop through options except the first one
+                $("#student_id option").not(":first").each(function() {
+                    if ($(this).text().toLowerCase().indexOf(value) > -1 || $(this).val()
+                        .toLowerCase().indexOf(value) > -1) {
+                        $(this).show();
+                        if (!firstMatch) {
+                            firstMatch = $(this); // store first match
+                        }
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                // Always keep "- Select Student -" visible
+                $("#student_id option:first").show();
+
+                if (value === "") {
+                    // Reset back to default if input is empty
+                    $("#student_id").val("");
+                } else if (firstMatch) {
+                    // Auto-select the first match
+                    $("#student_id").val(firstMatch.val());
+                } else {
+                    // No match → reset
+                    $("#student_id").val("");
+                }
             });
 
             /* SELECT : MULTIPLE STUDENT SELECT */
