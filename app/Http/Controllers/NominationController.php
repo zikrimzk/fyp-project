@@ -27,7 +27,7 @@ use App\Http\Controllers\FormHandlerController;
 class NominationController extends Controller
 {
 
-    /* Nomination Final Overview [Staff] - Route */
+    /* Nomination Final Overview [Staff] - Route | Last Checked: 17-08-2023 */
     public function nominationFinalOverview(Request $req, $name)
     {
         try {
@@ -289,7 +289,7 @@ class NominationController extends Controller
         }
     }
 
-    /* Update Final Nomination [Staff] - Function */
+    /* Update Final Nomination [Staff] - Function | Last Checked: 16-08-2023 */
     public function updateFinalNomination(Request $req, $id)
     {
         /* DECRYPT ID */
@@ -344,7 +344,7 @@ class NominationController extends Controller
         }
     }
 
-    /* Delete Final Nomination [Staff] - Function  */
+    /* Delete Final Nomination [Staff] - Function | Last Checked: 17-08-2023  */
     public function deleteFinalNomination($id)
     {
         /* DECRYPT ID */
@@ -373,14 +373,15 @@ class NominationController extends Controller
             }
 
             /* DELETE EVALUATOR DATA */
-            $evaluator = DB::table('evaluators as a')
-                ->join('nominations as b', 'a.nom_id', '=', 'b.id')
-                ->where('b.id', $nomination->id)
-                ->whereIn('a.eva_status', [1, 2, 3])
-                ->delete();    
+            $deletedEvaluators = DB::table('evaluators')
+                ->where('nom_id', $nomination->id)
+                ->whereIn('eva_status', [1, 2, 3])
+                ->delete();
 
-            /* DELETE STUDENT ACTIVITY */
-            $nomination->delete();
+            /* DELETE NOMINATION */
+            if ($deletedEvaluators > 0) {
+                $nomination->delete();
+            }
 
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' nomination fot ' . $activity->act_name . ' successfully deleted.');
@@ -579,7 +580,7 @@ class NominationController extends Controller
 
                 $table->addColumn('action', function ($row) {
 
-                    if (auth()->user()->staff_role != 1) {
+                    if (auth()->user()->staff_role == 1) {
                         /* HANDLE ACTION BUTTON */
                         if ($row->nom_status == 2 || $row->nom_status == 5) {
                             $button = '
@@ -593,7 +594,7 @@ class NominationController extends Controller
 
                         /* RETURN HTML BUTTON */
                         return $button;
-                    } elseif (auth()->user()->staff_role != 3) {
+                    } elseif (auth()->user()->staff_role == 3) {
                         /* HANDLE ACTION BUTTON */
                         if ($row->nom_status == 3) {
                             $button = '
@@ -607,7 +608,7 @@ class NominationController extends Controller
 
                         /* RETURN HTML BUTTON */
                         return $button;
-                    } elseif (auth()->user()->staff_role != 4) {
+                    } elseif (auth()->user()->staff_role == 4) {
                         /* HANDLE ACTION BUTTON */
                         if ($row->nom_status == 3) {
                             $button = '
@@ -644,7 +645,7 @@ class NominationController extends Controller
         }
     }
 
-    /* Nomination Student - Route | Last Checked : 16-08-2025 */
+    /* Nomination Student - Route | Last Checked : 17-08-2025 */
     public function nominationStudent($nomID, $mode)
     {
         try {
@@ -691,17 +692,11 @@ class NominationController extends Controller
 
             /* LINK ASSIGNMENT BASED ON MODE */
             if ($mode == 1) {
-                $page = 'My Supervision';
+                $page = 'Supervisor';
                 $link =  route('my-supervision-nomination', strtolower(str_replace(' ', '-', $activity->act_name)));
-            } else if ($mode == 2) {
-                $page = 'Committee';
-                $link =  route('committee-nomination', strtolower(str_replace(' ', '-', $activity->act_name)));
-            } else if ($mode == 3) {
-                $page = 'Deputy Dean';
-                $link =  route('deputydean-nomination', strtolower(str_replace(' ', '-', $activity->act_name)));
-            } else if ($mode == 4) {
-                $page = 'Dean';
-                $link =  route('dean-nomination', strtolower(str_replace(' ', '-', $activity->act_name)));
+            } else if ($mode == 2 || $mode == 3 || $mode == 4) {
+                $page = 'Administrator';
+                $link =  route('nomination-approval', strtolower(str_replace(' ', '-', $activity->act_name)));
             } else {
                 return back()->with('error', 'Error loading nomination data: Invalid Request. Please try again.');
             }
@@ -718,6 +713,7 @@ class NominationController extends Controller
                 'link' => $link,
             ]);
         } catch (Exception $e) {
+            dd($e);
             return abort(500, $e->getMessage());
         }
     }
@@ -849,7 +845,7 @@ class NominationController extends Controller
         }
     }
 
-    /* Nomination Form Submission [Staff] - Function | Email : Yes With Works | Last Checked : 16-08-2025 */
+    /* Nomination Form Submission [Staff] - Function | Email : Yes With Works | Last Checked : 17-08-2025 */
     public function submitNomination(Request $req, $nomID, $mode)
     {
         try {
@@ -988,7 +984,7 @@ class NominationController extends Controller
                     $nomination->nom_status = 1;
                 }
 
-                $fileName = 'Nomination_Form_' . $student->student_matricno . '.pdf';
+                $fileName = 'Nomination_Form_' . $student->student_matricno .  '_' . time() . '.pdf';
                 $nomination->nom_document = $fileName;
                 $nomination->nom_date = Carbon::now();
                 $nomination->save();
@@ -1016,28 +1012,21 @@ class NominationController extends Controller
                 /* RETURN REDIRECT BASED ON MODE */
                 if ($mode == 1) {
                     return redirect()->route('my-supervision-nomination', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination submitted successfully!');
-                } else if ($mode == 2) {
-                    return redirect()->route('committee-nomination', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination submitted successfully!');
-                } else if ($mode == 3) {
-                    return redirect()->route('deputydean-nomination', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination approved successfully!');
-                } else if ($mode == 4) {
-                    return redirect()->route('dean-nomination', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination approved successfully!');
+                } else if ($mode == 2 || $mode == 3 || $mode == 4) {
+                    return redirect()->route('nomination-approval', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination submitted successfully!');
                 } else {
                     return back()->with('error', 'Error submitting nomination: Invalid Request. Please try again.');
                 }
             } elseif ($option == 2) {
                 $nomination->nom_status = 5;
                 $nomination->save();
-                if ($mode == 3) {
-                    return redirect()->route('deputydean-nomination', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination rejected successfully!');
-                } else if ($mode == 4) {
-                    return redirect()->route('dean-nomination', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination rejected successfully!');
+                if ($mode == 3 || $mode == 4) {
+                    return redirect()->route('nomination-approval', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination rejected successfully!');
                 } else {
                     return back()->with('error', 'Error submitting nomination: Invalid Request. Please try again.');
                 }
             }
         } catch (Exception $e) {
-            dd($e);
             return back()->with('error', 'Oops! Error submitting nomination: ' . $e->getMessage() . ' ' . $e->getLine());
         }
     }
@@ -1059,23 +1048,26 @@ class NominationController extends Controller
         return $field;
     }
 
-    /* Process Evaluator (Fuzzy Match) - Function | Last Checked: 16-08-2025 */
+    /* Process Evaluator (Fuzzy Match) - Function | Last Checked: 17-08-2025 */
     protected function processEvaluators($req, $evaluatorFields, $nomination, $formSignatureFields, $mode)
     {
         /* DELETE EXISTING NOMINATION [IF ANY] */
         if ($mode == 1) {
-            Evaluator::where('nom_id', $nomination->id)->where('eva_status', 1)->delete();
+            Evaluator::where('nom_id', $nomination->id)
+                ->where('eva_status', 1)
+                ->delete();
             $status = 1;
-        } else if ($mode == 2) {
-            if (in_array('deputy_dean_signature', $formSignatureFields) || in_array('dean_signature', $formSignatureFields)) {
-                Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->delete();
-                $status = 2;
-            } else {
-                Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->update(['eva_status' => 3]);
-                $status = 3;
-            }
-        } else if ($mode == 3 || $mode == 4) {
-            Evaluator::where('nom_id', $nomination->id)->where('eva_status', 2)->update(['eva_status' => 3]);
+        } elseif ($mode == 2) {
+            Evaluator::where('nom_id', $nomination->id)
+                ->where('eva_status', 2)
+                ->delete();
+
+            $status = in_array('deputy_dean_signature', $formSignatureFields)
+                || in_array('dean_signature', $formSignatureFields) ? 2 : 3;
+        } elseif (in_array($mode, [3, 4])) {
+            Evaluator::where('nom_id', $nomination->id)
+                ->where('eva_status', 2)
+                ->delete();
             $status = 3;
         }
 
@@ -1380,43 +1372,78 @@ class NominationController extends Controller
         }
     }
 
-    public function reNominatedStudent($nominationId)
+    /* Renominate Process - Function | Last Checked: 17-08-2025 */
+    public function renominateProcess($nomID)
     {
 
-        $nomId = Crypt::decrypt($nominationId);
+        /* DECRYPT IDs */
+        $nomID = Crypt::decrypt($nomID);
 
         try {
-            $nomination = Nomination::find($nomId);
+
+            /* SET STAFF ROLE */
+            $staffrole = auth()->user()->staff_role;
+
+            /* LOAD NOMINATION DATA */
+            $nomination = Nomination::where('id', $nomID)->first();
 
             if (!$nomination) {
-                return back()->with('error', 'Nomination not found.');
+                return back()->with('error', 'Error occurred: Nomination not found.');
             }
 
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $nomination->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Error occurred: Student not found.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $nomination->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Error occurred: Activity not found.');
+            }
+
+            /* LOAD SEMESTER DATA */
             $currsemester = Semester::where('sem_status', 1)->first();
 
-            $existNom = Nomination::where('student_id', $nomination->student_id)
-                ->where('semester_id', $currsemester->id)
-                ->where('activity_id', $nomination->activity_id)
-                ->exists();
-
-            if ($existNom) {
-                return back()->with('error', 'Updating the nomination for this student is not allowed for the current semester. Please try again in the next semester.');
+            if (!$currsemester) {
+                return back()->with('error', 'Error occurred: Current semester not found.');
             }
 
+            /* CHECK IF NOMINATION FOR CURRENT SEMESTER ALREADY EXISTS */
+            // $existNom = Nomination::where('student_id', $nomination->student_id)
+            //     ->where('semester_id', $currsemester->id)
+            //     ->where('activity_id', $nomination->activity_id)
+            //     ->exists();
 
+            // if ($existNom) {
+            //     return back()->with('error', 'Update / Re-nomination for ' . $student->student_name . ' is not allowed for the current semester. Please try again in the next semester.');
+            // }
 
-            // UPDATE CURRENT EVALUATOR STATUS
-            Evaluator::where('nom_id', $nomId)
-                ->where('eva_status', 3)
-                ->update(['eva_status' => 2]);
+            /* LOAD CURRENT EVALUATOR DATA */
+            $currEvaluators = Evaluator::where('nom_id', $nomination->id)->where('eva_status', 3)->get();
 
-            // COPY ALL CURRENT DATA FROM NOMINATION
-            $newnomination = new Nomination();
-            $newnomination->student_id = $nomination->student_id;
-            $newnomination->semester_id = $currsemester->id;
-            $newnomination->activity_id = $nomination->activity_id;
+            if ($currEvaluators) {
+                foreach ($currEvaluators as $curreva) {
 
-            // REMOVE HIGHER UPS [COMMITTEE / DEPUTY DEAN / DEAN] SIGNATURES
+                    /* CHANGE STATUS OF EVALUATOR TO INACTIVE */
+                    $curreva->eva_status = 2;
+                    $curreva->save();
+
+                    /* DELETE ANY PENDING EVALUATION DATA FOR CURRENT EVALUATORS */
+                    Evaluation::where('staff_id', $curreva->staff_id)
+                        ->where('activity_id', $activity->id)
+                        ->where('student_id', $student->id)
+                        ->where('semester_id', $currsemester->id)
+                        ->where('evaluation_status', 1)
+                        ->where('evaluation_isFinal', 0)
+                        ->delete();
+                }
+            }
+
+            /* REMOVE HIGHER UPS [COMMITTEE / DEPUTY DEAN / DEAN] SIGNATURES */
             $originalSignatures = json_decode($nomination->nom_signature_data, true);
             $filteredSignatures = array_filter(
                 $originalSignatures,
@@ -1424,13 +1451,18 @@ class NominationController extends Controller
                 ARRAY_FILTER_USE_KEY
             );
 
+            /* CREATE NEW NOMINATION RECORD */
+            $newnomination = new Nomination();
+            $newnomination->student_id = $nomination->student_id;
+            $newnomination->semester_id = $currsemester->id;
+            $newnomination->activity_id = $nomination->activity_id;
             $newnomination->nom_signature_data = json_encode($filteredSignatures);
             $newnomination->nom_extra_data = $nomination->nom_extra_data;
             $newnomination->nom_status = 2;
             $newnomination->save();
 
-            // COPYING ALL CURRENT EVALUATOR DETAILS
-            $evaluators = Evaluator::where('nom_id', $nomId)->get();
+            /* CREATE NEW EVALUATOR RECORD */
+            $evaluators = Evaluator::where('nom_id', $nomination->id)->get();
             foreach ($evaluators as $evaluator) {
                 $newevaluator = new Evaluator();
                 $newevaluator->nom_id = $newnomination->id;
@@ -1441,9 +1473,23 @@ class NominationController extends Controller
                 $newevaluator->save();
             }
 
-            return redirect()->route('nomination-student', ['studentId' => Crypt::encrypt($nomination->student_id), 'actId' => Crypt::encrypt($nomination->activity_id), 'semesterId' => Crypt::encrypt($currsemester->id), 'mode' => 2])->with('success', 'Your update request has been created successfully. Please complete the nomination process.');
+            /* UPDATE NOMINATION STATUS FROM ACTIVE TO INACTIVE */
+            $nomination->nom_status = 6;
+            $nomination->save();
+
+            /* REDIRECT BASED ON STAFF ROLE */
+            if ($staffrole == 1) {
+                return redirect()->route('nomination-student', ['nomID' => Crypt::encrypt($newnomination->id), 'mode' => Crypt::encrypt(2)])
+                    ->with('success', 'Your update/ re-nomination request has been created successfully. Please complete the nomination process.');
+            } elseif ($staffrole == 3) {
+                return redirect()->route('nomination-student', ['nomID' => Crypt::encrypt($newnomination->id), 'mode' => Crypt::encrypt(3)])
+                    ->with('success', 'Your update/ re-nomination request has been created successfully. Please complete the nomination process.');
+            } elseif ($staffrole == 4) {
+                return redirect()->route('nomination-student', ['nomID' => Crypt::encrypt($newnomination->id), 'mode' => Crypt::encrypt(4)])
+                    ->with('success', 'Your update/ re-nomination request has been created successfully. Please complete the nomination process.');
+            }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error making request for nomination update: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error making request for nomination update/re-nomination: ' . $e->getMessage());
         }
     }
 }

@@ -454,7 +454,7 @@
                                     <div class="d-flex justify-content-between gap-3 w-100">
                                         <button type="button" class="btn btn-light w-50"
                                             data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{{ route('renomination-data-get', ['nominationId' => Crypt::encrypt($upd->nomination_id)]) }}"
+                                        <a href="{{ route('renomination-data-get', ['nomID' => Crypt::encrypt($upd->nomination_id)]) }}"
                                             class="btn btn-warning w-50">
                                             Confirmed
                                         </a>

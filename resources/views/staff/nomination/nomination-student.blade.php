@@ -12,8 +12,10 @@
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">{{ $page }}</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Nomination</a></li>
-                                <li class="breadcrumb-item"><a href="{{ $link }}">{{ $activity->act_name }}</a>
-                                </li>
+                                @if ($mode != 1)
+                                    <li class="breadcrumb-item"><a href="javascript: void(0)">Approval</a></li>
+                                @endif
+                                <li class="breadcrumb-item"><a href="{{ $link }}">{{ $activity->act_name }}</a></li>
                                 <li class="breadcrumb-item" aria-current="page">{{ $student->student_name }}</li>
                             </ul>
                         </div>
@@ -93,7 +95,7 @@
                     </form>
                 </div>
                 <!-- [ Nomination Student ] end -->
-                
+
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -220,14 +222,22 @@
 
         $('#submitBtn').on('click', function(e) {
             e.preventDefault();
-            $('#opt-hidden').val(1);
-            $('form').submit();
+            if (confirm(
+                    "Are you sure you want to submit these nomination details?\n\nPlease review all information carefully before proceeding. This action is final and cannot be reversed."
+                )) {
+                $('#opt-hidden').val(1);
+                $('form').submit();
+            }
         });
 
         $('#rejectBtn').on('click', function(e) {
             e.preventDefault();
-            $('#opt-hidden').val(2);
-            $('form').submit();
+            if (confirm(
+                    "Are you sure you want to reject this nomination application?\n\nPlease confirm your decision, as this action may result in processing delays."
+                )) {
+                $('#opt-hidden').val(2);
+                $('form').submit();
+            }
         });
 
         $('.notebook-container').each(function() {
@@ -400,6 +410,5 @@
                 $(this).removeClass('error-field');
             });
         });
-
     </script>
 @endsection

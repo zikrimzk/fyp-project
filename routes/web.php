@@ -165,9 +165,9 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Nomination Final Overview */
     Route::get('/nomination-final-overview-{name}', [NominationController::class, 'nominationFinalOverview'])->name('nomination-final-overview');
-    Route::get('/create-renomination-data/{nominationId}', [NominationController::class, 'renominatedStudent'])->name('renomination-data-get');
     Route::post('/update-nomination-final/{id}', [NominationController::class, 'updateFinalNomination'])->name('update-final-nomination-post');
     Route::get('/delete-nomination-final/{id}', [NominationController::class, 'deleteFinalNomination'])->name('delete-final-nomination-get');
+    Route::get('/create-renomination-data/{nomID}', [NominationController::class, 'renominateProcess'])->name('renomination-data-get');
     
     /* Nomination Management */
     Route::get('/nomination-approval-{name}', [NominationController::class, 'nominationApproval'])->name('nomination-approval');
