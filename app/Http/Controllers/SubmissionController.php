@@ -3572,7 +3572,7 @@ class SubmissionController extends Controller
     }
 
     /* Handle Signature And Status [Staff] - Function | Email : Yes With Works */
-    private function handleSignatureApprovalStatus($student, $updatedActivity, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, $isRepeatable, $type)
+    public function handleSignatureApprovalStatus($student, $updatedActivity, $updatedCorrection, $activity, $afID, $role, $hasCoSv, $updatedSignatureData, $isHaveEvaluation, $isRepeatable, $type)
     {
         /* HANDLE TARGET */
         $target = $type === 1 ? 1 : 2;

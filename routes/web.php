@@ -30,6 +30,13 @@ Route::prefix('auth')->group(function () {
     Route::post('/reset-password-{token}-{email}-{userType}', [AuthenticateController::class, 'resetPassword'])->name('reset-password');
 });
 
+Route::prefix('signatures')->middleware('auth:student,staff')->group(function () {
+
+    /* Evaluation Signature */
+    Route::get('/evaluation-signature-pad-{signature_key}-{evaluationID}-{mode}', [EvaluationController::class, 'evaluationSignaturePad'])->name('evaluation-signature-pad');
+    Route::get('/get-evaluation-signature-form', [EvaluationController::class, 'getEvaluationFormSignature'])->name('get-evaluation-signature-form-get');
+    Route::post('/submit-evaluation-signature-{evaluationID}-{mode}', [EvaluationController::class, 'submitSignatureData'])->name('submit-evaluation-signature-data-post');
+});
 
 Route::prefix('student')->middleware('auth:student')->group(function () {
 
@@ -68,8 +75,6 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     /* Student Activity Eligibility Check [WILL BE REMOVED] */
     Route::get('/student-activity-elibility-check/{matricno}/{activityid}', [SubmissionController::class, 'getStudentSubmissionEligibility'])->name('student-eligibility-check');
 });
-
-
 
 Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
@@ -168,7 +173,7 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/update-nomination-final/{id}', [NominationController::class, 'updateFinalNomination'])->name('update-final-nomination-post');
     Route::get('/delete-nomination-final/{id}', [NominationController::class, 'deleteFinalNomination'])->name('delete-final-nomination-get');
     Route::get('/create-renomination-data/{nomID}', [NominationController::class, 'renominateProcess'])->name('renomination-data-get');
-    
+
     /* Nomination Management */
     Route::get('/nomination-approval-{name}', [NominationController::class, 'nominationApproval'])->name('nomination-approval');
     Route::get('/nomination-{nomID}-{mode}', [NominationController::class, 'nominationStudent'])->name('nomination-student');

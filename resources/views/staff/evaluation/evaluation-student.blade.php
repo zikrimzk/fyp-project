@@ -92,7 +92,49 @@
                         </div>
                     </form>
                 </div>
-                <!-- [ Evaluation Student ] end -->
+
+                <div class="col-sm-12">
+                    <div class="card border-0 bg-light">
+                        <div class="card-header">
+                            <h5 class="mb-0 fw-semibold text-center">Signature Links</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                @foreach ($allRoleSignature as $sig)
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card h-100 shadow-sm border-0">
+                                            <div class="card-body text-center d-flex flex-column justify-content-between">
+                                                <!-- Label -->
+                                                <h6 class="fw-semibold mb-3">
+                                                    {{ $sig->ff_label }}
+                                                </h6>
+
+                                                <!-- QR -->
+                                                <div class="text-center">
+                                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ route('evaluation-signature-pad', ['signature_key' => Crypt::encrypt($sig->ff_signature_key), 'evaluationID' => Crypt::encrypt($evaluationID), 'mode' => $mode]) }}"
+                                                        alt="QR Code for {{ $sig->ff_label }}"
+                                                        class="img-fluid rounded shadow-sm mb-3" style="max-width: 200px;">
+                                                </div>
+
+                                                <!-- Action Buttons -->
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <button class="btn btn-outline-primary btn-sm btn-copy"
+                                                        data-url="{{ route('evaluation-signature-pad', ['signature_key' => Crypt::encrypt($sig->ff_signature_key), 'evaluationID' => Crypt::encrypt($evaluationID), 'mode' => $mode]) }}">
+                                                        <i class="fas fa-copy"></i> Copy
+                                                    </button>
+                                                    <a href="{{ route('evaluation-signature-pad', ['signature_key' => Crypt::encrypt($sig->ff_signature_key), 'evaluationID' => Crypt::encrypt($evaluationID), 'mode' => $mode]) }}"
+                                                        target="_blank" class="btn btn-outline-secondary btn-sm">
+                                                        <i class="fas fa-external-link-alt"></i> Open
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- [ Evaluation Confirmation Modal ] start -->
                 <div class="modal fade" id="confirmEvaluationModal" data-bs-backdrop="static" data-bs-keyboard="false"
@@ -130,7 +172,8 @@
                                 </p>
 
                                 <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
-                                    <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">
+                                    <button type="button" class="btn btn-outline-secondary w-100"
+                                        data-bs-dismiss="modal">
                                         Cancel
                                     </button>
                                     <a href="javascript:void(0)" class="btn btn-danger w-100" id="confirmedBtn">
@@ -143,6 +186,8 @@
                 </div>
                 <!-- [ Evaluation Confirmation Modal ] end -->
 
+
+                <!-- [ Evaluation Student ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>
@@ -182,13 +227,27 @@
             toastEl.show();
         }
 
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButtons = document.querySelectorAll('.btn-copy');
+
+            copyButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const url = this.getAttribute('data-url');
+                    navigator.clipboard.writeText(url).then(() => {
+                        showToast('success', 'Signature link copied to clipboard.');
+                    }).catch(err => {
+                        showToast('error', 'Failed to copy link. Please try again.');
+                    });
+                });
+            });
+        });
+
         /*********************************************************/
         /***************GLOBAL FUNCTION & VARIABLES***************/
         /*********************************************************/
 
         initSignaturePads();
         getEvaluationForm();
-
 
         /*********************************************************/
         /***************SIGNATURE PADS FUNCTION*******************/

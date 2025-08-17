@@ -60,16 +60,21 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Examiner-Panel Evaluation Management ] start -->
+                <!-- [ Examiner/Panel - Evaluation Management ] start -->
+
+                <!-- [ Filter Section ] Start -->
                 <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header fw-semibold table-color text-white py-2">
+                            <i class="ti ti-filter me-1"></i> FILTERS
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-3 row-cols-1 row-cols-md-3 row-cols-lg-4 align-items-end">
 
-                            <!-- [ Filter Section ] Start -->
-                            <div class="row g-3 align-items-end">
-
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Faculty --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Faculty</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_faculty_id" class="form-select">
                                             <option value="">-- Select Faculty --</option>
                                             @foreach ($facs as $fil)
@@ -86,14 +91,17 @@
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearFacFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Semester --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Semester</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_semester_id" class="form-select">
                                             <option value="">-- Select Semester --</option>
                                             @foreach ($sems as $fil)
@@ -102,42 +110,46 @@
                                                         {{ $fil->sem_label }} [Current]
                                                     </option>
                                                 @elseif($fil->sem_status == 3)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
-                                                    </option>
+                                                    <option value="{{ $fil->id }}">{{ $fil->sem_label }}</option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSemFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearSemFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Programme --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Programme</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_programme_id" class="form-select">
                                             <option value="">-- Select Programme --</option>
                                             @foreach ($progs as $fil)
                                                 @if ($fil->prog_status == 1)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->prog_code }}
+                                                    <option value="{{ $fil->id }}">{{ $fil->prog_code }}
                                                         ({{ $fil->prog_mode }})
                                                     </option>
                                                 @elseif($fil->prog_status == 2)
                                                     <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->prog_code }}
-                                                        ({{ $fil->prog_mode }}) [Inactive]</option>
+                                                        {{ $fil->prog_code }} ({{ $fil->prog_mode }}) [Inactive]
+                                                    </option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearProgFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearProgFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Status --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Status</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
                                             <option value="1">Pending</option>
@@ -146,18 +158,26 @@
                                             <option value="10">Pending : Committee/DD/Dean Approval</option>
                                             <option value="11">Rejected : Supervisor</option>
                                             <option value="12">Rejected : Committee/DD/Dean</option>
-                                            <option value="10">Final & Confirmed</option>
+                                            <option value="15">Final & Confirmed</option>
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearStatusFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearStatusFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
                             </div>
-                            <!-- [ Filter Section ] End -->
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Filter Section ] End -->
 
+                <!-- [ Datatable ] Start -->
+                <div class="col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- [ Datatable ] Start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -173,12 +193,13 @@
                                     </thead>
                                 </table>
                             </div>
-
+                            <!-- [ Datatable ] End -->
                         </div>
                     </div>
                 </div>
-                <!-- [ Examiner-Panel Evaluation Management ] end -->
+                <!-- [ Datatable ] End -->
 
+                <!-- [ Examiner/Panel - Evaluation Management ] end -->
             </div>
             <!-- [ Main Content ] end -->
         </div>

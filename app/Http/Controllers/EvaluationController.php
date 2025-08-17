@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Crypt;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\SubmissionController;
 
 
 class EvaluationController extends Controller
@@ -532,7 +533,7 @@ class EvaluationController extends Controller
                     $data->where('f.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
-                    if ($req->input('status') == 10) {
+                    if ($req->input('status') == 15) {
                         $data->where('f.evaluation_isFinal', 1);
                     } else {
                         $data->where('f.evaluation_status', $req->input('status'));
@@ -624,9 +625,7 @@ class EvaluationController extends Controller
                 });
 
                 $table->addColumn('evaluation_status', function ($row) {
-                    /* INITIALIZE STATUS VARIABLE */
-                    $status = '';
-
+                
                     /* DETERMINE STATUS BADGE BASED ON EVALUATION STATUS */
                     switch ($row->evaluation_status) {
                         case 1:
@@ -823,7 +822,7 @@ class EvaluationController extends Controller
                     $data->where('f.semester_id', $req->input('semester'));
                 }
                 if ($req->has('status') && !empty($req->input('status'))) {
-                    if ($req->input('status') == 10) {
+                    if ($req->input('status') == 15) {
                         $data->where('f.evaluation_isFinal', 1);
                     } else {
                         $data->where('f.evaluation_status', $req->input('status'));
@@ -915,8 +914,6 @@ class EvaluationController extends Controller
                 });
 
                 $table->addColumn('evaluation_status', function ($row) {
-                    /* INITIALIZE STATUS VARIABLE */
-                    $status = '';
 
                     /* DETERMINE STATUS BADGE BASED ON EVALUATION STATUS */
                     switch ($row->evaluation_status) {
@@ -980,6 +977,7 @@ class EvaluationController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
+
                     /* LOAD CURRENT SEMESTER */
                     $currentSemester = Semester::where('sem_status', 1)->first();
 
@@ -1021,6 +1019,7 @@ class EvaluationController extends Controller
                 return $table->make(true);
             }
 
+            /* RETURN VIEW */
             return view('staff.evaluation.chairman-evaluation-management', [
                 'title' => 'Chairman - Evaluation Management',
                 'studs' => Student::all(),
@@ -1030,12 +1029,13 @@ class EvaluationController extends Controller
                 'act' => $activity,
                 'data' => $data->get(),
             ]);
+            
         } catch (Exception $e) {
             return abort(500, $e->getMessage());
         }
     }
 
-    /* Evaluation Student [Evaluator] - Route */
+    /* Evaluation Student [Evaluator] - Route | Last Check: 17-08-2025 */
     public function evaluationStudent($evaluationID, $mode)
     {
         try {
@@ -1102,6 +1102,12 @@ class EvaluationController extends Controller
                 ->select('ff_signature_key')
                 ->get();
 
+            /* LOAD ALL ROLE FORM SIGNATURE KEY  */
+            $allRoleSignature = FormField::where('af_id', $actForm->id)
+                ->where('ff_category', 6)
+                ->select('ff_label', 'ff_signature_key')
+                ->get();
+
             /* LINK ASSIGNMENT */
             if ($mode == 5) {
                 $page = 'Examiner / Panel';
@@ -1116,6 +1122,7 @@ class EvaluationController extends Controller
                 'act' => $activity,
                 'actform' => $actForm,
                 'examinerSign' => $examinerSign,
+                'allRoleSignature' => $allRoleSignature,
                 'data' => $data,
                 'mode' => $mode,
                 'page' => $page,
@@ -1218,6 +1225,248 @@ class EvaluationController extends Controller
             return response()->json(['html' => $html]);
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error fetching evaluation form: ' . $e->getMessage());
+        }
+    }
+
+    /* Individual Signature Pad [Evaluator] - Route | Last Check: 17-08-2025 */
+    public function evaluationSignaturePad($signature_key, $evaluationID, $mode)
+    {
+        try {
+
+            /* DECRYPT IDs */
+            $evaluationID = decrypt($evaluationID);
+            $signature_key = decrypt($signature_key);
+
+            /* LOAD EVALUATION DATA */
+            $evaluation = Evaluation::where('id', $evaluationID)->first();
+
+            if (!$evaluation) {
+                return back()->with('error', 'Error occurred: Evaluation not found.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $evaluation->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Error occurred: Student not found.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $evaluation->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Error occurred: Activity not found.');
+            }
+
+            /* LOAD ACTIVITY FORM DATA */
+            if ($mode == 5) {
+                /* EXAMINER/PANEL */
+                $form = ActivityForm::where('activity_id', $evaluation->activity_id)
+                    ->where('af_target', 5)
+                    ->first();
+            } else if ($mode == 6) {
+                /* CHAIRMAN */
+                $form = ActivityForm::where('activity_id', $evaluation->activity_id)
+                    ->where('af_target', 4)
+                    ->first();
+            }
+
+            if (!$form) {
+                return back()->with('error', 'Error occurred: Activity form not found.');
+            }
+
+            /* LOAD EXAMINER SIGNATURE  */
+            $examinerSign = FormField::where('af_id', $form->id)
+                ->where('ff_signature_role', 8)
+                ->select('ff_signature_key')
+                ->get();
+
+            return view('staff.evaluation.evaluation-signature-pad', [
+                'title' => 'Evaluation Signature Pad',
+                'student' => $student,
+                'evaluationID' => $evaluationID,
+                'signature_key' => $signature_key,
+                'form' => $form,
+                'mode' => $mode,
+                'examinerSign' => $examinerSign,
+
+            ]);
+        } catch (Exception $e) {
+            return abort(500, $e->getMessage());
+        }
+    }
+
+    /* Get Evaluation Form Signature (Method: Input) - Function | Last Check: 17-08-2025 */
+    public function getEvaluationFormSignature(Request $req)
+    {
+        try {
+
+            /* GET IDs */
+            $mode = $req->input('mode');
+            $evaid = $req->input('evaid');
+            $afid = $req->input('afid');
+            $sigkey = $req->input('sigkey');
+
+            /* LOAD EVALUATION DATA */
+            $evaluation = Evaluation::where('id', $evaid)->first();
+
+            if (!$evaluation) {
+                return back()->with('error', 'Evaluation not found. Cannot view form. Please try again.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $evaluation->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Student not found. Cannot view form. Please try again.');
+            }
+
+            /* LOAD ACTIVITY FORM DATA */
+            $form = ActivityForm::where('id', $afid)->first();
+
+            if (!$form) {
+                return back()->with('error', 'Form not found. Cannot view form. Please try again.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $evaluation->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Activity not found. Cannot view form. Please try again.');
+            }
+
+            /* LOAD FACULTY DATA */
+            $faculty = Faculty::where('fac_status', 3)->first();
+
+            if (!$faculty) {
+                return back()->with('error', 'Faculty not found. Cannot view form. Please try again.');
+            }
+
+            /* LOAD FORM FIELD DATA */
+            $formfields = FormField::where('af_id', $form->id)
+                ->whereIn('ff_category', [2, 6])
+                ->where(function ($q) use ($sigkey) {
+                    $q->where('ff_category', '!=', 6)
+                        ->orWhere(function ($q2) use ($sigkey) {
+                            $q2->where('ff_category', 6)
+                                ->where('ff_signature_key', $sigkey);
+                        });
+                })
+                ->orderBy('ff_order')
+                ->get();
+
+            if (!$formfields) {
+                return back()->with('error', 'Form field not found. Cannot view form. Please try again.');
+            }
+
+            /* GET FORM SIGNATURE */
+            $signatures = $formfields->where('ff_category', 6);
+
+            /* GET EVALUATION SIGNATURE */
+            $signatureData = $evaluation ? json_decode($evaluation->evaluation_signature_data) : null;
+
+            /* MAPPING PROCESS - SUBSTITUTE DATA */
+            $userData = [];
+            $fhc = new FormHandlerController();
+            $userData = $fhc->joinMap($formfields, $student, $activity);
+
+            /* FETCH [EVALUATION] - EXTRA META DATA */
+            if ($evaluation && $evaluation->evaluation_meta_data) {
+                $extraData = json_decode($evaluation->evaluation_meta_data, true);
+                if (is_array($extraData)) {
+                    foreach ($extraData as $key => $value) {
+                        $normalizedKey = str_replace(' ', '_', strtolower($key));
+                        $userData[$normalizedKey] = $value ?? '-';
+                    }
+                }
+            }
+
+            $html = view('staff.sop.template.input-form', [
+                'title' => $activity->act_name . " Document",
+                'act' => $activity,
+                'form_title' => $form->af_title,
+                'formfields' => $formfields,
+                'userData' => $userData,
+                'faculty' => $faculty,
+                'signatures' => $signatures,
+                'signatureData' => $signatureData,
+                'mode' => $mode
+            ])->render();
+
+            return response()->json(['html' => $html]);
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error fetching evaluation form: ' . $e->getMessage());
+        }
+    }
+
+    /* Evaluation Signature Submission [Evaluator] - Function | Last Checked : 17-08-2025 */
+    public function submitSignatureData(Request $req, $evaluationID, $mode)
+    {
+        try {
+            /* DECRYPT PROCESS */
+            $evaluationID = decrypt($evaluationID);
+
+            /* LOAD EVALUATION DATA */
+            $evaluation = Evaluation::where('id', $evaluationID)->first();
+
+            if (!$evaluation) {
+                return back()->with('error', 'Evaluation not found. Operation could not be processed. Please try again.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $evaluation->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Student record not found. Operation could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $evaluation->activity_id)->first();
+
+            if (!$activity) {
+                return back()->with('error', 'Activity record not found. Operation could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* 
+             * LOAD ACTIVITY BASED ON MODE
+             * 5 : EXAMINER / PANEL FORM
+             * 6 : CHAIRMAN FORM
+             */
+            if ($mode == 5) {
+                $form = ActivityForm::where('activity_id', $evaluation->activity_id)
+                    ->where('af_target', 5)
+                    ->first();
+            } elseif ($mode == 6) {
+                $form = ActivityForm::where('activity_id', $evaluation->activity_id)
+                    ->where('af_target', 4)
+                    ->first();
+            }
+
+            if (!$form) {
+                return back()->with('error', 'Evaluation form not found. Operation could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* LOAD NOMINATION DATA */
+            $nomination = Nomination::where('student_id', $evaluation->student_id)
+                ->where('activity_id', $evaluation->activity_id)
+                ->whereHas('evaluators', function ($query) {
+                    $query->where('eva_status', 3);
+                })
+                ->first();
+
+            if (!$nomination) {
+                return back()->with('error', 'Active nomination record not found. Operation could not be processed. Please contact administrator for further assistance.');
+            }
+
+            /* STORE EVALUATION SIGNATURE */
+            if ($req->has('signatureData')) {
+                $this->storeEvaluationSignature($student, $form, $req->signatureData, $evaluation, $nomination, $mode);
+            }
+
+            /* RETURN ABORT */
+            return redirect()->route('main-login');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error processing evaluation signature: ' . $e->getMessage());
         }
     }
 
