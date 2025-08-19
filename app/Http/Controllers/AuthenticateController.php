@@ -252,76 +252,207 @@ class AuthenticateController extends Controller
     }
 
     /* Staff Function */
+    public function staffDashboardV1()
+    {
+        try {
+
+            // $studentBySemester = DB::table('student_semesters as a')
+            //     ->join('semesters as b', 'a.semester_id', '=', 'b.id')
+            //     ->select(
+            //         'b.sem_label',
+            //         'a.ss_status',
+            //         DB::raw('COUNT(a.student_id) as total_students')
+            //     )
+            //     ->groupBy('b.sem_label', 'a.ss_status')
+            //     ->orderBy('b.sem_label')
+            //     ->get();
+
+            // // Get latest 6 semesters with sem_status 1 or 3
+            // $semesters = DB::table('semesters')
+            //     ->whereIn('sem_status', [1, 3])
+            //     ->orderBy('sem_startdate', 'desc')
+            //     ->limit(6)
+            //     ->get();
+
+            // $currentSemester = DB::table('semesters')
+            //     ->where('sem_status', 1) // active or open semester
+            //     ->orderBy('sem_startdate', 'desc')
+            //     ->first();
+
+            // // Get student count by semester & programme (with mode)
+            // $studentByProgrammeBySemester = DB::table('student_semesters as a')
+            //     ->join('semesters as b', 'a.semester_id', '=', 'b.id')
+            //     ->join('students as c', 'a.student_id', '=', 'c.id')
+            //     ->join('programmes as d', 'c.programme_id', '=', 'd.id')
+            //     ->select(
+            //         'b.sem_label',
+            //         'd.prog_code',
+            //         'd.prog_mode',
+            //         DB::raw('COUNT(a.student_id) as total_students')
+            //     )
+            //     ->whereIn('a.semester_id', $semesters->pluck('id'))
+            //     ->groupBy('b.sem_label', 'd.prog_code', 'd.prog_mode')
+            //     ->orderBy('b.sem_startdate', 'asc')
+            //     ->get();
+
+
+            // $unassignedStudentsCount = DB::table('students as a')
+            //     ->join('student_semesters as ss', function ($join) use ($currentSemester) {
+            //         $join->on('ss.student_id', '=', 'a.id')
+            //             ->where('ss.semester_id', '=', $currentSemester->id);
+            //     })
+            //     ->leftJoin('supervisions as s', 's.student_id', '=', 'a.id')
+            //     ->where('a.student_status', 1)
+            //     ->select('a.id')
+            //     ->groupBy('a.id')
+            //     ->havingRaw('COUNT(s.staff_id) = 0')
+            //     ->get()
+            //     ->count();
+
+            // $totalStudents = DB::table('students')->count();
+            // $totalStaff = DB::table('staff')->count();
+            // $totalProgrammes = DB::table('programmes')->count();
+
+            /* SUPERVISOR DASHBOARD */
+
+            /*-- SECTION : ACTION REQUIRED --*/
+
+            /* 1.0 PENDING SUBMISSION APPROVAL [COUNT] */
+
+            /* 2.0 PENDING NOMINATION [COUNT] */
+
+            /* 3.0 PENDING EVALUATION BY ACTIVITY [COUNT] */
+
+            /* 4.0 PENDING CORRECTION APPROVAL [COUNT] */
+
+
+            /* CHAIR DASHBOARD */
+
+            /*-- SECTION : ACTION REQUIRED --*/
+
+            /* 1.0 PENDING EVALUATION BY ACTIVITY [COUNT] */
+
+
+            /* EXAMINER/PANEL DASHBOARD */
+
+            /*-- SECTION : ACTION REQUIRED --*/
+
+            /* 1.0 PENDING EVALUATION BY ACTIVITY [COUNT] */
+
+            /* 2.0 PENDING CORRECTION APPROVAL [COUNT] */
+
+
+            return view('staff.auth.staff-dashboard', [
+                'title' => 'Dashboard',
+                // 'studentBySemester' => $studentBySemester,
+                // 'studentByProgrammeBySemester' => $studentByProgrammeBySemester,
+                // 'semesters' => $semesters,
+                // 'totalStudents' => $totalStudents,
+                // 'totalStaff' => $totalStaff,
+                // 'totalProgrammes' => $totalProgrammes,
+                // 'unassignedStudentsCount' => $unassignedStudentsCount,
+            ]);
+        } catch (Exception $e) {
+            dd($e->getMessage());
+            return abort(500);
+        }
+    }
+
     public function staffDashboard()
     {
         try {
 
-            $studentBySemester = DB::table('student_semesters as a')
-                ->join('semesters as b', 'a.semester_id', '=', 'b.id')
-                ->select(
-                    'b.sem_label',
-                    'a.ss_status',
-                    DB::raw('COUNT(a.student_id) as total_students')
-                )
-                ->groupBy('b.sem_label', 'a.ss_status')
-                ->orderBy('b.sem_label')
-                ->get();
+            /* SUPERVISOR DASHBOARD */
 
-            // Get latest 6 semesters with sem_status 1 or 3
-            $semesters = DB::table('semesters')
-                ->whereIn('sem_status', [1, 3])
-                ->orderBy('sem_startdate', 'desc')
-                ->limit(6)
-                ->get();
-
-            $currentSemester = DB::table('semesters')
-                ->where('sem_status', 1) // active or open semester
-                ->orderBy('sem_startdate', 'desc')
-                ->first();
-
-            // Get student count by semester & programme (with mode)
-            $studentByProgrammeBySemester = DB::table('student_semesters as a')
-                ->join('semesters as b', 'a.semester_id', '=', 'b.id')
-                ->join('students as c', 'a.student_id', '=', 'c.id')
-                ->join('programmes as d', 'c.programme_id', '=', 'd.id')
-                ->select(
-                    'b.sem_label',
-                    'd.prog_code',
-                    'd.prog_mode',
-                    DB::raw('COUNT(a.student_id) as total_students')
-                )
-                ->whereIn('a.semester_id', $semesters->pluck('id'))
-                ->groupBy('b.sem_label', 'd.prog_code', 'd.prog_mode')
-                ->orderBy('b.sem_startdate', 'asc')
-                ->get();
-
-
-            $unassignedStudentsCount = DB::table('students as a')
-                ->join('student_semesters as ss', function ($join) use ($currentSemester) {
-                    $join->on('ss.student_id', '=', 'a.id')
-                        ->where('ss.semester_id', '=', $currentSemester->id);
+            /* IDENTIFY WHETHER STAFF IS A SUPERVISOR IN THIS SEMESTER */
+            $isSupervisor = DB::table('supervisions')
+                ->where('staff_id', auth()->user()->id)
+                ->whereExists(function ($query) {
+                    $latestSemesterSub = DB::table('student_semesters')
+                        ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
+                        ->groupBy('student_id');
+                    $query
+                        ->select(DB::raw(1))
+                        ->from('students as s')
+                        ->joinSub($latestSemesterSub, 'latest', function ($join) {
+                            $join->on('latest.student_id', '=', 's.id');
+                        })
+                        ->join('semesters as sem', 'sem.id', '=', 'latest.latest_semester_id')
+                        ->where('s.id', DB::raw('supervisions.student_id'))
+                        ->where('sem.sem_status', 1);
                 })
-                ->leftJoin('supervisions as s', 's.student_id', '=', 'a.id')
-                ->where('a.student_status', 1)
-                ->select('a.id')
-                ->groupBy('a.id')
-                ->havingRaw('COUNT(s.staff_id) = 0')
-                ->get()
-                ->count();
+                ->exists();
 
-            $totalStudents = DB::table('students')->count();
-            $totalStaff = DB::table('staff')->count();
-            $totalProgrammes = DB::table('programmes')->count();
+            /*-- SECTION : ACTION REQUIRED --*/
+
+            /* 1.0 PENDING SUBMISSION APPROVAL [COUNT] */
+            $pendingSupervisorSubmission = DB::table('student_activities as a')
+                ->join('supervisions as b', 'a.student_id', '=', 'b.student_id')
+                ->where('b.staff_id', auth()->user()->id)
+                ->where('a.sa_status', 1)
+                ->count() ?? 0;
+
+            /* 2.0 PENDING NOMINATION [COUNT] */
+            $pendingSupervisorNomination = DB::table('nominations as a')
+                ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                ->join('supervisions as c', 'a.student_id', '=', 'c.student_id')
+                ->where('c.staff_id', auth()->user()->id)
+                ->where('a.nom_status', 1)
+                ->select('b.act_name as activity_name', DB::raw('COUNT(a.id) as total_pending'))
+                ->groupBy('b.act_name')
+                ->get();
+
+            /* 3.0 PENDING EVALUATION BY ACTIVITY [COUNT] */
+            $pendingSupervisorEvaluation = DB::table('evaluations as a')
+                ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                ->join('supervisions as c', 'a.student_id', '=', 'c.student_id')
+                ->where('c.staff_id', auth()->user()->id)
+                ->where('a.evaluation_status', 9)
+                ->select('b.act_name as activity_name', DB::raw('COUNT(a.id) as total_pending'))
+                ->groupBy('b.act_name')
+                ->get();
+
+            /* 4.0 PENDING CORRECTION APPROVAL [COUNT] */
+            $pendingSupervisorCorrection = DB::table('activity_corrections as a')
+                ->join('activities as b', 'a.activity_id', '=', 'b.id')
+                ->join('supervisions as c', 'a.student_id', '=', 'c.student_id')
+                ->where('c.staff_id', auth()->user()->id)
+                ->where('a.ac_status', 2)
+                ->select('b.act_name as activity_name', DB::raw('COUNT(a.id) as total_pending'))
+                ->groupBy('b.act_name')
+                ->get();
+
+                
+            /* CHAIR DASHBOARD */
+
+            /* IDENTIFY WHETHER STAFF IS A CHAIR IN THIS SEMESTER */
+
+            /*-- SECTION : ACTION REQUIRED --*/
+
+            /* 1.0 PENDING EVALUATION BY ACTIVITY [COUNT] */
+
+
+            /* EXAMINER/PANEL DASHBOARD */
+
+            /* IDENTIFY WHETHER STAFF IS A EXAMINER/PANEL IN THIS SEMESTER */
+
+            /*-- SECTION : ACTION REQUIRED --*/
+
+            /* 1.0 PENDING EVALUATION BY ACTIVITY [COUNT] */
+
+            /* 2.0 PENDING CORRECTION APPROVAL [COUNT] */
+
 
             return view('staff.auth.staff-dashboard', [
                 'title' => 'Dashboard',
-                'studentBySemester' => $studentBySemester,
-                'studentByProgrammeBySemester' => $studentByProgrammeBySemester,
-                'semesters' => $semesters,
-                'totalStudents' => $totalStudents,
-                'totalStaff' => $totalStaff,
-                'totalProgrammes' => $totalProgrammes,
-                'unassignedStudentsCount' => $unassignedStudentsCount,
+
+                /* SUPERVISOR DASHBOARD */
+                'isSupervisor' => $isSupervisor,
+                'pendingSupervisorSubmission' => $pendingSupervisorSubmission,
+                'pendingSupervisorNomination' => $pendingSupervisorNomination,
+                'pendingSupervisorEvaluation' => $pendingSupervisorEvaluation,
+                'pendingSupervisorCorrection' => $pendingSupervisorCorrection,
+
             ]);
         } catch (Exception $e) {
             dd($e->getMessage());
@@ -639,7 +770,7 @@ class AuthenticateController extends Controller
                 /* RETURN SUCCESS */
                 return back()->with('success', 'Password has been updated successfully.');
             } else {
-                
+
                 /* RETURN ERROR */
                 return back()->with('error', 'Please enter the correct password.');
             }

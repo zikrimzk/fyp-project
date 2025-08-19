@@ -11,21 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('procedures', function (Blueprint $table) {
-            $table->foreignId('activity_id')->constrained('activities');
-            $table->foreignId('programme_id')->constrained('programmes');;
-            $table->integer('act_seq');
-            $table->integer('timeline_sem');
-            $table->integer('timeline_week');
-            $table->integer('init_status')->default(2)->comment('1-Open Always 2-Locked');
-            $table->integer('is_repeatable')->default(0)->comment('1-Yes 0-No');
-            $table->integer('is_haveJournalPublication')->default(0)->comment('1-Yes 0-No');
-            $table->integer('is_haveEva')->default(0)->comment('1-Yes 0-No');
-            $table->text('material')->nullable();
-            $table->timestamps();
-        });
-
-
          Schema::create('procedures', function (Blueprint $table) {
             $table->foreignId('activity_id')->constrained('activities');
             $table->foreignId('programme_id')->constrained('programmes');
