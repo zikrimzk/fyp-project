@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SOPController;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\NominationController;
@@ -324,4 +325,32 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
 
     /* Evaluation Management */
     Route::get('/chairman-evaluation-{name}', [EvaluationController::class, 'chairmanEvaluation'])->name('chairman-evaluation');
+});
+
+
+/* SERVER SETTING ROUTE [WILL BE REMOVED UPON DEPLOYED] */
+Route::get('/artisan/{cmd}/{key}', function ($cmd, $key) {
+    $secret = 'zikri123';
+
+    if ($key !== $secret) {
+        abort(403, 'Unauthorized');
+    }
+
+    $allowed = [
+        'migrate'       => 'migrate --force',
+        'migrate-fresh' => 'migrate:fresh --force',
+        'key'           => 'key:generate',
+        'cache'         => 'config:cache',
+        'route'         => 'route:cache',
+        'view'          => 'view:cache',
+        'storage'       => 'storage:link',
+        'optimize'      => 'optimize:clear',
+    ];
+
+    if (!array_key_exists($cmd, $allowed)) {
+        return "Command not allowed.";
+    }
+
+    Artisan::call($allowed[$cmd]);
+    return nl2br(Artisan::output());
 });
