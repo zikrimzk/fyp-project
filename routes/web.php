@@ -337,20 +337,27 @@ Route::get('/artisan/{cmd}/{key}', function ($cmd, $key) {
     }
 
     $allowed = [
-        'migrate'       => 'migrate --force',
-        'migrate-fresh' => 'migrate:fresh --force',
-        'key'           => 'key:generate',
-        'cache'         => 'config:cache',
-        'route'         => 'route:cache',
-        'view'          => 'view:cache',
-        'storage'       => 'storage:link',
-        'optimize'      => 'optimize:clear',
+        'migrate'        => 'migrate --force',
+        'migrate-fresh'  => 'migrate:fresh --force',
+        'key'            => 'key:generate',
+        'cache'          => 'config:cache',
+        'route'          => 'route:cache',
+        'view'           => 'view:cache',
+        'storage'        => 'storage:link',
+        'optimize'       => 'optimize:clear',
+        'composer'       => 'composer install --no-interaction --prefer-dist --optimize-autoloader',
     ];
 
     if (!array_key_exists($cmd, $allowed)) {
         return "Command not allowed.";
     }
 
-    Artisan::call($allowed[$cmd]);
-    return nl2br(Artisan::output());
+    // Run artisan or composer based on command
+    if ($cmd === 'composer') {
+        exec($allowed[$cmd] . ' 2>&1', $output, $returnVar);
+        return nl2br(implode("\n", $output));
+    } else {
+        Artisan::call($allowed[$cmd]);
+        return nl2br(Artisan::output());
+    }
 });
