@@ -5,7 +5,7 @@
     <title>e-PostGrad | Login</title>
     <!-- [Meta] -->
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.9, user-scalable=no">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="description" content="e-PostGrad System - Postgraduate Document Management Portal" />
@@ -187,7 +187,7 @@
             padding: 0.25rem;
             font-size: 1.1rem;
             transition: color 0.2s ease;
-            
+
         }
 
         .password-toggle:hover {
@@ -377,11 +377,12 @@
                 padding-bottom: 2rem;
             }
 
+            /*
             .form-options {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items:fl;
                 gap: 0.75rem;
-            }
+            } */
 
             .system-title {
                 font-size: 1.75rem;
@@ -408,7 +409,7 @@
                     <img src="../assets/images/logo-utem.PNG" alt="University Teknikal Malaysia Melaka" />
                 </div>
 
-                 <div class="welcome-section">
+                <div class="welcome-section">
                     <h2>e-PostGrad System</h2>
                     <p>Please sign in to your account to access the system.</p>
                 </div>
@@ -422,7 +423,7 @@
                     @if (session()->has('success'))
                         <div class="alert alert-success d-flex align-items-center" id="success-alert">
                             <div>
-                            <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check-circle"></i>
 
                                 <span id="success-message">{{ session('success') }}</span>
                             </div>
@@ -432,7 +433,7 @@
                     @if (session()->has('error'))
                         <div class="alert alert-danger d-flex align-items-center" id="error-alert">
                             <div>
-                            <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle"></i>
 
                                 <span id="error-message">{{ session('error') }}</span>
                             </div>
@@ -481,7 +482,8 @@
             <div class="footer-info">
                 <p>
                     <strong>University Teknikal Malaysia Melaka</strong><br>
-                    For technical support, contact b032320063@student.utem.edu.my
+                    For technical support, contact 
+                    <a href="mailto:e-postgrad@appnest.my" style="text-decoration: none; color: var(--primary-color); display: block;">e-postgrad@appnest.my</a>
                 </p>
             </div>
         </div>
