@@ -27,7 +27,6 @@ return new class extends Migration
             $table->string('student_titleOfResearch')->nullable();
             $table->integer('student_semcount')->default(0)->comment('Start with Semester 0');
             $table->integer('student_opcode')->default(1);
-            $table->foreignId('semester_id')->constrained('semesters');
             $table->foreignId('programme_id')->constrained('programmes');
             $table->rememberToken();
             $table->timestamps();
