@@ -61,7 +61,7 @@
                     <div class="card">
                         <div class="card-body">
 
-                            <!-- [ Procedure Setup Guidelines ] start -->
+                            {{-- <!-- [ Procedure Setup Guidelines ] start -->
                             <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
                                 <i class="ti ti-info-circle fs-3"></i>
                                 <div class="w-100">
@@ -94,7 +94,7 @@
                                     </ul>
                                 </div>
                             </div>
-                            <!-- [ Procedure Setup Guidelines ] start -->
+                            <!-- [ Procedure Setup Guidelines ] start --> --}}
 
                             <!-- [ Option Section ] start -->
                             <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
@@ -106,6 +106,8 @@
                                 </button>
                             </div>
                             <!-- [ Option Section ] end -->
+
+                            <!-- [ Data Table ] start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -124,6 +126,7 @@
                                     </thead>
                                 </table>
                             </div>
+                            <!-- [ Data Table ] end -->
                         </div>
                     </div>
                 </div>
@@ -357,9 +360,9 @@
                                                     required>
                                                     <option value="">- Select Option -</option>
                                                     <option value="1"
-                                                        @if (old('is_haveEva') == 1) selected @endif>Yes</option>
-                                                    <option value="2"
-                                                        @if (old('is_haveEva') == 0) selected @endif>No</option>
+                                                        @if (old('is_haveEva') === 1) selected @endif>Yes</option>
+                                                    <option value="0"
+                                                        @if (old('is_haveEva') === 0) selected @endif>No</option>
                                                 </select>
                                                 @error('is_haveEva')
                                                     <div class="invalid-feedback">{{ $message }}</div>

@@ -368,8 +368,10 @@ class SOPController extends Controller
         }
     }
 
+    /* Add Procedure [Staff] - Function | Last Checked: 23-08-2025  */
     public function addProcedure(Request $req)
     {
+        /* VALIDATE DATA FROM REQUEST */
         $validator = Validator::make($req->all(), [
             'activity_id'               => 'required|integer|exists:activities,id',
             'programme_id'              => 'required|integer|exists:programmes,id',
@@ -399,18 +401,24 @@ class SOPController extends Controller
             'material'                  => 'material',
         ]);
 
+        /* RETURN ERROR IF VALIDATION FAILS */
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
                 ->with('modal', 'addModal');
         }
+
         try {
 
-            $validated = $validator->validated();
-
+            /* DECLARE VARIABLES */
             $fileName = "";
             $filePath = "";
+
+            /* LOAD VALIDATED DATA */
+            $validated = $validator->validated();
+
+            /* CHECK IF EXISTING */
             $checkExists = Procedure::where('activity_id', $validated['activity_id'])
                 ->where('programme_id', $validated['programme_id'])
                 ->exists();
@@ -419,28 +427,37 @@ class SOPController extends Controller
                 return back()->with('error', 'Procedure already exists for this activity and programme.');
             }
 
-            // 1 - GET THE DATA
-            $activity = Activity::findOrFail($validated['activity_id']);
-            $programme = Programme::findOrFail($validated['programme_id']);
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $validated['activity_id'])->first();
 
-            // 2 - CALL THE DATA
+            if (!$activity) {
+                return back()->with('error', 'Error occured: Activity not found.');
+            }
+
+            /* LOAD PROGRAMME DATA */
+            $programme = Programme::where('id', $validated['programme_id'])->first();
+
+            if (!$programme) {
+                return back()->with('error', 'Error occured: Programme not found.');
+            }
+
+            /* GET ACTIVITY & PROGRAMME NAME */
             $act_name = $activity->act_name ?? 'N/A';
             $prog_code = $programme->prog_code ?? 'N/A';
             $prog_mode = $programme->prog_mode ?? 'N/A';
 
             if ($req->hasFile('material')) {
 
-                // 3 - SET & DECLARE FILE ROUTE
+                /* SET FILE NAME & PATH */
                 $fileName = Str::upper(str_replace(' ', '', $act_name) . '_' . $prog_code . '(' . $prog_mode . ')') . '.pdf';
                 $filePath = "Activity/{$activity->act_name}/Material/";
 
-                // 4 - SAVE THE FILE
-
+                /* SAVE THE FILE */
                 $file = $req->file('material');
                 $file->storeAs($filePath, $fileName, 'public');
             }
 
-
+            /* CREATE PROCEDURE DATA */
             Procedure::create([
                 'activity_id'               => $validated['activity_id'],
                 'programme_id'              => $validated['programme_id'],
@@ -456,17 +473,21 @@ class SOPController extends Controller
                 'material'                  => $filePath . $fileName,
             ]);
 
+            /* RETURN SUCCESS */
             return back()->with('success', 'Procedure for ' . $act_name . ' - ' . $prog_code . ' (' . $prog_mode . ') added successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error adding procedure: ' . $e->getMessage());
         }
     }
 
+    /* Update Procedure [Staff] - Function | Last Checked: 23-08-2025  */
     public function updateProcedure(Request $req, $actID, $progID)
     {
+        /* DECRYPTS IDs */
         $actID = decrypt($actID);
         $progID = decrypt($progID);
 
+        /* VALIDATE DATA FROM REQUEST */
         $validator = Validator::make($req->all(), [
             'activity_type_up'             => 'required|integer|in:1,2',
             'act_seq_up'                   => 'required|integer|min:1',
@@ -491,6 +512,7 @@ class SOPController extends Controller
             'material_up'                  => 'material',
         ]);
 
+        /* RETURN ERROR IF VALIDATION FAILS */
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
@@ -499,37 +521,49 @@ class SOPController extends Controller
         }
 
         try {
-
+            /* LOAD VALIDATED DATA */
+            $validated = $validator->validated();
             $validated = $validator->validated();
 
-            // 1 - GET THE DATA
-            $activity = Activity::findOrFail($actID);
-            $programme = Programme::findOrFail($progID);
+            /* LOAD ACTIVITY DATA */
+            $activity = Activity::where('id', $actID)->first();
 
-            // 2 - CALL THE DATA
+            if (!$activity) {
+                return back()->with('error', 'Error occured: Activity not found.');
+            }
+
+            /* LOAD PROGRAMME DATA */
+            $programme = Programme::where('id', $progID)->first();
+
+            if (!$programme) {
+                return back()->with('error', 'Error occured: Programme not found.');
+            }
+
+            /* GET ACTIVITY & PROGRAMME NAME */
             $act_name = $activity->act_name ?? 'N/A';
             $prog_code = $programme->prog_code ?? 'N/A';
             $prog_mode = $programme->prog_mode ?? 'N/A';
 
             if ($req->hasFile('material_up')) {
 
-                // 3 - SET & DECLARE FILE ROUTE
+                /* SET FILE NAME & PATH */
                 $fileName = Str::upper(str_replace(' ', '', $act_name) . '_' . $prog_code . '(' . $prog_mode . ')') . '.pdf';
                 $filePath = "Activity/{$activity->act_name}/Material/";
 
-                // 4 - CHECK FOR OLD FILE
+                /* LOAD AND DELETE OLD FILE */
                 $oldMaterial = Procedure::where('activity_id', $actID)->where('programme_id', $progID)->value('material');
                 if ($oldMaterial && Storage::exists($oldMaterial)) {
                     Storage::delete($oldMaterial);
                 }
 
-                // 5 - SAVE NEW FILE
+                /* SAVE NEW FILE */
                 $filepath = $req->file('material_up')->storeAs($filePath, $fileName, 'public');
                 Procedure::where('activity_id', $actID)->where('programme_id', $progID)->update([
                     'material' => $filepath
                 ]);
             }
 
+            /* UPDATE PROCEDURE */
             Procedure::where('activity_id', $actID)->where('programme_id', $progID)->update([
                 'activity_type'             => $validated['activity_type_up'],
                 'act_seq'                   => $validated['act_seq_up'],
@@ -542,33 +576,52 @@ class SOPController extends Controller
                 'evaluation_mode'           => $validated['evaluation_mode_up'] ?? null,
             ]);
 
+            /* RETURN SUCCESS */
             return back()->with('success', 'Procedure for ' . $act_name . ' - ' . $prog_code . '(' . $prog_mode . ')' . ' updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating procedure: ' . $e->getMessage());
         }
     }
 
+    /* Delete Procedure [Staff] - Function | Last Checked: 23-08-2025  */
     public function deleteProcedure($actID, $progID)
     {
+        /* DECRYPTS IDs */
+        $actID = Crypt::decrypt($actID);
+        $progID = Crypt::decrypt($progID);
+
         try {
-            $actID = decrypt($actID);
-            $progID = decrypt($progID);
-            Procedure::where('activity_id', $actID)->where('programme_id', $progID)->delete();
+            /* LOAD PROCEDURE DATA */
+            $procedure = Procedure::where('activity_id', $actID)->where('programme_id', $progID)->first();
+
+            if (!$procedure) {
+                return back()->with('error', 'Error occured: Procedure not found.');
+            }
+
+            /* DELETE PROCEDURE DATA */
+            $procedure->delete();
+
+            /* RETURN SUCCESS */
             return back()->with('success', 'Procedure deleted successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error deleting procedure: ' . $e->getMessage());
         }
     }
 
+    /* View Material File [Staff] - Route | Last Checked: 23-08-2025  */
     public function viewMaterialFile($filename)
     {
+        /* DECRYPTS IDs */
         $filename = Crypt::decrypt($filename);
+
+        /* SET AND LOAD FILE PATH */
         $path = storage_path("app/public/{$filename}");
 
         if (!file_exists($path)) {
             abort(404, 'File not found.');
         }
 
+        /* RETURN FILE */
         return response()->file($path);
     }
 
