@@ -2542,13 +2542,13 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Add Submission [Staff] - Function | Last Checked: 17-08-2025  */
+    /* Add Submission [Staff] - Function | Last Checked: 23-08-2025  */
     public function addSubmission(Request $req)
     {
         /* VALIDATE DATA FROM REQUEST */
         $validator = Validator::make($req->all(), [
             'submission_status' => 'required|integer|in:1,2,3,4,5',
-            'submission_duedate' => 'required',
+            'submission_duedate' => 'required|date|after_or_equal:today',
             'student_id' => 'required',
             'document_id' => 'required',
 
@@ -2577,12 +2577,14 @@ class SubmissionController extends Controller
 
             /* LOAD STUDENT DATA */
             $student = Student::find($req->student_id);
+
             if (!$student) {
                 return back()->with('error', 'Error occurred: Student not found.');
             }
 
             /* LOAD DOCUMENT DATA */
             $document = Document::find($req->document_id);
+
             if (!$document) {
                 return back()->with('error', 'Error occurred: Document not found.');
             }
@@ -2594,7 +2596,7 @@ class SubmissionController extends Controller
                 ->exists();
 
             if ($checkExists) {
-                return back()->with('error', $student->student_name . ' submission for ' . $document->doc_name . ' has already been addded for this semester.');
+                return back()->with('error', $student->student_name . ' submission for ' . $document->doc_name . ' has already been added for this semester.');
             }
 
             /* DETERMINE AND SET SUBMISSION STATUS */
@@ -2626,10 +2628,13 @@ class SubmissionController extends Controller
         }
     }
 
+    /* Update Submission [Staff] - Function | Last Checked: 23-08-2025  */
     public function updateSubmission(Request $req, $id)
     {
+        /* DECRYPT ID */
         $id = decrypt($id);
 
+        /* VALIDATE DATA FROM REQUEST */
         $validator = Validator::make($req->all(), [
             'submission_status_up' => 'required|integer|in:1,2,3,4,5',
             'submission_duedate_up' => 'required',
@@ -2638,6 +2643,7 @@ class SubmissionController extends Controller
             'submission_duedate_up' => 'submission due date',
         ]);
 
+        /* RETURN ERROR IF VALIDATION FAILS */
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
@@ -2647,7 +2653,28 @@ class SubmissionController extends Controller
 
         try {
 
-            // DETERMINE SUBMISSION STATUS
+            /* LOAD SUBMISSION DATA */
+            $submission = Submission::where('id', $id)->first();
+
+            if (!$submission) {
+                return back()->with('error', 'Error occurred: Submission not found.');
+            }
+
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $submission->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Error occurred: Student not found.');
+            }
+
+            /* LOAD DOCUMENT DATA */
+            $document = Document::where('id', $submission->document_id)->first();
+
+            if (!$document) {
+                return back()->with('error', 'Error occurred: Document not found.');
+            }
+
+            /* DETERMINE AND SET SUBMISSION STATUS */
             $sub_status = 1;
             if (Carbon::parse($req->submission_duedate_up)->lessThan(now()) && ($req->submission_status_up == 1 || $req->submission_status_up == 4)) {
                 $sub_status = 4;
@@ -2659,40 +2686,61 @@ class SubmissionController extends Controller
                 $sub_status = $req->submission_status_up;
             }
 
-            Submission::where('id', $id)->update([
+            /* UPDATE SUBMISSION */
+            $submission->update([
                 'submission_status' =>  $sub_status,
                 'submission_duedate' => $req->submission_duedate_up
             ]);
 
-            return back()->with('success', 'Submission has been updated successfully.');
+            /* RETURN SUCCESS */
+            return back()->with('success', $student->student_name . ' submission for ' . $document->doc_name . ' has been updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating submission: ' . $e->getMessage());
         }
     }
 
+    /* Archive or Unarchive Submission [Staff] - Function | Last Checked: 23-08-2025  */
     public function archiveSubmission($id, $opt)
     {
+        /* DECRYPT ID */
+        $id = decrypt($id);
+
         try {
-            $id = decrypt($id);
+            /* LOAD SUBMISSION DATA */
             $submission = Submission::where('id', $id)->first();
 
-            if ($opt == 1) // Archive Submission
-            {
-                $submission->update(['submission_status' => 5]);
+            if (!$submission) {
+                return back()->with('error', 'Error occurred: Submission not found.');
+            }
 
-                $message = "Submission has been archived successfully.";
-            } elseif ($opt == 2) // Unarchive Submission
-            {
+            /* LOAD STUDENT DATA */
+            $student = Student::where('id', $submission->student_id)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Error occurred: Student not found.');
+            }
+
+            /* LOAD DOCUMENT DATA */
+            $document = Document::where('id', $submission->document_id)->first();
+
+            if (!$document) {
+                return back()->with('error', 'Error occurred: Document not found.');
+            }
+
+            /* ARCHIVE OR UNARCHIVE SUBMISSION */
+            if ($opt == 1) {
+                $submission->update(['submission_status' => 5]);
+                $message = $student -> student_name . ' submission for ' . $document->doc_name . " has been archived successfully.";
+            } elseif ($opt == 2) {
                 if ($submission->submission_date == null) {
                     $submission->update(['submission_status' => 2]);
                 } else {
                     $submission->update(['submission_status' => 3]);
                 }
-
-                $message = "Submission has been unarchived successfully.";
+                $message = $student -> student_name . ' submission for ' . $document->doc_name . " has been unarchived successfully.";
             }
 
-
+            /* RETURN SUCCESS */
             return back()->with('success', $message);
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error archiving submission: ' . $e->getMessage());
