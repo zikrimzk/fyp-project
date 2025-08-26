@@ -1011,9 +1011,9 @@ class NominationController extends Controller
 
                 /* RETURN REDIRECT BASED ON MODE */
                 if ($mode == 1) {
-                    return redirect()->route('my-supervision-nomination', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination submitted successfully!');
+                    return redirect()->route('my-supervision-nomination', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination submitted successfully.');
                 } else if ($mode == 2 || $mode == 3 || $mode == 4) {
-                    return redirect()->route('nomination-approval', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination submitted successfully!');
+                    return redirect()->route('nomination-approval', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination submitted successfully.');
                 } else {
                     return back()->with('error', 'Error submitting nomination: Invalid Request. Please try again.');
                 }
@@ -1021,7 +1021,7 @@ class NominationController extends Controller
                 $nomination->nom_status = 5;
                 $nomination->save();
                 if ($mode == 3 || $mode == 4) {
-                    return redirect()->route('nomination-approval', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination rejected successfully!');
+                    return redirect()->route('nomination-approval', strtolower(str_replace(' ', '-',  $activity->act_name)))->with('success', 'Nomination rejected successfully.');
                 } else {
                     return back()->with('error', 'Error submitting nomination: Invalid Request. Please try again.');
                 }

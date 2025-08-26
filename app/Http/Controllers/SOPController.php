@@ -592,9 +592,9 @@ class SOPController extends Controller
 
         try {
             /* LOAD PROCEDURE DATA */
-            $procedure = Procedure::where('activity_id', $actID)->where('programme_id', $progID)->first();
+            $procedure = Procedure::where('activity_id', $actID)->where('programme_id', $progID);
 
-            if (!$procedure) {
+            if (!$procedure->exists()) {
                 return back()->with('error', 'Error occured: Procedure not found.');
             }
 

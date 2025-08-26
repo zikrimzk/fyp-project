@@ -1757,14 +1757,14 @@ class EvaluationController extends Controller
             /* REDIRECT BASED ON MODE */
             if ($mode == 5) {
                 return redirect()->route('examiner-panel-evaluation', strtolower(str_replace(' ', '-', $activity->act_name)))
-                    ->with('success', 'Evaluation submitted successfully!');
+                    ->with('success', 'Evaluation submitted successfully.');
             } else if ($mode == 6) {
                 return redirect()->route('chairman-evaluation', strtolower(str_replace(' ', '-', $activity->act_name)))
-                    ->with('success', 'Evaluation submitted successfully!');
+                    ->with('success', 'Evaluation submitted successfully.');
             }
 
             /* RETURN ABORT */
-            return abort(404, 'Inavalid request. Please try again.');
+            return abort(404, 'Invalid request. Please try again.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error submitting evaluation: ' . $e->getMessage());
         }

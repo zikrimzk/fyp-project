@@ -68,7 +68,7 @@
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
-                            
+
                             <!-- [ Form Setting Guidelines ] start -->
                             <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
                                 <i class="ti ti-info-circle fs-3"></i>
@@ -96,6 +96,7 @@
                             </div>
                             <!-- [ Form Setting Guidelines ] end -->
 
+                            <!-- [ Datatable ] start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -112,6 +113,8 @@
                                     </thead>
                                 </table>
                             </div>
+                            <!-- [ Datatable ] end -->
+
                         </div>
                     </div>
                 </div>
@@ -138,14 +141,18 @@
                                                 </select>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="txt_label" class="form-label">Form Title</label>
+                                                <label for="txt_label" class="form-label">
+                                                    Form Title <span class="fw-bold text-danger">*</span>
+                                                </label>
                                                 <input type="text" name="form_title"
                                                     id="txt_form_title-{{ $act->id }}" class="form-control"
                                                     placeholder="Enter Form Title">
                                             </div>
 
                                             <div class="mb-3">
-                                                <label for="txt_label" class="form-label">Form Target</label>
+                                                <label for="txt_label" class="form-label">
+                                                    Form Target <span class="fw-bold text-danger">*</span>
+                                                </label>
                                                 <select name="select_form_target" class="form-select"
                                                     id="select_form_target-{{ $act->id }}">
                                                     <option value="" selected>-- Select Target --</option>
@@ -158,7 +165,9 @@
                                             </div>
 
                                             <div class="mb-3">
-                                                <label for="txt_label" class="form-label">Form Status</label>
+                                                <label for="txt_label" class="form-label">
+                                                    Form Status <span class="fw-bold text-danger">*</span>
+                                                </label>
                                                 <select name="select_form_status" class="form-select"
                                                     id="select_form_status-{{ $act->id }}">
                                                     <option value="" selected>-- Select Status --</option>
