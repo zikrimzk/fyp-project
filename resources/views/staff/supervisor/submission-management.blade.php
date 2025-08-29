@@ -244,7 +244,6 @@
                             </div>
                             <!-- [ Option Section ] end -->
 
-
                             <!-- [ Datatable ] start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
@@ -268,7 +267,6 @@
                 </div>
                 <!-- [ Main Content ] end -->
 
-
                 <!-- [ Export Modal ] start -->
                 <form action="{{ route('export-my-supervision-submission-data-get') }}" method="GET" id="exportForm">
                     <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel"
@@ -279,7 +277,7 @@
                                 <!-- Header -->
                                 <div class="modal-header">
                                     <h5 class="modal-title fw-bold" id="exportModalLabel">
-                                        Export Submission Data
+                                        Export Submission
                                     </h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>

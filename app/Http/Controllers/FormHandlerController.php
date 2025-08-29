@@ -281,7 +281,10 @@ class FormHandlerController extends Controller
 
             /* REPORT MODULE
              * 1 : SUBMISSION
-             * 2 : -
+             * 2 : FINAL SUBMISSION
+             * 3 : FINAL NOMINATION
+             * 4 : FINAL EVALUATION
+             * 5 : FINAL CORRECTION
             */
 
             /* LOAD FACULTY DATA */
@@ -312,7 +315,7 @@ class FormHandlerController extends Controller
 
             return abort(404, 'Failed to generate report. Please contact administrator for further assistance.');
         } catch (Exception $e) {
-            return back()->with('error', 'Failed to generate report. Please contact administrator for further assistance.');
+            return back()->with('error', 'Failed to generate report. Please contact administrator for further assistance. ' . $e->getMessage());
         }
     }
 }

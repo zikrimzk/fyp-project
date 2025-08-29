@@ -499,7 +499,7 @@ class SupervisorController extends Controller
             /* EXPORT */
             if ($req->export_opt_id == 1) {
                 /* GENERATE REPORT */
-                $generatedReport = $fc->generateReport('SUBMISSION LIST', $groupedData, $type, 'landscape', 'E-PGS_MYSUPERVISION_SUBMISSION_LIST.pdf', 2, 1);
+                $generatedReport = $fc->generateReport('SUBMISSION LIST', $groupedData, $type, 'landscape', 'E-PGS_MYSUPERVISION_SUBMISSION_LIST.pdf', 1, 1);
 
                 /* RETURN GENERATED REPORT */
                 return $generatedReport;

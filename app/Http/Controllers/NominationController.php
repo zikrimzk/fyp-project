@@ -390,6 +390,122 @@ class NominationController extends Controller
         }
     }
 
+    /* Export Final Nomination - Function | Last Checked: 29-08-2025 | [WORK IN PROGRESS] */
+    public function exportFinalNomination(Request $req)
+    {
+        try {
+            /* LOAD NOMINATION DATA */
+            $nominations = DB::table('nominations as a')
+                ->join('activities as b', 'b.id', '=', 'a.activity_id')
+                ->join('students as c', 'c.id', '=', 'a.student_id')
+                ->join('semesters as d', 'd.id', '=', 'a.semester_id')
+                ->select(
+                    'a.id as nom_id',
+                    'b.act_name',
+                    'c.student_name',
+                    'c.student_matricno',
+                    'd.sem_label',
+                    'a.nom_status',
+                    'a.nom_date'
+                )
+                ->where('b.id', '=', $req->ex_activity_id);
+
+            /* CONDITION FILTER - SEMESTER */
+            if ($req->ex_semester_id) {
+                $nominations->where('semester_id', $req->ex_semester_id);
+            }
+
+            /* CONDITION FILTER - NOMINATION STATUS */
+            if ($req->ex_nom_status == 1) {
+                /* STATUS 1 : PENDING */
+                $nominations->where('a.nom_status', 1);
+                $type = "Pending";
+            } elseif ($req->ex_nom_status == 2) {
+                /* STATUS 2 : NOMINATED - SV */
+                $nominations->where('a.nom_status', 2);
+                $type = "Nominated - SV";
+            } elseif ($req->ex_nom_status == 3) {
+                /* STATUS 3 : REVIEWED - COMMITTEE */
+                $nominations->where('a.nom_status', 3);
+                $type = "Reviewed - Committee";
+            } elseif ($req->ex_nom_status == 4) {
+                /* STATUS 4 : APPROVED & ACTIVE */
+                $nominations->where('a.nom_status', 4);
+                $type = "Approved & Active";
+            } elseif ($req->ex_nom_status == 5) {
+                /* STATUS 5 : REJECTED */
+                $nominations->where('a.nom_status', 5);
+                $type = "Rejected";
+            } elseif ($req->ex_nom_status == 6) {
+                /* STATUS 6 : APPROVED & INACTIVE */
+                $nominations->where('a.nom_status', 6);
+                $type = "Approved & Inactive";
+            } else {
+                /* DEFAULT : ALL NOMINATIONS */
+                $nominations->whereIn('a.nom_status', [1, 2, 3, 4, 5, 6]);
+                $type = "All Nominations List";
+            }
+
+            /* GET THE DATA */
+            $nominations = $nominations->get();
+
+            /* MAP NOMINATION STATUS CODES TO LABELS */
+            $nominations->transform(function ($item) {
+                switch ($item->nom_status) {
+                    case 1:
+                        /* STATUS 1 : PENDING */
+                        $item->nom_status_label = 'Pending';
+                        break;
+                    case 2:
+                        /* STATUS 2 : NOMINATED - SV */
+                        $item->nom_status_label = 'Nominated - SV';
+                        break;
+                    case 3:
+                        /* STATUS 3 : REVIEWED - COMMITTEE */
+                        $item->nom_status_label = 'Reviewed - Committee';
+                        break;
+                    case 4:
+                        /* STATUS 4 : APPROVED & ACTIVE */
+                        $item->nom_status_label = 'Approved & Active';
+                        break;
+                    case 5:
+                        /* STATUS 5 : REJECTED */
+                        $item->nom_status_label = 'Rejected';
+                        break;
+                    case 6:
+                        /* STATUS 6 : APPROVED & INACTIVE */
+                        $item->nom_status_label = 'Approved & Inactive';
+                        break;
+                    default:
+                        /* UNKNOWN NOMINATION STATUS */
+                        $item->nom_status_label = 'Unknown';
+                        break;
+                }
+                return $item;
+            });
+
+            /* GROUP AFTER LABELING */
+            $groupedData = $nominations->groupBy('act_name');
+
+            $fc = new FormHandlerController();
+
+            /* EXPORT */
+            if ($req->export_opt_id == 1) {
+                /* GENERATE REPORT */
+                $generatedReport = $fc->generateReport('FINAL NOMINATION LIST', $groupedData, $type, 'landscape', 'E-PGS_FINAL_NOMINATION_LIST.pdf', 1, 3);
+
+                /* RETURN GENERATED REPORT */
+                return $generatedReport;
+            } elseif ($req->export_opt_id == 2) {
+                return $this->exportAsExcel($groupedData);
+            } else {
+                return back()->with('error', 'Invalid export format.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
+        }
+    }
+
     /* Nomination Management [Staff] - Route | Last Checked: 16-08-2025 */
     public function nominationApproval(Request $req, $name)
     {

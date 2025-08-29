@@ -175,10 +175,24 @@
                 </div>
                 <!-- [ Filter Section ] End -->
 
-                <!-- [ Datatable ] Start -->
+                <!-- [ Datatable & Option ] Start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
+                            <!-- [ Option Section ] start -->
+                            <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#exportModal" id="exportModalBtn"
+                                    title="Export Data">
+                                    <i class="ti ti-file-export f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Export Data
+                                    </span>
+                                </button>
+                            </div>
+                            <!-- [ Option Section ] end -->
+
+                            <!-- [ Datatable ] start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -194,10 +208,12 @@
                                     </thead>
                                 </table>
                             </div>
+                            <!-- [ Datatable ] end -->
+
                         </div>
                     </div>
                 </div>
-                <!-- [ Datatable ] End -->
+                <!-- [ Datatable & Option ] End -->
 
                 @foreach ($nomination as $upd)
                     <!-- [ Update Modal ] start -->
@@ -409,12 +425,14 @@
 
                                                 <ul class="mb-4 ps-3">
                                                     <li><strong>Update nomination details</strong> for the current semester
-                                                        (e.g., modifying examiner or panel information, correcting data).
+                                                        (e.g., modifying examiner or panel information, correcting data)
+                                                        .
                                                     </li>
                                                     <li><strong>Re-nominate the student</strong> because they need to
                                                         <strong>re-present or re-submit</strong> a previous activity.
                                                         Evaluators may remain the same, but a fresh nomination record is
-                                                        required.</li>
+                                                        required.
+                                                    </li>
                                                 </ul>
 
                                                 <div class="border-start border-3 border-dark ps-3 mb-4">
@@ -424,7 +442,8 @@
                                                         <li>Duplicate this nomination as a <strong>new record</strong> for
                                                             the current semester.</li>
                                                         <li>Change the old record status from <em>Approved & Active</em> →
-                                                            <em>Approved & Inactive</em>.</li>
+                                                            <em>Approved & Inactive</em>.
+                                                        </li>
                                                         <li>Retain the original nomination as reference.</li>
                                                         <li>Require updated or reconfirmed nominee details.</li>
                                                     </ul>
@@ -466,6 +485,104 @@
                     <!-- [ Renominate Modal ] End -->
                 @endforeach
 
+                <!-- [ Export Modal ] start -->
+                <form action="{{ route('export-final-nomination-data-get') }}" method="GET" id="exportForm">
+                    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+
+                                <!-- Header -->
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold" id="exportModalLabel">
+                                        Export Final Nomination
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+
+                                <!-- Body -->
+                                <div class="modal-body">
+                                    <div class="row g-3">
+                                        <!-- Hidden : Activity -->
+                                        <input type="hidden" name="ex_activity_id" value="{{ $act->id }}">
+
+                                        <!-- Semester Input -->
+                                        <div class="col-12">
+                                            <label for="ex_semester_id" class="form-label fw-semibold">Semester *</label>
+                                            <select id="ex_semester_id" name="ex_semester_id" class="form-select"
+                                                required>
+                                                <option value="">-- Select Semester --</option>
+                                                @foreach ($sems->whereIn('sem_status', [1, 3]) as $fil)
+                                                    <option value="{{ $fil->id }}"
+                                                        class="{{ $fil->sem_status == 1 ? 'bg-light-success' : '' }}"
+                                                        {{ $fil->sem_status == 1 ? 'selected' : '' }}>
+                                                        {{ $fil->sem_label }}
+                                                        {{ $fil->sem_status == 1 ? '[Current]' : '' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <small class="text-muted">Choose the semester you want to export data
+                                                for.</small>
+                                        </div>
+
+                                        <!-- Status Input -->
+                                        <div class="col-12">
+                                            <label for="ex_nom_status" class="form-label fw-semibold">Nomination
+                                                Status</label>
+                                            <select id="ex_nom_status" name="ex_nom_status" class="form-select">
+                                                <option value="">-- All Status --</option>
+                                                <option value="1">Pending</option>
+                                                <option value="2">
+                                                    Nominated - SV</option>
+                                                <option value="3">
+                                                    Reviewed - Committee</option>
+                                                <option value="4">Approved & Active</option>
+                                                <option value="5">Rejected</option>
+                                                <option value="6">Approved & Inactive</option>
+                                            </select>
+                                            <small class="text-muted">Filter records by their nomination status.</small>
+                                        </div>
+
+                                        <!-- Export Format Input -->
+                                        <div class="col-12">
+                                            <label for="export_opt_id" class="form-label fw-semibold">Export Format
+                                                *</label>
+                                            <select id="export_opt_id" name="export_opt_id" class="form-select" required>
+                                                <option value="">-- Select Format --</option>
+                                                <option value="1" selected>PDF (.pdf)</option>
+                                                <option value="2" disabled>Excel (.xlsx) <small>(Coming
+                                                        Soon)</small></option>
+                                            </select>
+                                            <small class="text-muted">Choose the file format for export.</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="modal-footer bg-light">
+                                    <div class="row w-100 g-2">
+                                        <div class="col-6">
+                                            <button type="button" class="btn btn-outline-secondary w-100"
+                                                data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button type="submit" class="btn btn-primary w-100 " id="exportBtn"
+                                                disabled>
+                                                Export Data
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!-- [ Export Modal ] end -->
+
                 <!-- [ Nomination - Final Overview  ] end -->
 
             </div>
@@ -474,7 +591,25 @@
     </div>
 
     <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            var modalToShow = "{{ session('modal') }}";
+            if (modalToShow) {
+                var modalElement = document.getElementById(modalToShow);
+                if (modalElement) {
+                    var modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                }
+            }
+        });
+        
         $(document).ready(function() {
+
+            // EXPORT : FINAL NOMINATION
+            $('#export_opt_id').on('change', function() {
+                $('#exportBtn').prop('disabled', !$(this).val());
+            });
+
+            $('#export_opt_id').trigger('change');
 
             // DATATABLE : NOMINATION
             var table = $('.data-table').DataTable({

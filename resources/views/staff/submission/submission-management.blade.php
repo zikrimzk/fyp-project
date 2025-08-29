@@ -286,7 +286,6 @@
                 </div>
                 <!-- [ Datatable & Option ] End -->
 
-
                 <!-- [ Export Modal ] start -->
                 <form action="{{ route('export-submission-data-get') }}" method="GET" id="exportForm">
                     <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel"
@@ -297,7 +296,7 @@
                                 <!-- Header -->
                                 <div class="modal-header">
                                     <h5 class="modal-title fw-bold" id="exportModalLabel">
-                                        Export Submission Data
+                                        Export Submission
                                     </h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
@@ -814,6 +813,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
+            // EXPORT : SUBMISSION
             $('#export_opt_id').on('change', function() {
                 $('#exportBtn').prop('disabled', !$(this).val());
             });

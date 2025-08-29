@@ -193,10 +193,25 @@
                 </div>
                 <!-- [ Filter Section ] End -->
 
-                <!-- [ Datatable ] Start -->
+                <!-- [ Datatable & Option ] Start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
+
+                            <!-- [ Option Section ] start -->
+                            <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                                    data-bs-toggle="modal" data-bs-target="#exportModal" id="exportModalBtn"
+                                    title="Export Data">
+                                    <i class="ti ti-file-export f-18"></i>
+                                    <span class="d-none d-sm-inline me-2">
+                                        Export Data
+                                    </span>
+                                </button>
+                            </div>
+                            <!-- [ Option Section ] end -->
+
+                            <!-- [ Datatable ] start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -212,10 +227,12 @@
                                     </thead>
                                 </table>
                             </div>
+                            <!-- [ Datatable ] end -->
+
                         </div>
                     </div>
                 </div>
-                <!-- [ Datatable ] End -->
+                <!-- [ Datatable & Option ] End -->
 
 
                 @foreach ($correction as $upd)
@@ -410,6 +427,107 @@
                     <!-- [ Delete Modal ] end -->
                 @endforeach
 
+                <!-- [ Export Modal ] start -->
+                <form action="{{ route('export-final-correction-data-get') }}" method="GET" id="exportForm">
+                    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-md modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+
+                                <!-- Header -->
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold" id="exportModalLabel">
+                                        Export Final Correction
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+
+                                <!-- Body -->
+                                <div class="modal-body">
+                                    <div class="row g-3">
+
+                                        <!-- Semester Input -->
+                                        <div class="col-12">
+                                            <label for="ex_semester_id" class="form-label fw-semibold">Semester *</label>
+                                            <select id="ex_semester_id" name="ex_semester_id" class="form-select"
+                                                required>
+                                                <option value="">-- Select Semester --</option>
+                                                @foreach ($sems->whereIn('sem_status', [1, 3]) as $fil)
+                                                    <option value="{{ $fil->id }}"
+                                                        class="{{ $fil->sem_status == 1 ? 'bg-light-success' : '' }}"
+                                                        {{ $fil->sem_status == 1 ? 'selected' : '' }}>
+                                                        {{ $fil->sem_label }}
+                                                        {{ $fil->sem_status == 1 ? '[Current]' : '' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <small class="text-muted">Choose the semester you want to export data
+                                                for.</small>
+                                        </div>
+
+                                        <!-- Status Input -->
+                                        <div class="col-12">
+                                            <label for="ex_correction_status" class="form-label fw-semibold">Correction
+                                                Status</label>
+                                            <select id="ex_correction_status" name="ex_correction_status"
+                                                class="form-select">
+                                                <option value="">-- All Status --</option>
+                                                <option value="1">Correction : Pending Student Action</option>
+                                                <option value="2">Correction : Pending Supervisor Approval</option>
+                                                <option value="3">Correction : Pending Examiners/Panels Approval
+                                                </option>
+                                                <option value="4">Correction : Pending Committee / Deputy Dean / Dean
+                                                    Approval</option>
+                                                <option value="5">Correction : Approve & Completed</option>
+                                                <option value="6">Correction : Rejected by Supervisor</option>
+                                                <option value="7">Correction : Rejected by Examiners/Panels</option>
+                                                <option value="8">Correction : Rejected by Committee / Deputy Dean /
+                                                    Dean
+                                                </option>
+                                            </select>
+                                            <small class="text-muted">Filter records by their correction status.</small>
+                                        </div>
+
+                                        <!-- Export Format Input -->
+                                        <div class="col-12">
+                                            <label for="export_opt_id" class="form-label fw-semibold">Export Format
+                                                *</label>
+                                            <select id="export_opt_id" name="export_opt_id" class="form-select" required>
+                                                <option value="">-- Select Format --</option>
+                                                <option value="1" selected>PDF (.pdf)</option>
+                                                <option value="2" disabled>Excel (.xlsx) <small>(Coming
+                                                        Soon)</small></option>
+                                            </select>
+                                            <small class="text-muted">Choose the file format for export.</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="modal-footer bg-light">
+                                    <div class="row w-100 g-2">
+                                        <div class="col-6">
+                                            <button type="button" class="btn btn-outline-secondary w-100"
+                                                data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button type="submit" class="btn btn-primary w-100 " id="exportBtn"
+                                                disabled>
+                                                Export Data
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!-- [ Export Modal ] end -->
+
                 <!-- [ Correction - Final Overview ] end -->
 
             </div>
@@ -430,6 +548,13 @@
         });
 
         $(document).ready(function() {
+
+            // EXPORT : FINAL CORRECTION
+            $('#export_opt_id').on('change', function() {
+                $('#exportBtn').prop('disabled', !$(this).val());
+            });
+
+            $('#export_opt_id').trigger('change');
 
             // DATATABLE : STUDENT ACTIVITY
             var table = $('.data-table').DataTable({

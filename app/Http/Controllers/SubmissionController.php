@@ -2312,6 +2312,155 @@ class SubmissionController extends Controller
         }
     }
 
+    /* Export Final Submission - Function | Last Checked: 29-08-2025 | [WORK IN PROGRESS] */
+    public function exportFinalSubmission(Request $req)
+    {
+        try {
+            /* LOAD SUBMISSION DATA */
+            $submissions = DB::table('student_activities as a')
+                ->join('activities as b', 'b.id', '=', 'a.activity_id')
+                ->join('students as c', 'c.id', '=', 'a.student_id')
+                ->join('semesters as d', 'd.id', '=', 'a.semester_id')
+                ->select(
+                    'b.act_name',
+                    'c.student_name',
+                    'c.student_matricno',
+                    'd.sem_label',
+                    'a.sa_status',
+                    'a.created_at as confirmation_date'
+                );
+
+            /* CONDITION FILTER - SEMESTER */
+            if ($req->ex_semester_id) {
+                $submissions->where('semester_id', $req->ex_semester_id);
+            }
+
+            /* CONDITION FILTER - STATUS */
+            if ($req->ex_sa_status == 1) {
+                /* PENDING APPROVAL : SUPERVISOR */
+                $submissions->where('a.sa_status', 1)
+                    ->where('a.submission_document', '=', '-');
+                $type = "Pending Approval : Supervisor";
+            } elseif ($req->ex_sa_status == 2) {
+                /* PENDING APPROVAL : COMMITTEE / DEPUTY DEAN / DEAN */
+                $submissions->where('a.sa_status', 2);
+                $type = "Pending Approval : Committee / Deputy Dean / Dean";
+            } elseif ($req->ex_sa_status == 3) {
+                /* APPROVED & COMPLETED */
+                $submissions->where('a.sa_status', 3);
+                $type = "Approved & Completed";
+            } elseif ($req->ex_sa_status == 4) {
+                /* REJECTED : SUPERVISOR */
+                $submissions->where('a.sa_status', 4);
+                $type = "Rejected : Supervisor";
+            } elseif ($req->ex_sa_status == 5) {
+                /* REJECTED : COMMITTEE / DEPUTY DEAN / DEAN */
+                $submissions->where('a.sa_status', 5);
+                $type = "Rejected : Committee / Deputy Dean / Dean";
+            } elseif ($req->ex_sa_status == 7) {
+                /* PENDING : EVALUATION */
+                $submissions->where('a.sa_status', 7);
+                $type = "Pending : Evaluation";
+            } elseif ($req->ex_sa_status == 8) {
+                /* EVALUATION : MINOR/MAJOR CORRECTION */
+                $submissions->where('a.sa_status', 8);
+                $type = "Evaluation : Minor/Major Correction";
+            } elseif ($req->ex_sa_status == 9) {
+                /* EVALUATION : REPRESENT/RESUBMIT */
+                $submissions->where('a.sa_status', 9);
+                $type = "Evaluation : Represent/Resubmit";
+            } elseif ($req->ex_sa_status == 12) {
+                /* EVALUATION : FAILED */
+                $submissions->where('a.sa_status', 12);
+                $type = "Evaluation : Failed";
+            } elseif ($req->ex_sa_status == 13) {
+                /* CONTINUE NEXT SEMESTER */
+                $submissions->where('a.sa_status', 13);
+                $type = "Continue Next Semester";
+            } else {
+                /* DEFAULT : ALL FINAL SUBMISSIONS */
+                $submissions->whereIn('a.sa_status', [1, 2, 3, 4, 5, 7, 8, 9, 12, 13]);
+                $type = "All Final Submissions List";
+            }
+
+            /* GET THE DATA */
+            $submissions = $submissions->get();
+
+            /* MAP STATUS CODES TO LABELS */
+            $submissions->transform(function ($item) {
+                switch ($item->sa_status) {
+                    case 1:
+                        /* STATUS 1 : PENDING APPROVAL - SUPERVISOR */
+                        $item->submission_status_label = 'Pending Approval : Supervisor';
+                        break;
+                    case 2:
+                        /* STATUS 2 : PENDING APPROVAL - COMMITTEE/DEPUTY DEAN/DEAN */
+                        $item->submission_status_label = 'Pending Approval : Committee / Deputy Dean / Dean';
+                        break;
+                    case 3:
+                        /* STATUS 3 : APPROVED & COMPLETED */
+                        $item->submission_status_label = 'Approved & Completed';
+                        break;
+                    case 4:
+                        /* STATUS 4 : REJECTED - SUPERVISOR */
+                        $item->submission_status_label = 'Rejected : Supervisor';
+                        break;
+                    case 5:
+                        /* STATUS 5 : REJECTED - COMMITTEE/DEPUTY DEAN/DEAN */
+                        $item->submission_status_label = 'Rejected : Committee / Deputy Dean / Dean';
+                        break;
+                    case 7:
+                        /* STATUS 7 : PENDING EVALUATION */
+                        $item->submission_status_label = 'Pending : Evaluation';
+                        break;
+                    case 8:
+                        /* STATUS 8 : EVALUATION - CORRECTION */
+                        $item->submission_status_label = 'Evaluation : Minor/Major Correction';
+                        break;
+                    case 9:
+                        /* STATUS 9 : EVALUATION - RESUBMIT */
+                        $item->submission_status_label = 'Evaluation : Represent/Resubmit';
+                        break;
+                    case 12:
+                        /* STATUS 12 : EVALUATION - FAILED */
+                        $item->submission_status_label = 'Evaluation : Failed';
+                        break;
+                    case 13:
+                        /* STATUS 13 : CONTINUE NEXT SEMESTER */
+                        $item->submission_status_label = 'Continue Next Semester';
+                        break;
+                    default:
+                        /* UNKNOWN STATUS */
+                        $item->submission_status_label = 'Unknown';
+                        break;
+                }
+                return $item;
+            });
+
+            /* GROUP AFTER LABELING */
+            $groupedData = $submissions->groupBy('act_name');
+
+            // dd($groupedData);
+
+            $fc = new FormHandlerController();
+
+            /* EXPORT */
+            if ($req->export_opt_id == 1) {
+                /* GENERATE REPORT */
+                $generatedReport = $fc->generateReport('FINAL SUBMISSION LIST', $groupedData, $type, 'landscape', 'E-PGS_FINAL_SUBMISSION_LIST.pdf', 1, 2);
+
+                /* RETURN GENERATED REPORT */
+                return $generatedReport;
+            } elseif ($req->export_opt_id == 2) {
+                return $this->exportAsExcel($groupedData);
+            } else {
+                return back()->with('error', 'Invalid export format.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
+        }
+    }
+
     /* Submission Management [Staff] - Route */
     public function submissionManagement(Request $req)
     {
@@ -2730,14 +2879,14 @@ class SubmissionController extends Controller
             /* ARCHIVE OR UNARCHIVE SUBMISSION */
             if ($opt == 1) {
                 $submission->update(['submission_status' => 5]);
-                $message = $student -> student_name . ' submission for ' . $document->doc_name . " has been archived successfully.";
+                $message = $student->student_name . ' submission for ' . $document->doc_name . " has been archived successfully.";
             } elseif ($opt == 2) {
                 if ($submission->submission_date == null) {
                     $submission->update(['submission_status' => 2]);
                 } else {
                     $submission->update(['submission_status' => 3]);
                 }
-                $message = $student -> student_name . ' submission for ' . $document->doc_name . " has been unarchived successfully.";
+                $message = $student->student_name . ' submission for ' . $document->doc_name . " has been unarchived successfully.";
             }
 
             /* RETURN SUCCESS */

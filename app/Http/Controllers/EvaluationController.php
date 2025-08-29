@@ -454,6 +454,179 @@ class EvaluationController extends Controller
         }
     }
 
+    /* Export Final Evaluation - Function | Last Checked: 29-08-2025 | [WORK IN PROGRESS] */
+    public function exportFinalEvaluation(Request $req)
+    {
+        try {
+            /* LOAD EVALUATION DATA */
+            $evaluations = DB::table('evaluations as a')
+                ->join('activities as b', 'b.id', '=', 'a.activity_id')
+                ->join('students as c', 'c.id', '=', 'a.student_id')
+                ->join('semesters as d', 'd.id', '=', 'a.semester_id')
+                ->join('staff as e', 'e.id', '=', 'a.staff_id')
+                ->select(
+                    'a.id as evaluation_id',
+                    'b.act_name',
+                    'b.id as activity_id',
+                    'c.student_name',
+                    'c.student_matricno',
+                    'c.id as student_id',
+                    'd.sem_label',
+                    'a.evaluation_status',
+                    'a.evaluation_date',
+                    'a.evaluation_meta_data',
+                    'e.staff_name',
+                    'e.staff_email',
+                    'e.id as staff_id'
+                )
+                ->where('b.id', '=', $req->ex_activity_id);
+
+            /* CONDITION FILTER - SEMESTER */
+            if ($req->ex_semester_id) {
+                $evaluations->where('semester_id', $req->ex_semester_id);
+            }
+
+            /* CONDITION FILTER - EVALUATION STATUS */
+            if ($req->ex_evaluation_status == 1) {
+                /* STATUS 1 : PENDING */
+                $evaluations->where('a.evaluation_status', 1);
+                $type = "Pending";
+            } elseif ($req->ex_evaluation_status == 2) {
+                /* STATUS 2 : PASSED */
+                $evaluations->where('a.evaluation_status', 2);
+                $type = "Passed";
+            } elseif ($req->ex_evaluation_status == 3) {
+                /* STATUS 3 : PASSED (MINOR CHANGES) */
+                $evaluations->where('a.evaluation_status', 3);
+                $type = "Passed (Minor Changes)";
+            } elseif ($req->ex_evaluation_status == 4) {
+                /* STATUS 4 : PASSED (MAJOR CHANGES) */
+                $evaluations->where('a.evaluation_status', 4);
+                $type = "Passed (Major Changes)";
+            } elseif ($req->ex_evaluation_status == 5) {
+                /* STATUS 5 : RESUBMIT / REPRESENT */
+                $evaluations->where('a.evaluation_status', 5);
+                $type = "Resubmit/Represent";
+            } elseif ($req->ex_evaluation_status == 6) {
+                /* STATUS 6 : FAILED */
+                $evaluations->where('a.evaluation_status', 6);
+                $type = "Failed";
+            } elseif ($req->ex_evaluation_status == 7) {
+                /* STATUS 7 : SUBMITTED (DRAFT) */
+                $evaluations->where('a.evaluation_status', 7);
+                $type = "Submitted (Draft)";
+            } elseif ($req->ex_evaluation_status == 8) {
+                /* STATUS 8 : CONFIRMED [EXAMINER / PANEL] */
+                $evaluations->where('a.evaluation_status', 8);
+                $type = "Confirmed [Examiner/Panel]";
+            } elseif ($req->ex_evaluation_status == 9) {
+                /* STATUS 9 : PENDING - SUPERVISOR APPROVAL */
+                $evaluations->where('a.evaluation_status', 9);
+                $type = "Pending : Supervisor Approval";
+            } elseif ($req->ex_evaluation_status == 10) {
+                /* STATUS 10 : PENDING - COMMITTEE / DD / DEAN APPROVAL */
+                $evaluations->where('a.evaluation_status', 10);
+                $type = "Pending : Committee/DD/Dean Approval";
+            } elseif ($req->ex_evaluation_status == 11) {
+                /* STATUS 11 : REJECTED - SUPERVISOR */
+                $evaluations->where('a.evaluation_status', 11);
+                $type = "Rejected : Supervisor";
+            } elseif ($req->ex_evaluation_status == 12) {
+                /* STATUS 12 : REJECTED - COMMITTEE / DD / DEAN */
+                $evaluations->where('a.evaluation_status', 12);
+                $type = "Rejected : Committee/DD/Dean";
+            } else {
+                /* DEFAULT : ALL EVALUATIONS */
+                $evaluations->whereIn('a.evaluation_status', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+                $type = "All Evaluations List";
+            }
+
+            /* GET THE DATA */
+            $evaluations = $evaluations->get();
+
+            /* MAP EVALUATION STATUS CODES TO LABELS */
+            $evaluations->transform(function ($item) {
+                switch ($item->evaluation_status) {
+                    case 1:
+                        /* STATUS 1 : PENDING */
+                        $item->evaluation_status_label = 'Pending';
+                        break;
+                    case 2:
+                        /* STATUS 2 : PASSED */
+                        $item->evaluation_status_label = 'Passed';
+                        break;
+                    case 3:
+                        /* STATUS 3 : PASSED (MINOR CHANGES) */
+                        $item->evaluation_status_label = 'Passed (Minor Changes)';
+                        break;
+                    case 4:
+                        /* STATUS 4 : PASSED (MAJOR CHANGES) */
+                        $item->evaluation_status_label = 'Passed (Major Changes)';
+                        break;
+                    case 5:
+                        /* STATUS 5 : RESUBMIT / REPRESENT */
+                        $item->evaluation_status_label = 'Resubmit/Represent';
+                        break;
+                    case 6:
+                        /* STATUS 6 : FAILED */
+                        $item->evaluation_status_label = 'Failed';
+                        break;
+                    case 7:
+                        /* STATUS 7 : SUBMITTED (DRAFT) */
+                        $item->evaluation_status_label = 'Submitted (Draft)';
+                        break;
+                    case 8:
+                        /* STATUS 8 : CONFIRMED [EXAMINER / PANEL] */
+                        $item->evaluation_status_label = 'Confirmed [Examiner/Panel]';
+                        break;
+                    case 9:
+                        /* STATUS 9 : PENDING - SUPERVISOR APPROVAL */
+                        $item->evaluation_status_label = 'Pending : Supervisor Approval';
+                        break;
+                    case 10:
+                        /* STATUS 10 : PENDING - COMMITTEE / DD / DEAN APPROVAL */
+                        $item->evaluation_status_label = 'Pending : Committee/DD/Dean Approval';
+                        break;
+                    case 11:
+                        /* STATUS 11 : REJECTED - SUPERVISOR */
+                        $item->evaluation_status_label = 'Rejected : Supervisor';
+                        break;
+                    case 12:
+                        /* STATUS 12 : REJECTED - COMMITTEE / DD / DEAN */
+                        $item->evaluation_status_label = 'Rejected : Committee/DD/Dean';
+                        break;
+                    default:
+                        /* UNKNOWN EVALUATION STATUS */
+                        $item->evaluation_status_label = 'Unknown';
+                        break;
+                }
+                return $item;
+            });
+
+            /* GROUP AFTER LABELING */
+            $groupedData = $evaluations->groupBy('act_name');
+
+            // dd($groupedData);
+
+            $fc = new FormHandlerController();
+
+            /* EXPORT */
+            if ($req->export_opt_id == 1) {
+                /* GENERATE REPORT */
+                $generatedReport = $fc->generateReport('FINAL EVALUATION LIST', $groupedData, $type, 'landscape', 'E-PGS_FINAL_EVALUATION_LIST.pdf', 1, 4);
+
+                /* RETURN GENERATED REPORT */
+                return $generatedReport;
+            } elseif ($req->export_opt_id == 2) {
+                return $this->exportAsExcel($groupedData);
+            } else {
+                return back()->with('error', 'Invalid export format.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
+        }
+    }
+
     /* Examiner / Panel Evaluation Management [Evaluator] - Route */
     public function examinerPanelEvaluation(Request $req, $name)
     {
@@ -2543,6 +2716,140 @@ class EvaluationController extends Controller
             return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final correctiom successfully deleted.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error deleting final correction: ' . $e->getMessage());
+        }
+    }
+
+    /* Export Final Correction - Function | Last Checked: 29-08-2025 | [WORK IN PROGRESS] */
+    public function exportFinalCorrection(Request $req)
+    {
+        try {
+            /* LOAD CORRECTION DATA */
+            $corrections = DB::table('activity_corrections as a')
+                ->join('activities as b', 'b.id', '=', 'a.activity_id')
+                ->join('students as c', 'c.id', '=', 'a.student_id')
+                ->join('semesters as d', 'd.id', '=', 'a.semester_id')
+                ->select(
+                    'a.id as evaluation_id',
+                    'b.act_name',
+                    'b.id as activity_id',
+                    'c.student_name',
+                    'c.student_matricno',
+                    'c.id as student_id',
+                    'd.sem_label',
+                    'a.ac_status',
+                    'a.ac_startdate',
+                    'a.ac_duedate',
+                );
+
+            /* CONDITION FILTER - SEMESTER */
+            if ($req->ex_semester_id) {
+                $corrections->where('semester_id', $req->ex_semester_id);
+            }
+
+            /* CONDITION FILTER - CORRECTION STATUS */
+            if ($req->ex_correction_status == 1) {
+                /* STATUS 1 : PENDING - STUDENT ACTION */
+                $corrections->where('a.ac_status', 1);
+                $type = "Pending Student Action";
+            } elseif ($req->ex_correction_status == 2) {
+                /* STATUS 2 : PENDING - SUPERVISOR APPROVAL */
+                $corrections->where('a.ac_status', 2);
+                $type = "Pending Supervisor Approval";
+            } elseif ($req->ex_correction_status == 3) {
+                /* STATUS 3 : PENDING - EXAMINERS / PANELS APPROVAL */
+                $corrections->where('a.ac_status', 3);
+                $type = "Pending Examiners/Panels Approval";
+            } elseif ($req->ex_correction_status == 4) {
+                /* STATUS 4 : PENDING - COMMITTEE / DD / DEAN APPROVAL */
+                $corrections->where('a.ac_status', 4);
+                $type = "Pending Committee/DD/Dean Approval";
+            } elseif ($req->ex_correction_status == 5) {
+                /* STATUS 5 : APPROVED & COMPLETED */
+                $corrections->where('a.ac_status', 5);
+                $type = "Approved & Completed";
+            } elseif ($req->ex_correction_status == 6) {
+                /* STATUS 6 : REJECTED - SUPERVISOR */
+                $corrections->where('a.ac_status', 6);
+                $type = "Rejected by Supervisor";
+            } elseif ($req->ex_correction_status == 7) {
+                /* STATUS 7 : REJECTED - EXAMINERS / PANELS */
+                $corrections->where('a.ac_status', 7);
+                $type = "Rejected by Examiners/Panels";
+            } elseif ($req->ex_correction_status == 8) {
+                /* STATUS 8 : REJECTED - COMMITTEE / DD / DEAN */
+                $corrections->where('a.ac_status', 8);
+                $type = "Rejected by Committee/DD/Dean";
+            } else {
+                /* DEFAULT : ALL CORRECTIONS */
+                $corrections->whereIn('a.ac_status', [1, 2, 3, 4, 5, 6, 7, 8]);
+                $type = "All Corrections List";
+            }
+
+            /* GET THE DATA */
+            $corrections = $corrections->get();
+
+            /* MAP CORRECTION STATUS CODES TO LABELS */
+            $corrections->transform(function ($item) {
+                switch ($item->ac_status) {
+                    case 1:
+                        /* STATUS 1 : PENDING - STUDENT ACTION */
+                        $item->correction_status_label = 'Pending Student Action';
+                        break;
+                    case 2:
+                        /* STATUS 2 : PENDING - SUPERVISOR APPROVAL */
+                        $item->correction_status_label = 'Pending Supervisor Approval';
+                        break;
+                    case 3:
+                        /* STATUS 3 : PENDING - EXAMINERS / PANELS APPROVAL */
+                        $item->correction_status_label = 'Pending Examiners/Panels Approval';
+                        break;
+                    case 4:
+                        /* STATUS 4 : PENDING - COMMITTEE / DD / DEAN APPROVAL */
+                        $item->correction_status_label = 'Pending Committee/DD/Dean Approval';
+                        break;
+                    case 5:
+                        /* STATUS 5 : APPROVED & COMPLETED */
+                        $item->correction_status_label = 'Approved & Completed';
+                        break;
+                    case 6:
+                        /* STATUS 6 : REJECTED - SUPERVISOR */
+                        $item->correction_status_label = 'Rejected by Supervisor';
+                        break;
+                    case 7:
+                        /* STATUS 7 : REJECTED - EXAMINERS / PANELS */
+                        $item->correction_status_label = 'Rejected by Examiners/Panels';
+                        break;
+                    case 8:
+                        /* STATUS 8 : REJECTED - COMMITTEE / DD / DEAN */
+                        $item->correction_status_label = 'Rejected by Committee/DD/Dean';
+                        break;
+                    default:
+                        /* UNKNOWN CORRECTION STATUS */
+                        $item->correction_status_label = 'Unknown';
+                        break;
+                }
+                return $item;
+            });
+
+            /* GROUP AFTER LABELING */
+            $groupedData = $corrections->groupBy('act_name');
+
+            $fc = new FormHandlerController();
+
+            /* EXPORT */
+            if ($req->export_opt_id == 1) {
+                /* GENERATE REPORT */
+                $generatedReport = $fc->generateReport('FINAL CORRECTION LIST', $groupedData, $type, 'landscape', 'E-PGS_FINAL_CORRECTION_LIST.pdf', 1, 5);
+
+                /* RETURN GENERATED REPORT */
+                return $generatedReport;
+            } elseif ($req->export_opt_id == 2) {
+                return $this->exportAsExcel($groupedData);
+            } else {
+                return back()->with('error', 'Invalid export format.');
+            }
+        } catch (Exception $e) {
+            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
         }
     }
 
