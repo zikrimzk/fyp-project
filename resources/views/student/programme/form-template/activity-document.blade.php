@@ -512,8 +512,8 @@
             text-align: center;
         }
     </style> --}}
-
-     <style>
+    
+    <style>
         body {
             font-family: Arial, sans-serif;
             font-size: 11pt;
@@ -611,8 +611,9 @@
 
         .label {
             width: 38%;
+            font-family: Arial, sans-serif;
             font-size: 11pt;
-            font-weight: 600;
+            /* font-weight: 600; */
             text-transform: none;
             background: #f5f5f5;
             border-right: 1px solid #ddd;
@@ -639,7 +640,6 @@
             border-bottom: 1px solid #333;
             word-wrap: break-word;
             white-space: pre-line;
-            /* color: transparent; */
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -716,7 +716,7 @@
 
         /* ENHANCED SECTION HEADERS */
         .section-header {
-            font-size: 12pt;
+            font-size: 11pt;
             font-weight: bold;
             text-transform: uppercase;
             color: #000;
@@ -804,7 +804,7 @@
 
         /* ENHANCED TEXT AREAS */
         .long-textarea-notebook {
-            font-family: 'Courier New', monospace;
+            font-family: Arial, Helvetica, sans-serif;
             font-size: 11px;
             line-height: 16px;
             border: 1px solid #999;
@@ -904,6 +904,10 @@
             color: #333;
         }
 
+        tr.text .text-content {
+            padding: 0 15px;
+        }
+
         /* CLEAN STYLING FOR SECTIONS */
         .info-table tr td[colspan="3"] {
             padding: 0;
@@ -925,8 +929,8 @@
             <tr>
                 <td class="logo-cell">
                     @if ($faculty->fac_logo && file_exists(public_path('storage/' . $faculty->fac_logo)))
-                        <img src="{{ public_path('storage/' . $faculty->fac_logo) }}" alt="{{ $faculty->fac_code }} LOGO"
-                            class="faculty-logo">
+                        <img src="{{ public_path('storage/' . $faculty->fac_logo) }}"
+                            alt="{{ $faculty->fac_code }} LOGO" class="faculty-logo">
                     @endif
                 </td>
                 <td class="text-cell">
@@ -1079,9 +1083,11 @@
                 @php $i++; @endphp
             @elseif($ff->ff_category == 4)
                 <!-- CATEGORY : TEXT -->
-                <tr>
+                <tr class="text">
                     <td colspan ="3">
-                        {!! $ff->ff_label !!}
+                        <div class="text-content">
+                            {!! $ff->ff_label !!}
+                        </div>
                     </td>
                 </tr>
                 @php $i++; @endphp
