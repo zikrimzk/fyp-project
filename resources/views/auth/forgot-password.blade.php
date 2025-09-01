@@ -76,7 +76,7 @@
         }
 
         .university-logo img {
-            width: 120px;
+            width: 100px;
             height: auto;
         }
 
@@ -140,7 +140,7 @@
             border: none;
             border-radius: 8px;
             font-size: 1rem;
-            font-weight: 600;
+            /* font-weight: 600; */
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
@@ -195,6 +195,7 @@
             transform: translateY(-10px);
             animation: slideInFadeIn 0.3s ease-out forwards;
             font-weight: 500;
+            text-align: left;
         }
 
         .alert-icon-wrapper {
@@ -316,6 +317,48 @@
             }
         }
 
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem; /* Reduce overall body padding */
+            }
+            .login-card {
+                box-shadow: none; /* Remove shadow to make it feel more native */
+                border: none; /* Remove border on smaller screens */
+            }
+            .login-container {
+                padding: 0; /* Remove container padding */
+            }
+
+            .login-header, .login-body, .footer-info {
+                padding: 1.5rem 1.25rem; /* Adjust padding for mobile screens */
+            }
+
+            .university-logo img {
+                width: 90px; /* Adjust logo size for mobile view */
+            }
+            
+            .system-title {
+                font-size: 1.1rem; /* Adjust title font size */
+            }
+            
+            .system-subtitle {
+                font-size: 0.8rem; /* Adjust subtitle font size */
+            }
+
+            .form-group {
+                margin-bottom: 1rem; /* Reduce space between form elements */
+            }
+
+            .login-button {
+                font-size: 0.95rem; /* Slightly smaller button font */
+                padding: 0.75rem; /* Reduce button padding */
+            }
+
+            .footer-info {
+                font-size: 0.75rem; /* Smaller footer text */
+            }
+        }
     </style>
 </head>
 
