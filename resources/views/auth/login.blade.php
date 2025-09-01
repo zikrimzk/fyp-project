@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <title>e-PostGrad | Login</title>
     <meta charset="utf-8" />
@@ -330,35 +329,20 @@
         }
 
         @keyframes spin {
-            to {
-                transform: translateY(-50%) rotate(360deg);
-            }
+            to { transform: translateY(-50%) rotate(360deg); }
         }
 
         /* Animations */
         @keyframes slideUpFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes slideInFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+
     </style>
 </head>
 
@@ -378,18 +362,14 @@
                     @if (session()->has('success'))
                         <div class="alert alert-success" id="success-alert">
                             <span class="alert-icon-wrapper">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                    stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                     <path d="M5 12l5 5l10 -10"></path>
                                 </svg>
                             </span>
                             <span id="success-message">{{ session('success') }}</span>
                             <button type="button" class="alert-close" onclick="closeAlert('success-alert')">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                    stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                     <path d="M18 6l-12 12"></path>
                                     <path d="M6 6l12 12"></path>
@@ -400,22 +380,16 @@
                     @if (session()->has('error'))
                         <div class="alert alert-danger" id="error-alert">
                             <span class="alert-icon-wrapper">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                    stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                     <path d="M12 9v4"></path>
-                                    <path
-                                        d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.875h16.214a1.914 1.914 0 0 0 1.636 -2.875l-8.106 -13.534a1.914 1.914 0 0 0 -3.274 0z">
-                                    </path>
+                                    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.875h16.214a1.914 1.914 0 0 0 1.636 -2.875l-8.106 -13.534a1.914 1.914 0 0 0 -3.274 0z"></path>
                                     <path d="M12 16h.01"></path>
                                 </svg>
                             </span>
                             <span id="error-message">{{ session('error') }}</span>
                             <button type="button" class="alert-close" onclick="closeAlert('error-alert')">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                    stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                     <path d="M18 6l-12 12"></path>
                                     <path d="M6 6l12 12"></path>
@@ -429,26 +403,18 @@
                     @csrf
                     <div class="form-group">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email"
-                            placeholder="Enter your student / staff email" value="{{ old('email') }}" required />
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter your student / staff email" value="{{ old('email') }}" required />
                     </div>
 
                     <div class="form-group">
                         <label for="password" class="form-label">Password</label>
                         <div class="password-wrapper">
-                            <input type="password" class="form-control" id="password" name="password"
-                                placeholder="Enter your password" required />
-                            <button type="button" class="password-toggle" id="password-toggle"
-                                aria-label="Toggle password visibility">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" id="password-icon"
-                                    width="24" height="24" viewBox="0 0 24 24" stroke-width="2"
-                                    stroke="currentColor" fill="none" stroke-linecap="round"
-                                    stroke-linejoin="round">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required />
+                            <button type="button" class="password-toggle" id="password-toggle" aria-label="Toggle password visibility">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" id="password-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                     <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
-                                    <path
-                                        d="M21 12c-2.761 4.51 -6.828 7 -10.5 7c-4.145 0 -7.215 -2.31 -10.5 -7c2.761 -4.51 6.828 -7 10.5 -7c4.145 0 7.215 2.31 10.5 7">
-                                    </path>
+                                    <path d="M21 12c-2.761 4.51 -6.828 7 -10.5 7c-4.145 0 -7.215 -2.31 -10.5 -7c2.761 -4.51 6.828 -7 10.5 -7c4.145 0 7.215 2.31 10.5 7"></path>
                                 </svg>
                             </button>
                         </div>
@@ -489,12 +455,10 @@
                     const passwordIcon = this.querySelector('.icon');
                     if (passwordInput.type === 'password') {
                         passwordInput.type = 'text';
-                        passwordIcon.innerHTML =
-                            `<path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828"></path><path d="M16.681 16.673a8.974 8.974 0 0 1 -4.681 1.327c-3.674 0 -7.215 -2.31 -10.5 -7c1.472 -2.215 3.593 -4.01 5.894 -5.461"></path><path d="M18.843 14.869c.808 -.816 1.411 -1.693 1.916 -2.869c-2.761 -4.51 -6.828 -7 -10.5 -7a8.983 8.983 0 0 0 -5.025 1.558"></path><path d="M3 3l18 18"></path>`;
+                        passwordIcon.innerHTML = `<path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828"></path><path d="M16.681 16.673a8.974 8.974 0 0 1 -4.681 1.327c-3.674 0 -7.215 -2.31 -10.5 -7c1.472 -2.215 3.593 -4.01 5.894 -5.461"></path><path d="M18.843 14.869c.808 -.816 1.411 -1.693 1.916 -2.869c-2.761 -4.51 -6.828 -7 -10.5 -7a8.983 8.983 0 0 0 -5.025 1.558"></path><path d="M3 3l18 18"></path>`;
                     } else {
                         passwordInput.type = 'password';
-                        passwordIcon.innerHTML =
-                            `<path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M21 12c-2.761 4.51 -6.828 7 -10.5 7c-4.145 0 -7.215 -2.31 -10.5 -7c2.761 -4.51 6.828 -7 10.5 -7c4.145 0 7.215 2.31 10.5 7"></path>`;
+                        passwordIcon.innerHTML = `<path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M21 12c-2.761 4.51 -6.828 7 -10.5 7c-4.145 0 -7.215 -2.31 -10.5 -7c2.761 -4.51 6.828 -7 10.5 -7c4.145 0 7.215 2.31 10.5 7"></path>`;
                     }
                 });
             }
@@ -531,22 +495,6 @@
                 setTimeout(() => closeAlert('error-alert'), 5000);
             }
         });
-
-        // Prevent pinch-to-zoom
-        document.addEventListener('gesturestart', function(e) {
-            e.preventDefault();
-        });
-
-        // Prevent double-tap zoom
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            let now = new Date().getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
     </script>
 </body>
-
 </html>
