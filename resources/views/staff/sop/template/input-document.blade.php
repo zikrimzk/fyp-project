@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ $title }}</title>
-    <style>
+    {{-- <style>
         body {
             font-family: 'Arial', sans-serif;
             font-size: 12pt;
@@ -297,7 +297,386 @@
             font-size: 12pt;
             line-height: 1.5;
         }
+    </style> --}}
+
+    <style>
+        /* BASE TYPOGRAPHY (Finalized) */
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            margin: 30px;
+            color: #333;
+            background: #fff;
+        }
+
+        /* HEADER (Finalized) */
+        .header {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background: #fafafa;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .logo-cell {
+            width: 120px;
+            text-align: center;
+            vertical-align: middle;
+            padding-right: 15px;
+            border-right: 1px solid #eee;
+        }
+
+        .faculty-logo {
+            width: 100px;
+            height: auto;
+        }
+
+        .text-cell {
+            text-align: center;
+            vertical-align: middle;
+            padding-left: 15px;
+        }
+
+        .faculty-name {
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0 0 5px 0;
+            letter-spacing: .5px;
+            color: #000;
+        }
+
+        .university-name {
+            font-size: 11pt;
+            text-transform: uppercase;
+            margin: 5px 0 0 0;
+            color: #555;
+            letter-spacing: .3px;
+        }
+
+        .line-title {
+            border-top: 2px solid #333;
+            margin: 12px -15px 8px -15px;
+        }
+
+        .form-title {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 8px 0 0 0;
+            padding: 8px;
+            background: #fff;
+            letter-spacing: 1px;
+            color: #000;
+        }
+
+        /* FORM LAYOUT (Finalized) */
+        .info-table {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #fff;
+        }
+
+        .info-table td {
+            padding: 10px 12px;
+            vertical-align: top;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-table tr:nth-child(even) {
+            background: #f8f8f8;
+        }
+
+        .label {
+            width: 38%;
+            font-size: 11pt;
+            text-transform: none;
+            background: #f5f5f5;
+            border-right: 1px solid #ddd;
+            color: #333;
+        }
+
+        .label span.isrequired {
+            color: #d32f2f;
+            font-size: 11pt;
+            font-weight: bold;
+            margin-left: 3px;
+        }
+
+        .colon {
+            width: 2%;
+            text-align: center;
+            font-weight: bold;
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .value {
+            width: 60%;
+            border-bottom: 1px solid #333;
+            word-wrap: break-word;
+            white-space: pre-line;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            min-height: 20px;
+            padding-left: 5px;
+            color: #000;
+        }
+
+        .value-input {
+            width: 60%;
+            padding-left: 5px;
+        }
+
+        .append-text {
+            display: block;
+            font-size: 9pt;
+            color: #666;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        /* CONTROLS (Finalized aesthetics retained, but hidden/disabled for PDF) */
+        .value-input input[type="text"],
+        .value-input input[type="number"],
+        .value-input input[type="date"],
+        .value-input input[type="datetime-local"],
+        .value-input select,
+        .value-input textarea {
+            width: 80%;
+            padding: 6px 10px;
+            font-size: 11pt;
+            border: 1px solid #999;
+            border-left: 3px solid #666;
+            background-color: #fff;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            text-transform: uppercase;
+            color: #333;
+        }
+
+        .value-input textarea {
+            resize: vertical;
+            height: 65px;
+            text-transform: none;
+            line-height: 1.4;
+        }
+
+        .value-input input[type="radio"],
+        .value-input input[type="checkbox"] {
+            margin-right: 6px;
+            transform: scale(1.2);
+        }
+
+        .option-group {
+            margin-top: 6px;
+            padding: 8px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+        }
+
+        .option-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 11pt;
+            text-transform: uppercase;
+            font-weight: normal;
+            color: #333;
+        }
+
+        /* SECTION HEADER (Finalized) */
+        .section-header {
+            font-size: 11pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #000;
+            background: #f0f0f0;
+            margin: 20px 0 0 0;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-bottom: 2px solid #666;
+            letter-spacing: .5px;
+        }
+
+        /* SIGNATURES (Finalized) */
+        .signature-table.clean-signature {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: #fff;
+        }
+
+        .signature-cell {
+            width: 33.33%;
+            text-align: center;
+            vertical-align: top;
+            padding: 20px 10px;
+            border-right: 1px solid #ccc;
+            background: #fafafa;
+        }
+
+        .signature-cell:last-child {
+            border-right: none;
+        }
+
+        .signature-box-clean {
+            height: 90px;
+            border: 1px solid #999;
+            border-bottom: 2px solid #333;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            background: #fff;
+            position: relative;
+        }
+
+        .signature-box-clean::before {
+            content: "Signature";
+            position: absolute;
+            top: 3px;
+            left: 5px;
+            font-size: 8pt;
+            color: #bbb;
+            font-style: italic;
+        }
+
+        .signature-img-clean {
+            max-height: 75px;
+            max-width: 90%;
+            object-fit: contain;
+        }
+
+        .signature-label-clean {
+            font-weight: bold;
+            font-size: 10pt;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            color: #000;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 2px;
+            letter-spacing: .3px;
+        }
+
+        .signature-date-clean {
+            font-size: 9pt;
+            line-height: 1.3;
+            color: #666;
+        }
+
+        .date-label,
+        .name-label {
+            display: block;
+            margin-bottom: 2px;
+            font-weight: normal;
+        }
+
+        /* Optional text placeholder box (harmonized) */
+        .signature-box-clean-text {
+            height: 90px;
+            line-height: 90px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9pt;
+            color: #d32f2f;
+            margin-bottom: 12px;
+            overflow: hidden;
+            white-space: nowrap;
+            border: 1px dashed #bbb;
+            background: #fff;
+        }
+
+        /* LONG TEXT / REPORT BLOCKS (Finalized tone) */
+        .long-textarea-block {
+            page-break-inside: auto;
+            break-inside: auto;
+            -webkit-column-break-inside: auto;
+            margin: 15px 0;
+            border: 1px solid #eee;
+            padding: 12px;
+            background: #f8f8f8;
+        }
+
+        .report-text {
+            white-space: pre-line;
+            word-wrap: break-word;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        /* HIDE/READ-ONLY FOR PDF EXPORT (kept) */
+        .value-input {
+            border: none;
+            padding: 0;
+            background: transparent;
+        }
+
+        .value-input input[type="text"],
+        .value-input input[type="number"],
+        .value-input input[type="date"],
+        .value-input input[type="datetime-local"],
+        .value-input select,
+        .value-input textarea {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            width: 100% !important;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        input,
+        select,
+        textarea,
+        button,
+        canvas {
+            border: none !important;
+            background: transparent !important;
+            pointer-events: none;
+        }
+
+        .signature-clear-btn,
+        .field-disabled-note,
+        .signature-disabled-note {
+            display: none !important;
+        }
+
+        /* CLEAN SECTION ROWS (Finalized) */
+        .info-table tr td[colspan="3"] {
+            padding: 0;
+            border: none;
+            background: none;
+        }
+
+        .info-table tr td[colspan="3"]>* {
+            margin: 0;
+        }
+
+        /* PARAGRAPHS */
+        p {
+            margin: 6px 0;
+            color: #333;
+        }
+
+        tr.text .text-content {
+            padding: 0 15px;
+        }
     </style>
+
 </head>
 
 <body>
@@ -532,9 +911,11 @@
         @php $i++; @endphp
     @elseif($ff->ff_category == 4)
         <!-- CATEGORY : TEXT -->
-        <tr>
+        <tr class="text">
             <td colspan ="3">
-                {!! $ff->ff_label !!}
+                <div class="text-content">
+                    {!! $ff->ff_label !!}
+                </div>
             </td>
         </tr>
         @php $i++; @endphp

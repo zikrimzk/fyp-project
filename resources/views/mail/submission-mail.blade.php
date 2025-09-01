@@ -9,6 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>e-PostGrad System Notification</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Roboto:wght@300;400;500;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -16,23 +18,26 @@
         }
 
         body {
-            font-family: 'Times New Roman', Times, serif;
-            background-color: #f8f9fa;
+            font-family: 'Merriweather', serif;
+            background-color: #f0f2f5;
             color: #2c3e50;
             line-height: 1.6;
-            padding: 20px 0;
+            padding: 40px 0;
         }
 
         .email-wrapper {
             max-width: 700px;
             margin: 0 auto;
             background: #ffffff;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             border: 1px solid #e8ecef;
         }
 
         /* Official Letterhead */
         .letterhead {
+            background-color: rgba(52, 58, 64, 255);
             color: white;
             padding: 30px 40px;
             text-align: center;
@@ -42,82 +47,84 @@
         .letterhead::after {
             content: '';
             position: absolute;
-            bottom: -10px;
+            bottom: 0;
             left: 0;
             right: 0;
-            height: 10px;
+            height: 5px;
             background: linear-gradient(90deg, #c9b037 0%, #f4e467 50%, #c9b037 100%);
         }
 
         .university-logo {
-            width: 60px;
-            height: 60px;
-            background: white;
-            border-radius: 50%;
+            width: 70px;
+            height: 70px;
             margin: 0 auto 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #000000;
-            font-size: 24px;
+            display: block;
         }
 
         .university-name {
-            font-size: 18px;
-            font-weight: bold;
+            font-family: 'Roboto', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
             margin-bottom: 5px;
-            letter-spacing: 1px;
-            color: #000000;
-
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #f8f9fa;
         }
 
         .system-name {
+            font-family: 'Roboto', sans-serif;
             font-size: 14px;
+            font-weight: 300;
             opacity: 0.9;
-            font-weight: normal;
-            color: #000000;
+            color: #ced4da;
         }
 
         /* Letter Content */
         .letter-content {
             padding: 40px 50px;
-            background: white;
+            background: #ffffff;
         }
 
         .letter-header {
-            border-bottom: 2px solid #1e3c72;
-            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 25px;
             margin-bottom: 30px;
+            position: relative;
         }
 
-        .reference-number {
-            font-size: 12px;
-            color: #666;
-            text-align: right;
-            margin-bottom: 10px;
+        .letter-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            height: 2px;
+            width: 60px;
+            background-color: rgba(52, 58, 64, 255);
         }
 
         .letter-date {
-            font-size: 14px;
-            color: #666;
+            font-size: 13px;
+            color: #7f8c8d;
             text-align: right;
             margin-bottom: 20px;
+            font-family: 'Roboto', sans-serif;
         }
 
         .subject-line {
-            font-weight: bold;
-            font-size: 16px;
-            color: #000000;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: rgba(52, 58, 64, 255);
             margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .activity-name {
-            font-size: 14px;
-            color: #666;
+            font-size: 15px;
+            color: #7f8c8d;
             font-style: italic;
+            font-family: 'Merriweather', serif;
         }
 
         /* Letter Body */
@@ -127,33 +134,36 @@
 
         .greeting {
             margin-bottom: 20px;
-            font-size: 14px;
+            font-size: 15px;
             color: #000000;
         }
 
         .recipient-name {
             font-weight: bold;
-            color: #000000;
+            color: rgba(52, 58, 64, 255);
         }
 
         .letter-paragraph {
             margin-bottom: 18px;
             text-align: justify;
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 15px;
+            line-height: 1.8;
         }
 
         .document-list {
             background: #f8f9fa;
-            border-left: 4px solid #1e3c72;
-            padding: 15px 20px;
-            margin: 20px 0;
+            border-left: 5px solid rgba(52, 58, 64, 255);
+            padding: 20px 25px;
+            margin: 25px 0;
+            border-radius: 4px;
         }
 
         .document-list h4 {
-            color: #000000;
-            margin-bottom: 10px;
-            font-size: 14px;
+            color: rgba(52, 58, 64, 255);
+            margin-bottom: 15px;
+            font-size: 15px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
         }
 
         .document-list ul {
@@ -162,9 +172,10 @@
         }
 
         .document-list li {
-            padding: 8px 0;
-            border-bottom: 1px dotted #ddd;
-            font-size: 13px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            font-family: 'Roboto', sans-serif;
         }
 
         .document-list li:last-child {
@@ -172,99 +183,101 @@
         }
 
         .due-date {
-            color: #e74c3c;
+            color: #c0392b;
             font-weight: bold;
         }
 
-        .highlight-box {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 5px;
+        .box {
             padding: 15px;
             margin: 20px 0;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .highlight-box {
+            background: #fff8e1;
+            border-left: 4px solid #fbc02d;
+            color: #7e57c2;
         }
 
         .success-box {
-            background: #d1edff;
-            border: 1px solid #74b9ff;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 20px 0;
+            background: #e8f5e9;
+            border-left: 4px solid #43a047;
+            color: #2e7d32;
         }
 
         .warning-box {
-            background: #ffe8e8;
-            border: 1px solid #ff7675;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 20px 0;
+            background: #fbe9e7;
+            border-left: 4px solid #e53935;
+            color: #d32f2f;
         }
 
         /* Action Button */
         .action-section {
             text-align: center;
-            margin: 30px 0;
-            padding: 20px;
+            margin: 40px 0;
+            padding: 25px;
             background: #f8f9fa;
-            border-radius: 5px;
+            border-radius: 8px;
+            border: 1px dashed #ced4da;
         }
 
         .action-button {
             display: inline-block;
-            color: rgb(0, 0, 0) !important;
+            background-color: rgba(52, 58, 64, 255);
+            color: #ffffff !important;
             text-decoration: none;
-            padding: 12px 30px;
-            border: 1px solid #1e3c72;
-            border-radius: 25px;
+            padding: 15px 35px;
+            border-radius: 5px;
             font-weight: bold;
             font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+            box-shadow: 0 4px 15px rgba(52, 58, 64, 0.3);
         }
 
         .action-button:hover {
+            background-color: #2b3035;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
+            box-shadow: 0 6px 20px rgba(52, 58, 64, 0.4);
         }
 
         /* Signature */
         .signature-section {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #e0e0e0;
         }
 
         .closing {
             margin-bottom: 15px;
-            font-size: 14px;
+            font-size: 15px;
         }
 
         .signature {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
-            color: #000000;
+            color: rgba(52, 58, 64, 255);
+            font-family: 'Roboto', sans-serif;
         }
 
         .signature-title {
-            font-size: 12px;
-            color: #666;
+            font-size: 13px;
+            color: #7f8c8d;
             margin-top: 5px;
+            font-family: 'Roboto', sans-serif;
         }
 
         /* Footer */
         .letter-footer {
-            background: #f8f9fa;
-            padding: 25px 50px;
-            border-top: 1px solid #eee;
+            background: rgba(52, 58, 64, 255);
+            color: #ecf0f1;
+            padding: 30px 50px;
             font-size: 12px;
-            color: #666;
-        }
-
-        .footer-divider {
-            border-bottom: 2px solid #1e3c72;
-            margin-bottom: 15px;
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
         }
 
         .footer-content {
@@ -272,10 +285,11 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 15px;
         }
 
         .contact-info a {
-            color: #1e3c72;
+            color: #f4e467;
             text-decoration: none;
         }
 
@@ -285,8 +299,12 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
+            body {
+                padding: 20px 0;
+            }
+
             .email-wrapper {
-                margin: 10px;
+                margin: 0 10px;
             }
 
             .letter-content {
@@ -300,23 +318,6 @@
             .footer-content {
                 flex-direction: column;
                 text-align: center;
-                gap: 10px;
-            }
-        }
-
-        /* Print Styles */
-        @media print {
-            body {
-                background: white;
-            }
-
-            .email-wrapper {
-                box-shadow: none;
-                border: none;
-            }
-
-            .action-button {
-                display: none;
             }
         }
     </style>
@@ -324,15 +325,12 @@
 
 <body>
     <div class="email-wrapper">
-        <!-- Official Letterhead -->
         <div class="letterhead">
             <div class="university-name">UNIVERSITI TEKNIKAL MALAYSIA MELAKA</div>
             <div class="system-name">e-PostGrad System</div>
         </div>
 
-        <!-- Letter Content -->
         <div class="letter-content">
-            <!-- Letter Header -->
             <div class="letter-header">
                 <div class="letter-date">{{ Carbon::now()->format('d F Y') }}</div>
 
@@ -358,7 +356,6 @@
                 <div class="activity-name">Re: {{ $data['act_name'] }}</div>
             </div>
 
-            <!-- Letter Body -->
             <div class="letter-body">
                 <div class="greeting">
                     <strong>Assalamualaikum Warahmatullahi Wabarakatuh</strong><br>
@@ -390,7 +387,7 @@
                         </ul>
                     </div>
 
-                    <div class="highlight-box">
+                    <div class="box highlight-box">
                         <strong>IMPORTANT:</strong> Please ensure that you click the <strong>"Confirm
                             Submission"</strong> button after uploading all required documents to complete the
                         submission process. Failure to do so will result in an incomplete submission.
@@ -404,7 +401,7 @@
                         activity.
                     </p>
 
-                    <div class="success-box">
+                    <div class="box success-box">
                         <strong>Submission Details:</strong><br>
                         Date & Time: {{ Carbon::parse($data['submission_date'])->format('l, d F Y \a\t g:i A') }}<br>
                         Activity: {{ $data['act_name'] }}<br>
@@ -422,7 +419,7 @@
                         has been <strong>APPROVED</strong>.
                     </p>
 
-                    <div class="success-box">
+                    <div class="box success-box">
                         <strong>Approval Details:</strong><br>
                         Approved by: <strong>{{ $data['approvalUser'] }}</strong><br>
                         Date & Time: {{ Carbon::parse($data['sa_date'])->format('l, d F Y \a\t g:i A') }}<br>
@@ -441,7 +438,7 @@
                         revision and has been returned for your attention.
                     </p>
 
-                    <div class="warning-box">
+                    <div class="box warning-box">
                         <strong>Review Details:</strong><br>
                         Reviewed by: <strong>{{ $data['approvalUser'] }}</strong><br>
                         Date & Time: {{ Carbon::parse($data['sa_date'])->format('l, d F Y \a\t g:i A') }}<br>
@@ -461,7 +458,7 @@
                         to allow for modifications and updates.
                     </p>
 
-                    <div class="highlight-box">
+                    <div class="box highlight-box">
                         <strong>REQUIRED ACTION:</strong> Please log in to the system, review the current status, make
                         the necessary updates to your documents, and reconfirm your submission.
                     </div>
@@ -469,22 +466,15 @@
                     {{-- ACTIVITY COMPLETED --}}
                     <p class="letter-paragraph">
                         It is with great pleasure that we congratulate you on the successful completion of your
-                        <strong>{{ $data['act_name'] }}</strong> activity. This represents a significant milestone in
-                        your postgraduate studies.
+                        <strong>{{ $data['act_name'] }}</strong> activity.
                     </p>
 
-                    <div class="success-box">
-                        <strong>🎉 CONGRATULATIONS! 🎉</strong><br>
+                    <div class="box success-box">
+                        <strong>CONGRATULATIONS!</strong><br>
                         Activity: {{ $data['act_name'] }}<br>
                         Status: <span style="color: #27ae60; font-weight: bold;">SUCCESSFULLY COMPLETED</span><br>
                         Completion Date: {{ Carbon::now()->format('d F Y') }}
                     </div>
-
-                    <p class="letter-paragraph">
-                        You are now eligible to proceed to the next activity in your study plan. If this represents the
-                        completion of your final required activity, we extend our heartiest congratulations and wish you
-                        continued success in your future endeavors.
-                    </p>
                 @elseif ($data['eType'] == 7)
                     {{-- STUDENT SUBMISSION OPENED --}}
                     <p class="letter-paragraph">
@@ -493,7 +483,7 @@
                         available for your use.
                     </p>
 
-                    <div class="success-box">
+                    <div class="box success-box">
                         <strong>Portal Status:</strong> <span style="color: #27ae60; font-weight: bold;">OPEN FOR
                             SUBMISSION</span><br>
                         Activity: {{ $data['act_name'] }}<br>
@@ -507,7 +497,7 @@
                         document uploads.
                     </p>
 
-                    <div class="warning-box">
+                    <div class="box warning-box">
                         <strong>Portal Status:</strong> <span
                             style="color: #e74c3c; font-weight: bold;">CLOSED</span><br>
                         Activity: {{ $data['act_name'] }}<br>
@@ -520,17 +510,15 @@
                     </p>
                 @endif
 
-                <!-- Action Section -->
                 <div class="action-section">
-                    <p style="margin-bottom: 15px; font-size: 14px; color: #666;">
-                        Access the e-PostGrad system using the link below:
+                    <p style="margin-bottom: 20px; font-size: 14px; color: #666;">
+                        You may access the e-PostGrad system by clicking the button below:
                     </p>
                     <a href="{{ route('main-login') }}" class="action-button">
                         Log in to e-PostGrad System
                     </a>
                 </div>
 
-                <!-- Signature Section -->
                 <div class="signature-section">
                     <p class="closing">
                         Thank you for your attention to this matter. Should you require any assistance, please do not
@@ -551,15 +539,13 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <div class="letter-footer">
-            <div class="footer-divider"></div>
             <div class="footer-content">
                 <div>
                     &copy; {{ date('Y') }} e-PostGrad System, UTeM. All rights reserved.
                 </div>
                 <div class="contact-info">
-                    Support: <a href="mailto:support@utem.edu.my">support@utem.edu.my</a>
+                    Support: <a href="mailto:e-postgrad@appnest.my">e-postgrad@appnest.my</a>
                 </div>
             </div>
         </div>

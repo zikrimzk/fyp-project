@@ -79,37 +79,44 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Supervisor - Evaluation Approval ] start -->
+                <!-- [ Evaluation Approval ] start -->
+
+                <!-- [ Filter Section ] Start -->
                 <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header fw-semibold table-color text-white py-2">
+                            <i class="ti ti-filter me-1"></i> FILTERS
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-3 row-cols-1 row-cols-md-3 row-cols-lg-4 align-items-end">
 
-                            <!-- [ Filter Section ] Start -->
-                            <div class="row g-3 align-items-end">
-
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Semester --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Semester</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_semester_id" class="form-select">
                                             <option value="">-- Select Semester --</option>
                                             @foreach ($sems as $fil)
                                                 @if ($fil->sem_status == 1)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                    <option value="{{ $fil->id }}" class="bg-light-success">
                                                         {{ $fil->sem_label }} [Current]
                                                     </option>
                                                 @elseif($fil->sem_status == 3)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->sem_label }}
-                                                    </option>
+                                                    <option value="{{ $fil->id }}">{{ $fil->sem_label }}</option>
                                                 @endif
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSemFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearSemFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                                {{-- Status --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Status</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
                                             <option value="9">Pending : Supervisor Approval</option>
@@ -118,16 +125,22 @@
                                             <option value="12">Rejected : Committee/DD/Dean</option>
                                             <option value="8">Confirmed</option>
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearStatusFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearStatusFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
-
                             </div>
-                            <!-- [ Filter Section ] End -->
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Filter Section ] End -->
 
+                <!-- [ Datatable ] Start -->
+                <div class="col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -141,12 +154,10 @@
                                     </thead>
                                 </table>
                             </div>
-
                         </div>
                     </div>
                 </div>
-                <!-- [ Supervisor - Evaluation Approval ] end -->
-
+                <!-- [ Datatable ] end -->
 
                 @foreach ($data as $upd)
                     <!-- [ Approve Modal ] Start -->
@@ -294,6 +305,9 @@
                     </form>
                     <!-- [ Reject Modal ] End -->
                 @endforeach
+
+                <!-- [ Evaluation Approval ] end -->
+
 
             </div>
             <!-- [ Main Content ] end -->

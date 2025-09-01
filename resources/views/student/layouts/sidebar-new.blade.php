@@ -70,10 +70,23 @@
         padding-bottom: 2rem;
     }
 
+
     .user-profile-section {
         padding: 1.5rem 1rem;
         border-bottom: 1px solid #dee2e6;
         margin-bottom: 1rem;
+    }
+
+    .avatar-sidebar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        overflow: hidden;
+        transition: transform 0.2s ease;
+    }
+
+    .avatar-sidebar:hover {
+        transform: scale(1.02);
     }
 
     .avatar-sidebar img {
@@ -91,7 +104,7 @@
 
     .user-role {
         color: #6c757d;
-        font-size: 0.8rem;
+        font-size: 0.6rem;
         background: rgba(0, 0, 0, 0.05);
         padding: 0.25rem 0.75rem;
         border-radius: 12px;
@@ -100,13 +113,13 @@
     }
 
     .programme-info {
-        font-size: 0.75rem;
+        font-size: 0.6rem;
         color: #6c757d;
         margin-bottom: 0.25rem;
     }
 
     .mode-badge {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
         padding: 0.25rem 0.5rem;
         border-radius: 8px;
     }
@@ -274,9 +287,9 @@
                     <h6 class="text-uppercase">{{ auth()->user()->student_name ?? '-' }}</h6>
                     <div class="programme-info text-uppercase">{{ auth()->user()->programmes->prog_name }}</div>
                     @if (auth()->user()->programmes->prog_mode == 'FT')
-                        <span class="badge bg-dark text-uppercase">Full Time</span>
+                        <span class="badge bg-dark text-uppercase" style="font-size: 0.6rem;">Full Time</span>
                     @else
-                        <span class="badge bg-secondary text-uppercase">Part Time</span>
+                        <span class="badge bg-secondary text-uppercase" style="font-size: 0.6rem;">Part Time</span>
                     @endif
                 </div>
             </div>
@@ -298,7 +311,10 @@
 
                 <!-- Course Section -->
                 <li class="pc-item pc-caption">
-                    <label>Course</label>
+                    <label>
+                        {{ auth()->user()->programmes->prog_code }}
+                        ({{ auth()->user()->programmes->prog_mode }})
+                    </label>
                 </li>
 
                 <li class="pc-item">
@@ -307,8 +323,7 @@
                             <i class="fas fa-book-open pc-icon"></i>
                         </span>
                         <span class="pc-mtext">
-                            {{ auth()->user()->programmes->prog_code }}
-                            ({{ auth()->user()->programmes->prog_mode }})
+                            Programme Overview
                         </span>
                     </a>
                 </li>

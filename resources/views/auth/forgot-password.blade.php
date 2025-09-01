@@ -1,46 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>e-PostGrad | Forgot Password</title>
+    <title>e-PostGrad | Reset Password</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="description" content="e-PostGrad System - Postgraduate Document Management Portal" />
     <meta name="author" content="ZikriMzk" />
+
     <link rel="icon" href="../assets/images/logo-test-white.png" type="image/x-icon" />
 
-    <link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css" />
-    <link rel="stylesheet" href="../assets/fonts/fontawesome.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com/">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary-color: #1e40af;
-            --primary-dark: #1e3a8a;
-            --secondary-color: #374151;
-            --success-color: #166534;
-            --danger-color: #b91c1c;
-            --white: #ffffff;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-500: #6b7280;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
-            --border-color: #d1d5db;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --color-primary: rgba(52, 58, 64, 255);
+            --color-primary-dark: #212529;
+            --color-secondary: #6c757d;
+            --color-success: #198754;
+            --color-danger: #dc3545;
+            --color-white: #ffffff;
+            --color-light-gray: #f8f9fa;
+            --color-medium-gray: #e9ecef;
+            --color-dark-gray: #343a40;
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
+        /* Basic Reset & Typography */
         * {
             margin: 0;
             padding: 0;
@@ -48,228 +39,188 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--gray-100);
+            font-family: 'Inter', sans-serif;
+            color: var(--color-dark-gray);
+            background-color: var(--color-light-gray);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: grid;
+            place-items: center;
             padding: 2rem 1rem;
-            color: var(--gray-800);
+            line-height: 1.6;
         }
 
+        /* Login Card & Layout */
         .login-container {
             width: 100%;
-            max-width: 440px;
-            position: relative;
+            max-width: 420px;
         }
 
         .login-card {
-            background: var(--white);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: var(--shadow-lg);
+            background: var(--color-white);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
             overflow: hidden;
+            text-align: center;
+            border: 1px solid var(--color-medium-gray);
+            animation: slideUpFadeIn 0.6s ease-out forwards;
         }
 
+        /* Header */
         .login-header {
-            background: var(--white);
-            /* padding: 1.5rem 1rem 1rem; */
-            text-align: center;
-            /* border-bottom: 1px solid var(--gray-200); */
+            padding: 2rem 2rem 1.5rem;
+            border-bottom: 1px solid var(--color-medium-gray);
         }
 
         .university-logo {
-            margin-top: 1.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .university-logo img {
-            width: 100px;
+            width: 120px;
             height: auto;
         }
 
         .system-title {
-            font-size: 2rem;
+            font-size: 1.25rem;
             font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.025em;
+            color: var(--color-primary);
+            margin-bottom: 0.25rem;
         }
 
         .system-subtitle {
-            font-size: 1rem;
-            color: var(--gray-600);
-            font-weight: 500;
-            line-height: 1.5;
+            font-size: 0.9rem;
+            color: var(--color-secondary);
         }
 
+        /* Login Body (Form) */
         .login-body {
-            padding: 2.5rem 2rem;
-        }
-
-        .welcome-section {
-            /* margin-bottom: 1rem; */
-            text-align: center;
-        }
-
-        .welcome-section h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 0.5rem;
-        }
-
-        .welcome-section p {
-            color: var(--gray-600);
-            font-size: 0.75rem;
-            line-height: 1.5;
+            padding: 2rem;
         }
 
         .form-group {
             margin-bottom: 1.5rem;
+            text-align: left;
         }
 
         .form-label {
             display: block;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: var(--gray-700);
+            color: var(--color-dark-gray);
             margin-bottom: 0.5rem;
         }
 
         .form-control {
             width: 100%;
             padding: 0.875rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            background: var(--white);
-            color: var(--gray-900);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: var(--color-white);
+            color: var(--color-dark-gray);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(52, 58, 64, 0.1);
         }
 
         .form-control::placeholder {
-            color: var(--gray-400);
+            color: var(--color-secondary);
         }
 
-        .password-wrapper {
-            position: relative;
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--gray-400);
-            cursor: pointer;
-            padding: 0.25rem;
-            font-size: 1.1rem;
-            transition: color 0.2s ease;
-
-        }
-
-        .password-toggle:hover {
-            color: var(--gray-600);
-        }
-
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .remember-me input[type="checkbox"] {
-            width: 1rem;
-            height: 1rem;
-            accent-color: var(--primary-color);
-        }
-
-        .remember-me label {
-            font-size: 0.9rem;
-            color: var(--gray-700);
-            cursor: pointer;
-        }
-
-        .forgot-password {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-
-        .forgot-password:hover {
-            color: var(--primary-dark);
-            text-decoration: underline;
-        }
-
+        /* Button */
         .login-button {
             width: 100%;
-            background: var(--primary-color);
-            color: var(--white);
+            padding: 0.875rem;
+            background: var(--color-primary);
+            color: var(--color-white);
             border: none;
-            padding: 1rem;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 1rem;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
 
         .login-button:hover {
-            background: var(--primary-dark);
+            background: var(--color-primary-dark);
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .login-button:active {
-            transform: translateY(1px);
+            transform: scale(0.99);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .login-button:disabled {
-            background: var(--gray-400);
+            background: var(--color-secondary);
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
+        /* Links */
+        .login-link-group {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .login-link {
+            color: var(--color-dark-gray);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .login-link:hover {
+            color: var(--color-primary);
+            text-decoration: underline;
+        }
+
+        /* Alerts */
         .alert {
             padding: 1rem;
-            border-radius: 6px;
+            border-radius: 8px;
             margin-bottom: 1.5rem;
             font-size: 0.9rem;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             gap: 0.75rem;
-            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(-10px);
+            animation: slideInFadeIn 0.3s ease-out forwards;
+            font-weight: 500;
+        }
+
+        .alert-icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+        }
+
+        .alert-icon-wrapper .icon {
+            width: 1.5em;
+            height: 1.5em;
         }
 
         .alert-success {
-            background-color: #f0fdf4;
-            color: var(--success-color);
-            border: 1px solid #bbf7d0;
+            background-color: #d1e7dd;
+            color: var(--color-success);
+            border: 1px solid #badbcc;
         }
 
         .alert-danger {
-            background-color: #fef2f2;
-            color: var(--danger-color);
-            border: 1px solid #fecaca;
+            background-color: #f8d7da;
+            color: var(--color-danger);
+            border: 1px solid #f5c2c7;
         }
 
         .alert-close {
@@ -280,48 +231,44 @@
             font-size: 1.2rem;
             margin-left: auto;
             opacity: 0.7;
-            transition: opacity 0.2s ease;
-            padding: 0;
-            line-height: 1;
+            transition: opacity 0.2s ease-in-out;
         }
 
         .alert-close:hover {
             opacity: 1;
         }
 
+        /* Footer */
         .footer-info {
-            background: var(--gray-50);
-            border-top: 1px solid var(--gray-200);
+            background: var(--color-light-gray);
+            border-top: 1px solid var(--color-medium-gray);
             padding: 1.5rem 2rem;
-            text-align: center;
-        }
-
-        .footer-info p {
-            color: var(--gray-500);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            color: var(--color-secondary);
             line-height: 1.5;
-            margin: 0;
         }
 
-        .institutional-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: var(--gray-50);
-            color: var(--gray-600);
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-top: 1rem;
-            border: 1px solid var(--gray-200);
+        .footer-info a {
+            color: var(--color-primary);
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 0.25rem;
+            transition: color 0.2s ease-in-out;
         }
 
-        /* Loading state */
+        .footer-info a:hover {
+            text-decoration: underline;
+            color: var(--color-primary-dark);
+        }
+
+        /* Loading State */
         .loading .login-button {
-            background: var(--gray-400);
+            background: var(--color-secondary);
             cursor: not-allowed;
             position: relative;
+            pointer-events: none;
+            transform: none !important;
         }
 
         .loading .login-button::after {
@@ -329,139 +276,112 @@
             position: absolute;
             right: 1rem;
             top: 50%;
-            transform: translateY(-50%);
+            transform: translateY(-50%) rotate(0deg);
             width: 1rem;
             height: 1rem;
             border: 2px solid transparent;
-            border-top: 2px solid currentColor;
+            border-top: 2px solid var(--color-white);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
             to {
-                transform: rotate(360deg);
+                transform: translateY(-50%) rotate(360deg);
             }
         }
 
-
-        .top-nav {
-            position: absolute;
-            top: -3rem;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: start;
-          
-        }
-
-        .top-nav a {
-            background: #ffffff;
-            padding: 0.5rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            color: #1e40af;
-            text-decoration: none;
-            font-weight: 500;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: 0.2s;
-        }
-
-        .top-nav a:hover {
-            background: #f9fafb;
-            border-color: #9ca3af;
-        }
-
-        @media (max-width: 640px) {
-            body {
-                padding: 1rem;
+        /* Animations */
+        @keyframes slideUpFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
 
-            .login-header,
-            .login-body {
-                padding-left: 1.5rem;
-                padding-right: 1.5rem;
-            }
-
-            .login-header {
-                padding-top: 2rem;
-                padding-bottom: 1.5rem;
-            }
-
-            .login-body {
-                padding-top: 2rem;
-                padding-bottom: 2rem;
-            }
-
-            .form-options {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.75rem;
-            }
-
-            .system-title {
-                font-size: 1.75rem;
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
-        /* Focus styles for accessibility */
-        .form-control:focus,
-        .login-button:focus,
-        .forgot-password:focus,
-        .password-toggle:focus {
-            outline: 2px solid var(--primary-color);
-            outline-offset: 2px;
+        @keyframes slideInFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
     </style>
 </head>
 
 <body>
     <div class="login-container">
-        <div class="top-nav">
-            <a href="{{ route('main-login') }}"><i class="ti ti-arrow-left"></i> Back to Login</a>
-        </div>
         <div class="login-card">
-            <!-- Header -->
-            <div class="login-header">
+            <header class="login-header">
                 <div class="university-logo">
                     <img src="../assets/images/logo-utem.PNG" alt="University Teknikal Malaysia Melaka" />
                 </div>
+                <h1 class="system-title">Reset Password</h1>
+                <p class="system-subtitle">Enter your email to request a password reset.</p>
+            </header>
 
-                <div class="welcome-section">
-                    <h2>Reset Password</h2>
-                    <p>Enter your email to request password reset.</p>
-                </div>
-            </div>
-
-            <!-- Body -->
-            <div class="login-body">
-                <!-- Alerts -->
+            <main class="login-body">
                 <div id="alert-container">
                     @if (session()->has('success'))
-                        <div class="alert alert-success d-flex align-items-center" id="success-alert">
-                            <div>
-                                <i class="fas fa-check-circle"></i>
-                                <span id="success-message">{{ session('success') }}</span>
-                            </div>
-                            <button type="button" class="alert-close" onclick="closeAlert('success-alert')">×</button>
-                        </div>
+                    <div class="alert alert-success" id="success-alert">
+                        <span class="alert-icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M5 12l5 5l10 -10"></path>
+                            </svg>
+                        </span>
+                        <span id="success-message">{{ session('success') }}</span>
+                        <button type="button" class="alert-close" onclick="closeAlert('success-alert')">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M18 6l-12 12"></path>
+                                <path d="M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
                     @endif
                     @if (session()->has('error'))
-                        <div class="alert alert-danger d-flex align-items-center" id="error-alert">
-                            <div>
-                                <i class="fas fa-info-circle"></i>
-                                <span id="error-message">{{ session('error') }}</span>
-                            </div>
-                            <button type="button" class="alert-close" onclick="closeAlert('error-alert')">×</button>
-                        </div>
+                    <div class="alert alert-danger" id="error-alert">
+                        <span class="alert-icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M12 9v4"></path>
+                                <path
+                                    d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.875h16.214a1.914 1.914 0 0 0 1.636 -2.875l-8.106 -13.534a1.914 1.914 0 0 0 -3.274 0z">
+                                </path>
+                                <path d="M12 16h.01"></path>
+                            </svg>
+                        </span>
+                        <span id="error-message">{{ session('error') }}</span>
+                        <button type="button" class="alert-close" onclick="closeAlert('error-alert')">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M18 6l-12 12"></path>
+                                <path d="M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
                     @endif
                 </div>
 
-                <!-- Reset Password Form -->
                 <form id="forgot-password-form" action="{{ route('request-reset-password') }}" method="POST"
                     autocomplete="off">
                     @csrf
@@ -470,50 +390,61 @@
                         <input type="email" class="form-control" id="email" name="email"
                             placeholder="Enter your email" value="{{ old('email') }}" required />
                     </div>
-
-                    <button type="submit" class="login-button" id="reset-btn">Request Password Reset</button>
+                    <button type="submit" class="login-button" id="reset-btn">
+                        Request Password Reset
+                    </button>
+                    <div class="login-link-group">
+                        <a href="{{ route('main-login') }}" class="login-link">Back to Login</a>
+                    </div>
                 </form>
-            </div>
+            </main>
 
-            <!-- Footer -->
-            <div class="footer-info">
+            <footer class="footer-info">
                 <p>
-                    <strong>University Teknikal Malaysia Melaka</strong><br>
-                    For technical support, contact 
-                    <a href="mailto:e-postgrad@appnest.my" style="text-decoration: none; color: var(--primary-color); display: block;">e-postgrad@appnest.my</a>
+                    <strong>Universiti Teknikal Malaysia Melaka</strong><br>
+                    For technical support, contact <a href="mailto:e-postgrad@appnest.my">e-postgrad@appnest.my</a>
                 </p>
-            </div>
+            </footer>
         </div>
     </div>
 
     <script>
-        // Form submission loading state
-        document.getElementById('forgot-password-form').addEventListener('submit', function(e) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const forgotPasswordForm = document.getElementById('forgot-password-form');
             const resetBtn = document.getElementById('reset-btn');
-            this.classList.add('loading');
-            resetBtn.textContent = 'Processing...';
-            resetBtn.disabled = true;
-        });
 
-        function closeAlert(alertId) {
-            const alert = document.getElementById(alertId);
-            if (alert) {
-                alert.style.display = 'none';
+            if (forgotPasswordForm) {
+                forgotPasswordForm.addEventListener('submit', function(e) {
+                    if (resetBtn) {
+                        resetBtn.classList.add('loading');
+                        resetBtn.textContent = 'Processing...';
+                        resetBtn.disabled = true;
+                    }
+                });
             }
-        }
 
-        // Prevent pinch zoom on mobile
-        document.addEventListener('gesturestart', function(e) {
-            e.preventDefault();
-        });
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            let now = new Date().getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
+            window.closeAlert = function(alertId) {
+                const alertElement = document.getElementById(alertId);
+                if (alertElement) {
+                    alertElement.style.animation = 'none';
+                    alertElement.style.opacity = '0';
+                    alertElement.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        alertElement.style.display = 'none';
+                    }, 300);
+                }
+            };
+
+            const successAlert = document.getElementById('success-alert');
+            const errorAlert = document.getElementById('error-alert');
+
+            if (successAlert) {
+                setTimeout(() => closeAlert('success-alert'), 5000);
             }
-            lastTouchEnd = now;
-        }, false);
+            if (errorAlert) {
+                setTimeout(() => closeAlert('error-alert'), 5000);
+            }
+        });
     </script>
 </body>
 

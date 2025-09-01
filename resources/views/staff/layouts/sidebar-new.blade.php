@@ -74,6 +74,7 @@
         padding: 1.5rem 1rem;
         border-bottom: 1px solid #dee2e6;
         margin-bottom: 1rem;
+        text-transform: uppercase;
     }
 
     .avatar-sidebar {
@@ -81,12 +82,11 @@
         height: 64px;
         border-radius: 50%;
         overflow: hidden;
-        border: 3px solid #dee2e6;
-        transition: border-color 0.2s ease;
+        transition: transform 0.2s ease;
     }
 
     .avatar-sidebar:hover {
-        border-color: #adb5bd;
+        transform: scale(1.02);
     }
 
     .avatar-sidebar img {
@@ -104,7 +104,7 @@
 
     .user-role {
         color: #6c757d;
-        font-size: 0.8rem;
+        font-size: 0.6rem;
         background: rgba(0, 0, 0, 0.05);
         padding: 0.25rem 0.75rem;
         border-radius: 12px;

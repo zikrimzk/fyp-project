@@ -4867,17 +4867,19 @@ class EvaluationController extends Controller
                     'sa_status' => 13
                 ]);
 
-                $message = $student->student_name . " activity for " . $activity->act_name . " has been marked as Passed & Continue. Student will continue this activity in next semester. An email notification has been sent to the student.";
+                $message = $student->student_name . " evaluation for " . $activity->act_name . " has been completed. Student will continue this activity in next semester.";
             } elseif ($req->evaluation_type == 2) {
                 $studentactivity->update([
                     'sa_status' => 3
                 ]);
 
-                $message = $student->student_name . " activity for " . $activity->act_name . " has been marked as Approved & Completed. An email notification has been sent to the student.";
+                $message = $student->student_name . " evaluation for " . $activity->act_name . " has been marked as Approved & Completed.";
             }
 
             /* FINALIZE SUBMISSION */
             $sc->finalizeSubmission($student, $studentactivity);
+            $sc->sendSubmissionNotification($student, 1, $activity->act_name, 6, 4);
+
 
             /* RETURN IF SUCCESS */
             return back()->with('success', $message);

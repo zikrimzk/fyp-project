@@ -43,8 +43,8 @@ use App\Http\Controllers\FormHandlerController;
 class SubmissionController extends Controller
 {
     /* General Function [REQUIRE CHECKING] */
-    // EMAIL NOTOFICATION
-    private function sendSubmissionNotification($data, $userType, $actName, $emailType, $approvalRole)
+    // EMAIL NOTIFICATION
+    public function sendSubmissionNotification($data, $userType, $actName, $emailType, $approvalRole)
     {
         //USER TYPE 
         // 1 - Student
@@ -3983,7 +3983,7 @@ class SubmissionController extends Controller
         }
     }
 
-    /* Archive Submission [Staff] [Committee/DD/DEAN] - Function */
+    /* Archive Submission [Staff] - Function | Last Checked: 01-09-2025 */
     public function finalizeSubmission($student, $activity)
     {
         DB::table('submissions as a')
@@ -3991,7 +3991,7 @@ class SubmissionController extends Controller
             ->join('activities as c', 'b.activity_id', '=', 'c.id')
             ->where('a.student_id', $student->id)
             ->where('c.id', $activity->activity_id)
-            ->where('a.semester_id', $activity->semester_id)
+            // ->where('a.semester_id', $activity->semester_id)
             ->update(['a.submission_status' => 5]);
     }
 

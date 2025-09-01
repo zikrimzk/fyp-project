@@ -419,8 +419,8 @@
                                                     Active</option>
                                                 <option value="2" @if (old('student_semester_status_change') == 2) selected @endif>
                                                     Inactive</option>
-                                                <option value="3" @if (old('student_semester_status_change') == 3) selected @endif>
-                                                    Barred</option>
+                                                {{-- <option value="3" @if (old('student_semester_status_change') == 3) selected @endif>
+                                                    Barred</option> --}}
                                                 <option value="4" @if (old('student_semester_status_change') == 4) selected @endif>
                                                     Completed</option>
                                             </select>
@@ -530,8 +530,8 @@
                                                     Active</option>
                                                 <option value="2" @if ($upd->ss_status == 2) selected @endif>
                                                     Inactive</option>
-                                                <option value="3" @if ($upd->ss_status == 3) selected @endif>
-                                                    Barred</option>
+                                                {{-- <option value="3" @if ($upd->ss_status == 3) selected @endif>
+                                                    Barred</option> --}}
                                                 <option value="4" @if ($upd->ss_status == 4) selected @endif>
                                                     Completed</option>
                                             </select>
