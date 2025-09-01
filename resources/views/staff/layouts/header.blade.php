@@ -13,8 +13,8 @@
                         <i class="ti ti-menu-2"></i>
                     </a>
                 </li>
-                <li class="pc-h-item d-none d-md-inline-flex">
-                  {{-- maybe later --}}
+                <li class="pc-h-item d-md-inline-flex">
+                  <span class="fw-semibold text-uppercase">e-PostGrad System</span>
                 </li>
             </ul>
         </div>

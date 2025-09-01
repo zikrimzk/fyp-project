@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use App\Http\Controllers\SubmissionController;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use App\Http\Controllers\SupervisionController;
 
 class StudentImport implements ToCollection, WithHeadingRow
 {
@@ -147,10 +148,10 @@ class StudentImport implements ToCollection, WithHeadingRow
                     'supervision_role' => 2
                 ]);
             }
-            
-            /* ASSIGN STUDENT SUBMISSION */
-            $sc = new SubmissionController();
-            $sc->assignStudentSubmission($student->student_matricno);
+
+            /* ASSIGN STUDENT SEMESTER UPON REGISTRATION */
+            $sc = new SupervisionController();
+            $sc->assignStudentSemesterGet($student->student_matricno);
 
             $this->insertedCount++;
         }

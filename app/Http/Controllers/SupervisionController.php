@@ -52,7 +52,7 @@ class SupervisionController extends Controller
                 ->join('programmes as c', 'c.id', '=', 'a.programme_id')
                 ->select('a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'ss.semester_id')
                 ->orderBy('a.student_name');
-                
+
             if ($req->ajax()) {
 
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
@@ -87,7 +87,7 @@ class SupervisionController extends Controller
                     /* GET STUDENT SEMESTERS DETAILS */
                     $totalsemester = StudentSemester::where('student_id', $row->id)->count();
                     $totalactive = StudentSemester::where('student_id', $row->id)->whereIn('ss_status', [1, 4])->count();
-                
+
                     /* RETURN STUDENT DETAILS */
                     return '
                         <div class="d-flex align-items-center" >
@@ -194,6 +194,7 @@ class SupervisionController extends Controller
         }
     }
 
+    /* Add Student [Staff] - Function | Last Checked: 01-09-2025 */
     public function addStudent(Request $req)
     {
         $validator = Validator::make($req->all(), [
@@ -275,20 +276,20 @@ class SupervisionController extends Controller
                 'programme_id' => $validated['programme_id'],
             ]);
 
-            /* ASSIGN SUBMISSION TO STUDENT [ASSUMING ALL PRE-REQUISITES DATA ARE SET] */
-            $sc = new SubmissionController();
-            $sc->assignStudentSubmission(Str::upper($validated['student_matricno']));
+            /* ASSIGN SEMESTER TO STUDENT */
+            $this->assignStudentSemesterGet($student->student_matricno);
 
             /* SENT EMAIL NOTIFICATION */
             $ac = new AuthenticateController();
             $ac->sendAccountNotification($student, 1, 1, route('main-login'));
 
-            return back()->with('success', 'Student added successfully.');
+            return back()->with('success', $student_name . ' has been added and enrolled successfully. An email notification has been sent.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error adding student: ' . $e->getMessage());
         }
     }
 
+    /* Update Student [Staff] - Function | Last Checked: 01-09-2025 */
     public function updateStudent(Request $req, $id)
     {
         $id = Crypt::decrypt($id);
@@ -377,6 +378,10 @@ class SupervisionController extends Controller
             if ($req->input('programme_id_up') != $student->programme_id) {
                 /* DELETE PREVIOUS SUBMISSION */
                 Submission::where('student_id', $student->id)->delete();
+
+                /* ASSIGN SUBMISSION TO STUDENT */
+                $sc = new SubmissionController();
+                $sc->assignStudentSubmission(Str::upper($validated['student_matricno_up']));
             }
 
             Student::where('id', $student->id)->update([
@@ -397,26 +402,29 @@ class SupervisionController extends Controller
                 $ac->sendAccountNotification($student, 2, 1, null);
             }
 
-            /* ASSIGN SUBMISSION TO STUDENT [ASSUMING ALL PRE-REQUISITES DATA ARE SET] */
-            $sc = new SubmissionController();
-            $sc->assignStudentSubmission(Str::upper($validated['student_matricno_up']));
-
             return back()->with('success', 'Student updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error updating student: ' . $e->getMessage());
         }
     }
 
+    /* Delete Student [Staff] - Function | Last Checked: 01-09-2025 */
     public function deleteStudent($id, $opt)
     {
+
+        /* DECRYPT STUDENT ID */
+        $id = decrypt($id);
+
         try {
-            $id = decrypt($id);
+            /* LOAD STUDENT DATA */
             $student = Student::find($id);
-            $submission = Submission::where('student_id', $id)->get();
 
             if (!$student) {
                 return back()->with('error', 'Student not found.');
             }
+
+            /* LOAD SUBMISSION DATA */
+            $submission = Submission::where('student_id', $id)->get();
 
             if ($submission) {
                 foreach ($submission as $sub) {
@@ -424,22 +432,29 @@ class SupervisionController extends Controller
                 }
             }
 
+            /* GET STUDENT DIRECTORY */
             $dirPath = $student->student_directory;
 
             if ($opt == 1) {
+                /* DELETE STUDENT DIRECTORY */
                 if (!empty($student->student_directory) && Storage::exists($dirPath)) {
                     Storage::deleteDirectory($dirPath);
                 }
+
+                /* DELETE STUDENT */
                 $student->delete();
 
+                /* RETURN SUCCESS */
                 return back()->with('success', 'Student deleted successfully.');
             } elseif ($opt == 2) {
+                /* UPDATE STUDENT STATUS */
                 $student->update(['student_status' => 2]);
 
                 /* SENT EMAIL NOTIFICATION */
                 $ac = new AuthenticateController();
                 $ac->sendAccountNotification($student, 2, 1, null);
 
+                /* RETURN SUCCESS */
                 return back()->with('success', 'Student has been inactivated successfully.');
             }
         } catch (Exception $e) {
@@ -447,16 +462,25 @@ class SupervisionController extends Controller
         }
     }
 
+    /* Import Student Data [Staff] - Function | Last Checked: 01-09-2025 */
     public function importStudent(Request $req)
     {
         try {
+            /* VALIDATE REQUEST */
             $req->validate([
                 'student_file' => 'required|mimes:xlsx,csv'
+            ], [], [
+                'student_file.required' => 'Please upload a student file.',
+                'student_file.mimes' => 'Invalid file type. Only xlsx and csv files are allowed.'
             ]);
 
+            /* IMPORT CLASS DECLARATION */
             $import = new StudentImport();
+
+            /* IMPORT DATA FROM EXCEL */
             Excel::import($import, $req->file('student_file'));
 
+            /* RETURN RESULT */
             $response = back()->with(
                 'success',
                 "{$import->insertedCount} student successfully inserted. {$import->skippedCount} data were not inserted."
@@ -469,6 +493,53 @@ class SupervisionController extends Controller
             return $response;
         } catch (Exception $e) {
             return back()->with('error', 'Oops! Error importing student: ' . $e->getMessage());
+        }
+    }
+
+    /* Assign Student Semester (Method: GET) [Staff] - Function | Last Checked: 01-09-2025 */
+    public function assignStudentSemesterGet($matricno)
+    {
+        try {
+            /* LOAD STUDENT DATA */
+            $student = Student::where('student_matricno', $matricno)->first();
+
+            if (!$student) {
+                return back()->with('error', 'Error occured: Student not found.');
+            }
+
+            /* LOAD SEMESTER DATA */
+            $semester = Semester::where('sem_status', 1)->first();
+
+            if (!$semester) {
+                return back()->with('error', 'Error occured: Semester not found.');
+            }
+
+            /* CHECK IF EXISTS */
+            $checkSemExist = StudentSemester::where('student_id', $student->id)->where('semester_id', $semester->id)->exists();
+
+            if ($checkSemExist) {
+                return back()->with('error', 'Error occured: This student is already assigned to this semester.');
+            }
+
+            /* CREATE STUDENT SEMESTER */
+            StudentSemester::create([
+                'student_id' => $student->id,
+                'semester_id' => $semester->id
+            ]);
+
+            /* UPDATE STUDENT SEMESTER COUNT */
+            $semCount = StudentSemester::where('student_id', $student->id)->whereIn('ss_status', [1, 4])->count();
+            $student->student_semcount = $semCount;
+            $student->save();
+
+            /* ASSIGN STUDENT SUBMISSION */
+            $sc = new SubmissionController();
+            $sc->assignStudentSubmission($student->student_matricno);
+
+            /* RETURN SUCCESS */
+            return back()->with('success', $student->student_name . ' has been assigned to this semester successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Oops! Error assigning student: ' . $e->getMessage());
         }
     }
 

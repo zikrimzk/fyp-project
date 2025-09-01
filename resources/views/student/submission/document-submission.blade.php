@@ -262,40 +262,6 @@
                     </div>
                 </div>
 
-                {{-- <!-- [ Delete Modal ] start -->
-                <div class="modal fade" id="removeSubmissionModal" data-bs-keyboard="false" tabindex="-1"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-sm-12 mb-4">
-                                        <div class="d-flex justify-content-center align-items-center mb-3">
-                                            <i class="ti ti-trash text-danger" style="font-size: 100px"></i>
-                                        </div>
-
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-center align-items-center mb-5">
-                                            <h4 class="text-center">Are you sure to remove this submission ?</h4>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex justify-content-between gap-3 align-items-center mt-2">
-                                            <button type="reset" class="btn btn-light btn-pc-default w-50"
-                                                data-bs-dismiss="modal">Cancel</button>
-                                            <a class="btn btn-danger w-100"
-                                                href="{{ route('student-remove-document-get', ['id' => Crypt::encrypt($doc->submission_id), 'filename' => Crypt::encrypt($submission_dir . '/' . $doc->submission_document)]) }}">Remove
-                                                Anyways</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- [ Delete Modal ] end --> --}}
-
                 <!-- [ Delete Confirmation Modal ] start -->
                 <div class="modal fade" id="removeSubmissionModal" data-bs-keyboard="false" tabindex="-1"
                     aria-hidden="true" data-bs-backdrop="static">

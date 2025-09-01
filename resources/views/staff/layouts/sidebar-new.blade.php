@@ -1,7 +1,7 @@
 @php
     use App\Models\Semester;
 @endphp
-<style>
+{{-- <style>
     /* Enhanced Sidebar Styles */
     .pc-sidebar {
         border-right: 1px solid #dee2e6;
@@ -247,6 +247,279 @@
             padding: 0.6rem 0.75rem;
         }
     }
+</style> --}}
+
+<style>
+    /* Theme Color Variables for Consistency and New Design */
+    :root {
+        --color-primary: rgba(52, 58, 64, 255);
+        --color-primary-dark: #212529;
+        --color-secondary: #6c757d;
+        --color-success: #198754;
+        --color-danger: #dc3545;
+        --color-white: #ffffff;
+        --color-light-gray: #f8f9fa;
+        --color-medium-gray: #e9ecef;
+        --color-dark-gray: #343a40;
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+        --gradient-active: linear-gradient(90deg, #3a4149 0%, #343a40 100%);
+        --gradient-hover: linear-gradient(90deg, #e9ecef 0%, #f8f9fa 100%);
+    }
+    
+    /* Enhanced Sidebar Styles */
+    .pc-sidebar {
+        border-right: 1px solid var(--color-medium-gray);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        background-color: var(--color-light-gray);
+    }
+
+    .navbar-wrapper {
+        height: 100vh;
+        overflow-y: hidden;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .navbar-wrapper::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .navbar-wrapper::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .navbar-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 2px;
+    }
+
+    .navbar-wrapper::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .sidebar-header {
+        background: var(--color-light-gray);
+        border-bottom: 2px solid var(--color-medium-gray);
+        padding: 1.5rem 1rem;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .sidebar-header .b-brand {
+        transition: transform 0.2s ease;
+    }
+
+    .sidebar-header .b-brand:hover {
+        transform: scale(1.02);
+    }
+
+    .semester-info {
+        background: rgba(0, 0, 0, 0.03);
+        border-bottom: 1px solid var(--color-medium-gray);
+        margin-bottom: 0;
+        padding: 0.75rem 1rem;
+        flex-shrink: 0;
+    }
+
+    .semester-info h6 {
+        color: var(--color-secondary);
+        font-weight: 600;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .navbar-content {
+        background: var(--color-light-gray);
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 2rem;
+    }
+
+    .user-profile-section {
+        padding: 1.5rem 1rem;
+        border-bottom: 1px solid var(--color-medium-gray);
+        margin-bottom: 1rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .avatar-sidebar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        overflow: hidden;
+        transition: transform 0.2s ease;
+        border: 2px solid var(--color-medium-gray);
+    }
+
+    .avatar-sidebar:hover {
+        transform: scale(1.05);
+        border-color: var(--color-primary);
+    }
+
+    .avatar-sidebar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .user-info h6 {
+        color: var(--color-dark-gray);
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-size: 0.95rem;
+    }
+
+    .user-role {
+        color: var(--color-secondary);
+        font-size: 0.6rem;
+        background: rgba(0, 0, 0, 0.05);
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        display: inline-block;
+    }
+
+    .pc-navbar {
+        padding: 0 0 14rem 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    .pc-item.pc-caption {
+        margin: 1.5rem 0 0.75rem 0;
+        padding: 0 1rem;
+    }
+
+    .pc-item.pc-caption label {
+        color: var(--color-secondary);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+
+    .pc-item {
+        margin-bottom: 0.25rem;
+    }
+
+    .pc-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: var(--color-dark-gray);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border-radius: 0;
+        position: relative;
+    }
+
+    .pc-link:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--color-primary);
+        text-decoration: none;
+        padding-left: calc(1rem - 3px);
+    }
+
+    .pc-link.active {
+        background: var(--gradient-active);
+        color: var(--color-white);
+        border-left: 3px solid var(--color-primary-dark);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding-left: calc(1rem - 3px);
+    }
+    
+    .pc-micon {
+        width: 20px;
+        height: 20px;
+        margin-right: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .pc-icon {
+        font-size: 16px;
+        color: inherit;
+    }
+
+    .pc-mtext {
+        flex: 1;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .pc-arrow {
+        margin-left: 0.5rem;
+        transition: transform 0.2s ease;
+    }
+
+    .pc-item.pc-hasmenu.active .pc-arrow {
+        transform: rotate(90deg);
+    }
+
+    .pc-submenu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        background: rgba(0, 0, 0, 0.03);
+        border-left: 2px solid var(--color-medium-gray);
+        margin-left: 1rem;
+    }
+
+    .pc-submenu .pc-item {
+        margin-bottom: 0;
+    }
+
+    .pc-submenu .pc-link {
+        padding: 0.6rem 1rem 0.6rem 2rem;
+        font-size: 0.8rem;
+        color: var(--color-secondary);
+    }
+
+    .pc-submenu .pc-link:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: var(--color-dark-gray);
+        border-left: 2px solid var(--color-primary);
+        padding-left: calc(2rem - 2px);
+    }
+
+    .pc-submenu .pc-submenu {
+        margin-left: 2rem;
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .pc-submenu .pc-submenu .pc-link {
+        padding-left: 2.5rem;
+        font-size: 0.75rem;
+    }
+
+    .pc-submenu .pc-submenu .pc-link:hover {
+        padding-left: calc(2.5rem - 2px);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .user-profile-section {
+            padding: 1rem;
+        }
+
+        .avatar-sidebar {
+            width: 48px;
+            height: 48px;
+        }
+
+        .pc-link {
+            padding: 0.6rem 0.75rem;
+        }
+    }
 </style>
 
 <nav class="pc-sidebar">
@@ -254,7 +527,7 @@
         <!-- Header Section -->
         <div class="sidebar-header">
             <a href="https://utem.edu.my" target="_blank" class="b-brand text-primary d-flex justify-content-center">
-                <img src="../assets/images/logo-utem.PNG" alt="UTEM Logo" width="100" />
+                <img src="../assets/images/logo-utem.PNG" alt="UTEM Logo" width="80" />
             </a>
         </div>
 
