@@ -426,7 +426,7 @@
                                                 </label>
                                                 <select class="form-select @error('document_id') is-invalid @enderror"
                                                     name="document_id" id="document_id" required>
-                                                    <option value ="" selected>- Select Student -</option>
+                                                    <option value ="" selected>- Select Document -</option>
                                                     @foreach ($docs as $doc)
                                                         @if ($doc->doc_status == 0)
                                                             <option value ="{{ $doc->id }}" disabled>
