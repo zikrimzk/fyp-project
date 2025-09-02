@@ -100,9 +100,97 @@
             <div class="row">
 
                 <!-- [ Semester Student List ] start -->
+
+                <!-- [ Filter Section ] Start -->
+                <div class="col-sm-12">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header fw-semibold table-color text-white py-2">
+                            <i class="ti ti-filter me-1"></i> FILTERS
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-3 row-cols-1 row-cols-md-3 row-cols-lg-4 align-items-end">
+
+                                {{-- Faculty --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Faculty</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_faculty_id" class="form-select">
+                                            <option value="">-- Select Faculty --</option>
+                                            @foreach ($facs as $fil)
+                                                @if ($fil->fac_status == 1)
+                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
+                                                @elseif($fil->fac_status == 2)
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        {{ $fil->fac_code }} [Inactive]
+                                                    </option>
+                                                @elseif($fil->fac_status == 3)
+                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                        {{ $fil->fac_code }} [Default]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearFacFilter"
+                                            title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Programme --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Programme</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_programme_id" class="form-select">
+                                            <option value="">-- Select Programme --</option>
+                                            @foreach ($progs as $fil)
+                                                @if ($fil->prog_status == 1)
+                                                    <option value="{{ $fil->id }}">{{ $fil->prog_code }}
+                                                        ({{ $fil->prog_mode }})
+                                                    </option>
+                                                @elseif($fil->prog_status == 2)
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        {{ $fil->prog_code }} ({{ $fil->prog_mode }}) [Inactive]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearProgFilter"
+                                            title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Status --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Status</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_status" class="form-select">
+                                            <option value="">-- Select Status --</option>
+                                            <option value="1">Active</option>
+                                            <option value="2">Inactive</option>
+                                            <option value="3">Barred</option>
+                                            <option value="4">Completed</option>
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearStatusFilter"
+                                            title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Filter Section ] End -->
+
+                <!-- [ Datatable & Option ] Start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
+
                             <!-- [ Option Section ] start -->
                             <div class="mb-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
                                 <button type="button"
@@ -118,8 +206,8 @@
                                             Student</span>
                                     </button>
                                     <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
-                                        data-bs-toggle="modal" data-bs-target="#import-assign-Modal" id="importStudentBtn"
-                                        title="Import Student">
+                                        data-bs-toggle="modal" data-bs-target="#import-assign-Modal"
+                                        id="importStudentBtn" title="Import Student">
                                         <i class="ti ti-file-import f-18"></i>
                                         <span class="d-none d-sm-inline me-2">Import Student</span>
                                     </button>
@@ -155,76 +243,7 @@
                             </div>
                             <!-- [ Option Section ] end -->
 
-                            <!-- [ Filter Section ] Start -->
-                            <div class="row g-3 align-items-end">
-
-                                <div class="col-sm-12 col-md-4 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_faculty_id" class="form-select">
-                                            <option value="">-- Select Faculty --</option>
-                                            @foreach ($facs as $fil)
-                                                @if ($fil->fac_status == 1)
-                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
-                                                @elseif($fil->fac_status == 2)
-                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->fac_code }} [Inactive]
-                                                    </option>
-                                                @elseif($fil->fac_status == 3)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success"
-                                                        selected>
-                                                        {{ $fil->fac_code }} [Default]
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearFacFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-4 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_programme_id" class="form-select">
-                                            <option value="">-- Select Programme --</option>
-                                            @foreach ($progs as $fil)
-                                                @if ($fil->prog_status == 1)
-                                                    <option value="{{ $fil->id }}"> {{ $fil->prog_code }}
-                                                        ({{ $fil->prog_mode }})
-                                                    </option>
-                                                @elseif($fil->prog_status == 2)
-                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->prog_code }}
-                                                        ({{ $fil->prog_mode }}) [Inactive]</option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearProgFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-4 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_status" class="form-select">
-                                            <option value="">-- Select Status --</option>
-                                            <option value="1">Active</option>
-                                            <option value="2">Inactive</option>
-                                            <option value="3">Barred</option>
-                                            <option value="4">Completed</option>
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearStatusFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- [ Filter Section ] End -->
-
+                            <!-- [ Datatable Section ] start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -239,9 +258,12 @@
                                     </thead>
                                 </table>
                             </div>
+                            <!-- [ Datatable Section ] end -->
+
                         </div>
                     </div>
                 </div>
+                <!-- [ Datatable & Option ] End -->
 
                 <!-- [ Assign Modal ] start -->
                 <form action="{{ route('assign-student-post', Crypt::encrypt($sem_id)) }}" method="POST">
@@ -610,6 +632,7 @@
             <!-- [ Main Content ] end -->
         </div>
     </div>
+    
     <script type="text/javascript">
         $(document).ready(function() {
 

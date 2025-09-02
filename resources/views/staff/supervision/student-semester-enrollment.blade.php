@@ -58,37 +58,44 @@
             <div class="row">
 
                 <!-- [ Student Semester Enrollment ] start -->
+
+                <!-- [ Enrollment Guideline ] start -->
+                <div class="d-none alert alert-warning d-flex align-items-start gap-3 p-4" role="alert">
+                    <i class="ti ti-info-circle fs-3"></i>
+                    <div class="w-100">
+                        <h4 class="mb-3 fw-semibold">Enrollment Guideline</h4>
+                        <ul class="mb-0 ps-3 small">
+                            <li class="mb-2">
+                                The system only allows <strong>Enroll</strong> and <strong>Unenroll</strong>
+                                actions for students in the <strong>current active semester</strong>.
+                            </li>
+                            <li class="mb-2">
+                                For <strong>past semesters</strong>, Committee users can only update the
+                                <strong>student's semester status</strong>. Enrollment actions are disabled.
+                            </li>
+                            <li class="mb-2">
+                                Only students with an <strong>Active</strong> semester status will have their
+                                semester counted. If the status is set to <strong>Inactive</strong> or
+                                <strong>Barred</strong>, their semester count will be excluded.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- [ Enrollment Guideline ] end -->
+
+                <!-- [ Filter Section ] Start -->
                 <div class="col-sm-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <!-- [ Enrollment Guideline ] start -->
-                            <div class="alert alert-light d-flex align-items-start gap-3 p-4" role="alert">
-                                <i class="ti ti-info-circle fs-3"></i>
-                                <div class="w-100">
-                                    <h4 class="mb-3 fw-semibold">Enrollment Guideline</h4>
-                                    <ul class="mb-0 ps-3 small">
-                                        <li class="mb-2">
-                                            The system only allows <strong>Enroll</strong> and <strong>Unenroll</strong>
-                                            actions for students in the <strong>current active semester</strong>.
-                                        </li>
-                                        <li class="mb-2">
-                                            For <strong>past semesters</strong>, Committee users can only update the
-                                            <strong>student's semester status</strong>. Enrollment actions are disabled.
-                                        </li>
-                                        <li class="mb-2">
-                                            Only students with an <strong>Active</strong> semester status will have their
-                                            semester counted. If the status is set to <strong>Inactive</strong> or
-                                            <strong>Barred</strong>, their semester count will be excluded.
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <!-- [ Enrollment Guideline ] end -->
-                            
-                            <!-- [ Filter Section ] Start -->
-                            <div class="row g-3 align-items-end">
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header fw-semibold table-color text-white py-2">
+                            <i class="ti ti-filter me-1"></i> FILTERS
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-3 row-cols-1 row-cols-md-3 row-cols-lg-4 align-items-end">
+
+                                {{-- Date Range --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Date Range</label>
+                                    <div class="input-group input-group-sm">
                                         <input type="text" class="form-control" id="dateRangeFilter"
                                             placeholder="-- Select date range --" readonly />
                                         <button type="button" class="btn btn-outline-secondary btn-sm"
@@ -97,22 +104,34 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
+
+                                {{-- Status --}}
+                                <div>
+                                    <label class="form-label fw-semibold text-muted small">Status</label>
+                                    <div class="input-group input-group-sm">
                                         <select id="fil_status" class="form-select">
                                             <option value="">-- Select Status --</option>
                                             <option value="1">Active</option>
                                             <option value="3">Past</option>
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearStatusFilter">
+                                        <button type="button" class="btn btn-outline-secondary" id="clearStatusFilter"
+                                            title="Clear">
                                             <i class="ti ti-x"></i>
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                            <!-- [ Filter Section ] End -->
 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Filter Section ] End -->
+
+                <!-- [ Datatable ] Start -->
+                <div class="col-sm-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- [ Datatable ] Start -->
                             <div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
@@ -126,9 +145,12 @@
                                     </thead>
                                 </table>
                             </div>
+                            <!-- [ Datatable ] End -->
                         </div>
                     </div>
                 </div>
+                <!-- [ Datatable ] End -->
+
                 <!-- [ Student Semester Enrolment ] end -->
             </div>
             <!-- [ Main Content ] end -->
