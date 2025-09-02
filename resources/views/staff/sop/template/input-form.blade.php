@@ -1106,7 +1106,7 @@
             <tr>
                 <td class="logo-cell">
                     @if ($faculty->fac_logo && file_exists(public_path('storage/' . $faculty->fac_logo)))
-                        <img src="{{ '../storage/' . urlencode($faculty->fac_logo) }}"
+                        <img src="{{ '../storage/' . ($faculty->fac_logo) }}"
                             alt="{{ $faculty->fac_code }} LOGO" class="faculty-logo">
                     @endif
                 </td>
