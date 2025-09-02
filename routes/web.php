@@ -31,8 +31,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/reset-password-{token}-{email}-{userType}', [AuthenticateController::class, 'resetPassword'])->name('reset-password');
 });
 
-Route::prefix('signatures')->middleware('auth:student,staff')->group(function () {
-
+Route::prefix('signatures')->group(function () {
     /* Evaluation Signature */
     Route::get('/evaluation-signature-pad-{signature_key}-{evaluationID}-{mode}', [EvaluationController::class, 'evaluationSignaturePad'])->name('evaluation-signature-pad');
     Route::get('/get-evaluation-signature-form', [EvaluationController::class, 'getEvaluationFormSignature'])->name('get-evaluation-signature-form-get');
