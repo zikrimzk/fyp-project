@@ -307,6 +307,9 @@
                                                     <option value="1">Yes</option>
                                                     <option value="0">No</option>
                                                 </select>
+                                                <small class="form-text text-muted mt-1 d-block">
+                                                    <i class="ti ti-info-circle"></i> This filename will only appear during student submission if the form has a configured Journal/Conference Name field.
+                                                </small>
                                                 @error('isShowDoc')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
@@ -410,6 +413,9 @@
                                                     <option value="1">Yes</option>
                                                     <option value="0">No</option>
                                                 </select>
+                                                <small class="form-text text-muted mt-1 d-block">
+                                                    <i class="ti ti-info-circle"></i> This filename will only appear during student submission if the form has a configured Journal/Conference Name field.
+                                                </small>
                                                 @error('isShowDoc_up')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror

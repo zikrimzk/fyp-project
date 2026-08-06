@@ -306,7 +306,7 @@
                                                 <select name="is_repeatable" id="is_repeatable"
                                                     class="form-select @error('is_repeatable') is-invalid @enderror"
                                                     required>
-                                                    <option value="">- Select Option -</option>
+                                                    <option value="" selected>- Select Option -</option>
                                                     <option value="1"
                                                         @if (old('is_repeatable') == 1) selected @endif>Yes
                                                     </option>
@@ -314,6 +314,9 @@
                                                         @if (old('is_repeatable') == 0) selected @endif>No
                                                     </option>
                                                 </select>
+                                                <small class="form-text text-muted mt-1 d-block">
+                                                    <i class="ti ti-info-circle"></i> Choosing <strong>Yes</strong> will repeat this activity every semester.
+                                                </small>
                                                 @error('is_repeatable')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
@@ -339,8 +342,9 @@
                                                         <option value="0">No</option>
                                                     @endif
                                                 </select>
-                                                <small class="form-text text-muted">Only can be select if the activity is
-                                                    repeatable</small>
+                                                <small class="form-text text-muted mt-1 d-block">
+                                                    <i class="ti ti-info-circle"></i> Is the submission requires journal publication?
+                                                </small>
                                                 @error('is_haveJournalPublication')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
@@ -606,6 +610,9 @@
                                                             @if ($upd->is_repeatable == 0) selected @endif>No
                                                         </option>
                                                     </select>
+                                                    <small class="form-text text-muted mt-1 d-block">
+                                                        <i class="ti ti-info-circle"></i> Choosing <strong>Yes</strong> will repeat this activity every semester.
+                                                    </small>
                                                     @error('is_repeatable_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -630,8 +637,9 @@
                                                             No
                                                         </option>
                                                     </select>
-                                                    <small class="form-text text-muted">Only can be select if the activity
-                                                        is repeatable</small>
+                                                    <small class="form-text text-muted mt-1 d-block">
+                                                        <i class="ti ti-info-circle"></i> Is the submission requires journal publication?
+                                                    </small>
 
                                                     @error('is_haveJournalPublication_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -915,9 +923,13 @@
                 if (this.value == 1) {
                     $('#is_haveJournalPublication').attr('disabled', false);
                 } else {
+                    $('#is_haveJournalPublication').val(0); // Reset to No
                     $('#is_haveJournalPublication').attr('disabled', true);
                 }
             });
+
+            // Trigger on load for the Add Procedure modal
+            $('#is_repeatable').trigger('change');
 
             $('.is-repeat').on('change', function() {
                 const publicationSelect = $(this).closest('.repeatable-group').find('.is-havePublication');
