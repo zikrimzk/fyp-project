@@ -333,7 +333,7 @@
                 <!-- [ Assign Modal ] end -->
 
                 <!-- [ Import Student Modal ] start -->
-                <form action="{{ route('import-student-semester-post') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('import-student-semester-post') }}" method="POST" enctype="multipart/form-data" id="importForm">
                     @csrf
                     <div class="modal fade" id="import-assign-Modal" data-bs-keyboard="false" tabindex="-1"
                         aria-hidden="true">
@@ -737,6 +737,8 @@
                 $('#file-name').val(fileName || "No file chosen");
                 $('#import-btn').prop('disabled', false);
             });
+
+
 
             /* ASSIGN STUDENT : FETCHING STUDENT DATA */
             const studentMatricTxt = $('#student_matricno');

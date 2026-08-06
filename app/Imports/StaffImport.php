@@ -2,11 +2,12 @@
 
 namespace App\Imports;
 
-use App\Models\Staff;
+use App\Http\Controllers\AuthenticateController;
 use App\Models\Department;
-use Illuminate\Support\Str;
+use App\Models\Staff;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -82,7 +83,7 @@ class StaffImport implements ToCollection, WithHeadingRow
             $password = bcrypt("pg@" . Str::lower($validated['staff_id']));
 
             /* CREATE STAFF DATA */
-            Staff::create([
+            $staff = Staff::create([
                 'staff_name' => Str::headline($validated['staff_name']),
                 'staff_id' => Str::upper($validated['staff_id']),
                 'staff_email' => $validated['staff_email'],
@@ -91,6 +92,10 @@ class StaffImport implements ToCollection, WithHeadingRow
                 'staff_role' => $validated['staff_role'],
                 'department_id' => $validated['staff_department'],
             ]);
+
+            /* SENT EMAIL NOTIFICATION - Function | Last Added: 06-08-2026 */
+            $ac = new AuthenticateController();
+            $ac->sendAccountNotification($staff, 1, 2, route('main-login'));
 
             $this->insertedCount++;
         }

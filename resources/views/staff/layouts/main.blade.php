@@ -163,10 +163,34 @@
             background-color: rgba(52, 58, 64, 255) !important;
         }
 
-        /* button,
+        /* Custom Button Styles (Management UI) */
         .btn {
             border-radius: 6px !important;
-        } */
+        }
+
+        .btn-primary {
+            background-color: rgba(52, 58, 64, 255) !important;
+            border-color: rgba(52, 58, 64, 255) !important;
+            color: #fff !important;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: rgba(33, 37, 41, 255) !important;
+            border-color: rgba(33, 37, 41, 255) !important;
+            color: #fff !important;
+        }
+
+        .btn-outline-primary {
+            color: rgba(52, 58, 64, 255) !important;
+            border-color: rgba(52, 58, 64, 255) !important;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-primary:hover, .btn-outline-primary:focus {
+            background-color: rgba(52, 58, 64, 255) !important;
+            color: #fff !important;
+        }
 
         @media (max-width: 768px) {
             .nav-tabs.profile-tabs .nav-item {
@@ -246,6 +270,44 @@
 
     <script>
         main_layout_change('vertical');
+    </script>
+
+    <script>
+        // Global Loading State for all form submissions
+        // Added on: 2026-08-06
+        $(document).ready(function() {
+            $('form').on('submit', function(e) {
+                // If the form fails native validation, do not show loading
+                if (this.checkValidity && !this.checkValidity()) {
+                    return;
+                }
+
+                // Find the submit button
+                let $form = $(this);
+                let $btn = $form.find('button[type="submit"]');
+
+                if ($btn.length && !$btn.prop('disabled')) {
+                    // Check if it already has a loading state to prevent double execution
+                    if ($btn.data('is-loading')) return;
+
+                    // Set loading state
+                    $btn.data('is-loading', true);
+                    
+                    // Store original HTML in case we need to revert
+                    let originalHtml = $btn.html();
+                    $btn.data('original-html', originalHtml);
+
+                    // Add spinner
+                    $btn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...');
+                    
+                    // Disable button to prevent double-click
+                    // Use setTimeout so the form submission doesn't drop the button's name/value if it's required
+                    setTimeout(function() {
+                        $btn.prop('disabled', true);
+                    }, 10);
+                }
+            });
+        });
     </script>
 
 </body>

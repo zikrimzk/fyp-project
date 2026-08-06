@@ -82,7 +82,109 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 
-                <!-- [ Staff Management ] start -->
+                
+                <!-- [ Filter Section ] Start -->
+                            <div class="col-sm-12">
+                                <div class="card shadow-sm border-0 mb-4">
+                                    <div class="card-header fw-semibold table-color text-white py-2">
+                                        <i class="ti ti-filter me-1"></i> FILTERS
+                                    </div>
+                                    <div class="card-body py-3">
+                                        <div class="row g-3 row-cols-1 row-cols-md-3 row-cols-lg-4 align-items-end">
+
+
+                                <div>
+                                    {{-- Faculty --}}
+                                    <label class="form-label fw-semibold text-muted small">Faculty</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_faculty_id" class="form-select">
+                                            <option value="">-- Select Faculty --</option>
+                                            @foreach ($facs as $fil)
+                                                @if ($fil->fac_status == 1)
+                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
+                                                @elseif($fil->fac_status == 2)
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        {{ $fil->fac_code }} [Inactive]
+                                                    </option>
+                                                @elseif($fil->fac_status == 3)
+                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
+                                                        {{ $fil->fac_code }} [Default]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearFacFilter" title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    {{-- Department --}}
+                                    <label class="form-label fw-semibold text-muted small">Department</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_department_id" class="form-select">
+                                            <option value="">-- Select Department --</option>
+                                            @foreach ($deps as $fil)
+                                                @if ($fil->dep_status == 1)
+                                                    <option value="{{ $fil->id }}">({{ $fil->dep_code }}) -
+                                                        {{ $fil->dep_name }}</option>
+                                                @elseif($fil->dep_status == 2)
+                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
+                                                        ({{ $fil->dep_code }})
+                                                        - {{ $fil->dep_name }} [Inactive]
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearDepFilter" title="Clear">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    {{-- Role --}}
+                                    <label class="form-label fw-semibold text-muted small">Role</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_role" class="form-select">
+                                            <option value="">-- Select Role --</option>
+                                            <option value="1">Committee</option>
+                                            <option value="2">Lecturer</option>
+                                            <option value="3">Deputy Dean</option>
+                                            <option value="4">Dean</option>
+                                        </select>
+                                        <button type="button" class="btn btn-outline-secondary"
+                                            id="clearRoleFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    {{-- Status --}}
+                                    <label class="form-label fw-semibold text-muted small">Status</label>
+                                    <div class="input-group input-group-sm">
+                                        <select id="fil_status" class="form-select">
+                                            <option value="">-- Select Status --</option>
+                                            <option value="1">Active</option>
+                                            <option value="2">Inactive</option>
+                                        </select>
+                                        <button type="button" class="btn  btn-outline-secondary"
+                                            id="clearStatusFilter">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- [ Filter Section ] End -->
+
+<!-- [ Staff Management ] start -->
                 <div class="col-sm-12">
                     <div class="card">
                         <div class="card-body">
@@ -110,91 +212,7 @@
                                     </span>
                                 </button>
                             </div>
-                            <!-- [ Option Section ] end -->
-
-                            <!-- [ Filter Section ] Start -->
-                            <div class="row g-3 align-items-end">
-
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_faculty_id" class="form-select">
-                                            <option value="">-- Select Faculty --</option>
-                                            @foreach ($facs as $fil)
-                                                @if ($fil->fac_status == 1)
-                                                    <option value="{{ $fil->id }}">{{ $fil->fac_code }}</option>
-                                                @elseif($fil->fac_status == 2)
-                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        {{ $fil->fac_code }} [Inactive]
-                                                    </option>
-                                                @elseif($fil->fac_status == 3)
-                                                    <option value="{{ $fil->id }}" class="bg-light-success" selected>
-                                                        {{ $fil->fac_code }} [Default]
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFacFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_department_id" class="form-select">
-                                            <option value="">-- Select Department --</option>
-                                            @foreach ($deps as $fil)
-                                                @if ($fil->dep_status == 1)
-                                                    <option value="{{ $fil->id }}">({{ $fil->dep_code }}) -
-                                                        {{ $fil->dep_name }}</option>
-                                                @elseif($fil->dep_status == 2)
-                                                    <option value="{{ $fil->id }}" class="bg-light-danger">
-                                                        ({{ $fil->dep_code }})
-                                                        - {{ $fil->dep_name }} [Inactive]
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearDepFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_role" class="form-select">
-                                            <option value="">-- Select Role --</option>
-                                            <option value="1">Committee</option>
-                                            <option value="2">Lecturer</option>
-                                            <option value="3">Deputy Dean</option>
-                                            <option value="4">Dean</option>
-                                        </select>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            id="clearRoleFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12 col-md-3 mb-3">
-                                    <div class="input-group">
-                                        <select id="fil_status" class="form-select">
-                                            <option value="">-- Select Status --</option>
-                                            <option value="1">Active</option>
-                                            <option value="2">Inactive</option>
-                                        </select>
-                                        <button type="button" class="btn  btn-outline-secondary btn-sm"
-                                            id="clearStatusFilter">
-                                            <i class="ti ti-x"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                            </div>
-                            <!-- [ Filter Section ] End -->
-
-                            <div class="dt-responsive table-responsive">
+                            <!-- [ Option Section ] end --><div class="dt-responsive table-responsive">
                                 <table class="table data-table table-hover nowrap">
                                     <thead>
                                         <tr>

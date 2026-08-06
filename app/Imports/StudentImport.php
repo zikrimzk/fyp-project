@@ -2,19 +2,20 @@
 
 namespace App\Imports;
 
+use App\Http\Controllers\AuthenticateController;
+use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\SupervisionController;
+use App\Models\Programme;
+use App\Models\Semester;
 use App\Models\Staff;
 use App\Models\Student;
-use App\Models\Semester;
-use App\Models\Programme;
 use App\Models\Supervision;
-use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
-use App\Http\Controllers\SubmissionController;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use App\Http\Controllers\SupervisionController;
 
 class StudentImport implements ToCollection, WithHeadingRow
 {
@@ -152,6 +153,10 @@ class StudentImport implements ToCollection, WithHeadingRow
             /* ASSIGN STUDENT SEMESTER UPON REGISTRATION */
             $sc = new SupervisionController();
             $sc->assignStudentSemesterGet($student->student_matricno);
+
+            /* SENT EMAIL NOTIFICATION */
+            $ac = new AuthenticateController();
+            $ac->sendAccountNotification($student, 1, 1, route('main-login'));
 
             $this->insertedCount++;
         }
