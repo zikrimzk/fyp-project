@@ -15,7 +15,7 @@
     <!-- [Favicon] icon -->
     <link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/svg+xml" />
     <!-- [Font] Family -->
-    <link rel="stylesheet" href="../assets/fonts/inter/inter.css" id="main-font-link" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.0" id="main-font-link" />
     <!-- [phosphor Icons] https://phosphoricons.com/ -->
     <link rel="stylesheet" href="../assets/fonts/phosphor/duotone/style.css" />
     <!-- [Tabler Icons] https://tablericons.com -->

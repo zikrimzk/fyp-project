@@ -49,6 +49,10 @@
 .staff-work-sidebar .staff-work-badge { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; flex-shrink: 0; min-width: 23px; height: 21px; padding: 0 6px; border-radius: 5px; background: #edf2f8; color: #345b83; font-size: 11px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
 .staff-work-sidebar .pc-link[aria-current="page"] .staff-work-badge { background: #d9e6f5; color: #194e83; }
 .staff-work-sidebar [data-sidebar-role][hidden] { display: none !important; }
+.staff-work-sidebar[data-initial-role="administrator"] [data-sidebar-role]:not([data-sidebar-role="administrator"]),
+.staff-work-sidebar[data-initial-role="supervisor"] [data-sidebar-role]:not([data-sidebar-role="supervisor"]),
+.staff-work-sidebar[data-initial-role="chairman"] [data-sidebar-role]:not([data-sidebar-role="chairman"]),
+.staff-work-sidebar[data-initial-role="examiner"] [data-sidebar-role]:not([data-sidebar-role="examiner"]) { display: none !important; }
 .staff-work-sidebar :focus-visible { outline: 2px solid var(--staff-accent); outline-offset: 2px; }
 @media (max-height: 740px) {
     .staff-work-sidebar .staff-sidebar-heading { padding: 14px 20px 12px; }

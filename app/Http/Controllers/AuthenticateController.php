@@ -395,7 +395,12 @@ class AuthenticateController extends Controller
             'activity' => ['nullable', 'integer', 'exists:activities,id'],
         ]);
 
-        $dashboardRole = $validatedFilters['dashboard_role'] ?? array_key_first($dashboardRoles);
+        $storedDashboardRole = $request->session()->get('staff_dashboard_role');
+        $dashboardRole = $validatedFilters['dashboard_role']
+            ?? (is_string($storedDashboardRole) && array_key_exists($storedDashboardRole, $dashboardRoles)
+                ? $storedDashboardRole
+                : array_key_first($dashboardRoles));
+        $request->session()->put('staff_dashboard_role', $dashboardRole);
         $semesterId = $validatedFilters['semester']
             ?? DB::table('semesters')->where('sem_status', 1)->orderByDesc('sem_startdate')->value('id')
             ?? DB::table('semesters')->orderByDesc('sem_startdate')->value('id');

@@ -7,16 +7,16 @@
 
     <style>
         :root {
-            --brand: #343a40;
+            --brand: #245a91;
             /* main */
-            --brand-600: #2d3338;
+            --brand-600: #194e83;
             /* darker */
-            --brand-500: #343a40;
-            --brand-200: #ced4da;
+            --brand-500: #245a91;
+            --brand-200: #c7d9ea;
             /* light border */
-            --brand-100: #f1f3f5;
+            --brand-100: #eaf2fa;
             /* light bg */
-            --muted: #6c757d;
+            --muted: #64748b;
         }
 
         /* Cards */

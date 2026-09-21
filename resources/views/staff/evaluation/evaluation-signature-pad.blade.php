@@ -12,7 +12,7 @@
     <!-- [Favicon] icon -->
     <link rel="icon" href="../assets/images/favicon.svg" type="image/x-icon" />
     <!-- [Font] Family -->
-    <link rel="stylesheet" href="../assets/fonts/inter/inter.css" id="main-font-link" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.0" id="main-font-link" />
     <!-- [jQuery Files] -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- [Template CSS Files] -->

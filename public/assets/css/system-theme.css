@@ -1,4 +1,4 @@
-/* e-Pasca shared interface theme — staff workspace and authentication pages. */
+/* e-Pasca shared interface theme — staff, student and authentication pages. */
 :root {
     --ep-primary: #245a91;
     --ep-primary-dark: #194e83;
@@ -31,9 +31,17 @@ html {
 body {
     background: var(--ep-canvas);
     color: var(--ep-text);
-    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Inter var", Inter, Arial, sans-serif;
+    font-synthesis: none;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
+
+button,
+input,
+optgroup,
+select,
+textarea { font-family: inherit; }
 
 a { color: var(--ep-primary); }
 a:hover { color: var(--ep-primary-dark); }
@@ -119,16 +127,165 @@ a:hover { color: var(--ep-primary-dark); }
 .nav-tabs .nav-link { color: var(--ep-text-muted); }
 .nav-tabs .nav-link.active { color: var(--ep-primary); border-bottom-color: var(--ep-primary); }
 
-.table { --bs-table-color: var(--ep-text); --bs-table-striped-bg: #f8fafc; }
+.table {
+    --bs-table-color: var(--ep-text);
+    --bs-table-striped-bg: #f8fafc;
+    --bs-table-hover-bg: #f3f7fa;
+    margin-bottom: 0;
+}
+
 .table > :not(caption) > * > * { border-bottom-color: var(--ep-border); }
-table.dataTable thead th,
-.table-color {
-    background: var(--ep-primary-dark) !important;
-    color: #fff !important;
+
+.ep-app table.dataTable thead th,
+.ep-app .table thead th {
+    background: #edf2f7 !important;
+    border-color: #d8e1ea !important;
+    color: #334155 !important;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .025em;
+    line-height: 1.35;
+    padding-block: .85rem;
+    text-transform: none;
+    vertical-align: middle;
+}
+
+.ep-app table.dataTable tbody td,
+.ep-app .table tbody td,
+.ep-app .table tbody th {
+    padding-block: .8rem;
+    vertical-align: middle;
+}
+
+.ep-app .table-color {
+    background: #f4f7fa !important;
+    border-bottom: 1px solid var(--ep-border) !important;
+    color: #334155 !important;
 }
 
 .pagination .page-link { color: var(--ep-primary); }
 .pagination .active > .page-link { background: var(--ep-primary); border-color: var(--ep-primary); }
+
+/* Shared page structure and data-heavy modules */
+.ep-app .page-header { margin-bottom: 1.25rem; }
+.ep-app .page-header-title h2,
+.ep-app .page-header-title h3 { color: var(--ep-text); font-weight: 700; letter-spacing: -.02em; }
+.ep-app .breadcrumb { margin-bottom: .55rem; font-size: .78rem; }
+.ep-app .breadcrumb-item,
+.ep-app .breadcrumb-item a { color: var(--ep-text-muted); }
+.ep-app .breadcrumb-item a:hover { color: var(--ep-primary); }
+
+.ep-app .card {
+    border: 1px solid var(--ep-border) !important;
+    box-shadow: var(--ep-shadow-sm) !important;
+}
+
+.ep-app .card-header {
+    border-bottom-color: var(--ep-border);
+    padding: 1rem 1.25rem;
+}
+
+.ep-app .card-body { padding: 1.25rem; }
+
+/* Filter cards use a quiet header and a predictable responsive grid. */
+.ep-app .card > .card-header.table-color {
+    min-height: 44px;
+    padding: .72rem 1.25rem !important;
+    font-size: .78rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.ep-app .card > .card-header.table-color i { color: var(--ep-primary); }
+.ep-app .card > .card-header.table-color + .card-body {
+    background: #fff;
+    padding: 1rem 1.25rem 1.25rem;
+}
+
+.ep-app .card > .card-header.table-color + .card-body .form-label {
+    margin-bottom: .4rem;
+    color: #475569;
+    font-size: .76rem;
+}
+
+.ep-app .input-group > .btn {
+    min-width: 42px;
+    padding-inline: .7rem;
+}
+
+.ep-app .btn-outline-secondary {
+    border-color: #cbd6e2;
+    color: #526276;
+}
+
+.ep-app .btn-outline-secondary:hover,
+.ep-app .btn-outline-secondary:focus {
+    background: #edf2f7;
+    border-color: #aebdcb;
+    color: #26374a;
+}
+
+.ep-app .table-responsive,
+.ep-app .dt-responsive {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.ep-app .table-responsive > .table,
+.ep-app .dt-responsive > .table { border: 0; }
+
+.ep-app div.dt-container .dt-layout-row,
+.ep-app .dataTables_wrapper .row {
+    align-items: center;
+    row-gap: .75rem;
+    margin-block: .85rem;
+}
+
+.ep-app div.dt-container .dt-search,
+.ep-app div.dt-container .dt-length,
+.ep-app .dataTables_filter,
+.ep-app .dataTables_length { color: var(--ep-text-muted); font-size: .78rem; }
+
+.ep-app div.dt-container .dt-search input,
+.ep-app div.dt-container .dt-length select,
+.ep-app .dataTables_filter input,
+.ep-app .dataTables_length select {
+    min-height: 38px;
+    border: 1px solid #cbd6e2;
+    border-radius: .45rem;
+    background-color: #fff;
+    color: var(--ep-text);
+}
+
+.ep-app div.dt-container .dt-search input:focus,
+.ep-app div.dt-container .dt-length select:focus,
+.ep-app .dataTables_filter input:focus,
+.ep-app .dataTables_length select:focus {
+    border-color: var(--ep-primary);
+    box-shadow: 0 0 0 .2rem var(--ep-primary-ring);
+    outline: 0;
+}
+
+.ep-app .dataTables_info,
+.ep-app div.dt-container .dt-info { color: var(--ep-text-muted); font-size: .78rem; }
+
+.ep-app .modal-header { background: var(--ep-surface-muted) !important; border-color: var(--ep-border); }
+.ep-app .modal-footer { border-color: var(--ep-border); }
+.ep-app .alert-heading { font-size: .92rem; }
+
+/* Student workspace */
+.ep-student-app .pc-container { background: var(--ep-canvas); }
+.ep-student-app .pc-container .pc-content { max-width: 1500px; padding: 24px; }
+.ep-student-app .brand-gradient {
+    background: linear-gradient(135deg, var(--ep-primary-dark), var(--ep-primary)) !important;
+}
+.ep-student-app .text-brand { color: var(--ep-primary) !important; }
+.ep-student-app .bg-brand-100 { background: var(--ep-primary-soft) !important; }
+.ep-student-app .border-brand-200 { border-color: #c7d9ea !important; }
+.ep-student-app .nav-tabs-underline .nav-link.active { color: var(--ep-primary) !important; }
+.ep-student-app .nav-tabs-underline .nav-link.active::after { background: var(--ep-primary) !important; }
+.ep-student-app .avatar-chip { background: #fff !important; color: var(--ep-primary-dark) !important; }
 
 /* Staff application shell */
 .pc-header {
@@ -248,6 +405,34 @@ table.dataTable thead th,
 @media (max-width: 991.98px) {
     .pc-container .pc-content { padding: 20px; }
     .staff-header-user-copy { display: none; }
+    .ep-app .card-body { padding: 1rem; }
+}
+
+/* Keep the off-canvas navigation completely outside the mobile viewport. */
+@media (max-width: 1024px) {
+    .ep-app .pc-sidebar {
+        left: 0 !important;
+        transform: translate3d(-100%, 0, 0);
+        visibility: hidden;
+        pointer-events: none;
+        border-right: 0;
+        transition: transform .2s ease-in-out, visibility 0s linear .2s;
+        will-change: transform;
+    }
+
+    .ep-app .pc-sidebar.mob-sidebar-active {
+        transform: translate3d(0, 0, 0);
+        visibility: visible;
+        pointer-events: auto;
+        overflow: visible;
+        border-right: 1px solid var(--ep-border);
+        transition: transform .2s ease-in-out, visibility 0s;
+    }
+
+    .ep-app .pc-sidebar .pc-menu-overlay {
+        cursor: pointer;
+        touch-action: none;
+    }
 }
 
 @media (max-width: 575.98px) {
@@ -259,6 +444,7 @@ table.dataTable thead th,
     .pc-header .pc-mob-drp > ul { min-width: 0; }
     .staff-header-title { max-width: 42vw; }
     .pc-container .pc-content { padding: 14px 12px 24px; }
+    .ep-student-app .pc-container .pc-content { padding: 14px 12px 24px; }
     .pc-footer .footer-wrapper { padding-inline: .75rem; }
     .pc-footer p { font-size: .75rem; }
 
@@ -272,6 +458,27 @@ table.dataTable thead th,
     .auth-page .auth-main { min-height: 100dvh; padding: 1rem; }
     .auth-page .auth-form .list-group-item { align-items: flex-start !important; gap: .75rem; }
     .auth-page .auth-form .list-group-item .badge { flex-shrink: 0; }
+
+    .ep-app .page-header { margin-bottom: 1rem; }
+    .ep-app .page-header-title h2,
+    .ep-app .page-header-title h3 { font-size: 1.2rem; line-height: 1.35; }
+    .ep-app .card-header,
+    .ep-app .card-body,
+    .ep-app .card > .card-header.table-color + .card-body { padding-inline: .9rem; }
+    .ep-app .card > .card-header.table-color + .card-body .row > * { min-width: 100%; }
+    .ep-app table.dataTable thead th,
+    .ep-app .table thead th,
+    .ep-app table.dataTable tbody td,
+    .ep-app .table tbody td,
+    .ep-app .table tbody th { padding: .7rem .65rem; }
+    .ep-app div.dt-container .dt-layout-row,
+    .ep-app .dataTables_wrapper .row { align-items: stretch; }
+    .ep-app div.dt-container .dt-search,
+    .ep-app div.dt-container .dt-length,
+    .ep-app .dataTables_filter,
+    .ep-app .dataTables_length { text-align: left !important; }
+    .ep-app div.dt-container .dt-search input,
+    .ep-app .dataTables_filter input { width: 100%; margin: .35rem 0 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

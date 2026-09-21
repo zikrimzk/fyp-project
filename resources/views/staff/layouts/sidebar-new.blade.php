@@ -127,6 +127,21 @@
                 if ($supervision) $sidebarRoles['supervisor'] = 'Supervisor';
                 if ($chairmanActivity->isNotEmpty()) $sidebarRoles['chairman'] = 'Chairman';
                 if ($examinerpanelActivity->isNotEmpty()) $sidebarRoles['examiner'] = 'Examiner / Panel';
+                $storedSidebarRole = session('staff_dashboard_role');
+                $requestedSidebarRole = request('dashboard_role');
+                $initialSidebarRole = is_string($requestedSidebarRole) && array_key_exists($requestedSidebarRole, $sidebarRoles)
+                    ? $requestedSidebarRole
+                    : (is_string($storedSidebarRole) && array_key_exists($storedSidebarRole, $sidebarRoles) ? $storedSidebarRole : array_key_first($sidebarRoles));
+
+                if (request()->routeIs('my-supervision-*') && array_key_exists('supervisor', $sidebarRoles)) {
+                    $initialSidebarRole = 'supervisor';
+                } elseif (request()->routeIs('chairman-*') && array_key_exists('chairman', $sidebarRoles)) {
+                    $initialSidebarRole = 'chairman';
+                } elseif (request()->routeIs('examiner-panel-*') && array_key_exists('examiner', $sidebarRoles)) {
+                    $initialSidebarRole = 'examiner';
+                } elseif (request()->routeIs('submission-eligibility') && array_key_exists('administrator', $sidebarRoles)) {
+                    $initialSidebarRole = 'administrator';
+                }
                 $sidebarCountsAvailable = true;
                 try {
                     $sidebarCounts = app(\App\Services\StaffWorkCounts::class)->forStaff(auth()->user());
@@ -136,12 +151,13 @@
                     $sidebarCountsAvailable = false;
                 }
             @endphp
-<link rel="stylesheet" href="{{ asset('assets/css/staff-sidebar.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/staff-sidebar.css') }}?v=1.0.0">
 <nav class="pc-sidebar staff-work-sidebar" id="staff-work-sidebar" aria-label="Staff navigation"
     data-staff-id="{{ auth()->user()->id }}"
     data-counts-url="{{ route('staff-sidebar-work-counts') }}"
     data-dashboard-url="{{ route('staff-dashboard') }}"
-    data-route-role="{{ request()->routeIs('staff-dashboard') ? request('dashboard_role', '') : (request()->routeIs('my-supervision-*') ? 'supervisor' : (request()->routeIs('chairman-*') ? 'chairman' : (request()->routeIs('examiner-panel-*') ? 'examiner' : (request()->routeIs('submission-eligibility') ? 'administrator' : '')))) }}">
+    data-route-role="{{ $initialSidebarRole }}"
+    data-initial-role="{{ $initialSidebarRole }}">
     <div class="navbar-wrapper">
         <div class="staff-sidebar-heading">
             <a href="{{ route('staff-dashboard') }}" class="staff-sidebar-brand">
@@ -156,7 +172,7 @@
                 <label for="staff-sidebar-role" class="staff-role-label">My Role</label>
                 <select id="staff-sidebar-role" class="form-select" aria-controls="staff-role-navigation">
                     @foreach ($sidebarRoles as $key => $label)
-                        <option value="{{ $key }}" data-label="{{ $label }}">{{ $label }}</option>
+                        <option value="{{ $key }}" data-label="{{ $label }}" @selected($key === $initialSidebarRole)>{{ $label }}</option>
                     @endforeach
                 </select>
                 @unless ($sidebarCountsAvailable)
@@ -646,4 +662,4 @@
     </div>
 </nav>
 <script type="application/json" id="staff-work-counts">@json($sidebarCounts)</script>
-<script src="{{ asset('assets/js/staff-sidebar.js') }}" defer></script>
+<script src="{{ asset('assets/js/staff-sidebar.js') }}?v=1.0.0" defer></script>

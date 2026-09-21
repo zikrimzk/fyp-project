@@ -1,5 +1,12 @@
 @php
     use App\Models\Semester;
+    $student = auth()->user();
+    $programme = $student->programmes;
+    $currentSemester = Semester::where('sem_status', 1)->value('sem_label') ?? 'No current semester';
+    $programmeName = $programme?->prog_name ?? 'Programme not assigned';
+    $programmeCode = $programme?->prog_code ?? 'Programme';
+    $programmeMode = $programme?->prog_mode ?? '-';
+    $programmeModeLabel = $programmeMode === 'FT' ? 'Full Time' : ($programmeMode === 'PT' ? 'Part Time' : $programmeMode);
 @endphp
 {{-- <style>
     /* Enhanced Sidebar Styles */
@@ -262,21 +269,21 @@
     }
 </style> --}}
 
-<style>
+<style media="not all">
     /* Theme Color Variables for Consistency and New Design */
     :root {
-        --color-primary: rgba(52, 58, 64, 255);
-        --color-primary-dark: #212529;
-        --color-secondary: #6c757d;
+        --color-primary: #245a91;
+        --color-primary-dark: #194e83;
+        --color-secondary: #64748b;
         --color-success: #198754;
         --color-danger: #dc3545;
         --color-white: #ffffff;
-        --color-light-gray: #f8f9fa;
-        --color-medium-gray: #e9ecef;
-        --color-dark-gray: #343a40;
+        --color-light-gray: #f8fafc;
+        --color-medium-gray: #dce4ec;
+        --color-dark-gray: #1f2d3d;
         --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-        --gradient-active: linear-gradient(90deg, #3a4149 0%, #343a40 100%);
-        --gradient-hover: linear-gradient(90deg, #e9ecef 0%, #f8f9fa 100%);
+        --gradient-active: linear-gradient(90deg, #245a91 0%, #194e83 100%);
+        --gradient-hover: linear-gradient(90deg, #eaf2fa 0%, #f8fafc 100%);
     }
 
     /* Enhanced Sidebar Styles */
@@ -543,80 +550,68 @@
     }
 </style>
 
-<nav class="pc-sidebar">
+<nav class="pc-sidebar student-work-sidebar" aria-label="Student navigation">
     <div class="navbar-wrapper">
-        <!-- Header Section -->
-        <div class="sidebar-header">
-            <a href="https://utem.edu.my" target="_blank" class="b-brand text-primary d-flex justify-content-center">
-                <img src="../assets/images/logo-utem.PNG" alt="UTEM Logo" width="80" />
+        <div class="student-sidebar-heading">
+            <a href="{{ route('student-home') }}" class="student-sidebar-brand">
+                <img src="{{ asset('assets/images/logo-utem.PNG') }}" alt="UTeM" width="54">
+                <span>
+                    <strong>e-Pasca</strong>
+                    <small>{{ $currentSemester }}</small>
+                </span>
             </a>
-        </div>
 
-        <!-- Semester Info -->
-        <div class="semester-info text-center">
-            <h6>{{ Semester::where('sem_status', 1)->first()->sem_label }}</h6>
+            <div class="student-sidebar-person">
+                <img src="{{ empty($student->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . $student->student_directory . '/photo/' . $student->student_photo) }}"
+                    alt="" width="34" height="34">
+                <span>
+                    <strong>{{ $student->student_name ?? 'Student' }}</strong>
+                    <small>{{ $programmeCode }} · {{ $programmeModeLabel }}</small>
+                </span>
+            </div>
+
+            <div class="student-programme-summary">
+                <span>Programme</span>
+                <strong>{{ $programmeName }}</strong>
+            </div>
         </div>
 
         <div class="navbar-content">
-            <!-- User Profile Section -->
-            <div class="user-profile-section d-flex flex-column align-items-center">
-                <div class="avatar-sidebar mb-3">
-                    <img src="{{ empty(auth()->user()->student_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . auth()->user()->student_directory . '/photo/' . auth()->user()->student_photo) }}"
-                        alt="Profile Photo" />
-                </div>
-                <div class="user-info text-center">
-                    <h6 class="text-uppercase">{{ auth()->user()->student_name ?? '-' }}</h6>
-                    <div class="programme-info text-uppercase">{{ auth()->user()->programmes->prog_name }}</div>
-                    @if (auth()->user()->programmes->prog_mode == 'FT')
-                        <span class="badge bg-dark text-uppercase" style="font-size: 0.6rem;">Full Time</span>
-                    @else
-                        <span class="badge bg-secondary text-uppercase" style="font-size: 0.6rem;">Part Time</span>
-                    @endif
-                </div>
-            </div>
-
             <ul class="pc-navbar">
-                <!-- Main Section -->
                 <li class="pc-item pc-caption">
                     <label>Main</label>
                 </li>
 
                 <li class="pc-item">
-                    <a href="{{ route('student-home') }}" class="pc-link">
+                    <a href="{{ route('student-home') }}" class="pc-link" @if(request()->routeIs('student-home')) aria-current="page" @endif>
                         <span class="pc-micon">
                             <i class="fas fa-home pc-icon"></i>
                         </span>
-                        <span class="pc-mtext">Home</span>
+                        <span class="pc-mtext">Dashboard</span>
                     </a>
                 </li>
 
-                <!-- Course Section -->
                 <li class="pc-item pc-caption">
-                    <label>
-                        {{ auth()->user()->programmes->prog_code }}
-                        ({{ auth()->user()->programmes->prog_mode }})
-                    </label>
+                    <label>Academic</label>
                 </li>
 
                 <li class="pc-item">
-                    <a href="{{ route('student-programme-overview') }}" class="pc-link">
+                    <a href="{{ route('student-programme-overview') }}" class="pc-link"
+                        @if(request()->routeIs('student-programme-overview', 'student-document-submission')) aria-current="page" @endif>
                         <span class="pc-micon">
                             <i class="fas fa-book-open pc-icon"></i>
                         </span>
-                        <span class="pc-mtext">
-                            Programme Overview
-                        </span>
+                        <span class="pc-mtext">Programme Overview</span>
                     </a>
                 </li>
 
                 <li class="pc-item">
-                    <a href="{{ route('student-journal-publication') }}" class="pc-link">
+                    <a href="{{ route('student-journal-publication') }}" class="pc-link"
+                        @if(request()->routeIs('student-journal-publication')) aria-current="page" @endif>
                         <span class="pc-micon">
                             <i class="fas fa-bookmark pc-icon"></i>
                         </span>
-                        <span class="pc-mtext">
-                            Journal Publication
-                        </span>
+                        <span class="pc-mtext">Journal Publication</span>
                     </a>
                 </li>
             </ul>

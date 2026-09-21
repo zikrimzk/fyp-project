@@ -10,7 +10,7 @@
     <meta name="author" content="ZikriMzk" />
 
     <link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/svg+xml" />
-    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.0">
 
     <style>
         :root {

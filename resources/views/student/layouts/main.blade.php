@@ -6,8 +6,7 @@
     <title>e-Pasca | {{ $title }}</title>
     <!-- [Meta] -->
     <meta charset="utf-8" />
-    <meta name="viewport"
-        content="width=device-width, initial-scale=0.9, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -18,7 +17,8 @@
     <!-- [Favicon] icon -->
     <link rel="icon" href="../assets/images/favicon.svg" type="image/x-icon" />
     <!-- [Font] Family -->
-    <link rel="stylesheet" href="../assets/fonts/inter/inter.css" id="main-font-link" />
+    <link rel="preload" href="{{ asset('assets/fonts/inter/Inter-roman.var.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.0" id="main-font-link" />
     <!-- [phosphor Icons] https://phosphoricons.com/ -->
     <link rel="stylesheet" href="../assets/fonts/phosphor/duotone/style.css" />
     <!-- [Tabler Icons] https://tablericons.com -->
@@ -172,11 +172,14 @@
         }
     </style>
 
+    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}?v=1.0.0" />
+    <link rel="stylesheet" href="{{ asset('assets/css/student-sidebar.css') }}?v=1.0.0" />
+
 </head>
 <!-- [Head] end -->
 <!-- [Body] Start -->
 
-<body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"
+<body class="ep-app ep-student-app" data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-layout="vertical" data-pc-direction="ltr"
     data-pc-theme_contrast="" data-pc-theme="light">
     <!-- [ Pre-loader ] start -->
     <div class="page-loader">
@@ -207,23 +210,6 @@
     <script src="../assets/js/fonts/custom-font.js"></script>
     <script src="../assets/js/pcoded.js"></script>
     <script src="../assets/js/plugins/feather.min.js"></script>
-
-    <script>
-        // Prevent pinch-to-zoom
-        document.addEventListener('gesturestart', function(e) {
-            e.preventDefault();
-        });
-
-        // Prevent double-tap zoom
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            let now = new Date().getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
-    </script>
 
     <script>
         $(document).ready(function() {

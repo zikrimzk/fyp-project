@@ -52,8 +52,11 @@
     function selectRole(role, remember = true) {
         if (!selector || ![...selector.options].some(option => option.value === role)) return;
         selector.value = role;
+        sidebar.dataset.initialRole = role;
         items.forEach(item => { item.hidden = item.dataset.sidebarRole !== role; });
-        if (remember) { try { localStorage.setItem(storageKey, role); } catch (_) { /* Storage may be disabled. */ } }
+        if (remember) {
+            try { localStorage.setItem(storageKey, role); } catch (_) { /* Storage may be disabled. */ }
+        }
         sidebar.querySelectorAll('[data-dashboard-link]').forEach(link => {
             const url = new URL(sidebar.dataset.dashboardUrl, location.href);
             url.searchParams.set('dashboard_role', role);
@@ -99,13 +102,6 @@
         const initialRole = routeRole || (validSaved ? savedRole : selector.value);
         selectRole(initialRole, false);
         const onDashboard = cleanPath(location.href) === cleanPath(sidebar.dataset.dashboardUrl);
-        const dashboardRole = new URLSearchParams(location.search).get('dashboard_role');
-        if (onDashboard && !dashboardRole && validSaved) {
-            const url = new URL(location.href);
-            url.searchParams.set('dashboard_role', savedRole);
-            location.replace(url.href);
-            return;
-        }
         selector.addEventListener('change', () => {
             selectRole(selector.value);
             if (!onDashboard) return;

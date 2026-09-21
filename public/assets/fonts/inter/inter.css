@@ -7,11 +7,28 @@
   src: url('Inter-roman.var.woff2?v=3.18') format('woff2');
 }
 
+/* Static family alias for components that request "Inter" instead of "Inter var". */
+@font-face {
+  font-family: 'Inter';
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
+  src: url('Inter-roman.var.woff2?v=3.18') format('woff2');
+}
+
 @font-face {
   font-family: 'Inter var';
   font-weight: 100 900;
   font-display: swap;
   font-style: italic;
   font-named-instance: 'Italic';
+  src: url('Inter-italic.var.woff2?v=3.18') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: italic;
   src: url('Inter-italic.var.woff2?v=3.18') format('woff2');
 }
