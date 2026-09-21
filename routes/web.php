@@ -56,14 +56,14 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
     Route::get('/view-document/{filename}', [SOPController::class, 'viewMaterialFile'])->where('filename', '.*')->name('student-view-material-get');
 
     /* Submission Management */
-    Route::get('/document-submission-{id}', [SubmissionController::class, 'documentSubmission'])->name('student-document-submission');
-    Route::post('/submit-document', [SubmissionController::class, 'submitDocument'])->name('student-submit-document-post');
-    Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->name('student-remove-document-get');
-    Route::post('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->name('student-confirm-submission-post');
+    Route::get('/document-submission-{id}', [SubmissionController::class, 'documentSubmission'])->middleware(\App\Http\Middleware\EnsureSubmissionAccess::class)->name('student-document-submission');
+    Route::post('/submit-document', [SubmissionController::class, 'submitDocument'])->middleware(\App\Http\Middleware\EnsureSubmissionAccess::class)->name('student-submit-document-post');
+    Route::get('/remove-document-{id}-{filename}', [SubmissionController::class, 'removeDocument'])->middleware(\App\Http\Middleware\EnsureSubmissionAccess::class)->name('student-remove-document-get');
+    Route::post('/confirm-student-submission-{actID}', [SubmissionController::class, 'confirmStudentSubmission'])->middleware(\App\Http\Middleware\EnsureSubmissionAccess::class)->name('student-confirm-submission-post');
     Route::get('/view-final-document/{actID}/{semesterID}/{filename}/{opt}', [SubmissionController::class, 'viewFinalDocument'])->where('filename', '.*')->name('student-view-final-document-get');
 
     /* Correction Confirmation */
-    Route::post('/confirm-correction-submission-{actID}', [SubmissionController::class, 'confirmStudentCorrection'])->name('student-confirm-correction-post');
+    Route::post('/confirm-correction-submission-{actID}', [SubmissionController::class, 'confirmStudentCorrection'])->middleware(\App\Http\Middleware\EnsureSubmissionAccess::class)->name('student-confirm-correction-post');
 
     /* Journal Publication */
     Route::get('/journal-publication', [SubmissionController::class, 'journalPublicationManagement'])->name('student-journal-publication');
@@ -77,6 +77,11 @@ Route::prefix('student')->middleware('auth:student')->group(function () {
 });
 
 Route::prefix('staff')->middleware('auth:staff')->group(function () {
+    Route::get('/sidebar-work-counts', function () {
+        return response()->json(app(\App\Services\StaffWorkCounts::class)->forStaff(auth()->user()))
+            ->header('Cache-Control', 'no-store');
+    })->name('staff-sidebar-work-counts');
+
 
     // ---------------------------------------------------------------------------------------------------------------------//
     // -----------------------------------------------------ALL STAFF ------------------------------------------------------//
@@ -165,7 +170,8 @@ Route::prefix('staff')->middleware('auth:staff')->group(function () {
     Route::post('/delete-review-activity', [SubmissionController::class, 'deleteReview'])->name('delete-review-post');
 
     /* Submission Suggestion */
-    Route::get('/submission-suggestion', [SubmissionController::class, 'submissionSuggestion'])->name('submission-suggestion');
+    Route::get('/submission-eligibility', [SubmissionController::class, 'submissionSuggestion'])->name('submission-eligibility');
+    Route::redirect('/submission-suggestion', '/staff/submission-eligibility')->name('submission-suggestion');
     Route::get('/submission-eligibility-approval/{studentID}/{activityID}/{opt}', [SubmissionController::class, 'studentSubmissionSuggestionApproval'])->name('submission-eligibility-approval-get');
     Route::post('/multiple-submission-eligibility-approval', [SubmissionController::class, 'multipleStudentSubmissionSuggestionApproval'])->name('multiple-submission-eligibility-approval-post');
 

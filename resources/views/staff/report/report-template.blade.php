@@ -507,7 +507,7 @@
             <div class="generated-info">
                 Document generated on {{ Carbon::now()->format('l, F j, Y \a\t g:i A') }}
                 <br>
-                e-PostGrad System | Faculty: {{ $faculty->fac_code }}
+                e-Pasca System | Faculty: {{ $faculty->fac_code }}
             </div>
             <div class="no-signature-notice">
                 This is a computer-generated document and does not require a signature

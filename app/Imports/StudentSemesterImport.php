@@ -78,22 +78,24 @@ class StudentSemesterImport implements ToCollection, WithHeadingRow
 
             $validated = $validator->validated();
 
-            /* CREATE STUDENT SEMESTER DATA */
-            StudentSemester::create([
-                'student_id' => $validated['student_matricno'],
-                'semester_id' => $validated['current_semester_id']
-            ]);
+            \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+                /* CREATE STUDENT SEMESTER DATA */
+                StudentSemester::create([
+                    'student_id' => $validated['student_matricno'],
+                    'semester_id' => $validated['current_semester_id']
+                ]);
 
-            /* UPDATE STUDENT SEMESTER COUNT */
-            $semCount = StudentSemester::where('student_id', $validated['student_matricno'])->whereIn('ss_status', [1,4])->count();
+                /* UPDATE STUDENT SEMESTER COUNT */
+                $semCount = StudentSemester::where('student_id', $validated['student_matricno'])->whereIn('ss_status', [1,4])->count();
 
-            $student = Student::where('id', $validated['student_matricno'])->first();
-            $student->student_semcount = $semCount;
-            $student->save();
+                $student = Student::where('id', $validated['student_matricno'])->first();
+                $student->student_semcount = $semCount;
+                $student->save();
 
-            /* ASSIGN STUDENT SUBMISSION */
-            $sc = new SubmissionController();
-            $sc->assignStudentSubmission($student->student_matricno);
+                /* ASSIGN STUDENT SUBMISSION */
+                $sc = new SubmissionController();
+                $sc->assignStudentSubmission($student->student_matricno);
+            });
 
             $this->insertedCount++;
         }

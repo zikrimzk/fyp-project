@@ -94,7 +94,7 @@ class MySupervisionStudentExport implements FromCollection, WithEvents
                 $sheet->insertNewRowBefore(1, 5);
 
                 // TITLE
-                $sheet->setCellValue('A2', 'E-POSTGRAD | UNIVERSITI TEKNIKAL MALAYSIA MELAKA (UTeM)');
+                $sheet->setCellValue('A2', 'e-Pasca | UNIVERSITI TEKNIKAL MALAYSIA MELAKA (UTeM)');
                 $sheet->setCellValue('A3', 'MY SUPERVISION STUDENT LIST');
 
                 // STYLING HEADER AND CONTENT

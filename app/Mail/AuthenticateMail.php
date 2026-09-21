@@ -23,7 +23,7 @@ class AuthenticateMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'e-Postgrad Account Notification',
+            subject: 'e-Pasca Account Notification',
         );
     }
 

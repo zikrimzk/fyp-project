@@ -5,7 +5,7 @@
 <html>
 
 <head>
-    <title>e-PostGrad Submission Notification</title>
+    <title>e-Pasca Submission Notification</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
@@ -105,7 +105,7 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            <h1>e-PostGrad System</h1>
+            <h1>e-Pasca System</h1>
             @if ($data['eType'] == 1)
                 {{-- FOR STUDENTS --}}
                 <h2>Submission Reminder</h2>
@@ -141,7 +141,7 @@
             @if ($data['eType'] == 1)
                 {{-- SUBMISSION REMINDER --}}
                 <p>This is a gentle reminder to submit your <strong>{{ $data['act_name'] }}</strong> documents via the
-                    e-PostGrad system. The documents required are as follows:</p>
+                    e-Pasca system. The documents required are as follows:</p>
                 <ul>
                     @foreach ($data['document'] as $doc)
                         <li>{{ $doc->doc_name }} – Due by
@@ -155,7 +155,7 @@
                 <p>This is to inform you that your student, <strong>{{ $data['student_name'] }}</strong> (Matric No:
                     {{ $data['student_matricno'] }}) has confirmed submission of their
                     <strong>{{ $data['act_name'] }}</strong> documents on
-                    {{ Carbon::parse($data['submission_date'])->format('d-m-Y g:i A') }} via the e-PostGrad system.
+                    {{ Carbon::parse($data['submission_date'])->format('d-m-Y g:i A') }} via the e-Pasca system.
                     Please review the submission at your earliest convenience.
                 </p>
                 </p>
@@ -163,7 +163,7 @@
                 {{-- STUDENT SUBMISSION APPROVED --}}
                 <p>We are pleased to inform you that your <strong>{{ $data['act_name'] }}</strong> document has been
                     approved by <strong>{{ $data['approvalUser'] }}</strong> on
-                    {{ Carbon::parse($data['sa_date'])->format('d-m-Y g:i A') }} through the e-PostGrad system.</p>
+                    {{ Carbon::parse($data['sa_date'])->format('d-m-Y g:i A') }} through the e-Pasca system.</p>
             @elseif ($data['eType'] == 4)
                 {{-- STUDENT SUBMISSION REJECTED --}}
                 <p>We regret to inform you that your <strong>{{ $data['act_name'] }}</strong> document was rejected by
@@ -191,14 +191,14 @@
                     submit any documents. Contact the administrator if you have any queries</p>
             @endif
 
-            <a href="{{ route('main-login') }}" class="btn">Log in to e-PostGrad</a>
+            <a href="{{ route('main-login') }}" class="btn">Log in to e-Pasca</a>
 
             <p>Thank you.</p>
-            <p>Best regards,<br><strong>e-PostGrad Team</strong></p>
+            <p>Best regards,<br><strong>e-Pasca Team</strong></p>
         </div>
 
         <div class="email-footer">
-            <p>&copy; {{ date('Y') }} e-PostGrad System. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} e-Pasca System. All rights reserved.</p>
             <p>Need help? <a href="mailto:utem.edu.my">Contact Support</a></p>
         </div>
     </div>
@@ -214,7 +214,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>e-PostGrad System Notification</title>
+    <title>e-Pasca System Notification</title>
     <style>
         * {
             margin: 0;
@@ -540,7 +540,7 @@
             <!-- Letter Header -->
             <div class="letter-header">
                 <div class="reference-number">Ref:
-                    e-PostGrad/{{ date('Y') }}/{{ strtoupper(substr(md5($data['name']), 0, 6)) }}</div>
+                    e-Pasca/{{ date('Y') }}/{{ strtoupper(substr(md5($data['name']), 0, 6)) }}</div>
                 <div class="letter-date">{{ Carbon::now()->format('d F Y') }}</div>
 
                 <div class="subject-line">
@@ -586,7 +586,7 @@
                     <p class="letter-paragraph">
                         We hope this official communication finds you in good health and spirits. This serves as a
                         formal reminder regarding your pending document submission for the above-referenced activity
-                        through our e-PostGrad system.
+                        through our e-Pasca system.
                     </p>
 
                     <div class="document-list">
@@ -625,7 +625,7 @@
 
                     <p class="letter-paragraph">
                         We kindly request your prompt attention to review the submitted documents at your earliest
-                        convenience through the e-PostGrad system.
+                        convenience through the e-Pasca system.
                     </p>
                 @elseif ($data['eType'] == 3)
                     {{-- STUDENT SUBMISSION APPROVED --}}
@@ -662,7 +662,7 @@
                     </div>
 
                     <p class="letter-paragraph">
-                        Please log in to the e-PostGrad system to review the feedback provided and take the necessary
+                        Please log in to the e-Pasca system to review the feedback provided and take the necessary
                         corrective actions. We encourage you to consult with your supervisor if you require any
                         clarification.
                     </p>
@@ -735,10 +735,10 @@
                 <!-- Action Section -->
                 <div class="action-section">
                     <p style="margin-bottom: 15px; font-size: 14px; color: #666;">
-                        Access the e-PostGrad system using the link below:
+                        Access the e-Pasca system using the link below:
                     </p>
                     <a href="{{ route('main-login') }}" class="action-button">
-                        🔐 Log in to e-PostGrad System
+                        🔐 Log in to e-Pasca System
                     </a>
                 </div>
 
@@ -754,7 +754,7 @@
                     </p>
 
                     <div class="signature">
-                        e-PostGrad System Administrator
+                        e-Pasca System Administrator
                     </div>
                     <div class="signature-title">
                         Faculty of Graduate Studies<br>
@@ -769,7 +769,7 @@
             <div class="footer-divider"></div>
             <div class="footer-content">
                 <div>
-                    &copy; {{ date('Y') }} e-PostGrad System, UTeM. All rights reserved.
+                    &copy; {{ date('Y') }} e-Pasca System, UTeM. All rights reserved.
                 </div>
                 <div class="contact-info">
                     Support: <a href="mailto:support@utem.edu.my">support@utem.edu.my</a> |

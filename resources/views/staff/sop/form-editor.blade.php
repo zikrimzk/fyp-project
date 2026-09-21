@@ -968,7 +968,7 @@
                                     <div class="w-100">
                                         <h3 class="modal-title text-white">
                                             <i class="ti ti-forms me-2"></i>
-                                            e-PostGrad Form Editor
+                                            e-Pasca Form Editor
                                         </h3>
                                         <p class="modal-subtitle">Configure your form settings and guidelines before
                                             building</p>

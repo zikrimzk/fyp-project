@@ -3,7 +3,7 @@
     <div class="footer-wrapper container-fluid">
         <div class="row">
             <div class="col my-1">
-                <p class="m-0 ">e-PostGrad System Copyright © @php echo date("Y"); @endphp  All rights reserved</p>
+                <p class="m-0 ">e-Pasca System Copyright © @php echo date("Y"); @endphp  All rights reserved</p>
             </div>
         </div>
     </div>

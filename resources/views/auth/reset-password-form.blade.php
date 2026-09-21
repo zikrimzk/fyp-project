@@ -2,11 +2,10 @@
 <html lang="en">
 
 <head>
-    <title>e-PostGrad | {{ $title }}</title>
+    <title>e-Pasca | {{ $title }}</title>
     <!-- [Meta] -->
     <meta charset="utf-8" />
-    <meta name="viewport"
-        content="width=device-width, initial-scale=0.9, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="description" content="-" />
@@ -14,7 +13,7 @@
     <meta name="author" content="ZikriMzk" />
 
     <!-- [Favicon] icon -->
-    <link rel="icon" href="../assets/images/logo-test-white.png" type="image/x-icon" />
+    <link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/svg+xml" />
     <!-- [Font] Family -->
     <link rel="stylesheet" href="../assets/fonts/inter/inter.css" id="main-font-link" />
     <!-- [phosphor Icons] https://phosphoricons.com/ -->
@@ -31,13 +30,14 @@
     <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
     <link rel="stylesheet" href="../assets/css/style-preset.css" />
     <link rel="stylesheet" href="../assets/css/landing.css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
 
 </head>
 
 <body data-pc-preset="preset-1" data-pc-sidebar-caption="true" data-pc-direction="ltr" data-pc-theme_contrast=""
-    data-pc-theme="light" class="landing-page">
+    data-pc-theme="light" class="landing-page auth-page">
 
 
     <div class="auth-main">
@@ -294,23 +294,6 @@
     <script src="../assets/js/fonts/custom-font.js"></script>
     <script src="../assets/js/pcoded.js"></script>
     <script src="../assets/js/plugins/feather.min.js"></script>
-
-    <script>
-        // Prevent pinch-to-zoom
-        document.addEventListener('gesturestart', function(e) {
-            e.preventDefault();
-        });
-
-        // Prevent double-tap zoom
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            let now = new Date().getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
-    </script>
 
 </body>
 

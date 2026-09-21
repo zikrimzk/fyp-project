@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>e-PostGrad Account Notification</title>
+    <title>e-Pasca Account Notification</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Roboto:wght@300;400;500;700&display=swap');
 
@@ -292,7 +292,7 @@
     <div class="email-wrapper">
         <div class="letterhead">
             <div class="university-name">UNIVERSITI TEKNIKAL MALAYSIA MELAKA</div>
-            <div class="system-name">e-PostGrad System</div>
+            <div class="system-name">e-Pasca System</div>
         </div>
         <div class="letterhead-divider"></div>
 
@@ -311,7 +311,7 @@
                         PASSWORD RESET CONFIRMATION
                     @endif
                 </div>
-                <div class="activity-name">e-PostGrad System Account Management</div>
+                <div class="activity-name">e-Pasca System Account Management</div>
             </div>
 
             <div class="letter-body">
@@ -327,7 +327,7 @@
                 @if ($data['eType'] == 1)
                     {{-- ACCOUNT REGISTRATION --}}
                     <p class="letter-paragraph">
-                        We are pleased to inform you that your account has been successfully created in the e-PostGrad
+                        We are pleased to inform you that your account has been successfully created in the e-Pasca
                         system. This system will serve as your primary platform for managing all postgraduate-related
                         submissions and communications.
                     </p>
@@ -362,13 +362,13 @@
                     </div>
 
                     <p class="letter-paragraph">
-                        Welcome to the e-PostGrad system! This platform will facilitate efficient management of your
+                        Welcome to the e-Pasca system! This platform will facilitate efficient management of your
                         postgraduate documentation and communication processes.
                     </p>
                 @elseif ($data['eType'] == 2)
                     {{-- ACCOUNT DEACTIVATION --}}
                     <p class="letter-paragraph">
-                        We regret to inform you that your e-PostGrad system account has been inactivated effective
+                        We regret to inform you that your e-Pasca system account has been inactivated effective
                         immediately.
                     </p>
 
@@ -393,7 +393,7 @@
                 @elseif ($data['eType'] == 3)
                     {{-- PASSWORD RESET REQUEST --}}
                     <p class="letter-paragraph">
-                        We have received a request to reset the password for your e-PostGrad system account. This
+                        We have received a request to reset the password for your e-Pasca system account. This
                         request was initiated from your registered email address.
                     </p>
 
@@ -417,7 +417,7 @@
                 @elseif ($data['eType'] == 4)
                     {{-- PASSWORD RESET CONFIRMATION --}}
                     <p class="letter-paragraph">
-                        We are pleased to confirm that your password has been successfully updated in the e-PostGrad
+                        We are pleased to confirm that your password has been successfully updated in the e-Pasca
                         system. Your account security has been enhanced with the new credentials.
                     </p>
 
@@ -429,7 +429,7 @@
                     </div>
 
                     <p class="letter-paragraph">
-                        You can now log in to the e-PostGrad system using your new password. Please ensure that you keep
+                        You can now log in to the e-Pasca system using your new password. Please ensure that you keep
                         your login credentials secure and do not share them with unauthorized individuals.
                     </p>
 
@@ -448,14 +448,14 @@
                     <div class="action-section">
                         <p style="margin-bottom: 15px; font-size: 14px; color: #666;">
                             @if ($data['eType'] == 1 || $data['eType'] == 4)
-                                Access your e-PostGrad account using the link below:
+                                Access your e-Pasca account using the link below:
                             @elseif ($data['eType'] == 3)
                                 Click the button below to reset your password:
                             @endif
                         </p>
                         <a href="{{ $data['link'] }}" class="action-button">
                             @if ($data['eType'] == 1 || $data['eType'] == 4)
-                                Log in to e-PostGrad System
+                                Log in to e-Pasca System
                             @elseif ($data['eType'] == 3)
                                 Reset My Password
                             @endif
@@ -474,7 +474,7 @@
                     </p>
 
                     <div class="signature">
-                        e-PostGrad System Administrator
+                        e-Pasca System Administrator
                     </div>
                     <div class="signature-title">
                         Universiti Teknikal Malaysia Melaka
@@ -486,7 +486,7 @@
         <div class="letter-footer">
             <div class="footer-content">
                 <div>
-                    &copy; {{ date('Y') }} e-PostGrad System, UTeM. All rights reserved.
+                    &copy; {{ date('Y') }} e-Pasca System, UTeM. All rights reserved.
                 </div>
                 <div class="contact-info">
                     Support: <a href="mailto:support@utem.edu.my">support@utem.edu.my</a>

@@ -23,7 +23,7 @@ class SubmissionMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'e-Postgrad Submission Notification',
+            subject: 'e-Pasca Submission Notification',
         );
     }
 

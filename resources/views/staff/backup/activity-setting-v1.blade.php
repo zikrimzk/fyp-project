@@ -2339,7 +2339,7 @@ initTableBuilder();
 <html lang="en">
 
 <head>
-    <title>e-PostGrad | {{ $title }}</title>
+    <title>e-Pasca | {{ $title }}</title>
     <!-- [Meta] -->
     <meta charset="utf-8" />
     <meta name="viewport"
@@ -2389,7 +2389,7 @@ initTableBuilder();
                         <div class="card-body">
                             <div class="text-center mt-3 mb-4">
                                 <h3 class="text-center f-w-500 mb-1">Login</h3>
-                                <h5 class="text-center text-muted">e-PostGrad System</h5>
+                                <h5 class="text-center text-muted">e-Pasca System</h5>
                             </div>
 
                             <!-- Start Alert -->

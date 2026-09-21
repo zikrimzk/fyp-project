@@ -89,7 +89,7 @@ class StudentSemesterExport implements FromCollection, WithEvents
                 $sheet->insertNewRowBefore(1, 5);
 
                 // TITLE
-                $sheet->setCellValue('A2', 'E-POSTGRAD | UNIVERSITI TEKNIKAL MALAYSIA MELAKA (UTeM)');
+                $sheet->setCellValue('A2', 'e-Pasca | UNIVERSITI TEKNIKAL MALAYSIA MELAKA (UTeM)');
                 if (!empty($this->semesterId)) {
                     $sheet->setCellValue('A3', 'STUDENT LIST (' . DB::table('semesters')->where('id', $this->semesterId)->first()->sem_label . ')');
                 } else {

@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport"
-        content="width=device-width, initial-scale=0.9, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="description" content="-" />
@@ -20,10 +19,11 @@
     <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
     <link rel="stylesheet" href="../assets/css/style-preset.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}" />
     <title>{{ $title }}</title>
 </head>
 
-<body>
+<body class="staff-signature-page">
 
     <!-- [ Alert ] start -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">

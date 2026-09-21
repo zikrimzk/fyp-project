@@ -1649,6 +1649,7 @@ class SupervisionController extends Controller
                 return back()->with('error', 'This student is already assigned to this semester.');
             }
 
+            DB::beginTransaction();
             StudentSemester::create([
                 'student_id' => $student->id,
                 'semester_id' => $semID
@@ -1661,9 +1662,11 @@ class SupervisionController extends Controller
 
             $sc = new SubmissionController();
             $sc->assignStudentSubmission($student->student_matricno);
+            DB::commit();
 
             return back()->with('success', $student->student_name . ' has been assigned to this semester successfully.');
         } catch (Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Oops! Error assigning student: ' . $e->getMessage());
         }
     }
@@ -1691,6 +1694,7 @@ class SupervisionController extends Controller
             $validated = $validator->validated();
 
 
+            DB::beginTransaction();
             StudentSemester::where('student_id', $studentID)->where('semester_id', $semID)->update([
                 'ss_status' => $validated['student_semester_status_change'],
             ]);
@@ -1707,9 +1711,11 @@ class SupervisionController extends Controller
 
             $sc = new SubmissionController();
             $sc->assignStudentSubmission($student->student_matricno);
+            DB::commit();
 
             return back()->with('success', $student->student_name . ' semester status updated successfully.');
         } catch (Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Oops! Error updating student semester status: ' . $e->getMessage());
         }
     }
@@ -1721,6 +1727,7 @@ class SupervisionController extends Controller
             $semID = Crypt::decrypt($semID);
             $student = Student::where('id', $studentID)->first();
 
+            DB::beginTransaction();
             StudentSemester::where('student_id', $studentID)->where('semester_id', $semID)->delete();
 
             $semCount = StudentSemester::where('student_id', $studentID)->whereIn('ss_status', [1, 4])->count();
@@ -1730,15 +1737,23 @@ class SupervisionController extends Controller
 
             $sc = new SubmissionController();
             $sc->assignStudentSubmission($student->student_matricno);
+            DB::commit();
 
             return back()->with('success',  $student->student_name . ' semester enrollment has been deleted successfully.');
         } catch (Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Oops! Error deleting student: ' . $e->getMessage());
         }
     }
 
     public function updateMultipleStudentSemester(Request $req)
     {
+        $req->validate([
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'integer|exists:students,id',
+            'semester_id' => 'required|integer|exists:semesters,id',
+            'status' => 'required|integer|in:1,2,3,4',
+        ]);
         DB::beginTransaction();
 
         try {
@@ -1781,6 +1796,11 @@ class SupervisionController extends Controller
 
     public function deleteMultipleStudentSemester(Request $req)
     {
+        $req->validate([
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'integer|exists:students,id',
+            'semester_id' => 'required|integer|exists:semesters,id',
+        ]);
         DB::beginTransaction();
 
         try {

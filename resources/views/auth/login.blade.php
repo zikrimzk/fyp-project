@@ -1,22 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>e-PostGrad | Login</title>
+    <title>e-Pasca | Login</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="description" content="e-PostGrad System - Postgraduate Document Management Portal" />
+    <meta name="description" content="e-Pasca System - Postgraduate Document Management Portal" />
     <meta name="keywords" content="postgraduate, research, university, academic, document management" />
     <meta name="author" content="ZikriMzk" />
 
-    <link rel="icon" href="https://example.com/assets/images/logo-test-white.png" type="image/x-icon" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com/">
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/svg+xml" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}">
 
     <style>
         :root {
@@ -391,16 +386,17 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}">
 </head>
 
-<body>
+<body class="auth-page">
     <div class="login-container">
         <div class="login-card">
             <header class="login-header">
                 <div class="university-logo">
                     <img src="../assets/images/logo-utem.PNG" alt="University Teknikal Malaysia Melaka" />
                 </div>
-                <h1 class="system-title">e-PostGrad System</h1>
+                <h1 class="system-title">e-Pasca System</h1>
                 <p class="system-subtitle">Please sign in to your account to access the system.</p>
             </header>
 

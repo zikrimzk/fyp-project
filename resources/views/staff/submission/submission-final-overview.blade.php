@@ -208,6 +208,7 @@
                                         Export Data
                                     </span>
                                 </button>
+                                <a href="{{ route('submission-eligibility') }}" class="ms-md-auto align-self-center">View Student Eligibility &gt;</a>
                             </div>
                             <!-- [ Option Section ] end -->
 

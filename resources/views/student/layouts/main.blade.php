@@ -3,7 +3,7 @@
 <!-- [Head] start -->
 
 <head>
-    <title>e-PostGrad | {{ $title }}</title>
+    <title>e-Pasca | {{ $title }}</title>
     <!-- [Meta] -->
     <meta charset="utf-8" />
     <meta name="viewport"

@@ -1,584 +1,10 @@
 @php
     use App\Models\Semester;
 @endphp
-{{-- <style>
-    /* Enhanced Sidebar Styles */
-    .pc-sidebar {
-        border-right: 1px solid #dee2e6;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
-    }
-
-    .navbar-wrapper {
-        height: 100vh;
-        overflow-y: hidden;
-        overflow-x: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .navbar-wrapper::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .navbar-wrapper::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.05);
-    }
-
-    .navbar-wrapper::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 2px;
-    }
-
-    .navbar-wrapper::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 0, 0, 0.3);
-    }
-
-    .sidebar-header {
-        background: var(--bs-light-secondary, #f8f9fa);
-        border-bottom: 2px solid #dee2e6;
-        padding: 1rem;
-        flex-shrink: 0;
-    }
-
-    .sidebar-header .b-brand {
-        transition: transform 0.2s ease;
-    }
-
-    .sidebar-header .b-brand:hover {
-        transform: scale(1.02);
-    }
-
-    .semester-info {
-        background: rgba(0, 0, 0, 0.03);
-        border-bottom: 1px solid #dee2e6;
-        margin-bottom: 0;
-        padding: 0.75rem 1rem;
-        flex-shrink: 0;
-    }
-
-    .semester-info h6 {
-        color: #495057;
-        font-weight: 600;
-        margin: 0;
-        font-size: 0.875rem;
-    }
-
-    .navbar-content {
-        background: var(--bs-light-secondary, #f8f9fa);
-        flex: 1;
-        overflow-y: unset;
-        padding-bottom: 2rem;
-    }
-
-    .user-profile-section {
-        padding: 1.5rem 1rem;
-        border-bottom: 1px solid #dee2e6;
-        margin-bottom: 1rem;
-        text-transform: uppercase;
-    }
-
-    .avatar-sidebar {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        overflow: hidden;
-        transition: transform 0.2s ease;
-    }
-
-    .avatar-sidebar:hover {
-        transform: scale(1.02);
-    }
-
-    .avatar-sidebar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .user-info h6 {
-        color: #212529;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-        font-size: 0.95rem;
-    }
-
-    .user-role {
-        color: #6c757d;
-        font-size: 0.6rem;
-        background: rgba(0, 0, 0, 0.05);
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        display: inline-block;
-    }
-
-    .pc-navbar {
-        padding: 0 0 14rem 0;
-        /* Added bottom padding for proper spacing */
-        margin: 0;
-        list-style: none;
-    }
-
-    .pc-item.pc-caption {
-        margin: 1.5rem 0 0.75rem 0;
-        padding: 0 1rem;
-    }
-
-    .pc-item.pc-caption label {
-        color: #6c757d;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin: 0;
-    }
-
-    .pc-item {
-        margin-bottom: 0.25rem;
-    }
-
-    .pc-link {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        color: #495057;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        border-radius: 0;
-        position: relative;
-    }
-
-    .pc-link:hover {
-        background: rgba(0, 0, 0, 0.05);
-        color: #212529;
-        text-decoration: none;
-        border-left: 3px solid var(--bs-primary, #0d6efd);
-        padding-left: calc(1rem - 3px);
-    }
-
-    .pc-link.active {
-        background: rgba(13, 110, 253, 0.1);
-        color: var(--bs-primary, #0d6efd);
-        border-left: 3px solid var(--bs-primary, #0d6efd);
-        padding-left: calc(1rem - 3px);
-    }
-
-    .pc-micon {
-        width: 20px;
-        height: 20px;
-        margin-right: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .pc-icon {
-        font-size: 16px;
-        color: inherit;
-    }
-
-    .pc-mtext {
-        flex: 1;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .pc-arrow {
-        margin-left: 0.5rem;
-        transition: transform 0.2s ease;
-    }
-
-    .pc-item.pc-hasmenu.active .pc-arrow {
-        transform: rotate(90deg);
-    }
-
-    .pc-submenu {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        background: rgba(0, 0, 0, 0.03);
-        border-left: 2px solid #dee2e6;
-        margin-left: 1rem;
-    }
-
-    .pc-submenu .pc-item {
-        margin-bottom: 0;
-    }
-
-    .pc-submenu .pc-link {
-        padding: 0.6rem 1rem 0.6rem 2rem;
-        font-size: 0.8rem;
-        color: #6c757d;
-    }
-
-    .pc-submenu .pc-link:hover {
-        background: rgba(0, 0, 0, 0.05);
-        color: #495057;
-        border-left: 2px solid var(--bs-primary, #0d6efd);
-        padding-left: calc(2rem - 2px);
-    }
-
-    .pc-submenu .pc-submenu {
-        margin-left: 2rem;
-        background: rgba(0, 0, 0, 0.05);
-    }
-
-    .pc-submenu .pc-submenu .pc-link {
-        padding-left: 2.5rem;
-        font-size: 0.75rem;
-    }
-
-    .pc-submenu .pc-submenu .pc-link:hover {
-        padding-left: calc(2.5rem - 2px);
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .user-profile-section {
-            padding: 1rem;
-        }
-
-        .avatar-sidebar {
-            width: 48px;
-            height: 48px;
-        }
-
-        .pc-link {
-            padding: 0.6rem 0.75rem;
-        }
-    }
-</style> --}}
-
-<style>
-    /* Theme Color Variables for Consistency and New Design */
-    :root {
-        --color-primary: rgba(52, 58, 64, 255);
-        --color-primary-dark: #212529;
-        --color-secondary: #6c757d;
-        --color-success: #198754;
-        --color-danger: #dc3545;
-        --color-white: #ffffff;
-        --color-light-gray: #f8f9fa;
-        --color-medium-gray: #e9ecef;
-        --color-dark-gray: #343a40;
-        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-        --gradient-active: linear-gradient(90deg, #3a4149 0%, #343a40 100%);
-        --gradient-hover: linear-gradient(90deg, #e9ecef 0%, #f8f9fa 100%);
-    }
-    
-    /* Enhanced Sidebar Styles */
-    .pc-sidebar {
-        border-right: 1px solid var(--color-medium-gray);
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
-        background-color: var(--color-light-gray);
-    }
-
-    .navbar-wrapper {
-        height: 100vh;
-        overflow-y: hidden;
-        overflow-x: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .navbar-wrapper::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .navbar-wrapper::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.05);
-    }
-
-    .navbar-wrapper::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 2px;
-    }
-
-    .navbar-wrapper::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 0, 0, 0.3);
-    }
-
-    .sidebar-header {
-        background: var(--color-light-gray);
-        border-bottom: 2px solid var(--color-medium-gray);
-        padding: 1.5rem 1rem;
-        flex-shrink: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .sidebar-header .b-brand {
-        transition: transform 0.2s ease;
-    }
-
-    .sidebar-header .b-brand:hover {
-        transform: scale(1.02);
-    }
-
-    .semester-info {
-        background: rgba(0, 0, 0, 0.03);
-        border-bottom: 1px solid var(--color-medium-gray);
-        margin-bottom: 0;
-        padding: 0.75rem 1rem;
-        flex-shrink: 0;
-    }
-
-    .semester-info h6 {
-        color: var(--color-secondary);
-        font-weight: 600;
-        margin: 0;
-        font-size: 0.875rem;
-    }
-
-    .navbar-content {
-        background: var(--color-light-gray);
-        flex: 1;
-        overflow-y: auto;
-        padding-bottom: 2rem;
-    }
-
-    .user-profile-section {
-        padding: 1.5rem 1rem;
-        border-bottom: 1px solid var(--color-medium-gray);
-        margin-bottom: 1rem;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .avatar-sidebar {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        overflow: hidden;
-        transition: transform 0.2s ease;
-        border: 2px solid var(--color-medium-gray);
-    }
-
-    .avatar-sidebar:hover {
-        transform: scale(1.05);
-        border-color: var(--color-primary);
-    }
-
-    .avatar-sidebar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .user-info h6 {
-        color: var(--color-dark-gray);
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-        font-size: 0.95rem;
-    }
-
-    .user-role {
-        color: var(--color-secondary);
-        font-size: 0.6rem;
-        background: rgba(0, 0, 0, 0.05);
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        display: inline-block;
-    }
-
-    .pc-navbar {
-        padding: 0 0 14rem 0;
-        margin: 0;
-        list-style: none;
-    }
-
-    .pc-item.pc-caption {
-        margin: 1.5rem 0 0.75rem 0;
-        padding: 0 1rem;
-    }
-
-    .pc-item.pc-caption label {
-        color: var(--color-secondary);
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin: 0;
-    }
-
-    .pc-item {
-        margin-bottom: 0.25rem;
-    }
-
-    .pc-link {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        color: var(--color-dark-gray);
-        text-decoration: none;
-        transition: all 0.2s ease;
-        border-radius: 0;
-        position: relative;
-    }
-
-    .pc-link:hover {
-        background: rgba(0, 0, 0, 0.05);
-        color: var(--color-primary);
-        text-decoration: none;
-        padding-left: calc(1rem - 3px);
-    }
-
-    .pc-link.active {
-        background: var(--gradient-active);
-        color: var(--color-white);
-        border-left: 3px solid var(--color-primary-dark);
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-        padding-left: calc(1rem - 3px);
-    }
-    
-    .pc-micon {
-        width: 20px;
-        height: 20px;
-        margin-right: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .pc-icon {
-        font-size: 16px;
-        color: inherit;
-    }
-
-    .pc-mtext {
-        flex: 1;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .pc-arrow {
-        margin-left: 0.5rem;
-        transition: transform 0.2s ease;
-    }
-
-    .pc-item.pc-hasmenu.active .pc-arrow {
-        transform: rotate(90deg);
-    }
-
-    .pc-submenu {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        background: rgba(0, 0, 0, 0.03);
-        border-left: 2px solid var(--color-medium-gray);
-        margin-left: 1rem;
-    }
-
-    .pc-submenu .pc-item {
-        margin-bottom: 0;
-    }
-
-    .pc-submenu .pc-link {
-        padding: 0.6rem 1rem 0.6rem 2rem;
-        font-size: 0.8rem;
-        color: var(--color-secondary);
-    }
-
-    .pc-submenu .pc-link:hover {
-        background: rgba(0, 0, 0, 0.05);
-        color: var(--color-dark-gray);
-        border-left: 2px solid var(--color-primary);
-        padding-left: calc(2rem - 2px);
-    }
-
-    .pc-submenu .pc-submenu {
-        margin-left: 2rem;
-        background: rgba(0, 0, 0, 0.05);
-    }
-
-    .pc-submenu .pc-submenu .pc-link {
-        padding-left: 2.5rem;
-        font-size: 0.75rem;
-    }
-
-    .pc-submenu .pc-submenu .pc-link:hover {
-        padding-left: calc(2.5rem - 2px);
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .user-profile-section {
-            padding: 1rem;
-        }
-
-        .avatar-sidebar {
-            width: 48px;
-            height: 48px;
-        }
-
-        .pc-link {
-            padding: 0.6rem 0.75rem;
-        }
-    }
-</style>
-
-<nav class="pc-sidebar">
-    <div class="navbar-wrapper">
-        <!-- Header Section -->
-        <div class="sidebar-header">
-            <a href="https://utem.edu.my" target="_blank" class="b-brand text-primary d-flex justify-content-center">
-                <img src="../assets/images/logo-utem.PNG" alt="UTEM Logo" width="80" />
-            </a>
-        </div>
-
-        <!-- Semester Info -->
-        <div class="semester-info text-center">
-            <h6>{{ Semester::where('sem_status', 1)->first()->sem_label }}</h6>
-        </div>
-
-        <div class="navbar-content">
-            <!-- User Profile Section -->
-            <div class="user-profile-section d-flex flex-column align-items-center">
-                <div class="avatar-sidebar mb-3">
-                    <img src="{{ empty(auth()->user()->staff_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . auth()->user()->staff_photo) }}"
-                        alt="Profile Photo" />
-                </div>
-                <div class="user-info text-center">
-                    <h6>{{ auth()->user()->staff_name ?? '-' }}</h6>
-                    @if (auth()->user()->staff_role == 1)
-                        <span class="user-role">Committee</span>
-                    @elseif(auth()->user()->staff_role == 2)
-                        <span class="user-role">Lecturer</span>
-                    @elseif(auth()->user()->staff_role == 3)
-                        <span class="user-role">Deputy Dean</span>
-                    @elseif(auth()->user()->staff_role == 4)
-                        <span class="user-role">Dean</span>
-                    @else
-                        <span class="user-role">N/A</span>
-                    @endif
-                </div>
-            </div>
-
             @php
 
-                /* CHECK FOR CURRENT SEMESTER STUDENT FOR SUPERVISION */
-                $supervision = DB::table('supervisions')
-                    ->where('staff_id', auth()->user()->id)
-                    ->whereExists(function ($query) {
-                        $latestSemesterSub = DB::table('student_semesters')
-                            ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
-                            ->groupBy('student_id');
-                        $query
-                            ->select(DB::raw(1))
-                            ->from('students as s')
-                            ->joinSub($latestSemesterSub, 'latest', function ($join) {
-                                $join->on('latest.student_id', '=', 's.id');
-                            })
-                            ->join('semesters as sem', 'sem.id', '=', 'latest.latest_semester_id')
-                            ->where('s.id', DB::raw('supervisions.student_id'))
-                            ->where('sem.sem_status', 1);
-                    })
-                    ->exists();
+                /* KEEP SUPERVISION ACCESS INCLUDING OUTSTANDING WORK FROM EARLIER SEMESTERS */
+                $supervision = DB::table('supervisions')->where('staff_id', auth()->user()->id)->exists();
 
                 /* CHECK EACH ROLE */
                 $iscommittee = auth()->user()->staff_role == 1;
@@ -696,15 +122,57 @@
                 $ddActs = $evalConfig->filter(fn($x) => in_array(5, $x['roles']));
                 $deanActs = $evalConfig->filter(fn($x) => in_array(6, $x['roles']));
 
+                $sidebarRoles = [];
+                if ($higherUps) $sidebarRoles['administrator'] = 'Administrator';
+                if ($supervision) $sidebarRoles['supervisor'] = 'Supervisor';
+                if ($chairmanActivity->isNotEmpty()) $sidebarRoles['chairman'] = 'Chairman';
+                if ($examinerpanelActivity->isNotEmpty()) $sidebarRoles['examiner'] = 'Examiner / Panel';
+                $sidebarCountsAvailable = true;
+                try {
+                    $sidebarCounts = app(\App\Services\StaffWorkCounts::class)->forStaff(auth()->user());
+                } catch (\Throwable $error) {
+                    report($error);
+                    $sidebarCounts = [];
+                    $sidebarCountsAvailable = false;
+                }
             @endphp
-
+<link rel="stylesheet" href="{{ asset('assets/css/staff-sidebar.css') }}">
+<nav class="pc-sidebar staff-work-sidebar" id="staff-work-sidebar" aria-label="Staff navigation"
+    data-staff-id="{{ auth()->user()->id }}"
+    data-counts-url="{{ route('staff-sidebar-work-counts') }}"
+    data-dashboard-url="{{ route('staff-dashboard') }}"
+    data-route-role="{{ request()->routeIs('staff-dashboard') ? request('dashboard_role', '') : (request()->routeIs('my-supervision-*') ? 'supervisor' : (request()->routeIs('chairman-*') ? 'chairman' : (request()->routeIs('examiner-panel-*') ? 'examiner' : (request()->routeIs('submission-eligibility') ? 'administrator' : '')))) }}">
+    <div class="navbar-wrapper">
+        <div class="staff-sidebar-heading">
+            <a href="{{ route('staff-dashboard') }}" class="staff-sidebar-brand">
+                <img src="{{ asset('assets/images/logo-utem.PNG') }}" alt="UTeM" width="54">
+                <span><strong>e-Pasca</strong><small>{{ Semester::where('sem_status', 1)->value('sem_label') ?? 'No current semester' }}</small></span>
+            </a>
+            <div class="staff-sidebar-person">
+                <img src="{{ empty(auth()->user()->staff_photo) ? asset('assets/images/user/default-profile-1.jpg') : asset('storage/' . auth()->user()->staff_photo) }}" alt="" width="34" height="34">
+                <span>{{ auth()->user()->staff_name ?? 'Staff' }}</span>
+            </div>
+            @if (count($sidebarRoles))
+                <label for="staff-sidebar-role" class="staff-role-label">My Role</label>
+                <select id="staff-sidebar-role" class="form-select" aria-controls="staff-role-navigation">
+                    @foreach ($sidebarRoles as $key => $label)
+                        <option value="{{ $key }}" data-label="{{ $label }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                @unless ($sidebarCountsAvailable)
+                    <div class="staff-work-summary" role="status">Pending counts temporarily unavailable</div>
+                @endunless
+                <div id="staff-other-roles" class="staff-other-roles" aria-label="Pending work in other roles"></div>
+            @endif
+        </div>
+        <div class="navbar-content" id="staff-role-navigation">
             <ul class="pc-navbar">
                 <!-- Main Section -->
                 <li class="pc-item pc-caption">
                     <label>Main</label>
                 </li>
                 <li class="pc-item">
-                    <a href="{{ route('staff-dashboard') }}" class="pc-link">
+                    <a href="{{ route('staff-dashboard') }}" class="pc-link" data-dashboard-link>
                         <span class="pc-micon">
                             <i class="fas fa-home pc-icon"></i>
                         </span>
@@ -714,11 +182,11 @@
 
                 @if ($supervision)
                     <!-- Supervisor Section -->
-                    <li class="pc-item pc-caption">
+                    <li data-sidebar-role="supervisor" class="pc-item pc-caption">
                         <label>Supervisor</label>
                     </li>
 
-                    <li class="pc-item">
+                    <li data-sidebar-role="supervisor" class="pc-item">
                         <a href="{{ route('my-supervision-student-list') }}" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-user-graduate pc-icon"></i>
@@ -727,7 +195,7 @@
                         </a>
                     </li>
 
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="supervisor" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-file-upload pc-icon"></i>
@@ -749,7 +217,7 @@
                         </ul>
                     </li>
 
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="supervisor" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-clipboard-list pc-icon"></i>
@@ -769,8 +237,8 @@
                         </ul>
                     </li>
 
-                    @if ($supervisorActs->isNotEmpty())
-                        <li class="pc-item pc-hasmenu">
+                    @if ($supervisorActs->isNotEmpty() || ($sidebarCounts[route('my-supervision-correction-approval')] ?? 0) > 0)
+                        <li data-sidebar-role="supervisor" class="pc-item pc-hasmenu">
                             <a href="javascript:void(0)" class="pc-link">
                                 <span class="pc-micon"><i class="fas fa-pen pc-icon"></i></span>
                                 <span class="pc-mtext">Evaluation</span>
@@ -797,95 +265,12 @@
 
                 @endif
 
-                {{-- @if ($iscommittee)
-                    <!-- Committee Section -->
-                    <li class="pc-item pc-caption">
-                        <label>Committee</label>
-                    </li>
-                    <li class="pc-item pc-hasmenu">
-                        <a href="javascript:void(0)" class="pc-link">
-                            <span class="pc-micon">
-                                <i class="fas fa-clipboard-list pc-icon"></i>
-                            </span>
-                            <span class="pc-mtext">Nomination</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                        </a>
-                        <ul class="pc-submenu">
-                            @foreach ($nomination as $nom)
-                                <li class="pc-item">
-                                    <a class="pc-link"
-                                        href="{{ route('committee-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                        {{ $nom->activity_name }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </li>
-                @endif
-
-                @if ($isDD)
-                    <!-- Deputy Dean Section -->
-                    <li class="pc-item pc-caption"><label>Deputy Dean</label></li>
-
-                    @if ($showDeputyDeanNomination)
-                        <li class="pc-item pc-hasmenu">
-                            <a href="javascript:void(0)" class="pc-link">
-                                <span class="pc-micon">
-                                    <i class="fas fa-clipboard-list pc-icon"></i>
-                                </span>
-                                <span class="pc-mtext">Nomination</span>
-                                <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                            </a>
-                            <ul class="pc-submenu">
-                                @foreach ($deputyDeanNominations as $nom)
-                                    <li class="pc-item">
-                                        <a class="pc-link"
-                                            href="{{ route('deputydean-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                            {{ $nom->activity_name }}
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </li>
-                    @endif
-                @endif
-
-                @if ($isDean)
-                    <!-- Dean Section -->
-                    <li class="pc-item pc-caption"><label>Dean</label></li>
-
-                    @if ($showDeanNomination)
-                        <li class="pc-item pc-caption">
-                            <label>Dean</label>
-                        </li>
-                        <li class="pc-item pc-hasmenu">
-                            <a href="javascript:void(0)" class="pc-link">
-                                <span class="pc-micon">
-                                    <i class="fas fa-clipboard-list pc-icon"></i>
-                                </span>
-                                <span class="pc-mtext">Nomination</span>
-                                <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
-                            </a>
-                            <ul class="pc-submenu">
-                                @foreach ($deanNominations as $nom)
-                                    <li class="pc-item">
-                                        <a class="pc-link"
-                                            href="{{ route('dean-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                            {{ $nom->activity_name }}
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </li>
-                    @endif
-                @endif --}}
-
                 @if ($chairmanActivity->isNotEmpty())
                     <!-- Chairman Section -->
-                    <li class="pc-item pc-caption">
+                    <li data-sidebar-role="chairman" class="pc-item pc-caption">
                         <label>Chairman</label>
                     </li>
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="chairman" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-pen pc-icon"></i>
@@ -908,10 +293,10 @@
 
                 @if ($examinerpanelActivity->isNotEmpty())
                     <!-- Examiner Section -->
-                    <li class="pc-item pc-caption">
+                    <li data-sidebar-role="examiner" class="pc-item pc-caption">
                         <label>Examiner / Panel</label>
                     </li>
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="examiner" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-pen pc-icon"></i>
@@ -940,11 +325,11 @@
 
                 @if ($higherUps)
                     <!-- Administrator Section -->
-                    <li class="pc-item pc-caption">
+                    <li data-sidebar-role="administrator" class="pc-item pc-caption">
                         <label>Administrator</label>
                     </li>
 
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="administrator" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-users-cog pc-icon"></i>
@@ -986,7 +371,7 @@
                         </ul>
                     </li>
 
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="administrator" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-file-upload pc-icon"></i>
@@ -1010,15 +395,10 @@
                                     Submission Approval
                                 </a>
                             </li>
-                            <li class="pc-item">
-                                <a class="pc-link" href="{{ route('submission-suggestion') }}">
-                                    Submission Suggestion
-                                </a>
-                            </li>
                         </ul>
                     </li>
 
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="administrator" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-clipboard-list pc-icon"></i>
@@ -1104,7 +484,7 @@
                         </ul>
                     </li>
 
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="administrator" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-pen pc-icon"></i>
@@ -1202,7 +582,7 @@
                         </ul>
                     </li>
 
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="administrator" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-project-diagram pc-icon"></i>
@@ -1229,7 +609,7 @@
                         </ul>
                     </li>
 
-                    <li class="pc-item pc-hasmenu">
+                    <li data-sidebar-role="administrator" class="pc-item pc-hasmenu">
                         <a href="javascript:void(0)" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-cog pc-icon"></i>
@@ -1265,3 +645,5 @@
         </div>
     </div>
 </nav>
+<script type="application/json" id="staff-work-counts">@json($sidebarCounts)</script>
+<script src="{{ asset('assets/js/staff-sidebar.js') }}" defer></script>

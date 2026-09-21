@@ -14,7 +14,7 @@
                     </a>
                 </li>
                 <li class="pc-h-item d-md-inline-flex">
-                    <span class="fw-semibold text-uppercase">e-PostGrad System</span>
+                    <span class="fw-semibold text-uppercase">e-Pasca System</span>
                 </li>
             </ul>
         </div>

@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>e-PostGrad System Notification</title>
+    <title>e-Pasca System Notification</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Roboto:wght@300;400;500;700&display=swap');
 
@@ -327,7 +327,7 @@
     <div class="email-wrapper">
         <div class="letterhead">
             <div class="university-name">UNIVERSITI TEKNIKAL MALAYSIA MELAKA</div>
-            <div class="system-name">e-PostGrad System</div>
+            <div class="system-name">e-Pasca System</div>
         </div>
 
         <div class="letter-content">
@@ -371,7 +371,7 @@
                     <p class="letter-paragraph">
                         We hope this official communication finds you in good health and spirits. This serves as a
                         formal reminder regarding your pending document submission for the above-referenced activity
-                        through our e-PostGrad system.
+                        through our e-Pasca system.
                     </p>
 
                     <div class="document-list">
@@ -410,7 +410,7 @@
 
                     <p class="letter-paragraph">
                         We kindly request your prompt attention to review the submitted documents at your earliest
-                        convenience through the e-PostGrad system.
+                        convenience through the e-Pasca system.
                     </p>
                 @elseif ($data['eType'] == 3)
                     {{-- STUDENT SUBMISSION APPROVED --}}
@@ -447,7 +447,7 @@
                     </div>
 
                     <p class="letter-paragraph">
-                        Please log in to the e-PostGrad system to review the feedback provided and take the necessary
+                        Please log in to the e-Pasca system to review the feedback provided and take the necessary
                         corrective actions. We encourage you to consult with your supervisor if you require any
                         clarification.
                     </p>
@@ -512,10 +512,10 @@
 
                 <div class="action-section">
                     <p style="margin-bottom: 20px; font-size: 14px; color: #666;">
-                        You may access the e-PostGrad system by clicking the button below:
+                        You may access the e-Pasca system by clicking the button below:
                     </p>
                     <a href="{{ route('main-login') }}" class="action-button">
-                        Log in to e-PostGrad System
+                        Log in to e-Pasca System
                     </a>
                 </div>
 
@@ -530,7 +530,7 @@
                     </p>
 
                     <div class="signature">
-                        e-PostGrad System Administrator
+                        e-Pasca System Administrator
                     </div>
                     <div class="signature-title">
                         Universiti Teknikal Malaysia Melaka
@@ -542,7 +542,7 @@
         <div class="letter-footer">
             <div class="footer-content">
                 <div>
-                    &copy; {{ date('Y') }} e-PostGrad System, UTeM. All rights reserved.
+                    &copy; {{ date('Y') }} e-Pasca System, UTeM. All rights reserved.
                 </div>
                 <div class="contact-info">
                     Support: <a href="mailto:e-postgrad@appnest.my">e-postgrad@appnest.my</a>
