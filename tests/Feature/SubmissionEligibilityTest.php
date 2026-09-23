@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Nomination;
+use App\Models\Evaluation;
 use App\Models\Procedure;
 use App\Models\Semester;
 use App\Models\Student;
@@ -74,6 +75,22 @@ class SubmissionEligibilityTest extends TestCase
         $this->assertDatabaseHas('submissions', ['document_id' => 2, 'submission_status' => 1]);
     }
 
+    public function test_open_nonrepeatable_activity_bypasses_previous_prerequisites_after_timeline(): void
+    {
+        DB::table('procedures')->where('activity_id', 2)->update([
+            'timeline_sem' => 1,
+            'init_status' => 1,
+            'is_repeatable' => 0,
+        ]);
+
+        $this->sync();
+
+        $this->assertDatabaseHas('submissions', [
+            'document_id' => 2,
+            'submission_status' => 1,
+        ]);
+    }
+
     public function test_inactive_removed_and_reactivated_enrollment_preserves_uploads(): void
     {
         $this->sync();
@@ -88,6 +105,55 @@ class SubmissionEligibilityTest extends TestCase
         $this->sync();
         $this->assertDatabaseHas('submissions', ['document_id' => 1, 'submission_status' => 3, 'submission_document' => 'draft.pdf']);
         $this->assertSame(1, Nomination::count());
+    }
+
+    public function test_ineligible_student_nomination_and_assignments_are_removed_then_started_fresh(): void
+    {
+        DB::table('departments')->insert([
+            'id' => 1,
+            'dep_name' => 'Test',
+            'dep_code' => 'TEST',
+            'fac_id' => 1,
+        ]);
+        DB::table('staff')->insert([
+            'id' => 1,
+            'staff_id' => 'S001',
+            'staff_name' => 'Supervisor',
+            'staff_email' => 'supervisor@example.test',
+            'staff_password' => 'test',
+            'department_id' => 1,
+        ]);
+
+        $this->sync();
+        $originalNominationId = Nomination::where('activity_id', 1)->value('id');
+        DB::table('evaluators')->insert([
+            'staff_id' => 1,
+            'nom_id' => $originalNominationId,
+            'eva_status' => 1,
+            'eva_role' => 1,
+        ]);
+        Evaluation::create([
+            'student_id' => 1,
+            'activity_id' => 1,
+            'semester_id' => $this->semester->id,
+            'staff_id' => 1,
+            'evaluation_status' => 1,
+        ]);
+
+        DB::table('student_semesters')->update(['ss_status' => 2]);
+        $this->sync();
+
+        $this->assertDatabaseMissing('nominations', ['id' => $originalNominationId]);
+        $this->assertDatabaseCount('evaluators', 0);
+        $this->assertDatabaseCount('evaluations', 0);
+
+        DB::table('student_semesters')->update(['ss_status' => 1]);
+        $this->sync();
+
+        $newNomination = Nomination::where('activity_id', 1)->firstOrFail();
+        $this->assertNotSame($originalNominationId, $newNomination->id);
+        $this->assertSame(1, (int) $newNomination->nom_status);
+        $this->assertDatabaseCount('evaluators', 0);
     }
 
     public function test_only_current_active_enrollment_opens_submissions(): void

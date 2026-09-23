@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ProcedureFlowBuilder;
 
 class SOPController extends Controller
 {
@@ -264,7 +265,7 @@ class SOPController extends Controller
     }
 
     /* Procedure Setting [Checked : 04/04/2025] */
-    public function procedureSetting(Request $req)
+    public function procedureSetting(Request $req, ProcedureFlowBuilder $flowBuilder)
     {
         try {
             if ($req->ajax()) {
@@ -357,11 +358,14 @@ class SOPController extends Controller
 
                 return $table->make(true);
             }
+            $procedureFlows = $flowBuilder->grouped();
+
             return view('staff.sop.procedure-setting', [
                 'title' => 'Procedure Setting',
                 'acts' => Activity::all(),
                 'progs' => Programme::all(),
-                'pros' => Procedure::all()
+                'pros' => Procedure::all(),
+                'procedureFlows' => $procedureFlows,
             ]);
         } catch (Exception $e) {
             return abort(500);

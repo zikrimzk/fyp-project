@@ -17,6 +17,10 @@
             --brand-100: #eaf2fa;
             /* light bg */
             --muted: #64748b;
+            --attention: #9a6700;
+            --attention-strong: #7a5100;
+            --attention-bg: #fffaf0;
+            --attention-border: #ead7a3;
         }
 
         /* Cards */
@@ -115,6 +119,16 @@
             color: #b02a37;
         }
 
+        .badge-soft-attention {
+            background: #f8edcf;
+            color: var(--attention-strong);
+        }
+
+        .badge-soft-required {
+            background: #eef2f6;
+            color: #475569;
+        }
+
         /* Empty states */
         .empty-state {
             text-align: center;
@@ -143,13 +157,31 @@
         }
 
         .reminder-item.is-overdue {
-            border-left-color: #dc3545 !important;
-            background: rgba(220, 53, 69, .035);
+            border-left-color: var(--attention) !important;
+            background: #fffdf8;
         }
 
         .reminder-count {
             min-width: 1.5rem;
         }
+
+        .reminder-count-attention {
+            background: #f8edcf;
+            color: var(--attention-strong);
+        }
+
+        .reminder-notice {
+            background: var(--attention-bg);
+            border-bottom: 1px solid var(--attention-border);
+            color: #5f4a1b;
+        }
+
+        .reminder-notice-icon,
+        .text-attention { color: var(--attention); }
+
+        .reminder-card .card-header { padding: 1.15rem 1.25rem 0; }
+        .reminder-card .nav-tabs-underline { margin-inline: -.25rem; }
+        .reminder-card .nav-tabs-underline .nav-link { padding-inline: .75rem; }
 
         /* Small utilities */
         .text-brand {
@@ -234,7 +266,7 @@
                 <!-- [ Dashboard ] start -->
 
                 <!-- [ Main ] start -->
-                <div class="col-sm-8">
+                <div class="col-12 col-lg-7">
 
                     <!-- [ Student Details ] start -->
                     <div class="card rounded-lg overflow-hidden mb-4">
@@ -344,24 +376,54 @@
                     </div>
                     <!-- [ Student Details ] end -->
 
+                    <!-- [ Programme Journey ] start -->
+                    <div class="card mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                                <div class="d-flex align-items-start gap-3">
+                                    <span class="avatar-chip flex-shrink-0"><i class="ti ti-route" aria-hidden="true"></i></span>
+                                    <div>
+                                        <h5 class="mb-1">Programme Journey</h5>
+                                        @if ($procedureFlow->isNotEmpty())
+                                            <p class="text-muted small mb-0">
+                                                View the activity sequence, semester timeline and requirements for
+                                                {{ $procedureFlow->first()->prog_code }} ({{ $procedureFlow->first()->prog_mode }}).
+                                            </p>
+                                        @else
+                                            <p class="text-muted small mb-0">No programme procedure has been configured yet.</p>
+                                        @endif
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary flex-shrink-0"
+                                    data-bs-toggle="modal" data-bs-target="#studentProgrammeFlowModal"
+                                    @disabled($procedureFlow->isEmpty())>
+                                    <i class="ti ti-chart-arrows me-1" aria-hidden="true"></i>
+                                    View programme flow
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ Programme Journey ] end -->
+
                 </div>
                 <!-- [ Main ] end -->
 
 
                 <!-- [ Aside ] start -->
-                <div class="col-sm-4">
+                <div class="col-12 col-lg-5">
 
                     <!-- [ Reminders ] start -->
                     @php
                         $showOverdue = $overdueCount > 0;
                     @endphp
-                    <div class="card mb-4">
+                    <div class="card mb-4 reminder-card">
                         <div class="card-header bg-white pb-0">
                             <div class="d-flex align-items-center justify-content-between">
                                 <h5 class="mb-0 fw-semibold">
                                     <i class="fas fa-bell me-2 text-brand"></i> Reminders
                                 </h5>
                             </div>
+                            <p class="small text-muted mb-0 mt-1">Review upcoming and overdue submission deadlines.</p>
 
                             <!-- Tabs -->
                             <ul class="nav nav-tabs nav-tabs-underline mt-3" id="remindersTab" role="tablist">
@@ -374,10 +436,10 @@
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link {{ $showOverdue ? 'active text-danger' : '' }}" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-pane"
+                                    <button class="nav-link {{ $showOverdue ? 'active' : '' }}" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-pane"
                                         type="button" role="tab" aria-controls="past-pane" aria-selected="{{ $showOverdue ? 'true' : 'false' }}">
                                         Overdue
-                                        <span class="badge rounded-pill {{ $overdueCount > 0 ? 'bg-danger' : 'bg-light text-dark' }} ms-1 reminder-count">{{ $overdueCount }}</span>
+                                        <span class="badge rounded-pill {{ $overdueCount > 0 ? 'reminder-count-attention' : 'bg-light text-dark' }} ms-1 reminder-count">{{ $overdueCount }}</span>
                                     </button>
                                 </li>
                             </ul>
@@ -385,9 +447,9 @@
 
                         <div class="card-body p-0">
                             @if ($overdueCount > 0)
-                                <div class="alert alert-danger border-0 rounded-0 mb-0 px-4 py-3" role="alert">
+                                <div class="reminder-notice px-4 py-3" role="status">
                                     <div class="d-flex align-items-start gap-2">
-                                        <i class="fas fa-exclamation-triangle mt-1" aria-hidden="true"></i>
+                                        <i class="fas fa-clock mt-1 reminder-notice-icon" aria-hidden="true"></i>
                                         <div>
                                             <strong>{{ $overdueCount }} overdue {{ Str::plural('submission', $overdueCount) }} require your attention.</strong>
                                             <div class="small mt-1">Open an item below to submit the required document.</div>
@@ -431,7 +493,7 @@
                                                                 <span class="badge badge-soft badge-soft-brand">
                                                                     {{ $doc->activity_name }}
                                                                 </span>
-                                                                <span class="badge badge-soft {{ $doc->isRequired ? 'badge-soft-danger' : 'badge-soft-ok' }}">
+                                                                <span class="badge badge-soft {{ $doc->isRequired ? 'badge-soft-required' : 'badge-soft-ok' }}">
                                                                     {{ $doc->isRequired ? 'Required' : 'Optional' }}
                                                                 </span>
                                                             </div>
@@ -459,11 +521,11 @@
                                                         <div class="flex-grow-1">
                                                             <div class="d-flex justify-content-between gap-2">
                                                                 <h6 class="mb-1">{{ $doc->document_name }}</h6>
-                                                                <i class="ti ti-chevron-right text-danger" aria-hidden="true"></i>
+                                                                <i class="ti ti-chevron-right text-attention" aria-hidden="true"></i>
                                                             </div>
 
                                                             <div class="d-flex align-items-center gap-2 small">
-                                                                <span class="badge badge-soft badge-soft-danger">
+                                                                <span class="badge badge-soft badge-soft-attention">
                                                                     <i class="far fa-clock me-1"></i>{{ $doc->deadline_label }}
                                                                 </span>
                                                                 <span class="text-muted">Due {{ $doc->due_date_label }}</span>
@@ -473,7 +535,7 @@
                                                                 <span class="badge badge-soft badge-soft-brand">
                                                                     {{ $doc->activity_name }}
                                                                 </span>
-                                                                <span class="badge badge-soft {{ $doc->isRequired ? 'badge-soft-danger' : 'badge-soft-ok' }}">
+                                                                <span class="badge badge-soft {{ $doc->isRequired ? 'badge-soft-required' : 'badge-soft-ok' }}">
                                                                     {{ $doc->isRequired ? 'Required' : 'Optional' }}
                                                                 </span>
                                                             </div>
@@ -635,6 +697,8 @@
                     </div>
                 </form>
                 <!-- [ Edit Research Modal ] end -->
+
+                @include('student.auth.partials.programme-flow-modal')
 
                 <!-- [ Dashboard ] end -->
             </div>

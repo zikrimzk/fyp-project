@@ -15,7 +15,7 @@
     <!-- [Favicon] icon -->
     <link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/svg+xml" />
     <!-- [Font] Family -->
-    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.0" id="main-font-link" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.1" id="main-font-link" />
     <!-- [phosphor Icons] https://phosphoricons.com/ -->
     <link rel="stylesheet" href="../assets/fonts/phosphor/duotone/style.css" />
     <!-- [Tabler Icons] https://tablericons.com -->
@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
     <link rel="stylesheet" href="../assets/css/style-preset.css" />
     <link rel="stylesheet" href="../assets/css/landing.css" />
-    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}?v=1.0.2" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
 

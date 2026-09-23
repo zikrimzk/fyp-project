@@ -12,14 +12,14 @@
     <!-- [Favicon] icon -->
     <link rel="icon" href="../assets/images/favicon.svg" type="image/x-icon" />
     <!-- [Font] Family -->
-    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.0" id="main-font-link" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.1" id="main-font-link" />
     <!-- [jQuery Files] -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- [Template CSS Files] -->
     <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
     <link rel="stylesheet" href="../assets/css/style-preset.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}?v=1.0.2" />
     <title>{{ $title }}</title>
 </head>
 

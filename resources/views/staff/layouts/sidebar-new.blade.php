@@ -151,7 +151,7 @@
                     $sidebarCountsAvailable = false;
                 }
             @endphp
-<link rel="stylesheet" href="{{ asset('assets/css/staff-sidebar.css') }}?v=1.0.0">
+<link rel="stylesheet" href="{{ asset('assets/css/staff-sidebar.css') }}?v=1.0.1">
 <nav class="pc-sidebar staff-work-sidebar" id="staff-work-sidebar" aria-label="Staff navigation"
     data-staff-id="{{ auth()->user()->id }}"
     data-counts-url="{{ route('staff-sidebar-work-counts') }}"

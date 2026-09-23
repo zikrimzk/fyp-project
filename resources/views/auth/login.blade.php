@@ -11,7 +11,7 @@
     <meta name="author" content="ZikriMzk" />
 
     <link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/svg+xml" />
-    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.0">
+    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.1">
 
     <style>
         :root {
@@ -35,7 +35,7 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--ep-font-sans, "Inter var", Inter, "Segoe UI", Arial, sans-serif);
             color: var(--color-dark-gray);
             background-color: var(--color-light-gray);
             min-height: 100vh;
@@ -386,7 +386,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}?v=1.0.2">
 </head>
 
 <body class="auth-page">

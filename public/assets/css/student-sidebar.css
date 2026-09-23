@@ -8,7 +8,7 @@
     border-right: 1px solid var(--student-line);
     box-shadow: none;
     color: var(--student-ink);
-    font-family: "Inter var", Inter, Arial, sans-serif;
+    font-family: var(--ep-font-sans, "Inter var", Inter, "Segoe UI", Arial, sans-serif);
 }
 
 .student-work-sidebar .navbar-wrapper {

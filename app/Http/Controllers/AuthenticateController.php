@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Services\AuditLogger;
+use App\Services\ProcedureFlowBuilder;
 
 class AuthenticateController extends Controller
 {
@@ -606,7 +607,7 @@ class AuthenticateController extends Controller
     }
 
     /* Student Function */
-    public function studentHome()
+    public function studentHome(ProcedureFlowBuilder $flowBuilder)
     {
         try {
             $currentSemesterId = Semester::where('sem_status', 1)->value('id');
@@ -653,10 +654,10 @@ class AuthenticateController extends Controller
                     if ($submission->is_overdue) {
                         $daysOverdue = abs($daysUntilDue);
                         $submission->deadline_label = 'Overdue by ' . $daysOverdue . ' ' . Str::plural('day', $daysOverdue);
-                        $submission->deadline_class = 'badge-soft-danger';
+                        $submission->deadline_class = 'badge-soft-attention';
                     } elseif ($daysUntilDue === 0) {
                         $submission->deadline_label = 'Due today';
-                        $submission->deadline_class = 'badge-soft-danger';
+                        $submission->deadline_class = 'badge-soft-attention';
                     } elseif ($daysUntilDue === 1) {
                         $submission->deadline_label = 'Due tomorrow';
                         $submission->deadline_class = 'badge-soft-warn';
@@ -673,6 +674,7 @@ class AuthenticateController extends Controller
             $dueSoonCount = $upcomingDocuments
                 ->filter(fn ($submission) => $submission->days_until_due <= 7)
                 ->count();
+            $procedureFlow = $flowBuilder->forProgramme((int) auth()->user()->programme_id);
 
             return view('student.auth.student-home', [
                 'title' => 'Student Dashboard',
@@ -681,6 +683,7 @@ class AuthenticateController extends Controller
                 'upcomingDocuments' => $upcomingDocuments,
                 'overdueCount' => $overdueDocuments->count(),
                 'dueSoonCount' => $dueSoonCount,
+                'procedureFlow' => $procedureFlow,
             ]);
         } catch (Exception $e) {
             return abort(500);

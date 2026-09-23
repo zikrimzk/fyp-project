@@ -1,6 +1,183 @@
 @extends('staff.layouts.main')
 
 @section('content')
+    <style>
+        .procedure-flow-modal .modal-dialog {
+            max-width: min(1280px, calc(100vw - 2rem));
+        }
+
+        .procedure-flow-summary {
+            background: var(--ep-surface-muted);
+            border: 1px solid var(--ep-border);
+            border-radius: var(--ep-radius-sm);
+        }
+
+        .procedure-flow-legend-item {
+            align-items: center;
+            display: inline-flex;
+            gap: .4rem;
+        }
+
+        .procedure-flow-legend-mark {
+            border-radius: 50%;
+            display: inline-block;
+            height: .7rem;
+            width: .7rem;
+        }
+
+        .procedure-flow-legend-mark.is-open { background: var(--ep-primary); }
+        .procedure-flow-legend-mark.is-locked { background: var(--ep-warning); }
+
+        .procedure-flow-track {
+            align-items: stretch;
+            display: flex;
+            min-width: max-content;
+            padding: .5rem .25rem 1.25rem;
+        }
+
+        .procedure-flow-scroll {
+            overflow-x: auto;
+            overscroll-behavior-inline: contain;
+            scrollbar-color: #b7c4d1 transparent;
+        }
+
+        .procedure-flow-node {
+            background: var(--ep-surface);
+            border: 1px solid var(--ep-border);
+            border-radius: var(--ep-radius);
+            box-shadow: var(--ep-shadow-sm);
+            display: flex;
+            flex: 0 0 270px;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .procedure-flow-node::before {
+            content: "";
+            height: 4px;
+            inset: 0 0 auto;
+            position: absolute;
+        }
+
+        .procedure-flow-node.is-open::before { background: var(--ep-primary); }
+        .procedure-flow-node.is-locked::before { background: var(--ep-warning); }
+        .procedure-flow-node.is-record::before { background: var(--ep-text-muted); }
+
+        .procedure-flow-sequence {
+            align-items: center;
+            background: var(--ep-primary-soft);
+            border-radius: 999px;
+            color: var(--ep-primary-dark);
+            display: inline-flex;
+            font-size: .75rem;
+            font-weight: 700;
+            height: 1.75rem;
+            justify-content: center;
+            min-width: 1.75rem;
+            padding: 0 .55rem;
+        }
+
+        .procedure-flow-timeline {
+            background: var(--ep-surface-muted);
+            border: 1px solid var(--ep-border);
+            border-radius: var(--ep-radius-sm);
+        }
+
+        .procedure-flow-status {
+            border-radius: .4rem;
+            font-size: .76rem;
+            font-weight: 700;
+            padding: .3rem .5rem;
+        }
+
+        .procedure-flow-status.is-open {
+            background: var(--ep-primary-soft);
+            color: var(--ep-primary-dark);
+        }
+
+        .procedure-flow-status.is-locked {
+            background: #fff6e5;
+            color: #8a5200;
+        }
+
+        .procedure-flow-status.is-record {
+            background: #eef2f6;
+            color: #475569;
+        }
+
+        .procedure-flow-connector {
+            align-items: center;
+            align-self: center;
+            display: flex;
+            flex: 0 0 120px;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 .6rem;
+        }
+
+        .procedure-flow-connector-label {
+            color: var(--ep-text-muted);
+            font-size: .68rem;
+            line-height: 1.25;
+            margin-bottom: .45rem;
+            min-height: 1.7rem;
+            text-align: center;
+        }
+
+        .procedure-flow-connector-line {
+            background: var(--ep-warning);
+            height: 2px;
+            position: relative;
+            width: 100%;
+        }
+
+        .procedure-flow-connector-line::after {
+            border-bottom: 5px solid transparent;
+            border-left: 7px solid var(--ep-warning);
+            border-top: 5px solid transparent;
+            content: "";
+            position: absolute;
+            right: -1px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .procedure-flow-connector.is-open .procedure-flow-connector-line {
+            background: repeating-linear-gradient(90deg, var(--ep-primary) 0 7px, transparent 7px 12px);
+        }
+
+        .procedure-flow-connector.is-open .procedure-flow-connector-line::after {
+            border-left-color: var(--ep-primary);
+        }
+
+        @media (max-width: 767.98px) {
+            .procedure-flow-modal .modal-dialog { margin: .5rem; max-width: none; }
+            .procedure-flow-track { align-items: stretch; flex-direction: column; min-width: 0; }
+            .procedure-flow-node { flex-basis: auto; width: 100%; }
+            .procedure-flow-connector { flex-basis: 76px; min-height: 76px; padding: .5rem 0; }
+            .procedure-flow-connector-label { margin-bottom: .3rem; min-height: 0; }
+            .procedure-flow-connector-line { height: 38px; width: 2px; }
+            .procedure-flow-connector-line::after {
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 7px solid var(--ep-warning);
+                bottom: -1px;
+                left: 50%;
+                right: auto;
+                top: auto;
+                transform: translateX(-50%);
+            }
+            .procedure-flow-connector.is-open .procedure-flow-connector-line {
+                background: repeating-linear-gradient(180deg, var(--ep-primary) 0 7px, transparent 7px 12px);
+            }
+            .procedure-flow-connector.is-open .procedure-flow-connector-line::after {
+                border-left-color: transparent;
+                border-top-color: var(--ep-primary);
+            }
+        }
+    </style>
+
     <div class="pc-container">
         <div class="pc-content">
             <!-- [ breadcrumb ] start -->
@@ -287,7 +464,7 @@
                                                     required>
                                                     <option value="">- Select Status -</option>
                                                     <option value="1"
-                                                        @if (old('init_status') == 1) selected @endif>(O) Open Always
+                                                        @if (old('init_status') == 1) selected @endif>(O) Open
                                                     </option>
                                                     <option value="2"
                                                         @if (old('init_status') == 2) selected @endif>(L) Locked
@@ -296,6 +473,10 @@
                                                 @error('init_status')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
+                                                <div class="form-text mt-2">
+                                                    <div><strong>Open:</strong> Opens after the semester timeline is reached, without waiting for an earlier activity.</div>
+                                                    <div><strong>Locked:</strong> Opens after the semester timeline is reached and any prerequisite activity is completed.</div>
+                                                </div>
                                             </div>
                                         </div>
                                         <!--Activity Repeatable Input-->
@@ -415,6 +596,147 @@
                     </div>
                 </form>
                 <!-- [ Add Modal ] end -->
+
+                @foreach ($procedureFlows as $programmeId => $flowProcedures)
+                    @php
+                        $programme = $flowProcedures->first();
+                    @endphp
+                    <div class="modal fade procedure-flow-modal" id="procedureFlowModal-{{ $programmeId }}"
+                        tabindex="-1" aria-labelledby="procedureFlowModalLabel-{{ $programmeId }}" aria-hidden="true">
+                        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <div>
+                                        <div class="text-muted small mb-1">Programme procedure flow</div>
+                                        <h5 class="modal-title" id="procedureFlowModalLabel-{{ $programmeId }}">
+                                            {{ $programme->prog_code }} ({{ $programme->prog_mode }})
+                                        </h5>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-3 p-md-4">
+                                    <div class="procedure-flow-summary d-flex flex-column flex-lg-row justify-content-between gap-3 p-3 mb-4">
+                                        <div>
+                                            <div class="fw-semibold">{{ $programme->prog_name }}</div>
+                                            <div class="small text-muted">
+                                                {{ $flowProcedures->count() }} configured
+                                                {{ Str::plural('activity', $flowProcedures->count()) }}, shown in sequence order.
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-wrap align-items-center gap-3 small" aria-label="Flow legend">
+                                            <span class="procedure-flow-legend-item">
+                                                <span class="procedure-flow-legend-mark is-open" aria-hidden="true"></span>
+                                                Open: timeline only
+                                            </span>
+                                            <span class="procedure-flow-legend-item">
+                                                <span class="procedure-flow-legend-mark is-locked" aria-hidden="true"></span>
+                                                Locked: timeline + prerequisites
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="procedure-flow-scroll" tabindex="0"
+                                        aria-label="Scrollable procedure flow for {{ $programme->prog_code }} {{ $programme->prog_mode }}">
+                                        <div class="procedure-flow-track" role="list">
+                                            @foreach ($flowProcedures as $procedure)
+                                                @php
+                                                    $isRecord = (int) $procedure->activity_type === 2;
+                                                    $isOpen = !$isRecord && (int) $procedure->init_status === 1;
+                                                    $nodeClass = $isRecord ? 'is-record' : ($isOpen ? 'is-open' : 'is-locked');
+                                                    $nextProcedure = $flowProcedures->get($loop->index + 1);
+                                                    $nextIsOpen = $nextProcedure
+                                                        && (int) $nextProcedure->activity_type !== 2
+                                                        && (int) $nextProcedure->init_status === 1;
+                                                @endphp
+                                                <article class="procedure-flow-node {{ $nodeClass }}" role="listitem">
+                                                    <div class="p-3 p-lg-4 d-flex flex-column h-100">
+                                                        <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                                                            <span class="procedure-flow-sequence">{{ $procedure->act_seq }}</span>
+                                                            @if ($isRecord)
+                                                                <span class="procedure-flow-status is-record">Record-based</span>
+                                                            @elseif ($isOpen)
+                                                                <span class="procedure-flow-status is-open">Open</span>
+                                                            @else
+                                                                <span class="procedure-flow-status is-locked">Locked</span>
+                                                            @endif
+                                                        </div>
+
+                                                        <h6 class="mb-3">{{ $procedure->act_name }}</h6>
+
+                                                        <div class="procedure-flow-timeline d-flex gap-3 p-3 mb-3">
+                                                            <div>
+                                                                <div class="small text-muted">Semester</div>
+                                                                <div class="fw-bold">{{ $procedure->timeline_sem }}</div>
+                                                            </div>
+                                                            <div class="border-start ps-3">
+                                                                <div class="small text-muted">Week</div>
+                                                                <div class="fw-bold">{{ $procedure->timeline_week }}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        <p class="small text-muted mb-3">
+                                                            @if ($isRecord)
+                                                                Recorded administratively according to the configured timeline.
+                                                            @elseif ($isOpen)
+                                                                Opens when the semester timeline is reached; earlier activities are not required.
+                                                            @else
+                                                                Opens when the semester timeline and all earlier prerequisites are completed.
+                                                            @endif
+                                                        </p>
+
+                                                        <div class="d-flex flex-wrap gap-1 mt-auto">
+                                                            @if ((int) $procedure->is_haveEva === 1)
+                                                                <span class="badge bg-light-primary text-primary">Evaluation</span>
+                                                            @endif
+                                                            @if ((int) $procedure->is_repeatable === 1)
+                                                                <span class="badge bg-light-secondary text-secondary">
+                                                                    <i class="ti ti-refresh me-1" aria-hidden="true"></i>Repeats every semester
+                                                                </span>
+                                                            @endif
+                                                            @if ((int) $procedure->is_haveJournalPublication === 1)
+                                                                <span class="badge bg-light-info text-info">Journal required</span>
+                                                            @endif
+                                                            @if ($procedure->material)
+                                                                <a class="badge bg-light-dark text-dark text-decoration-none"
+                                                                    href="{{ URL::signedRoute('view-material-get', ['filename' => Crypt::encrypt($procedure->material)]) }}"
+                                                                    target="_blank" rel="noopener">
+                                                                    <i class="ti ti-file-text me-1" aria-hidden="true"></i>Material
+                                                                </a>
+                                                            @endif
+                                                        </div>
+
+                                                        @if ((int) $procedure->is_haveEva === 1 && $procedure->evaluation_mode)
+                                                            <div class="small text-muted border-top mt-3 pt-3">
+                                                                <strong>Evaluation:</strong>
+                                                                {{ (int) $procedure->evaluation_mode === 1
+                                                                    ? 'Panel and chairman report'
+                                                                    : 'Panel report and approval' }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </article>
+
+                                                @unless ($loop->last)
+                                                    <div class="procedure-flow-connector {{ $nextIsOpen ? 'is-open' : 'is-locked' }}"
+                                                        aria-hidden="true">
+                                                        <span class="procedure-flow-connector-label">
+                                                            {{ $nextIsOpen ? 'Timeline only' : 'Complete previous' }}
+                                                        </span>
+                                                        <span class="procedure-flow-connector-line"></span>
+                                                    </div>
+                                                @endunless
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
 
                 @foreach ($pros as $upd)
                     <!-- [ Update Modal ] start -->
@@ -584,7 +906,6 @@
                                                         required>
                                                         <option value="1"
                                                             @if ($upd->init_status == 1) selected @endif>(O) Open
-                                                            Always
                                                         </option>
                                                         <option value="2"
                                                             @if ($upd->init_status == 2) selected @endif>(L) Locked
@@ -593,6 +914,10 @@
                                                     @error('init_status_up')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
+                                                    <div class="form-text mt-2">
+                                                        <div><strong>Open:</strong> Opens after the semester timeline is reached, without waiting for an earlier activity.</div>
+                                                        <div><strong>Locked:</strong> Opens after the semester timeline is reached and any prerequisite activity is completed.</div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <!--Activity Repeatable Input-->
@@ -835,15 +1160,29 @@
                 rowGroup: {
                     dataSrc: 'prog_code_mode',
                     startRender: function(rows, group) {
-                        return $('<tr class="group-header" style="cursor:pointer"/>')
-                            .attr('data-group', group)
-                            .append(
-                                '<td colspan="9" class="bg-light text-center">' +
-                                '<span class="fw-semibold text-uppercase me-2">' + group + '</span>' +
-                                ' <span class="badge bg-primary">' + rows.count() + '</span>' +
-                                ' <i class="ti ti-chevron-down float-end toggle-icon"></i>' +
-                                '</td>'
-                            );
+                        const firstRow = rows.data()[0];
+                        const $row = $('<tr class="group-header" style="cursor:pointer"/>')
+                            .attr('data-group', group);
+                        const $cell = $('<td colspan="9" class="bg-light"/>');
+                        const $layout = $('<div class="d-flex flex-wrap align-items-center justify-content-between gap-2"/>');
+                        const $identity = $('<div class="d-flex align-items-center gap-2"/>');
+
+                        $('<span class="fw-semibold text-uppercase"/>').text(group).appendTo($identity);
+                        $('<span class="badge bg-primary"/>').text(rows.count()).appendTo($identity);
+
+                        const $actions = $('<div class="d-flex align-items-center gap-2"/>');
+                        $('<button type="button" class="btn btn-sm btn-outline-primary procedure-flow-trigger"/>')
+                            .attr('data-bs-toggle', 'modal')
+                            .attr('data-bs-target', '#procedureFlowModal-' + firstRow.programme_id)
+                            .attr('aria-label', 'Visualize procedure flow for ' + group)
+                            .append('<i class="ti ti-chart-arrows me-1" aria-hidden="true"></i>')
+                            .append(document.createTextNode('Visualize'))
+                            .appendTo($actions);
+                        $('<i class="ti ti-chevron-down toggle-icon" aria-hidden="true"></i>').appendTo($actions);
+
+                        $layout.append($identity, $actions);
+                        $cell.append($layout);
+                        return $row.append($cell);
                     }
                 },
 
@@ -851,7 +1190,11 @@
 
             var collapsedGroups = {};
 
-            $('.data-table tbody').on('click', 'tr.group-header', function() {
+            $('.data-table tbody').on('click', 'tr.group-header', function(event) {
+                if ($(event.target).closest('.procedure-flow-trigger').length) {
+                    return;
+                }
+
                 var group = $(this).data('group');
                 collapsedGroups[group] = !collapsedGroups[group];
 

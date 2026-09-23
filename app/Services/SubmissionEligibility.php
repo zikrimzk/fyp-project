@@ -126,8 +126,8 @@ class SubmissionEligibility
         if ((int) $student->student_semcount < (int) $procedure->timeline_sem) {
             return 7;
         }
-        // Always-open recurring activities do not depend on the milestone sequence.
-        if ($procedure->is_repeatable && (int) $procedure->init_status === 1) {
+        // Open activities depend only on reaching their configured semester timeline.
+        if ((int) $procedure->init_status === 1) {
             return 1;
         }
         if ($this->snapshot !== null) {
@@ -165,12 +165,18 @@ class SubmissionEligibility
                         })->update(['submission_status' => 5]);
                 }
                 if (! $this->enrolled($student, $semester)) {
+                    $this->resetEvaluationWorkflow($student, $procedure, $semester);
                     $this->lock($student, $procedure, $semester);
 
                     continue;
                 }
                 $status = $this->status($student, $procedure, $semester);
-                if (in_array($status, [4, 5, 6], true)) {
+                if ($status === 4) {
+                    $this->ensureFreshNomination($student, $procedure, $semester);
+
+                    continue;
+                }
+                if (in_array($status, [5, 6], true)) {
                     continue;
                 }
                 if ($this->requirements($student, $procedure) === 1) {
@@ -188,6 +194,55 @@ class SubmissionEligibility
                 }
             }
         });
+    }
+
+    private function resetEvaluationWorkflow(Student $student, $procedure, Semester $semester): void
+    {
+        if (! $procedure->is_haveEva
+            || $this->activities($student, $procedure, $semester)->where('sa_status', 3)->exists()) {
+            return;
+        }
+
+        $nominations = Nomination::where('student_id', $student->id)
+            ->where('activity_id', $procedure->activity_id)
+            ->when($procedure->is_repeatable, fn ($query) => $query->where('semester_id', $semester->id))
+            ->lockForUpdate()
+            ->pluck('id');
+
+        if ($nominations->isNotEmpty()) {
+            DB::table('evaluators')->whereIn('nom_id', $nominations)->delete();
+            Nomination::whereIn('id', $nominations)->delete();
+        }
+
+        Evaluation::where('student_id', $student->id)
+            ->where('activity_id', $procedure->activity_id)
+            ->when($procedure->is_repeatable, fn ($query) => $query->where('semester_id', $semester->id))
+            ->delete();
+    }
+
+    private function ensureFreshNomination(Student $student, $procedure, Semester $semester): void
+    {
+        if (! $procedure->is_haveEva) {
+            return;
+        }
+
+        $nominationExists = Nomination::where('student_id', $student->id)
+            ->where('activity_id', $procedure->activity_id)
+            ->when($procedure->is_repeatable, fn ($query) => $query->where('semester_id', $semester->id))
+            ->exists();
+        $evaluationExists = Evaluation::where('student_id', $student->id)
+            ->where('activity_id', $procedure->activity_id)
+            ->when($procedure->is_repeatable, fn ($query) => $query->where('semester_id', $semester->id))
+            ->exists();
+
+        if (! $nominationExists && ! $evaluationExists) {
+            Nomination::create([
+                'student_id' => $student->id,
+                'activity_id' => $procedure->activity_id,
+                'semester_id' => $semester->id,
+                'nom_status' => 1,
+            ]);
+        }
     }
 
     private function lock(Student $student, $procedure, Semester $semester): void

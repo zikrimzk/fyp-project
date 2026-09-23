@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\StaffWorkCounts;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // The application uses Bootstrap throughout. Without this, Laravel's
+        // Tailwind pagination view renders unstyled controls and oversized SVGs.
+        Paginator::useBootstrapFive();
     }
 }

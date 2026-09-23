@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AuditLog;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
@@ -78,7 +79,32 @@ class AuditLogger
 
     public function sanitizedRequestData(Request $request): array
     {
-        return $this->sanitize($request->except(self::SENSITIVE_KEYS));
+        $data = $request->except(self::SENSITIVE_KEYS);
+
+        // UploadedFile objects otherwise become an unhelpful empty array in
+        // JSON. Keep only operational metadata; never record temporary paths
+        // or file contents in the immutable audit log.
+        foreach ($request->allFiles() as $key => $files) {
+            $data[$key] = $this->uploadedFileMetadata($files);
+        }
+
+        return $this->sanitize($data);
+    }
+
+    private function uploadedFileMetadata(UploadedFile|array $files): array
+    {
+        if (is_array($files)) {
+            return array_map(fn (UploadedFile|array $file) => $this->uploadedFileMetadata($file), $files);
+        }
+
+        return array_filter([
+            'original_name' => Str::limit($files->getClientOriginalName(), 255, ''),
+            'extension' => strtolower($files->getClientOriginalExtension()),
+            'client_mime_type' => $files->getClientMimeType(),
+            'size_bytes' => $files->getSize() ?: null,
+            'upload_error' => $files->getError(),
+            'upload_valid' => $files->isValid(),
+        ], fn ($value) => $value !== null && $value !== '');
     }
 
     private function sanitize(array $data): array

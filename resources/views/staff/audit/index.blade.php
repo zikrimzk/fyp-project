@@ -73,8 +73,8 @@
 
             <div class="card">
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                    <div class="table-responsive" aria-label="Audit log records">
+                        <table class="table table-hover align-middle audit-log-table">
                             <thead>
                                 <tr>
                                     <th>Date &amp; time</th>
@@ -104,7 +104,11 @@
                                                 {{ str($log->outcome)->headline() }}
                                             </span>
                                         </td>
-                                        <td><code title="Request reference">{{ $log->request_id ?: '—' }}</code></td>
+                                        <td>
+                                            <code class="audit-reference text-truncate" title="{{ $log->request_id ?: 'No request reference' }}">
+                                                {{ $log->request_id ?: '—' }}
+                                            </code>
+                                        </td>
                                         <td>
                                             <details>
                                                 <summary class="text-primary" style="cursor: pointer">View</summary>
@@ -153,11 +157,11 @@
                         </table>
                     </div>
 
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3">
+                    <div class="ep-pagination-bar d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                         <small class="text-muted">
                             Showing {{ $logs->firstItem() ?? 0 }}–{{ $logs->lastItem() ?? 0 }} of {{ $logs->total() }} records
                         </small>
-                        {{ $logs->links() }}
+                        {{ $logs->onEachSide(1)->links() }}
                     </div>
                 </div>
             </div>

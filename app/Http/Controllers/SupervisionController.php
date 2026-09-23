@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use RuntimeException;
+use Throwable;
 use Carbon\Carbon;
 use App\Models\Staff;
 use App\Models\Faculty;
@@ -15,6 +17,7 @@ use Illuminate\Support\Str;
 use App\Exports\StaffExport;
 use App\Imports\StaffImport;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use App\Exports\StudentExport;
 use App\Imports\StudentImport;
 use App\Models\StudentSemester;
@@ -28,6 +31,7 @@ use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use App\Services\AccountDependencyService;
+use App\Services\ExceptionReference;
 
 class SupervisionController extends Controller
 {
@@ -971,12 +975,34 @@ class SupervisionController extends Controller
     public function importStaff(Request $request)
     {
         try {
-            $request->validate([
-                'staff_file' => 'required|mimes:xlsx,csv'
+            $validated = $request->validate([
+                'staff_file' => 'bail|required|file|mimes:xlsx,csv|max:10240'
+            ], [
+                'staff_file.required' => 'Please select a staff file to import.',
+                'staff_file.file' => 'The staff import could not be uploaded. Please select the file again.',
+                'staff_file.mimes' => 'Invalid file type. Only XLSX and CSV files are allowed.',
+                'staff_file.max' => 'The staff import file must not exceed 10 MB.',
             ]);
 
+            /** @var UploadedFile $file */
+            $file = $validated['staff_file'];
+            $missingExtensions = $this->missingXlsxExtensions($file);
+
+            if ($missingExtensions !== []) {
+                $exception = new RuntimeException(
+                    'The server cannot read XLSX files because these PHP extensions are unavailable: '
+                    . implode(', ', $missingExtensions)
+                );
+                $reference = app(ExceptionReference::class)->report($exception, $request);
+
+                return back()->with(
+                    'error',
+                    "This server is not configured to read Excel files. Please save the file as CSV and try again, or contact the system administrator with reference ID {$reference}."
+                );
+            }
+
             $import = new StaffImport();
-            Excel::import($import, $request->file('staff_file'));
+            Excel::import($import, $file);
 
             $response = back()->with(
                 'success',
@@ -988,9 +1014,31 @@ class SupervisionController extends Controller
             }
 
             return $response;
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing staff: ' . $this->friendlyException($e));
+        } catch (Throwable $e) {
+            return back()->with('error', 'Oops! Error importing staff: ' . $this->friendlyException($e, 'import the staff file'));
         }
+    }
+
+    /**
+     * XLSX files are ZIP archives containing XML documents. A deployment made
+     * with ignored Composer platform requirements can therefore work locally
+     * while failing with an uncaught Error on the production server.
+     */
+    private function missingXlsxExtensions(UploadedFile $file): array
+    {
+        if (strtolower($file->getClientOriginalExtension()) !== 'xlsx') {
+            return [];
+        }
+
+        $requirements = [
+            'zip' => class_exists(\ZipArchive::class),
+            'dom' => class_exists(\DOMDocument::class),
+            'simplexml' => function_exists('simplexml_load_string'),
+            'xmlreader' => class_exists(\XMLReader::class),
+            'xmlwriter' => class_exists(\XMLWriter::class),
+        ];
+
+        return array_keys(array_filter($requirements, fn (bool $available) => !$available));
     }
 
     public function exportStaff(Request $req)

@@ -18,7 +18,7 @@
     <link rel="icon" href="../assets/images/favicon.svg" type="image/x-icon" />
     <!-- [Font] Family -->
     <link rel="preload" href="{{ asset('assets/fonts/inter/Inter-roman.var.woff2') }}" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.0" id="main-font-link" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.1" id="main-font-link" />
     <!-- [phosphor Icons] https://phosphoricons.com/ -->
     <link rel="stylesheet" href="../assets/fonts/phosphor/duotone/style.css" />
     <!-- [Tabler Icons] https://tablericons.com -->
@@ -172,8 +172,9 @@
         }
     </style>
 
-    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}?v=1.0.0" />
-    <link rel="stylesheet" href="{{ asset('assets/css/student-sidebar.css') }}?v=1.0.0" />
+    <link rel="stylesheet" href="{{ asset('assets/css/system-theme.css') }}?v=1.0.2" />
+    <link rel="stylesheet" href="{{ asset('assets/css/student-sidebar.css') }}?v=1.0.1" />
+    <link rel="stylesheet" href="{{ asset('assets/css/procedure-flow.css') }}?v=1.0.0" />
 
 </head>
 <!-- [Head] end -->
