@@ -460,8 +460,8 @@
                                     <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
                                         <button type="button" class="btn btn-outline-secondary w-100"
                                             data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{{ route('delete-supervision-get', ['id' => Crypt::encrypt($upd->id)]) }}"
-                                            class="btn btn-danger w-100">Delete Anyway</a>
+                                        <x-mutation-button :action="route('delete-supervision-get', ['id' => Crypt::encrypt($upd->id)])"
+                                            class="btn btn-danger w-100">Delete Anyway</x-mutation-button>
                                     </div>
                                 </div>
                             </div>

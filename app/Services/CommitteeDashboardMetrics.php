@@ -21,6 +21,8 @@ class CommitteeDashboardMetrics
 
     private int $signatureRole;
 
+    private int $staffId;
+
     private Collection $signatureFields;
 
     private Collection $submissionActivities;
@@ -32,6 +34,7 @@ class CommitteeDashboardMetrics
     public function forStaff(Staff $staff, array $filters): array
     {
         $this->filters = $filters;
+        $this->staffId = (int) $staff->id;
         $this->signatureRole = [1 => 4, 3 => 5, 4 => 6][(int) $staff->staff_role] ?? 4;
         $this->signatureFields = DB::table('activity_forms as af')
             ->join('form_fields as ff', 'ff.af_id', '=', 'af.id')
@@ -127,28 +130,28 @@ class CommitteeDashboardMetrics
 
     private function actions(): array
     {
-        $submissionRows = $this->activityScope(DB::table('student_activities as sa')
+        $submissionRows = $this->excludeSupervised($this->activityScope(DB::table('student_activities as sa')
             ->join('students as s', 's.id', '=', 'sa.student_id')
-            ->join('programmes as p', 'p.id', '=', 's.programme_id'), 'sa', 's')
+            ->join('programmes as p', 'p.id', '=', 's.programme_id'), 'sa', 's'), 's')
             ->where('sa.sa_status', 2)
             ->get(['sa.id', 'sa.activity_id', 'sa.sa_signature_data']);
 
         $nominationStatuses = $this->signatureRole === 4 ? [2, 5] : [3];
-        $nominationRows = $this->activityScope(DB::table('nominations as n')
+        $nominationRows = $this->excludeSupervised($this->activityScope(DB::table('nominations as n')
             ->join('students as s', 's.id', '=', 'n.student_id')
-            ->join('programmes as p', 'p.id', '=', 's.programme_id'), 'n', 's')
+            ->join('programmes as p', 'p.id', '=', 's.programme_id'), 'n', 's'), 's')
             ->whereIn('n.nom_status', $nominationStatuses)
             ->get(['n.id', 'n.activity_id', 'n.nom_signature_data']);
 
-        $evaluationRows = $this->activityScope(DB::table('evaluations as e')
+        $evaluationRows = $this->excludeSupervised($this->activityScope(DB::table('evaluations as e')
             ->join('students as s', 's.id', '=', 'e.student_id')
-            ->join('programmes as p', 'p.id', '=', 's.programme_id'), 'e', 's')
+            ->join('programmes as p', 'p.id', '=', 's.programme_id'), 'e', 's'), 's')
             ->where('e.evaluation_status', 10)
             ->get(['e.id', 'e.activity_id', 'e.evaluation_signature_data']);
 
-        $correctionRows = $this->activityScope(DB::table('activity_corrections as ac')
+        $correctionRows = $this->excludeSupervised($this->activityScope(DB::table('activity_corrections as ac')
             ->join('students as s', 's.id', '=', 'ac.student_id')
-            ->join('programmes as p', 'p.id', '=', 's.programme_id'), 'ac', 's')
+            ->join('programmes as p', 'p.id', '=', 's.programme_id'), 'ac', 's'), 's')
             ->where('ac.ac_status', 4)
             ->get(['ac.id', 'ac.activity_id', 'ac.ac_signature_data']);
 
@@ -490,5 +493,15 @@ class CommitteeDashboardMetrics
         }
 
         return $query;
+    }
+
+    private function excludeSupervised(Builder $query, string $studentAlias): Builder
+    {
+        return $query->whereNotExists(function ($subquery) use ($studentAlias) {
+            $subquery->selectRaw('1')
+                ->from('supervisions as approval_conflict_supervisions')
+                ->whereColumn('approval_conflict_supervisions.student_id', $studentAlias.'.id')
+                ->where('approval_conflict_supervisions.staff_id', $this->staffId);
+        });
     }
 }

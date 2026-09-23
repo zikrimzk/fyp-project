@@ -210,9 +210,8 @@
                                                     <h5 class="mb-3 text-danger">Important Note</h5>
                                                     <ul class="mb-0 ps-3 small">
                                                         <li class="mb-2">
-                                                            Please <strong>verify carefully</strong> before setting the
-                                                            current semester. <strong>This action is NOT
-                                                                reversible</strong>.
+                                                            Review the live impact preview before setting the current
+                                                            semester. The database changes are committed as one transaction.
                                                         </li>
                                                         <li class="mb-2">
                                                             Any mistake in setting the semester may lead to <strong>major
@@ -250,11 +249,38 @@
                                                 <select name="semester_id" id="semester_id" class="form-select" required>
                                                     <option value="">- Select Semester -</option>
                                                     @foreach ($sems->where('sem_status', 2) as $sem)
-                                                        <option value="{{ $sem->id }}">{{ $sem->sem_label }}
+                                                        <option value="{{ $sem->id }}" @selected((int) old('semester_id') === (int) $sem->id)>{{ $sem->sem_label }}
                                                         </option>
                                                     @endforeach
                                                 </select>
                                             </div>
+                                        </div>
+
+                                        <div class="col-sm-12">
+                                            <div id="semester-impact-preview" class="border rounded p-3 mb-3 bg-light"
+                                                aria-live="polite">
+                                                <div class="text-muted small">Select an upcoming semester to calculate its impact.</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-12">
+                                            <div class="alert alert-warning small">
+                                                <strong>Recovery procedure:</strong> if this rollover is incorrect, stop new-semester
+                                                enrollment work and use the semester rollover entry in Audit Log. It records the
+                                                previous statuses and affected student IDs needed for a controlled restoration.
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-12">
+                                            <label for="semester_confirmation" class="form-label">
+                                                Type <strong>CHANGE SEMESTER</strong> to confirm
+                                            </label>
+                                            <input type="text" name="confirmation" id="semester_confirmation"
+                                                class="form-control @error('confirmation') is-invalid @enderror"
+                                                autocomplete="off" required>
+                                            @error('confirmation')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
                                         </div>
 
                                     </div>
@@ -267,7 +293,7 @@
                                                 <button type="button" class="btn btn-outline-secondary btn-pc-default w-100"
                                                     data-bs-dismiss="modal">Cancel</button>
                                                 <button type="submit" class="btn btn-primary w-100"
-                                                    id="addApplicationBtn">
+                                                    id="confirmSemesterChangeBtn" disabled>
                                                     Confirm & Set Semester
                                                 </button>
                                             </div>
@@ -394,8 +420,8 @@
                                     <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
                                         <button type="button" class="btn btn-outline-secondary w-100"
                                             data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{{ route('delete-semester-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
-                                            class="btn btn-danger w-100">Delete Anyway</a>
+                                        <x-mutation-button :action="route('delete-semester-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1])"
+                                            class="btn btn-danger w-100">Delete Anyway</x-mutation-button>
                                     </div>
                                 </div>
                             </div>
@@ -423,8 +449,8 @@
                                     <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
                                         <button type="button" class="btn btn-outline-secondary w-100"
                                             data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{{ route('delete-semester-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
-                                            class="btn btn-warning w-100">Inactivate</a>
+                                        <x-mutation-button :action="route('delete-semester-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2])"
+                                            class="btn btn-warning w-100">Inactivate</x-mutation-button>
                                     </div>
                                 </div>
                             </div>
@@ -449,6 +475,65 @@
                     var modal = new bootstrap.Modal(modalElement);
                     modal.show();
                 }
+            }
+
+            const semesterSelect = document.getElementById('semester_id');
+            const confirmation = document.getElementById('semester_confirmation');
+            const preview = document.getElementById('semester-impact-preview');
+            const submitButton = document.getElementById('confirmSemesterChangeBtn');
+            const previewUrl = @json(route('semester-change-preview', ['id' => '__ID__']));
+            let previewReady = false;
+
+            const escapeHtml = function(value) {
+                const element = document.createElement('div');
+                element.textContent = String(value ?? '');
+                return element.innerHTML;
+            };
+
+            const updateSubmitState = function() {
+                submitButton.disabled = !previewReady || confirmation.value.trim() !== 'CHANGE SEMESTER';
+            };
+
+            confirmation.addEventListener('input', updateSubmitState);
+            semesterSelect.addEventListener('change', async function() {
+                previewReady = false;
+                confirmation.value = '';
+                updateSubmitState();
+
+                if (!this.value) {
+                    preview.innerHTML = '<div class="text-muted small">Select an upcoming semester to calculate its impact.</div>';
+                    return;
+                }
+
+                preview.innerHTML = '<div class="text-muted small"><span class="spinner-border spinner-border-sm me-2"></span>Calculating impact...</div>';
+
+                try {
+                    const response = await fetch(previewUrl.replace('__ID__', encodeURIComponent(this.value)), {
+                        headers: { 'Accept': 'application/json' },
+                        credentials: 'same-origin'
+                    });
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.message || 'The impact preview could not be loaded.');
+                    }
+
+                    const changes = data.changes.map(change => `<li>${escapeHtml(change)}</li>`).join('');
+                    preview.innerHTML = `
+                        <h6 class="mb-2">Impact preview</h6>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6"><div class="border rounded bg-white p-2"><small class="text-muted d-block">Active enrollments completed</small><strong>${data.active_enrollment_count}</strong></div></div>
+                            <div class="col-6"><div class="border rounded bg-white p-2"><small class="text-muted d-block">Students affected</small><strong>${data.active_student_count}</strong></div></div>
+                        </div>
+                        <ul class="small mb-0 ps-3">${changes}</ul>`;
+                    previewReady = true;
+                    updateSubmitState();
+                } catch (error) {
+                    preview.innerHTML = `<div class="text-danger small">${escapeHtml(error.message)}</div>`;
+                }
+            });
+
+            if (semesterSelect.value) {
+                semesterSelect.dispatchEvent(new Event('change'));
             }
         });
 

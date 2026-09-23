@@ -233,24 +233,13 @@
                         </ul>
                     </li>
 
-                    <li data-sidebar-role="supervisor" class="pc-item pc-hasmenu">
-                        <a href="javascript:void(0)" class="pc-link">
+                    <li data-sidebar-role="supervisor" class="pc-item">
+                        <a href="{{ route('my-supervision-nomination') }}" class="pc-link">
                             <span class="pc-micon">
                                 <i class="fas fa-clipboard-list pc-icon"></i>
                             </span>
                             <span class="pc-mtext">Nomination</span>
-                            <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
-                        <ul class="pc-submenu">
-                            @foreach ($nomination as $nom)
-                                <li class="pc-item">
-                                    <a class="pc-link"
-                                        href="{{ route('my-supervision-nomination', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                        {{ $nom->activity_name }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
                     </li>
 
                     @if ($supervisorActs->isNotEmpty() || ($sidebarCounts[route('my-supervision-correction-approval')] ?? 0) > 0)
@@ -442,59 +431,26 @@
                             </li>
 
                             @if ($iscommittee)
-                                <li class="pc-item pc-hasmenu">
-                                    <a href="javascript:void(0)" class="pc-link">
-                                        <span class="pc-mtext">Approval</span>
-                                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                                <li class="pc-item">
+                                    <a href="{{ route('nomination-approval') }}" class="pc-link">
+                                        <span class="pc-mtext">Nomination Approval</span>
                                     </a>
-                                    <ul class="pc-submenu">
-                                        @foreach ($nomination as $nom)
-                                            <li class="pc-item">
-                                                <a class="pc-link"
-                                                    href="{{ route('nomination-approval', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                                    {{ $nom->activity_name }}
-                                                </a>
-                                            </li>
-                                        @endforeach
-                                    </ul>
                                 </li>
                             @endif
 
                             @if ($isDD && $showDeputyDeanNomination)
-                                <li class="pc-item pc-hasmenu">
-                                    <a href="javascript:void(0)" class="pc-link">
-                                        <span class="pc-mtext">Approval</span>
-                                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                                <li class="pc-item">
+                                    <a href="{{ route('nomination-approval') }}" class="pc-link">
+                                        <span class="pc-mtext">Nomination Approval</span>
                                     </a>
-                                    <ul class="pc-submenu">
-                                        @foreach ($deputyDeanNominations as $nom)
-                                            <li class="pc-item">
-                                                <a class="pc-link"
-                                                    href="{{ route('nomination-approval', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                                    {{ $nom->activity_name }}
-                                                </a>
-                                            </li>
-                                        @endforeach
-                                    </ul>
                                 </li>
                             @endif
 
                             @if ($isDean && $showDeanNomination)
-                                <li class="pc-item pc-hasmenu">
-                                    <a href="javascript:void(0)" class="pc-link">
-                                        <span class="pc-mtext">Approval</span>
-                                        <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
+                                <li class="pc-item">
+                                    <a href="{{ route('nomination-approval') }}" class="pc-link">
+                                        <span class="pc-mtext">Nomination Approval</span>
                                     </a>
-                                    <ul class="pc-submenu">
-                                        @foreach ($deanNominations as $nom)
-                                            <li class="pc-item">
-                                                <a class="pc-link"
-                                                    href="{{ route('nomination-approval', strtolower(str_replace(' ', '-', $nom->activity_name))) }}">
-                                                    {{ $nom->activity_name }}
-                                                </a>
-                                            </li>
-                                        @endforeach
-                                    </ul>
                                 </li>
                             @endif
                         </ul>
@@ -634,6 +590,13 @@
                             <span class="pc-arrow"><i data-feather="chevron-right"></i></span>
                         </a>
                         <ul class="pc-submenu">
+                            @if ($iscommittee)
+                                <li class="pc-item">
+                                    <a class="pc-link" href="{{ route('audit-log-index') }}">
+                                        Audit Log
+                                    </a>
+                                </li>
+                            @endif
                             <li class="pc-item">
                                 <a class="pc-link" href="{{ route('faculty-setting') }}">
                                     Faculty Setting

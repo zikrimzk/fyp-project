@@ -38,6 +38,7 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use setasign\Fpdi\PdfParser\StreamReader;
 use App\Http\Controllers\FormHandlerController;
+use App\Services\AuditLogger;
 
 
 class SubmissionController extends Controller
@@ -94,7 +95,25 @@ class SubmissionController extends Controller
             $studentMatricno = $data->student_matricno ?? 'Matric No';
         }
 
-        if (env('MAIL_ENABLE') == 'true') {
+        $audit = app(AuditLogger::class);
+        $context = [
+            'subject_type' => $userType == 1 ? 'student' : 'staff',
+            'subject_id' => $data->id ?? $data->student_id ?? null,
+            'subject_label' => $name,
+            'metadata' => [
+                'recipient' => $email,
+                'email_type' => $emailType,
+                'activity' => $actName,
+                'approval_role' => $approvalUser,
+            ],
+        ];
+
+        if (env('MAIL_ENABLE') != 'true') {
+            $audit->record('email', 'submission-notification-email', 'Submission email was skipped because email is disabled.', $context + ['outcome' => 'skipped']);
+            return;
+        }
+
+        try {
             Mail::to($email)->send(new SubmissionMail([
                 'eType' => $emailType,
                 'act_name' => $actName,
@@ -105,6 +124,10 @@ class SubmissionController extends Controller
                 'student_matricno' => $studentMatricno ?? '-',
                 'submission_date' => $submissionDate ?? Carbon::now()->format('d F Y g:i A'),
             ]));
+            $audit->record('email', 'submission-notification-email', 'Submission email sent successfully.', $context);
+        } catch (Exception $e) {
+            $audit->record('email', 'submission-notification-email', 'Submission email delivery failed.', $context + ['outcome' => 'failed']);
+            throw $e;
         }
     }
 
@@ -311,7 +334,7 @@ class SubmissionController extends Controller
                 'evaluationReport' => $evaluationReport,
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -359,7 +382,7 @@ class SubmissionController extends Controller
                 'submission_dir' => $submission_dir
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -367,7 +390,7 @@ class SubmissionController extends Controller
     {
         try {
             $validator = Validator::make($req->all(), [
-                'file' => 'required|file|mimes:pdf,docx|max:102400',
+                'file' => 'required|file|mimes:pdf|max:102400',
                 'activity_id' => 'required|integer|exists:activities,id',
                 'document_id' => 'required|integer|exists:documents,id',
                 'submission_id' => 'required|integer|exists:submissions,id',
@@ -444,7 +467,7 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error uploading submission document: ' . $e->getMessage(),
+                'message' => 'Oops! Error uploading submission document: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -478,7 +501,7 @@ class SubmissionController extends Controller
 
             return back()->with('success', 'Submission has been removed successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error removing submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error removing submission: ' . $this->friendlyException($e));
         }
     }
 
@@ -545,7 +568,7 @@ class SubmissionController extends Controller
 
             return back()->with('success', 'Submission for ' . $activity . ' has been confirmed successfully. An email has been sent to the supervisor. If there are any issues, please contact the administrator.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error confirming submission: ' . $this->friendlyException($e));
         }
     }
 
@@ -614,7 +637,7 @@ class SubmissionController extends Controller
 
             return back()->with('success', 'Correction for ' . $activity . ' has been confirmed successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error confirming submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error confirming submission: ' . $this->friendlyException($e));
         }
     }
 
@@ -774,7 +797,7 @@ class SubmissionController extends Controller
             $mergedPath =  $finalDocPath . '/' . $documentName;
             $pdf->Output($mergedPath, 'F');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error occurred during handling activity form: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error occurred during handling activity form: ' . $this->friendlyException($e));
         }
     }
 
@@ -1033,7 +1056,7 @@ class SubmissionController extends Controller
                 }
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error storing signature: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error storing signature: ' . $this->friendlyException($e));
         }
     }
 
@@ -1123,7 +1146,7 @@ class SubmissionController extends Controller
             /* RETURN PDF STREAM */
             return $pdf->stream($fileName . '.pdf');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error generating form: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error generating form: ' . $this->friendlyException($e));
         }
     }
 
@@ -1209,7 +1232,7 @@ class SubmissionController extends Controller
                 'Content-Type' => 'application/pdf'
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1266,8 +1289,7 @@ class SubmissionController extends Controller
                 'journals' => $data
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
-            return abort(500);
+            return abort(500, $this->friendlyException($e, 'load journal publications'));
         }
     }
 
@@ -1285,7 +1307,7 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'errors' => 'Error fetching journal publication: ' . $e->getMessage()
+                'errors' => 'Error fetching journal publication: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -1325,7 +1347,7 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'errors' => 'Error adding journal publication: ' . $e->getMessage()
+                'errors' => 'Error adding journal publication: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -1368,7 +1390,7 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'errors' => 'Error updating journal publication: ' . $e->getMessage()
+                'errors' => 'Error updating journal publication: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -1386,7 +1408,7 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'errors' => 'Error deleting journal publication: ' . $e->getMessage()
+                'errors' => 'Error deleting journal publication: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -1655,7 +1677,7 @@ class SubmissionController extends Controller
                 'studentActivity' => $data->get()
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1711,7 +1733,7 @@ class SubmissionController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final submission successfully updated.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating final submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating final submission: ' . $this->friendlyException($e));
         }
     }
 
@@ -1800,7 +1822,7 @@ class SubmissionController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final submission successfully deleted. An email notification has been sent to the student.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting final submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting final submission: ' . $this->friendlyException($e));
         }
     }
 
@@ -1949,7 +1971,7 @@ class SubmissionController extends Controller
                 return back()->with('error', 'Invalid export format.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
+            return back()->with('error', 'Error exporting submissions: ' . $this->friendlyException($e));
         }
     }
 
@@ -2178,8 +2200,7 @@ class SubmissionController extends Controller
                 'subs' => $data->get()
             ]);
         } catch (Exception $e) {
-            dd($e);
-            return abort(500);
+            return abort(500, $this->friendlyException($e, 'load submission management'));
         }
     }
 
@@ -2265,7 +2286,7 @@ class SubmissionController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' submission for ' . $document->doc_name . ' has been added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error adding submission: ' . $this->friendlyException($e));
         }
     }
 
@@ -2336,7 +2357,7 @@ class SubmissionController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' submission for ' . $document->doc_name . ' has been updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating submission: ' . $this->friendlyException($e));
         }
     }
 
@@ -2384,7 +2405,7 @@ class SubmissionController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $message);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error archiving submission: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error archiving submission: ' . $this->friendlyException($e));
         }
     }
 
@@ -2458,7 +2479,7 @@ class SubmissionController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'message' => 'Oops! Error updating submissions: ' . $e->getMessage(),
+                'message' => 'Oops! Error updating submissions: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -2490,7 +2511,7 @@ class SubmissionController extends Controller
 
             return back()->with('success', $message);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error archiving selected submissions: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error archiving selected submissions: ' . $this->friendlyException($e));
         }
     }
 
@@ -2567,7 +2588,7 @@ class SubmissionController extends Controller
 
             return response()->download($zipFile)->deleteFileAfterSend(true);
         } catch (Exception $e) {
-            return back()->with('error', 'Error generating ZIP: ' . $e->getMessage());
+            return back()->with('error', 'Error generating ZIP: ' . $this->friendlyException($e));
         }
     }
 
@@ -2648,7 +2669,7 @@ class SubmissionController extends Controller
                 return back()->with('error', 'Invalid export format.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
+            return back()->with('error', 'Error exporting submissions: ' . $this->friendlyException($e));
         }
     }
 
@@ -3034,7 +3055,7 @@ class SubmissionController extends Controller
                 'subs' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -3094,6 +3115,10 @@ class SubmissionController extends Controller
             /* CHECK SUPERVISOR ROLE (SV or CoSV) */
             $supervision = Supervision::where('student_id', $student->id)
                 ->where('staff_id', $authUser->id)->first();
+
+            if ($supervision && (int) $studentActivity->sa_status === 2) {
+                return back()->with('error', 'You cannot act as a higher-level approver for a student you supervise. Another authorized staff member must complete this approval stage.');
+            }
 
             /* CHECK PROCEDURE FOR IS_HAVEEVA */
             $procedure = Procedure::where('activity_id', $activity->id)
@@ -3202,7 +3227,7 @@ class SubmissionController extends Controller
 
             return back()->with('error', 'Oops! Something went wrong. Cannot process your request. Please try again. If the problem persists, please contact the system administrator.');
         } catch (Exception $e) {
-            return back()->with('error', 'Error occurred: ' . $e->getMessage());
+            return back()->with('error', 'Error occurred: ' . $this->friendlyException($e));
         }
     }
 
@@ -3641,7 +3666,7 @@ class SubmissionController extends Controller
             /* ZIP FILE DOWNLOAD */
             return response()->download($zipFile)->deleteFileAfterSend(true);
         } catch (Exception $e) {
-            return back()->with('error', 'Error generating ZIP: ' . $e->getMessage());
+            return back()->with('error', 'Error generating ZIP: ' . $this->friendlyException($e));
         }
     }
 
@@ -3661,7 +3686,7 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error getting review: ' . $e->getMessage()
+                'message' => 'Oops! Error getting review: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -3702,7 +3727,7 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating the review: ' . $e->getMessage(),
+                'message' => 'Error updating the review: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -3727,7 +3752,7 @@ class SubmissionController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error deleting the review: ' . $e->getMessage(),
+                'message' => 'Error deleting the review: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -3883,8 +3908,7 @@ class SubmissionController extends Controller
                 'acts' => $act,
             ]);
         } catch (Exception $e) {
-            report($e);
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -3900,7 +3924,7 @@ class SubmissionController extends Controller
                 Activity::findOrFail($activityId)->act_name, (int) $option === 1 ? 7 : 8, null);
             return back()->with('success', 'Submission eligibility updated successfully. Existing work has been preserved.');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->with('error', $e->validator->errors()->first());
         } catch (Exception $e) {
             report($e);
             return back()->with('error', 'Could not update submission eligibility. Refresh the overview and retry.');

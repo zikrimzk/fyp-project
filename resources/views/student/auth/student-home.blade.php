@@ -126,6 +126,31 @@
             opacity: .7;
         }
 
+        .reminder-list {
+            max-height: 430px;
+            overflow-y: auto;
+        }
+
+        .reminder-item {
+            border-left: 3px solid transparent !important;
+            transition: background-color .15s ease, border-color .15s ease;
+        }
+
+        .reminder-item:hover,
+        .reminder-item:focus-within {
+            background: #f8fafc;
+            border-left-color: var(--brand-500) !important;
+        }
+
+        .reminder-item.is-overdue {
+            border-left-color: #dc3545 !important;
+            background: rgba(220, 53, 69, .035);
+        }
+
+        .reminder-count {
+            min-width: 1.5rem;
+        }
+
         /* Small utilities */
         .text-brand {
             color: var(--brand-500) !important;
@@ -327,6 +352,9 @@
                 <div class="col-sm-4">
 
                     <!-- [ Reminders ] start -->
+                    @php
+                        $showOverdue = $overdueCount > 0;
+                    @endphp
                     <div class="card mb-4">
                         <div class="card-header bg-white pb-0">
                             <div class="d-flex align-items-center justify-content-between">
@@ -338,84 +366,73 @@
                             <!-- Tabs -->
                             <ul class="nav nav-tabs nav-tabs-underline mt-3" id="remindersTab" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab"
+                                    <button class="nav-link {{ $showOverdue ? '' : 'active' }}" id="upcoming-tab" data-bs-toggle="tab"
                                         data-bs-target="#upcoming-pane" type="button" role="tab"
-                                        aria-controls="upcoming-pane" aria-selected="true">
+                                        aria-controls="upcoming-pane" aria-selected="{{ $showOverdue ? 'false' : 'true' }}">
                                         Upcoming
+                                        <span class="badge rounded-pill bg-light text-dark ms-1 reminder-count">{{ $upcomingDocuments->count() }}</span>
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-pane"
-                                        type="button" role="tab" aria-controls="past-pane" aria-selected="false">
-                                        Past Due
+                                    <button class="nav-link {{ $showOverdue ? 'active text-danger' : '' }}" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-pane"
+                                        type="button" role="tab" aria-controls="past-pane" aria-selected="{{ $showOverdue ? 'true' : 'false' }}">
+                                        Overdue
+                                        <span class="badge rounded-pill {{ $overdueCount > 0 ? 'bg-danger' : 'bg-light text-dark' }} ms-1 reminder-count">{{ $overdueCount }}</span>
                                     </button>
                                 </li>
-                                {{-- <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="completed-tab" data-bs-toggle="tab"
-                                            data-bs-target="#completed-pane" type="button" role="tab"
-                                            aria-controls="completed-pane" aria-selected="false">
-                                        Completed
-                                    </button>
-                                    </li> --}}
                             </ul>
                         </div>
 
-                        <div class="card-body p-2">
+                        <div class="card-body p-0">
+                            @if ($overdueCount > 0)
+                                <div class="alert alert-danger border-0 rounded-0 mb-0 px-4 py-3" role="alert">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fas fa-exclamation-triangle mt-1" aria-hidden="true"></i>
+                                        <div>
+                                            <strong>{{ $overdueCount }} overdue {{ Str::plural('submission', $overdueCount) }} require your attention.</strong>
+                                            <div class="small mt-1">Open an item below to submit the required document.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @elseif ($dueSoonCount > 0)
+                                <div class="alert alert-warning border-0 rounded-0 mb-0 px-4 py-3" role="alert">
+                                    <strong>{{ $dueSoonCount }} {{ Str::plural('submission', $dueSoonCount) }} due within seven days.</strong>
+                                </div>
+                            @else
+                                <div class="px-4 py-3 border-bottom text-success small fw-semibold">
+                                    <i class="fas fa-check-circle me-1" aria-hidden="true"></i> No urgent submission action is required.
+                                </div>
+                            @endif
+
                             <div class="tab-content" id="remindersTabContent">
 
-                                {{-- Upcoming (submission_status = 1) --}}
-                                <div class="tab-pane fade show active" id="upcoming-pane" role="tabpanel"
+                                <div class="tab-pane fade {{ $showOverdue ? '' : 'show active' }}" id="upcoming-pane" role="tabpanel"
                                     aria-labelledby="upcoming-tab">
-                                    <div class="list-group list-group-flush">
-                                        @forelse ($documents->where('submission_status', 1) as $doc)
+                                    <div class="list-group list-group-flush reminder-list">
+                                        @forelse ($upcomingDocuments as $doc)
                                             <a href="{{ route('student-document-submission', Crypt::encrypt($doc->submission_id)) }}"
-                                                class="text-reset text-decoration-none">
-                                                <div class="list-group-item border-0 py-3 px-4">
+                                                class="text-reset text-decoration-none" aria-label="Open {{ $doc->document_name }} submission">
+                                                <div class="list-group-item border-0 py-3 px-4 reminder-item">
                                                     <div class="d-flex align-items-start">
                                                         <div class="flex-grow-1">
-                                                            <h6 class="mb-1">{{ $doc->document_name }}</h6>
-
-                                                            @php
-                                                                $dueDate = \Carbon\Carbon::parse(
-                                                                    $doc->submission_duedate,
-                                                                );
-                                                                $daysRemaining = \Carbon\Carbon::now()->diffInDays(
-                                                                    $dueDate,
-                                                                    false,
-                                                                );
-
-                                                                $badgeClass = 'badge-soft-ok';
-                                                                $label = 'Due in ' . $daysRemaining . ' days';
-                                                                if ($daysRemaining > 7) {
-                                                                    $badgeClass = 'badge-soft';
-                                                                    $label = 'Due in ' . $daysRemaining . ' days';
-                                                                } elseif ($daysRemaining > 1) {
-                                                                    $badgeClass = 'badge-soft-warn';
-                                                                } elseif ($daysRemaining == 1) {
-                                                                    $badgeClass = 'badge-soft-warn';
-                                                                    $label = 'Due tomorrow';
-                                                                } elseif ($daysRemaining == 0) {
-                                                                    $badgeClass = 'badge-soft-danger';
-                                                                    $label = 'Due today';
-                                                                } elseif ($daysRemaining < 0) {
-                                                                    $badgeClass = 'badge-soft-danger';
-                                                                    $label =
-                                                                        'Overdue by ' . abs($daysRemaining) . ' days';
-                                                                }
-                                                            @endphp
-
-                                                            <div class="d-flex align-items-center gap-2 small">
-                                                                <span class="badge badge-soft {{ $badgeClass }}">
-                                                                    <i
-                                                                        class="far fa-calendar-alt me-1"></i>{{ $label }}
-                                                                </span>
-                                                                <span
-                                                                    class="text-muted">({{ $dueDate->format('M d, Y') }})</span>
+                                                            <div class="d-flex justify-content-between gap-2">
+                                                                <h6 class="mb-1">{{ $doc->document_name }}</h6>
+                                                                <i class="ti ti-chevron-right text-muted" aria-hidden="true"></i>
                                                             </div>
 
-                                                            <div class="small mt-1">
+                                                            <div class="d-flex align-items-center gap-2 small">
+                                                                <span class="badge badge-soft {{ $doc->deadline_class }}">
+                                                                    <i class="far fa-calendar-alt me-1"></i>{{ $doc->deadline_label }}
+                                                                </span>
+                                                                <span class="text-muted">{{ $doc->due_date_label }}</span>
+                                                            </div>
+
+                                                            <div class="small mt-2 d-flex flex-wrap gap-1">
                                                                 <span class="badge badge-soft badge-soft-brand">
                                                                     {{ $doc->activity_name }}
+                                                                </span>
+                                                                <span class="badge badge-soft {{ $doc->isRequired ? 'badge-soft-danger' : 'badge-soft-ok' }}">
+                                                                    {{ $doc->isRequired ? 'Required' : 'Optional' }}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -425,51 +442,39 @@
                                         @empty
                                             <div class="list-group-item border-0 py-3 px-4">
                                                 <div class="empty-state">
-                                                    <i class="fas fa-info-circle me-1"></i> No upcoming submissions.
+                                                    <i class="fas fa-check-circle me-1 text-success"></i> No upcoming submissions.
                                                 </div>
                                             </div>
                                         @endforelse
                                     </div>
                                 </div>
 
-                                {{-- Past Due (submission_status = 4) --}}
-                                <div class="tab-pane fade" id="past-pane" role="tabpanel" aria-labelledby="past-tab">
-                                    <div class="list-group list-group-flush">
-                                        @forelse ($documents->where('submission_status', 4) as $doc)
+                                <div class="tab-pane fade {{ $showOverdue ? 'show active' : '' }}" id="past-pane" role="tabpanel" aria-labelledby="past-tab">
+                                    <div class="list-group list-group-flush reminder-list">
+                                        @forelse ($overdueDocuments as $doc)
                                             <a href="{{ route('student-document-submission', Crypt::encrypt($doc->submission_id)) }}"
-                                                class="text-reset text-decoration-none">
-                                                <div class="list-group-item border-0 py-3 px-4">
+                                                class="text-reset text-decoration-none" aria-label="Open overdue {{ $doc->document_name }} submission">
+                                                <div class="list-group-item border-0 py-3 px-4 reminder-item is-overdue">
                                                     <div class="d-flex align-items-start">
                                                         <div class="flex-grow-1">
-                                                            <h6 class="mb-1">{{ $doc->document_name }}</h6>
-
-                                                            @php
-                                                                $dueDate = \Carbon\Carbon::parse(
-                                                                    $doc->submission_duedate,
-                                                                );
-                                                                $daysRemaining = \Carbon\Carbon::now()->diffInDays(
-                                                                    $dueDate,
-                                                                    false,
-                                                                );
-
-                                                                $badgeClass = 'badge-soft-danger';
-                                                                $label =
-                                                                    $daysRemaining < 0
-                                                                        ? 'Overdue by ' . abs($daysRemaining) . ' days'
-                                                                        : 'Due in ' . $daysRemaining . ' days';
-                                                            @endphp
-
-                                                            <div class="d-flex align-items-center gap-2 small">
-                                                                <span class="badge badge-soft {{ $badgeClass }}">
-                                                                    <i class="far fa-clock me-1"></i>{{ $label }}
-                                                                </span>
-                                                                <span
-                                                                    class="text-muted">({{ $dueDate->format('M d, Y') }})</span>
+                                                            <div class="d-flex justify-content-between gap-2">
+                                                                <h6 class="mb-1">{{ $doc->document_name }}</h6>
+                                                                <i class="ti ti-chevron-right text-danger" aria-hidden="true"></i>
                                                             </div>
 
-                                                            <div class="small mt-1">
+                                                            <div class="d-flex align-items-center gap-2 small">
+                                                                <span class="badge badge-soft badge-soft-danger">
+                                                                    <i class="far fa-clock me-1"></i>{{ $doc->deadline_label }}
+                                                                </span>
+                                                                <span class="text-muted">Due {{ $doc->due_date_label }}</span>
+                                                            </div>
+
+                                                            <div class="small mt-2 d-flex flex-wrap gap-1">
                                                                 <span class="badge badge-soft badge-soft-brand">
                                                                     {{ $doc->activity_name }}
+                                                                </span>
+                                                                <span class="badge badge-soft {{ $doc->isRequired ? 'badge-soft-danger' : 'badge-soft-ok' }}">
+                                                                    {{ $doc->isRequired ? 'Required' : 'Optional' }}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -483,27 +488,6 @@
                                                 </div>
                                             </div>
                                         @endforelse
-                                    </div>
-                                </div>
-
-                                {{-- Completed (kept as example / hidden by default) --}}
-                                <div class="tab-pane fade" id="completed-pane" role="tabpanel"
-                                    aria-labelledby="completed-tab">
-                                    <div class="list-group list-group-flush">
-                                        <div class="list-group-item border-0 py-3 px-4">
-                                            <div class="d-flex align-items-start">
-                                                <div class="avatar-chip me-3"><i class="fas fa-check"></i></div>
-                                                <div>
-                                                    <h6 class="mb-1">Chapter 1 Submission</h6>
-                                                    <div class="small text-muted mb-1">
-                                                        <i class="far fa-calendar-alt me-1"></i> Submitted on May 28, 2023
-                                                    </div>
-                                                    <div class="small badge badge-soft badge-soft-ok">
-                                                        <i class="fas fa-check-circle me-1"></i> Approved by supervisor
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
 

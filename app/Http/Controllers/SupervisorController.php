@@ -21,6 +21,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Crypt;
 use Yajra\DataTables\Facades\DataTables;
 use App\Exports\MySupervisionStudentExport;
+use App\Services\NominationNavigation;
 
 class SupervisorController extends Controller
 {
@@ -187,7 +188,7 @@ class SupervisorController extends Controller
                 'sems' => Semester::all(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -198,7 +199,7 @@ class SupervisorController extends Controller
             $selectedIds = $req->query('ids');
             return Excel::download(new MySupervisionStudentExport($selectedIds), 'e-PGS_MY_SUPERVISION_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error exporting students: ' . $this->friendlyException($e));
         }
     }
 
@@ -426,7 +427,7 @@ class SupervisorController extends Controller
                 'subs' => $data->get()
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -509,7 +510,7 @@ class SupervisorController extends Controller
                 return back()->with('error', 'Invalid export format.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
+            return back()->with('error', 'Error exporting submissions: ' . $this->friendlyException($e));
         }
     }
 
@@ -875,7 +876,7 @@ class SupervisorController extends Controller
                 'subs' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1195,27 +1196,26 @@ class SupervisorController extends Controller
                 'subs' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
     /* My Supervision Nomination - Route | Last Checked: 16-08-2025 */
-    public function mySupervisionNomination(Request $req, $name)
+    public function mySupervisionNomination(Request $req, ?string $name = null)
     {
         try {
 
-            /* GET ACTIVITY ID FROM ACTIVITY NAME */
-            $id = Activity::all()
-                ->first(function ($activity) use ($name) {
-                    return strtolower(str_replace(' ', '-', $activity->act_name)) === $name;
-                })?->id;
-
-            /* LOAD ACTIVITY DATA */
-            $activity = Activity::where('id', $id)->first();
+            $nominationTabs = app(NominationNavigation::class)
+                ->tabsFor(auth()->user(), 'my-supervision-nomination');
+            $selectedTab = $name
+                ? $nominationTabs->firstWhere('slug', $name)
+                : $nominationTabs->first();
+            $activity = $selectedTab ? Activity::find($selectedTab->id) : null;
 
             if (!$activity) {
-                return abort(404, 'Activity not found. Please try again.');
+                return abort(404, 'No evaluation-enabled nomination activity is available.');
             }
+            $id = $activity->id;
 
             /* LOAD DATATABLE DATA */
             $latestSemesterSub = DB::table('student_semesters')
@@ -1414,10 +1414,11 @@ class SupervisorController extends Controller
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
                 'act' => $activity,
+                'nominationTabs' => $nominationTabs,
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1809,7 +1810,7 @@ class SupervisorController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -2220,7 +2221,7 @@ class SupervisorController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 }

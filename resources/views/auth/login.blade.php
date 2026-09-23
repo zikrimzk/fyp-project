@@ -396,7 +396,7 @@
                 <div class="university-logo">
                     <img src="../assets/images/logo-utem.PNG" alt="University Teknikal Malaysia Melaka" />
                 </div>
-                <h1 class="system-title">e-Pasca System</h1>
+                <h1 class="system-title">e-Pasca</h1>
                 <p class="system-subtitle">Please sign in to your account to access the system.</p>
             </header>
 

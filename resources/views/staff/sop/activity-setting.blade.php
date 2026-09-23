@@ -728,7 +728,8 @@
                 if (confirm("Are you sure you want to delete this activity?")) {
                     $.ajax({
                         url: "/staff/delete-activity-" + actId,
-                        type: "GET",
+                        type: "DELETE",
+                        data: { _token: "{{ csrf_token() }}" },
                         success: function(response) {
                             if (response.success) {
                                 getActivityList();
@@ -864,7 +865,8 @@
                 if (confirm("Are you sure you want to delete this document?")) {
                     $.ajax({
                         url: "/staff/delete-document-" + docId, // API Delete dari Laravel
-                        type: "GET",
+                        type: "DELETE",
+                        data: { _token: "{{ csrf_token() }}" },
                         success: function(response) {
                             if (response.success) {
                                 showToast("success", response.message);

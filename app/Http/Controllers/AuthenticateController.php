@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use App\Services\AuditLogger;
 
 class AuthenticateController extends Controller
 {
@@ -45,7 +46,27 @@ class AuthenticateController extends Controller
         // 3 - FORGOT PASSWORD
         // 4 - PASSWORD RESET NOTIFICATION
 
-        if (env('MAIL_ENABLE') == 'true') {
+        $audit = app(AuditLogger::class);
+        $emailEvent = match ((int) $emailType) {
+            1 => 'account-registration-email',
+            2 => 'account-deactivation-email',
+            3 => 'password-reset-request-email',
+            4 => 'password-reset-notification-email',
+            default => 'account-email',
+        };
+
+        if (env('MAIL_ENABLE') != 'true') {
+            $audit->record('email', $emailEvent, 'Email delivery was skipped because email is disabled.', [
+                'outcome' => 'skipped',
+                'subject_type' => $userType == 1 ? 'student' : 'staff',
+                'subject_id' => $data->id ?? null,
+                'subject_label' => $name,
+                'metadata' => ['recipient' => $email, 'email_type' => $emailType],
+            ]);
+            return;
+        }
+
+        try {
             Mail::to($email)->send(new AuthenticateMail([
                 'eType' => $emailType,
                 'uType' => $userType,
@@ -53,6 +74,22 @@ class AuthenticateController extends Controller
                 'date' => Carbon::now()->format('d F Y g:i A'),
                 'link' => $link
             ]));
+
+            $audit->record('email', $emailEvent, 'Account email sent successfully.', [
+                'subject_type' => $userType == 1 ? 'student' : 'staff',
+                'subject_id' => $data->id ?? null,
+                'subject_label' => $name,
+                'metadata' => ['recipient' => $email, 'email_type' => $emailType],
+            ]);
+        } catch (Exception $e) {
+            $audit->record('email', $emailEvent, 'Account email delivery failed.', [
+                'outcome' => 'failed',
+                'subject_type' => $userType == 1 ? 'student' : 'staff',
+                'subject_id' => $data->id ?? null,
+                'subject_label' => $name,
+                'metadata' => ['recipient' => $email, 'email_type' => $emailType],
+            ]);
+            throw $e;
         }
     }
 
@@ -81,8 +118,13 @@ class AuthenticateController extends Controller
                 if ($student->student_status == 1) {
                     Auth::guard('student')->login($student);
                     $req->session()->regenerate();
+                    app(AuditLogger::class)->record('authentication', 'student-login', 'Student signed in successfully.', [], $req, $student);
                     return redirect()->route('student-home');
                 } else {
+                    app(AuditLogger::class)->record('authentication', 'student-login', 'Student sign-in was rejected because the account is inactive.', [
+                        'outcome' => 'failed', 'actor_type' => 'student', 'actor_id' => $student->id,
+                        'actor_identifier' => $student->student_matricno, 'actor_name' => $student->student_name,
+                    ], $req);
                     return back()->withInput()->with('error', 'Your account is currently inactive. Please contact the system administrator for assistance.');
                 }
             }
@@ -93,31 +135,43 @@ class AuthenticateController extends Controller
                 if ($staff->staff_status == 1) {
                     Auth::guard('staff')->login($staff);
                     $req->session()->regenerate();
+                    app(AuditLogger::class)->record('authentication', 'staff-login', 'Staff member signed in successfully.', [], $req, $staff);
                     return redirect()->route('staff-dashboard');
                 } else {
+                    app(AuditLogger::class)->record('authentication', 'staff-login', 'Staff sign-in was rejected because the account is inactive.', [
+                        'outcome' => 'failed', 'actor_type' => 'staff', 'actor_id' => $staff->id,
+                        'actor_identifier' => $staff->staff_id, 'actor_name' => $staff->staff_name,
+                    ], $req);
                     return back()->withInput()->with('error', 'Your account is currently inactive. Please contact the system administrator for assistance.');
                 }
             }
 
             // If both fail
+            app(AuditLogger::class)->record('authentication', 'login-failed', 'Sign-in failed because the credentials were not accepted.', [
+                'outcome' => 'failed', 'actor_identifier' => $req->email,
+                'metadata' => ['attempted_user_type' => 'unknown'],
+            ], $req);
             return back()->withInput()->with('error', 'The email or password you entered is incorrect. Please try again.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error authenticating user: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error authenticating user: ' . $this->friendlyException($e));
         }
     }
 
     public function logoutUser()
     {
         try {
-
             if (Auth::guard('student')->check()) {
+                app(AuditLogger::class)->record('authentication', 'student-logout', 'Student signed out successfully.');
                 Auth::guard('student')->logout();
             } elseif (Auth::guard('staff')->check()) {
+                app(AuditLogger::class)->record('authentication', 'staff-logout', 'Staff member signed out successfully.');
                 Auth::guard('staff')->logout();
             }
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
             return redirect('/')->with('success', 'Logged out successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error logout user: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error logout user: ' . $this->friendlyException($e));
         }
     }
 
@@ -181,7 +235,7 @@ class AuthenticateController extends Controller
                 return back()->with('success', 'Password reset link sent successfully. Please check your email.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error requesting reset password: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error requesting reset password: ' . $this->friendlyException($e));
         }
     }
 
@@ -250,7 +304,7 @@ class AuthenticateController extends Controller
 
             return redirect($main_link)->with('success', 'Password has been reset successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error reseting password: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error reseting password: ' . $this->friendlyException($e));
         }
     }
 
@@ -356,8 +410,7 @@ class AuthenticateController extends Controller
                 // 'unassignedStudentsCount' => $unassignedStudentsCount,
             ]);
         } catch (Exception $e) {
-            dd($e->getMessage());
-            return abort(500);
+            return abort(500, $this->friendlyException($e, 'load the staff dashboard'));
         }
     }
 
@@ -513,7 +566,7 @@ class AuthenticateController extends Controller
 
             return back()->with('success', 'Profile updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating profile: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating profile: ' . $this->friendlyException($e));
         }
     }
 
@@ -548,7 +601,7 @@ class AuthenticateController extends Controller
                 return back()->with('error', 'Please enter the correct password.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating password: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating password: ' . $this->friendlyException($e));
         }
     }
 
@@ -556,6 +609,9 @@ class AuthenticateController extends Controller
     public function studentHome()
     {
         try {
+            $currentSemesterId = Semester::where('sem_status', 1)->value('id');
+            $today = Carbon::today();
+
             $document = DB::table('procedures as a')
                 ->join('programmes as b', 'a.programme_id', '=', 'b.id')
                 ->join('activities as c', 'a.activity_id', '=', 'c.id')
@@ -563,6 +619,14 @@ class AuthenticateController extends Controller
                 ->join('submissions as e', 'd.id', '=', 'e.document_id')
                 ->where('b.id', auth()->user()->programme_id)
                 ->where('e.student_id', auth()->user()->id)
+                ->whereIn('e.submission_status', [1, 4])
+                ->whereNotNull('e.submission_duedate')
+                ->when($currentSemesterId, function ($query) use ($currentSemesterId) {
+                    $query->where(function ($scope) use ($currentSemesterId) {
+                        $scope->where('a.is_repeatable', 0)
+                            ->orWhere('e.semester_id', $currentSemesterId);
+                    });
+                })
                 ->select(
                     'c.id as activity_id',
                     'c.act_name as activity_name',
@@ -573,12 +637,50 @@ class AuthenticateController extends Controller
                     'e.submission_duedate',
                     'e.submission_document',
                     'e.submission_date',
+                    'e.semester_id',
                 )
-                ->get();
+                ->distinct()
+                ->orderBy('e.submission_duedate')
+                ->get()
+                ->map(function ($submission) use ($today) {
+                    $dueDate = Carbon::parse($submission->submission_duedate)->startOfDay();
+                    $daysUntilDue = (int) $today->diffInDays($dueDate, false);
+
+                    $submission->is_overdue = $dueDate->lt($today);
+                    $submission->days_until_due = $daysUntilDue;
+                    $submission->due_date_label = $dueDate->format('d M Y');
+
+                    if ($submission->is_overdue) {
+                        $daysOverdue = abs($daysUntilDue);
+                        $submission->deadline_label = 'Overdue by ' . $daysOverdue . ' ' . Str::plural('day', $daysOverdue);
+                        $submission->deadline_class = 'badge-soft-danger';
+                    } elseif ($daysUntilDue === 0) {
+                        $submission->deadline_label = 'Due today';
+                        $submission->deadline_class = 'badge-soft-danger';
+                    } elseif ($daysUntilDue === 1) {
+                        $submission->deadline_label = 'Due tomorrow';
+                        $submission->deadline_class = 'badge-soft-warn';
+                    } else {
+                        $submission->deadline_label = 'Due in ' . $daysUntilDue . ' days';
+                        $submission->deadline_class = $daysUntilDue <= 7 ? 'badge-soft-warn' : 'badge-soft-brand';
+                    }
+
+                    return $submission;
+                });
+
+            $overdueDocuments = $document->where('is_overdue', true)->values();
+            $upcomingDocuments = $document->where('is_overdue', false)->values();
+            $dueSoonCount = $upcomingDocuments
+                ->filter(fn ($submission) => $submission->days_until_due <= 7)
+                ->count();
 
             return view('student.auth.student-home', [
                 'title' => 'Student Dashboard',
                 'documents' => $document,
+                'overdueDocuments' => $overdueDocuments,
+                'upcomingDocuments' => $upcomingDocuments,
+                'overdueCount' => $overdueDocuments->count(),
+                'dueSoonCount' => $dueSoonCount,
             ]);
         } catch (Exception $e) {
             return abort(500);
@@ -594,7 +696,7 @@ class AuthenticateController extends Controller
                 'title' => 'My Profile',
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -695,7 +797,7 @@ class AuthenticateController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', 'Profile updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating profile: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating profile: ' . $this->friendlyException($e));
         }
     }
 
@@ -746,7 +848,7 @@ class AuthenticateController extends Controller
                 return back()->with('error', 'Please enter the correct password.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating password: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating password: ' . $this->friendlyException($e));
         }
     }
 }

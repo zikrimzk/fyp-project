@@ -14,12 +14,13 @@
                             <ul class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Supervisor</a></li>
                                 <li class="breadcrumb-item"><a href="javascript: void(0)">Nomination</a></li>
-                                <li class="breadcrumb-item" aria-current="page">{{ $act->act_name }}</li>
+                                <li class="breadcrumb-item" aria-current="page">Management</li>
                             </ul>
                         </div>
                         <div class="col-md-12">
                             <div class="page-header-title">
-                                <h2 class="mb-0">{{ $act->act_name }} - Nomination Management</h2>
+                                <h2 class="mb-0">Nomination Approval</h2>
+                                <p class="text-muted mb-0">{{ $act->act_name }}</p>
                             </div>
                         </div>
                     </div>
@@ -59,6 +60,21 @@
             <!-- [ Main Content ] start -->
             <div class="row">
                 <!-- [ Activity Nomination ] start -->
+
+                <div class="col-sm-12">
+                    <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Nomination activity">
+                        @foreach ($nominationTabs as $tab)
+                            <a class="btn btn-sm d-inline-flex align-items-center gap-2 {{ $tab->id === $act->id ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                href="{{ $tab->url }}" @if ($tab->id === $act->id) aria-current="page" @endif>
+                                <span>{{ $tab->name }}</span>
+                                @if ($tab->pending_count > 0)
+                                    <span class="badge {{ $tab->id === $act->id ? 'bg-white text-primary' : 'bg-danger text-white' }}"
+                                        aria-label="{{ $tab->pending_count }} pending nominations">{{ $tab->pending_count }}</span>
+                                @endif
+                            </a>
+                        @endforeach
+                    </nav>
+                </div>
 
                 <!-- [ Filter Section ] Start -->
                 <div class="col-sm-12">

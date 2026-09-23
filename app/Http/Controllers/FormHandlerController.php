@@ -315,7 +315,7 @@ class FormHandlerController extends Controller
 
             return abort(404, 'Failed to generate report. Please contact administrator for further assistance.');
         } catch (Exception $e) {
-            return back()->with('error', 'Failed to generate report. Please contact administrator for further assistance. ' . $e->getMessage());
+            return back()->with('error', 'Failed to generate report. Please contact administrator for further assistance. ' . $this->friendlyException($e));
         }
     }
 }

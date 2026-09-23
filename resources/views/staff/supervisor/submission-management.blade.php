@@ -617,10 +617,10 @@
                                                 data-bs-dismiss="modal">
                                                 Cancel
                                             </button>
-                                            <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 1]) }}"
-                                                class="btn btn-danger w-100">
+                                            <x-mutation-button :action="route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 1])"
+                                                method="PATCH" class="btn btn-danger w-100">
                                                 Archive
-                                            </a>
+                                            </x-mutation-button>
                                         </div>
                                     </div>
                                 </div>
@@ -646,10 +646,10 @@
                                                 data-bs-dismiss="modal">
                                                 Cancel
                                             </button>
-                                            <a href="{{ route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 2]) }}"
-                                                class="btn btn-primary w-100">
+                                            <x-mutation-button :action="route('archive-submission-get', ['id' => Crypt::encrypt($upd->submission_id), 'opt' => 2])"
+                                                method="PATCH" class="btn btn-primary w-100">
                                                 Unarchive
-                                            </a>
+                                            </x-mutation-button>
                                         </div>
                                     </div>
                                 </div>

@@ -48,7 +48,7 @@ class SOPController extends Controller
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Error: ' . $e->getMessage(),
+                    'message' => 'Error: ' . $this->friendlyException($e),
                 ],
                 500
             );
@@ -84,7 +84,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error adding activity: ' . $e->getMessage()
+                'message' => 'Oops! Error adding activity: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -120,7 +120,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error updating activity: ' . $e->getMessage()
+                'message' => 'Oops! Error updating activity: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -137,7 +137,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error deleting activity: ' . $e->getMessage()
+                'message' => 'Oops! Error deleting activity: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -159,7 +159,7 @@ class SOPController extends Controller
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Oops! Error viewing documents: ' . $e->getMessage()
+                    'message' => 'Oops! Error viewing documents: ' . $this->friendlyException($e)
                 ],
                 500
             );
@@ -202,7 +202,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error adding documents: ' . $e->getMessage()
+                'message' => 'Oops! Error adding documents: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -241,7 +241,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error updating documents: ' . $e->getMessage()
+                'message' => 'Oops! Error updating documents: ' . $this->friendlyException($e)
 
             ], 500);
         }
@@ -258,7 +258,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error deleting document: ' . $e->getMessage()
+                'message' => 'Oops! Error deleting document: ' . $this->friendlyException($e)
             ], 500);
         }
     }
@@ -476,7 +476,7 @@ class SOPController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', 'Procedure for ' . $act_name . ' - ' . $prog_code . ' (' . $prog_mode . ') added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding procedure: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error adding procedure: ' . $this->friendlyException($e));
         }
     }
 
@@ -579,7 +579,7 @@ class SOPController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', 'Procedure for ' . $act_name . ' - ' . $prog_code . '(' . $prog_mode . ')' . ' updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating procedure: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating procedure: ' . $this->friendlyException($e));
         }
     }
 
@@ -604,7 +604,7 @@ class SOPController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', 'Procedure deleted successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting procedure: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting procedure: ' . $this->friendlyException($e));
         }
     }
 
@@ -725,7 +725,7 @@ class SOPController extends Controller
                 'actForms' => ActivityForm::all(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -790,7 +790,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => $this->friendlyException($e),
             ], 500);
         }
     }
@@ -803,7 +803,7 @@ class SOPController extends Controller
             ActivityForm::where('id', $afID)->delete();
             return back()->with('success', 'Form and all related setting deleted successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting activity forms: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting activity forms: ' . $this->friendlyException($e));
         }
     }
 
@@ -1353,7 +1353,7 @@ class SOPController extends Controller
 
             return back()->with('success', 'Form template has been generated successfully!');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error getting started: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error getting started: ' . $this->friendlyException($e));
         }
     }
 
@@ -1379,7 +1379,7 @@ class SOPController extends Controller
                 'acts' => $actdata,
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1409,7 +1409,7 @@ class SOPController extends Controller
 
             return $pdf->stream(strtoupper(str_replace(' ', '_', $actform->af_title)) . '.pdf');
         } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()]);
+            return response()->json(['error' => $this->friendlyException($e)]);
         }
     }
 
@@ -1434,7 +1434,7 @@ class SOPController extends Controller
 
             ]);
         } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()]);
+            return response()->json(['error' => $this->friendlyException($e)]);
         }
     }
 
@@ -1460,7 +1460,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error getting the activity form data: ' . $e->getMessage(),
+                'message' => 'Error getting the activity form data: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -1589,7 +1589,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error adding the form field: ' . $e->getMessage(),
+                'message' => 'Error adding the form field: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -1708,7 +1708,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating the form field: ' . $e->getMessage(),
+                'message' => 'Error updating the form field: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -1731,7 +1731,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error updating the form field order: ' . $e->getMessage(),
+                'message' => 'Error updating the form field order: ' . $this->friendlyException($e),
 
             ], 500);
         }
@@ -1757,7 +1757,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error deleting the form field: ' . $e->getMessage(),
+                'message' => 'Error deleting the form field: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -1796,7 +1796,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error getting the form field data: ' . $e->getMessage(),
+                'message' => 'Error getting the form field data: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -1813,7 +1813,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error getting the selected form field data: ' . $e->getMessage(),
+                'message' => 'Error getting the selected form field data: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -1843,7 +1843,7 @@ class SOPController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error getting the selected form field data: ' . $e->getMessage(),
+                'message' => 'Error getting the selected form field data: ' . $this->friendlyException($e),
             ], 500);
         }
     }

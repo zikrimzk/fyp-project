@@ -14,41 +14,41 @@
     <meta name="author" content="ZikriMzk" />
 
     <!-- [Favicon] icon -->
-    <link rel="icon" href="../assets/images/favicon.svg" type="image/x-icon" />
+    <link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/x-icon" />
     <!-- [Font] Family -->
     <link rel="preload" href="{{ asset('assets/fonts/inter/Inter-roman.var.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}?v=1.0.0" id="main-font-link" />
     <!-- [phosphor Icons] https://phosphoricons.com/ -->
-    <link rel="stylesheet" href="../assets/fonts/phosphor/duotone/style.css" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/phosphor/duotone/style.css') }}" />
     <!-- [Tabler Icons] https://tablericons.com -->
-    <link rel="stylesheet" href="../assets/fonts/tabler-icons.min.css" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/tabler-icons.min.css') }}" />
     <!-- [Feather Icons] https://feathericons.com -->
-    <link rel="stylesheet" href="../assets/fonts/feather.css" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/feather.css') }}" />
     <!-- [Font Awesome Icons] https://fontawesome.com/icons -->
-    <link rel="stylesheet" href="../assets/fonts/fontawesome.css" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/fontawesome.css') }}" />
     <!-- [Material Icons] https://fonts.google.com/icons -->
-    <link rel="stylesheet" href="../assets/fonts/material.css" />
+    <link rel="stylesheet" href="{{ asset('assets/fonts/material.css') }}" />
     <!-- [Template CSS Files] -->
-    <link rel="stylesheet" href="../assets/css/style.css" id="main-style-link" />
-    <link rel="stylesheet" href="../assets/css/style-preset.css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" id="main-style-link" />
+    <link rel="stylesheet" href="{{ asset('assets/css/style-preset.css') }}" />
     <!--[jQuery] -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- [DataTables Scripts] -->
-    <script src="../assets/js/plugins/dataTables.min.js"></script>
+    <script src="{{ asset('assets/js/plugins/dataTables.min.js') }}"></script>
     <script src="https://cdn.datatables.net/rowgroup/1.5.1/js/dataTables.rowGroup.js"></script>
     <script src="https://cdn.datatables.net/rowgroup/1.5.1/js/rowGroup.dataTables.js"></script>
-    <script src="../assets/js/plugins/dataTables.bootstrap5.min.js"></script>
-    <script src="../assets/js/plugins/dataTables.responsive.min.js"></script>
-    <script src="../assets/js/plugins/responsive.bootstrap5.min.js"></script>
+    <script src="{{ asset('assets/js/plugins/dataTables.bootstrap5.min.js') }}"></script>
+    <script src="{{ asset('assets/js/plugins/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('assets/js/plugins/responsive.bootstrap5.min.js') }}"></script>
     <!-- [DataTables Style Links] -->
-    <link rel="stylesheet" href="../assets/css/plugins/dataTables.bootstrap5.min.css" />
-    <link rel="stylesheet" href="../assets/css/plugins/responsive.bootstrap5.min.css" />
-    <link href="../assets/css/plugins/animate.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/plugins/dataTables.bootstrap5.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/css/plugins/responsive.bootstrap5.min.css') }}" />
+    <link href="{{ asset('assets/css/plugins/animate.min.css') }}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.3.1/css/rowGroup.dataTables.min.css">
     <!-- [Flatpickr Style Links] -->
-    <link rel="stylesheet" href="../assets/css/plugins/flatpickr.min.css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/plugins/flatpickr.min.css') }}" />
     <!-- [Flatpickr Scripts] -->
-    <script src="../assets/js/plugins/flatpickr.min.js"></script>
+    <script src="{{ asset('assets/js/plugins/flatpickr.min.js') }}"></script>
 
     <script>
         $.extend(true, $.fn.dataTable.defaults, {
@@ -69,6 +69,68 @@
                 defaultContent: '-'
             }]
         });
+
+        (function() {
+            function readableLabel(element) {
+                var id = element.id;
+                var explicit = id ? document.querySelector('label[for="' + CSS.escape(id) + '"]') : null;
+                if (explicit) return explicit.textContent.trim();
+
+                var inputGroup = element.closest('.input-group');
+                var container = inputGroup ? inputGroup.parentElement : element.parentElement;
+                var nearby = container ? container.querySelector(':scope > .form-label, :scope > label') : null;
+                if (nearby) return nearby.textContent.replace('*', '').trim();
+
+                return (id || element.name || 'Filter')
+                    .replace(/^fil_/, '')
+                    .replace(/_/g, ' ')
+                    .replace(/\b\w/g, function(char) { return char.toUpperCase(); });
+            }
+
+            function selectedFilters(table) {
+                var scope = table.closest('.pc-content') || document;
+                return Array.from(scope.querySelectorAll('select[id^="fil_"], input[id$="Filter"]'))
+                    .filter(function(element) {
+                        if (!element.offsetParent) return false;
+                        var value = element.tagName === 'SELECT'
+                            ? element.options[element.selectedIndex]?.text.trim()
+                            : element.value.trim();
+                        if (!value || /^--\s*select/i.test(value) || /^all\s/i.test(value)) return false;
+                        element.dataset.emptyStateValue = value;
+                        return true;
+                    })
+                    .map(function(element) {
+                        return readableLabel(element) + ': ' + element.dataset.emptyStateValue;
+                    });
+            }
+
+            $(document).on('init.dt draw.dt', function(event, settings) {
+                var table = settings.nTable;
+                var emptyCell = table.querySelector('tbody td.dt-empty, tbody td.dataTables_empty');
+                if (!emptyCell) return;
+
+                var filters = selectedFilters(table);
+                emptyCell.textContent = '';
+
+                var wrapper = document.createElement('div');
+                wrapper.className = 'ep-empty-state py-4';
+
+                var title = document.createElement('strong');
+                title.className = 'd-block mb-1';
+                title.textContent = filters.length
+                    ? 'No records match the current filters.'
+                    : 'No records are available for this module yet.';
+                wrapper.appendChild(title);
+
+                var guidance = document.createElement('span');
+                guidance.className = 'text-muted d-block';
+                guidance.textContent = filters.length
+                    ? 'Active filters: ' + filters.join(' · ') + '. Clear one or more filters to widen the results.'
+                    : 'Records will appear here when the related workflow step has been completed.';
+                wrapper.appendChild(guidance);
+                emptyCell.appendChild(wrapper);
+            });
+        })();
     </script>
 
     <style>
@@ -101,6 +163,12 @@
 
         .data-table td {
             white-space: normal !important;
+        }
+
+        .ep-empty-state {
+            max-width: 760px;
+            margin: 0 auto;
+            line-height: 1.5;
         }
 
         .disabled-a {
@@ -235,12 +303,12 @@
     <!-- [ Footer ] end -->
 
     <!-- Required Js -->
-    <script src="../assets/js/plugins/popper.min.js"></script>
-    <script src="../assets/js/plugins/simplebar.min.js"></script>
-    <script src="../assets/js/plugins/bootstrap.min.js"></script>
-    <script src="../assets/js/fonts/custom-font.js"></script>
-    <script src="../assets/js/pcoded.js"></script>
-    <script src="../assets/js/plugins/feather.min.js"></script>
+    <script src="{{ asset('assets/js/plugins/popper.min.js') }}"></script>
+    <script src="{{ asset('assets/js/plugins/simplebar.min.js') }}"></script>
+    <script src="{{ asset('assets/js/plugins/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/js/fonts/custom-font.js') }}"></script>
+    <script src="{{ asset('assets/js/pcoded.js') }}"></script>
+    <script src="{{ asset('assets/js/plugins/feather.min.js') }}"></script>
 
     <script>
         $(document).ready(function() {

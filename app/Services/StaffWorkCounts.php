@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\DB;
 /** Read-only, request-local counts. A count represents a distinct actionable record. */
 class StaffWorkCounts
 {
+    /** Avoid recalculating the same expensive count set for the sidebar and page tabs in one request. */
+    private array $requestCache = [];
+
     private array $work = [];
 
     private $fields;
@@ -37,6 +40,11 @@ class StaffWorkCounts
 
     public function forStaff(Staff $staff): array
     {
+        $cacheKey = (string) $staff->getKey();
+        if (array_key_exists($cacheKey, $this->requestCache)) {
+            return $this->requestCache[$cacheKey];
+        }
+
         $this->work = [];
         $this->fields = DB::table('activity_forms as af')->join('form_fields as ff', 'ff.af_id', '=', 'af.id')
             ->where('ff.ff_category', 6)->orderBy('ff.ff_order')
@@ -89,11 +97,17 @@ class StaffWorkCounts
             }
             if ((int) $row->nom_status === 1 && $supervisions->get($row->student_id, collect())->contains(fn ($s) => (int) $s->supervision_role === 1)) {
                 $this->add('my-supervision-nomination', $row->id, $names[$row->activity_id]);
+                $this->add('my-supervision-nomination', $row->id);
             }
-            if ($higherRole === 4 && in_array((int) $row->nom_status, [2, 5], true)) {
+            // A higher-role staff member must never approve a nomination for
+            // a student they supervise, even after completing the SV stage.
+            $hasSupervisionConflict = $supervisions->get($row->student_id, collect())->isNotEmpty();
+            if (! $hasSupervisionConflict && $higherRole === 4 && in_array((int) $row->nom_status, [2, 5], true)) {
                 $this->add('nomination-approval', $row->id, $names[$row->activity_id]);
-            } elseif (in_array($higherRole, [5, 6], true) && (int) $row->nom_status === 3 && $this->unsigned($row, 3, $higherRole, $row->nom_signature_data)) {
+                $this->add('nomination-approval', $row->id);
+            } elseif (! $hasSupervisionConflict && in_array($higherRole, [5, 6], true) && (int) $row->nom_status === 3 && $this->unsigned($row, 3, $higherRole, $row->nom_signature_data)) {
                 $this->add('nomination-approval', $row->id, $names[$row->activity_id]);
+                $this->add('nomination-approval', $row->id);
             }
         }
 
@@ -141,6 +155,6 @@ class StaffWorkCounts
             }
         }
 
-        return array_map('count', $this->work);
+        return $this->requestCache[$cacheKey] = array_map('count', $this->work);
     }
 }

@@ -10,6 +10,8 @@ use App\Models\Activity;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use App\Services\AuditLogger;
+use Exception;
 
 class SendSubmissionReminders extends Command
 {
@@ -84,7 +86,20 @@ class SendSubmissionReminders extends Command
             $email = null;
         }
 
-        if (env('MAIL_ENABLE') == 'true') {
+        $audit = app(AuditLogger::class);
+        $context = [
+            'actor_type' => 'system',
+            'subject_type' => 'student',
+            'subject_label' => $name,
+            'metadata' => ['recipient' => $email, 'email_type' => $emailType, 'activity' => $actName],
+        ];
+
+        if (env('MAIL_ENABLE') != 'true') {
+            $audit->record('email', 'submission-reminder-email', 'Submission reminder was skipped because email is disabled.', $context + ['outcome' => 'skipped']);
+            return;
+        }
+
+        try {
             Mail::to($email)->send(new SubmissionMail([
                 'eType' => $emailType,
                 'act_name' => $actName,
@@ -96,6 +111,10 @@ class SendSubmissionReminders extends Command
                 'submission_date' => '-',
                 'document' => $data->document,
             ]));
+            $audit->record('email', 'submission-reminder-email', 'Submission reminder sent successfully.', $context);
+        } catch (Exception $e) {
+            $audit->record('email', 'submission-reminder-email', 'Submission reminder delivery failed.', $context + ['outcome' => 'failed']);
+            throw $e;
         }
     }
 }

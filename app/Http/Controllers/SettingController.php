@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use App\Services\AuditLogger;
 
 class SettingController extends Controller
 {
@@ -90,7 +91,7 @@ class SettingController extends Controller
                 'facs' => Faculty::all()
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -770,7 +771,7 @@ class SettingController extends Controller
 
             return back()->with('success', 'Semester updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating semester.' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating semester.' . $this->friendlyException($e));
         }
     }
 
@@ -792,27 +793,123 @@ class SettingController extends Controller
 
     public function changeCurrentSemester(Request $req)
     {
-        try {
+        $validator = Validator::make($req->all(), [
+            'semester_id' => ['required', 'integer', 'exists:semesters,id'],
+            'confirmation' => ['required', 'in:CHANGE SEMESTER'],
+        ], [], [
+            'semester_id' => 'new semester',
+            'confirmation' => 'confirmation phrase',
+        ]);
 
-            if ($req->semester_id === null) {
-                return back()->with('error', 'Please select new semester to continue.');
-            }
-            // GET CURRENT SEMESTER
-            $currsemester = Semester::where('sem_status', 1)->first();
-
-            // UPDATE STUDENT PREVIOUS SEMESTER STATUS TO "Completed"
-            StudentSemester::where('semester_id', $currsemester->id)->where('ss_status', 1)->update(['ss_status' => 4]);
-
-            // UPDATE THE PREVIOUS SEM STATUS TO "Past"
-            $currsemester->sem_status = 3;
-            $currsemester->save();
-
-            // UPDATE THE CURRENT SEM STATUS TO "Current"
-            Semester::where('id', $req->semester_id)->update(['sem_status' => 1]);
-            $newsem = Semester::where('sem_status', 1)->first();
-            return back()->with('success', 'Current semester have been change to ' . $newsem->sem_label);
-        } catch (Exception $e) {
-            return back()->with('error', 'Oops! Something went wrong. Please try again.' . $e->getMessage());
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()->with('modal', 'setCurrSem');
         }
+
+        $validated = $validator->validated();
+
+        try {
+            $rollover = DB::transaction(function () use ($validated, $req) {
+                $semesters = Semester::query()->lockForUpdate()->get();
+                $currentSemesters = $semesters->where('sem_status', 1);
+                $currentSemester = $currentSemesters->first();
+                $newSemester = $semesters->firstWhere('id', (int) $validated['semester_id']);
+
+                if ($currentSemesters->count() !== 1 || !$currentSemester || !$newSemester) {
+                    throw new \RuntimeException('The current or selected semester could not be found.');
+                }
+
+                if ((int) $currentSemester->id === (int) $newSemester->id) {
+                    throw new \RuntimeException('The selected semester is already current.');
+                }
+
+                if ((int) $newSemester->sem_status !== 2) {
+                    throw new \RuntimeException('Only an upcoming semester can become the current semester.');
+                }
+
+                $affectedStudentIds = StudentSemester::where('semester_id', $currentSemester->id)
+                    ->where('ss_status', 1)
+                    ->lockForUpdate()
+                    ->pluck('student_id')
+                    ->map(fn ($id) => (int) $id)
+                    ->values();
+
+                if ($affectedStudentIds->isNotEmpty()) {
+                    StudentSemester::where('semester_id', $currentSemester->id)
+                        ->whereIn('student_id', $affectedStudentIds)
+                        ->where('ss_status', 1)
+                        ->update(['ss_status' => 4]);
+                }
+
+                Semester::where('sem_status', 1)->update(['sem_status' => 3]);
+                Semester::where('id', $newSemester->id)->update(['sem_status' => 1]);
+
+                $rollover = [
+                    'previous_semester_id' => (int) $currentSemester->id,
+                    'previous_semester_label' => $currentSemester->sem_label,
+                    'previous_semester_status' => (int) $currentSemester->sem_status,
+                    'new_semester_id' => (int) $newSemester->id,
+                    'new_semester_label' => $newSemester->sem_label,
+                    'new_semester_previous_status' => (int) $newSemester->sem_status,
+                    'affected_student_ids' => $affectedStudentIds->all(),
+                    'affected_student_count' => $affectedStudentIds->count(),
+                ];
+
+                $auditLog = app(AuditLogger::class)->record(
+                    'configuration',
+                    'semester.rollover',
+                    'Changed the current semester from ' . $rollover['previous_semester_label'] . ' to ' . $rollover['new_semester_label'] . '.',
+                    [
+                        'subject_type' => Semester::class,
+                        'subject_id' => $rollover['new_semester_id'],
+                        'subject_label' => $rollover['new_semester_label'],
+                        'metadata' => $rollover + [
+                            'recovery_procedure' => 'Use this audit record to restore the two semester statuses and reset the listed old-semester student enrollments from Completed (4) to Active (1). Verify no new-semester enrollment work has started before recovery.',
+                        ],
+                    ],
+                    $req
+                );
+
+                if (!$auditLog) {
+                    throw new \RuntimeException('The rollover audit entry could not be recorded. No semester changes were saved.');
+                }
+
+                return $rollover;
+            }, 3);
+
+            return back()->with('success', 'Current semester has been changed to ' . $rollover['new_semester_label'] . '. ' . $rollover['affected_student_count'] . ' active enrollment(s) were completed.');
+        } catch (Exception $e) {
+            return back()->with('error', $this->friendlyException($e, 'change the current semester'));
+        }
+    }
+
+    public function semesterChangePreview(int $id)
+    {
+        $currentSemesters = Semester::where('sem_status', 1)->get();
+        $currentSemester = $currentSemesters->first();
+        $newSemester = Semester::find($id);
+
+        if ($currentSemesters->count() !== 1 || !$currentSemester || !$newSemester) {
+            return response()->json(['message' => 'The current or selected semester could not be found.'], 404);
+        }
+
+        if ((int) $newSemester->sem_status !== 2) {
+            return response()->json(['message' => 'Only an upcoming semester can be selected.'], 422);
+        }
+
+        $activeEnrollments = StudentSemester::where('semester_id', $currentSemester->id)
+            ->where('ss_status', 1);
+
+        return response()->json([
+            'current_semester' => ['id' => $currentSemester->id, 'label' => $currentSemester->sem_label],
+            'new_semester' => ['id' => $newSemester->id, 'label' => $newSemester->sem_label],
+            'active_enrollment_count' => (clone $activeEnrollments)->count(),
+            'active_student_count' => (clone $activeEnrollments)->distinct()->count('student_id'),
+            'changes' => [
+                $currentSemester->sem_label . ' will become Past.',
+                $newSemester->sem_label . ' will become Active (Current).',
+                'Active enrollments in the old semester will become Completed.',
+                'No submission, nomination, evaluation, or document record will be deleted.',
+            ],
+        ])->header('Cache-Control', 'no-store');
     }
 }

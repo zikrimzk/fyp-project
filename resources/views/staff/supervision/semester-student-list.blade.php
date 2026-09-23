@@ -613,10 +613,10 @@
                                             </button>
                                         </div>
                                         <div class="col-12 col-md-6">
-                                            <a href="{{ route('delete-student-semester-get', ['studentID' => Crypt::encrypt($upd->student_id), 'semID' => Crypt::encrypt($sem_id)]) }}"
+                                            <x-mutation-button :action="route('delete-student-semester-get', ['studentID' => Crypt::encrypt($upd->student_id), 'semID' => Crypt::encrypt($sem_id)])"
                                                 class="btn btn-danger w-100">
                                                 Delete Anyways
-                                            </a>
+                                            </x-mutation-button>
                                         </div>
                                     </div>
                                 </div>

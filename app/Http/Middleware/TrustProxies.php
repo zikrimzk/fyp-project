@@ -25,4 +25,17 @@ class TrustProxies extends Middleware
         Request::HEADER_X_FORWARDED_PORT |
         Request::HEADER_X_FORWARDED_PROTO |
         Request::HEADER_X_FORWARDED_AWS_ELB;
+
+    /**
+     * Trust only explicitly configured reverse proxies so forwarded client IPs
+     * cannot be spoofed by a direct request.
+     */
+    protected function proxies()
+    {
+        $configured = config('app.trusted_proxies');
+
+        return is_string($configured) && trim($configured) !== ''
+            ? array_map('trim', explode(',', $configured))
+            : null;
+    }
 }

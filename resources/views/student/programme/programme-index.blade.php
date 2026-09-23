@@ -6,6 +6,46 @@
 @extends('student.layouts.main')
 
 @section('content')
+    <style>
+        .programme-activity-card {
+            border: 1px solid #e3e9f0 !important;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, .055) !important;
+            overflow: hidden;
+        }
+
+        .programme-activity-card .activity-header {
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #edf1f5;
+        }
+
+        .activity-sequence {
+            width: 2.25rem;
+            height: 2.25rem;
+            display: inline-grid;
+            place-items: center;
+            border-radius: .65rem;
+            color: #245a91;
+            background: #eaf2fa;
+            font-weight: 700;
+            flex: 0 0 auto;
+        }
+
+        .submission-document-card {
+            background: #fff;
+            border: 1px solid #e5eaf0;
+            border-left: 4px solid #64748b;
+            border-radius: .75rem;
+        }
+
+        .submission-document-card.is-actionable {
+            border-left-color: #245a91;
+        }
+
+        .submission-document-card.is-overdue {
+            border-left-color: #dc3545;
+            background: rgba(220, 53, 69, .025);
+        }
+    </style>
     <div class="pc-container">
         <div class="pc-content">
             <!-- [ breadcrumb ] start -->
@@ -21,6 +61,7 @@
                         <div class="col-md-12">
                             <div class="page-header-title">
                                 <h2 class="mb-0">Programme Overview</h2>
+                                <p class="text-muted mb-0 mt-1">Track each programme activity, submission deadline, approval, and final document.</p>
                             </div>
                         </div>
                     </div>
@@ -98,13 +139,15 @@
                     <div class="col-sm-12">
                         @forelse($acts as $act)
                             <!-- [ Activity Details ] start -->
-                            <div class="card mb-4 mt-3 border-2 shadow-md rounded-4">
+                            <div class="card mb-4 mt-3 rounded-4 programme-activity-card">
                                 <div class="card-body">
 
                                     {{-- Activity Header --}}
                                     <div
-                                        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-                                        <div>
+                                        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 activity-header gap-3">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <span class="activity-sequence" aria-label="Activity {{ $loop->iteration }}">{{ $loop->iteration }}</span>
+                                            <div>
                                             <h5 class="fw-bold mb-1">{{ $act->act_name }}</h5>
                                             @if ($act->init_status == 1)
                                                 <span class="badge bg-light-warning">Pending Approval : Supervisor </span>
@@ -158,6 +201,7 @@
                                             @else
                                                 <span class="badge bg-secondary">N/A</span>
                                             @endif
+                                            </div>
                                         </div>
 
                                         <div class="d-none">
@@ -281,9 +325,16 @@
                                         @if ($activityDocs && optional($activityDocs->first())->document_name)
                                             <div class="row g-3">
                                                 @foreach ($activityDocs as $item)
+                                                    @php
+                                                        $itemDueDate = Carbon::parse($item->submission_duedate);
+                                                        $itemIsOverdue = in_array((int) $item->submission_status, [1, 4]) && $itemDueDate->isPast();
+                                                        $deadlineText = $itemIsOverdue
+                                                            ? 'Overdue by ' . $itemDueDate->diffForHumans(now(), ['parts' => 2, 'syntax' => Carbon::DIFF_ABSOLUTE])
+                                                            : $itemDueDate->diffForHumans(now(), ['parts' => 2, 'syntax' => Carbon::DIFF_RELATIVE_TO_NOW]);
+                                                    @endphp
                                                     <div class="col-12">
                                                         <div
-                                                            class="bg-light p-3 rounded-3 shadow-sm border-start border-4 border-secondary">
+                                                            class="submission-document-card p-3 {{ $itemIsOverdue ? 'is-overdue' : (in_array((int) $item->submission_status, [1, 4]) ? 'is-actionable' : '') }}">
                                                             <div
                                                                 class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
                                                                 <div>
@@ -323,18 +374,15 @@
                                                             <div
                                                                 class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mt-3">
                                                                 <div>
-                                                                    <small class="text-muted">Submission Date</small>
+                                                                    <small class="text-muted">Due Date</small>
                                                                     <div class="fw-semibold">
-                                                                        {{ Carbon::parse($item->submission_duedate)->format('d M Y , g:i a') }}
+                                                                        {{ $itemDueDate->format('d M Y, g:i a') }}
                                                                     </div>
                                                                 </div>
                                                                 <div>
-                                                                    <small class="text-muted">Time Remaining</small>
-                                                                    <div class="fw-semibold">
-                                                                        {{ Carbon::parse($item->submission_duedate)->diffForHumans(Carbon::now(), [
-                                                                            'parts' => 3,
-                                                                            'syntax' => Carbon::DIFF_RELATIVE_TO_NOW,
-                                                                        ]) }}
+                                                                    <small class="text-muted">Deadline</small>
+                                                                    <div class="fw-semibold {{ $itemIsOverdue ? 'text-danger' : '' }}">
+                                                                        {{ $deadlineText }}
                                                                     </div>
                                                                 </div>
                                                                 <div class="text-md-end">
@@ -342,9 +390,8 @@
                                                                         {{-- Allow submission based on status --}}
                                                                         @if ($item->submission_status == 1 || $item->submission_status == 4)
                                                                             <a href="{{ route('student-document-submission', Crypt::encrypt($item->submission_id)) }}"
-                                                                                class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
-                                                                                <i class="ti ti-upload"></i> Submit
-                                                                                Document
+                                                                                class="btn btn-sm {{ $itemIsOverdue ? 'btn-danger' : 'btn-primary' }} d-inline-flex align-items-center gap-1">
+                                                                                <i class="ti ti-upload"></i> {{ $itemIsOverdue ? 'Submit Overdue Document' : 'Submit Document' }}
                                                                             </a>
                                                                         @elseif($item->submission_status == 3)
                                                                             <a href="{{ route('student-document-submission', Crypt::encrypt($item->submission_id)) }}"
@@ -373,8 +420,9 @@
                                                 @endforeach
                                             </div>
                                         @else
-                                            <p class="text-muted fst-italic">No documents visible to students.
-                                            </p>
+                                            <div class="alert alert-light border mb-0 py-3">
+                                                <i class="ti ti-info-circle me-2 text-primary"></i>No submission documents are currently available for this activity.
+                                            </div>
                                         @endif
                                     </div>
 

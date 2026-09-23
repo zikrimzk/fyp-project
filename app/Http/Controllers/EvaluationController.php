@@ -343,7 +343,7 @@ class EvaluationController extends Controller
                 'evaluation' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -405,7 +405,7 @@ class EvaluationController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' evaluation by ' . $evaluator->staff_name . ' successfully updated.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating final evaluation: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating final evaluation: ' . $this->friendlyException($e));
         }
     }
 
@@ -450,7 +450,7 @@ class EvaluationController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' evaluation by ' . $evaluator->staff_name . ' successfully deleted.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting final evaluation: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting final evaluation: ' . $this->friendlyException($e));
         }
     }
 
@@ -623,7 +623,7 @@ class EvaluationController extends Controller
                 return back()->with('error', 'Invalid export format.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
+            return back()->with('error', 'Error exporting submissions: ' . $this->friendlyException($e));
         }
     }
 
@@ -912,7 +912,7 @@ class EvaluationController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1203,7 +1203,7 @@ class EvaluationController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1302,7 +1302,7 @@ class EvaluationController extends Controller
                 'evaluationID' => $evaluationID
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1396,7 +1396,7 @@ class EvaluationController extends Controller
 
             return response()->json(['html' => $html]);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error fetching evaluation form: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error fetching evaluation form: ' . $this->friendlyException($e));
         }
     }
 
@@ -1464,7 +1464,7 @@ class EvaluationController extends Controller
 
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1567,7 +1567,7 @@ class EvaluationController extends Controller
 
             return response()->json(['html' => $html]);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error fetching evaluation form: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error fetching evaluation form: ' . $this->friendlyException($e));
         }
     }
 
@@ -1638,7 +1638,7 @@ class EvaluationController extends Controller
             /* RETURN ABORT */
             return redirect()->route('main-login');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error processing evaluation signature: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error processing evaluation signature: ' . $this->friendlyException($e));
         }
     }
 
@@ -1939,7 +1939,7 @@ class EvaluationController extends Controller
             /* RETURN ABORT */
             return abort(404, 'Invalid request. Please try again.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error submitting evaluation: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error submitting evaluation: ' . $this->friendlyException($e));
         }
     }
 
@@ -2085,7 +2085,7 @@ class EvaluationController extends Controller
                 $evaluation->save();
             }
         } catch (Exception $e) {
-            throw new Exception('Signature storage error: ' . $e->getMessage());
+            throw new Exception('Signature storage error: ' . $this->friendlyException($e));
         }
     }
 
@@ -2384,7 +2384,7 @@ class EvaluationController extends Controller
             /* RETURN PATH */
             return $path;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error generating evaluation form: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error generating evaluation form: ' . $this->friendlyException($e));
         }
     }
 
@@ -2611,7 +2611,7 @@ class EvaluationController extends Controller
                 'correction' => $data->get()
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -2677,7 +2677,7 @@ class EvaluationController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final correction successfully updated.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating final correction: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating final correction: ' . $this->friendlyException($e));
         }
     }
 
@@ -2715,7 +2715,7 @@ class EvaluationController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' - ' . $activity->act_name . ' final correctiom successfully deleted.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting final correction: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting final correction: ' . $this->friendlyException($e));
         }
     }
 
@@ -2849,7 +2849,7 @@ class EvaluationController extends Controller
                 return back()->with('error', 'Invalid export format.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
+            return back()->with('error', 'Error exporting submissions: ' . $this->friendlyException($e));
         }
     }
 
@@ -3170,7 +3170,7 @@ class EvaluationController extends Controller
                 'subs' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -3479,7 +3479,7 @@ class EvaluationController extends Controller
                 'subs' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -3652,7 +3652,7 @@ class EvaluationController extends Controller
 
             return back()->with('error', 'Oops! Something went wrong. Cannot process your request. Please try again. If the problem persists, please contact the system administrator.');
         } catch (Exception $e) {
-            return back()->with('error', 'Error occurred: ' . $e->getMessage());
+            return back()->with('error', 'Error occurred: ' . $this->friendlyException($e));
         }
     }
 
@@ -4043,7 +4043,7 @@ class EvaluationController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -4567,7 +4567,7 @@ class EvaluationController extends Controller
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -4827,7 +4827,7 @@ class EvaluationController extends Controller
             /* RETURN ABORT */
             return abort(404, 'Inavalid request. Please try again.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error approving evaluation: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error approving evaluation: ' . $this->friendlyException($e));
         }
     }
 
@@ -4884,7 +4884,7 @@ class EvaluationController extends Controller
             /* RETURN IF SUCCESS */
             return back()->with('success', $message);
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error finalizing evaluation: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error finalizing evaluation: ' . $this->friendlyException($e));
         }
     }
 }

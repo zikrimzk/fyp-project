@@ -381,10 +381,10 @@
                                                 data-bs-dismiss="modal">
                                                 Cancel
                                             </button>
-                                            <a href="{{ route('delete-final-nomination-get', ['id' => Crypt::encrypt($upd->nomination_id)]) }}"
+                                            <x-mutation-button :action="route('delete-final-nomination-get', ['id' => Crypt::encrypt($upd->nomination_id)])"
                                                 class="btn btn-danger w-100 fw-bold">
                                                 Delete Permanently
-                                            </a>
+                                            </x-mutation-button>
                                         </div>
                                     </div>
                                 </div>

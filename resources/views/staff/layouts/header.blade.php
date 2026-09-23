@@ -1,3 +1,12 @@
+@php
+    $staffRoleLabel = match ((int) auth()->user()->staff_role) {
+        1 => 'Committee',
+        2 => 'Lecturer',
+        3 => 'Deputy Dean',
+        4 => 'Dean',
+        default => 'Staff',
+    };
+@endphp
 <header class="pc-header">
     <div class="header-wrapper"> <!-- [Mobile Media Block] start -->
         <div class="me-auto pc-mob-drp">
@@ -28,7 +37,7 @@
                             alt="" width="34" height="34">
                         <span class="staff-header-user-copy">
                             <strong>{{ auth()->user()->staff_name ?? 'Staff' }}</strong>
-                            <small>Staff account</small>
+                            <small>{{ $staffRoleLabel }}</small>
                         </span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
@@ -36,10 +45,13 @@
                             <i class="ti ti-user"></i>
                             <span>My Profile</span>
                         </a>
-                        <a href="{{ route('user-logout') }}" class="dropdown-item">
-                            <i class="ti ti-power"></i>
-                            <span>Logout</span>
-                        </a>
+                        <form method="POST" action="{{ route('user-logout') }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item">
+                                <i class="ti ti-power"></i>
+                                <span>Logout</span>
+                            </button>
+                        </form>
                     </div>
                 </li>
             </ul>

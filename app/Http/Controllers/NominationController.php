@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Crypt;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\FormHandlerController;
+use App\Services\NominationNavigation;
 
 class NominationController extends Controller
 {
@@ -285,7 +286,7 @@ class NominationController extends Controller
                 'evaluator' =>  $evaluator
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -340,7 +341,7 @@ class NominationController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' nomination for ' . $activity->act_name . ' successfully updated.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating final nomination: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating final nomination: ' . $this->friendlyException($e));
         }
     }
 
@@ -386,7 +387,7 @@ class NominationController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' nomination fot ' . $activity->act_name . ' successfully deleted.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting final nomination: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting final nomination: ' . $this->friendlyException($e));
         }
     }
 
@@ -502,27 +503,26 @@ class NominationController extends Controller
                 return back()->with('error', 'Invalid export format.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Error exporting submissions: ' . $e->getMessage());
+            return back()->with('error', 'Error exporting submissions: ' . $this->friendlyException($e));
         }
     }
 
     /* Nomination Management [Staff] - Route | Last Checked: 16-08-2025 */
-    public function nominationApproval(Request $req, $name)
+    public function nominationApproval(Request $req, ?string $name = null)
     {
         try {
 
-            /* GET ACTIVITY ID FROM ACTIVITY NAME */
-            $id = Activity::all()
-                ->first(function ($activity) use ($name) {
-                    return strtolower(str_replace(' ', '-', $activity->act_name)) === $name;
-                })?->id;
-
-            /* LOAD ACTIVITY DATA */
-            $activity = Activity::where('id', $id)->first();
+            $nominationTabs = app(NominationNavigation::class)
+                ->tabsFor(auth()->user(), 'nomination-approval');
+            $selectedTab = $name
+                ? $nominationTabs->firstWhere('slug', $name)
+                : $nominationTabs->first();
+            $activity = $selectedTab ? Activity::find($selectedTab->id) : null;
 
             if (!$activity) {
-                return abort(404, 'Activity not found. Please try again.');
+                return abort(404, 'No evaluation-enabled nomination activity is available.');
             }
+            $id = $activity->id;
 
             /* LOAD DATATABLE DATA */
             $latestSemesterSub = DB::table('student_semesters')
@@ -754,10 +754,11 @@ class NominationController extends Controller
                 'facs' => Faculty::all(),
                 'sems' => Semester::all(),
                 'act' => $activity,
+                'nominationTabs' => $nominationTabs,
                 'data' => $data->get(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -781,6 +782,15 @@ class NominationController extends Controller
 
             if (!$student) {
                 return back()->with('error', 'Error loading nomination data: Student not found');
+            }
+
+            if (in_array((int) $mode, [2, 3, 4], true)) {
+                $expectedMode = [1 => 2, 3 => 3, 4 => 4][(int) auth()->user()->staff_role] ?? null;
+                abort_unless($expectedMode === (int) $mode, 403);
+
+                if ($this->hasSupervisionConflict((int) $student->id)) {
+                    return back()->with('error', $this->supervisionConflictMessage());
+                }
             }
 
             /* LOAD ACTIVITY DATA */
@@ -828,9 +838,10 @@ class NominationController extends Controller
                 'page' => $page,
                 'link' => $link,
             ]);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (Exception $e) {
-            dd($e);
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -956,8 +967,7 @@ class NominationController extends Controller
             /* RETURN HTML */
             return response()->json(['html' => $html]);
         } catch (Exception $e) {
-            dd($e);
-            return back()->with('error', 'Oops! Error fetching nomination form: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error fetching nomination form: ' . $this->friendlyException($e));
         }
     }
 
@@ -985,6 +995,15 @@ class NominationController extends Controller
 
             if (!$student) {
                 return back()->with('error', 'Error submitting nomination form: Student not found.');
+            }
+
+            if (in_array((int) $mode, [2, 3, 4], true)) {
+                $expectedMode = [1 => 2, 3 => 3, 4 => 4][(int) auth()->user()->staff_role] ?? null;
+                abort_unless($expectedMode === (int) $mode, 403);
+
+                if ($this->hasSupervisionConflict((int) $student->id)) {
+                    return back()->with('error', $this->supervisionConflictMessage());
+                }
             }
 
             /* LOAD ACTIVITY DATA */
@@ -1142,8 +1161,10 @@ class NominationController extends Controller
                     return back()->with('error', 'Error submitting nomination: Invalid Request. Please try again.');
                 }
             }
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error submitting nomination: ' . $e->getMessage() . ' ' . $e->getLine());
+            return back()->with('error', 'Oops! Error submitting nomination: ' . $this->friendlyException($e) . ' ' . "details recorded internally");
         }
     }
 
@@ -1162,6 +1183,19 @@ class NominationController extends Controller
 
         /* RETURN FIELD */
         return $field;
+    }
+
+    private function hasSupervisionConflict(int $studentId): bool
+    {
+        return DB::table('supervisions')
+            ->where('student_id', $studentId)
+            ->where('staff_id', auth()->user()->id)
+            ->exists();
+    }
+
+    private function supervisionConflictMessage(): string
+    {
+        return 'You cannot act as a higher-level approver for a student you supervise. Another authorized staff member must complete this approval stage.';
     }
 
     /* Process Evaluator (Fuzzy Match) - Function | Last Checked: 17-08-2025 */
@@ -1342,7 +1376,7 @@ class NominationController extends Controller
                 }
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error storing signature: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error storing signature: ' . $this->friendlyException($e));
         }
     }
 
@@ -1484,7 +1518,7 @@ class NominationController extends Controller
             $pdf->save(storage_path($path));
             return $path;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error generating nomination form: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error generating nomination form: ' . $this->friendlyException($e));
         }
     }
 
@@ -1605,7 +1639,7 @@ class NominationController extends Controller
                     ->with('success', 'Your update/ re-nomination request has been created successfully. Please complete the nomination process.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error making request for nomination update/re-nomination: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error making request for nomination update/re-nomination: ' . $this->friendlyException($e));
         }
     }
 }

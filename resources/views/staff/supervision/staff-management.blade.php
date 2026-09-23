@@ -535,6 +535,18 @@
                 <!-- [ Import Modal ] end -->
 
                 @foreach ($staffs as $upd)
+                    @php
+                        $workload = $staffWorkloads[$upd->id] ?? [
+                            'supervisions' => 0,
+                            'review_history' => 0,
+                            'active_evaluator_assignments' => 0,
+                            'unfinished_evaluations' => 0,
+                            'evaluator_records' => 0,
+                            'evaluation_records' => 0,
+                        ];
+                        $activeWorkload = $workload['supervisions'] + $workload['active_evaluator_assignments'] + $workload['unfinished_evaluations'];
+                        $linkedRecords = $workload['supervisions'] + $workload['review_history'] + $workload['evaluator_records'] + $workload['evaluation_records'];
+                    @endphp
                     <!-- [ Update Modal ] start -->
                     <form action="{{ route('update-staff-post', Crypt::encrypt($upd->id)) }}"
                         enctype="multipart/form-data" method="POST">
@@ -797,8 +809,8 @@
                                     <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
                                         <button type="button" class="btn btn-outline-secondary w-100"
                                             data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{{ route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1]) }}"
-                                            class="btn btn-danger w-100">Delete Anyway</a>
+                                        <x-mutation-button :action="route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 1])"
+                                            class="btn btn-danger w-100">Delete Anyway</x-mutation-button>
                                     </div>
                                 </div>
                             </div>
@@ -819,15 +831,36 @@
                                     <h4 class="text-center mb-2" id="disableModalLabel-{{ $upd->id }}">Account
                                         Inactivation</h4>
                                     <p class="text-center text-muted mb-4">
-                                        Oops! You can't delete this staff.<br>
-                                        However, you can inactivate them instead. Would you like to proceed?
+                                        This account is referenced by postgraduate workflow records and cannot be deleted.
+                                        Review the responsibilities below before inactivation.
                                     </p>
+
+                                    <div class="border rounded p-3 mb-3 text-start" aria-label="Current staff workload">
+                                        <h6 class="mb-3">Current workload and assignments</h6>
+                                        <div class="row g-2 small">
+                                            <div class="col-6"><span class="text-muted d-block">Supervised students</span><strong>{{ $workload['supervisions'] }}</strong></div>
+                                            <div class="col-6"><span class="text-muted d-block">Active evaluator assignments</span><strong>{{ $workload['active_evaluator_assignments'] }}</strong></div>
+                                            <div class="col-6"><span class="text-muted d-block">Unfinalized evaluations</span><strong>{{ $workload['unfinished_evaluations'] }}</strong></div>
+                                            <div class="col-6"><span class="text-muted d-block">Review history records</span><strong>{{ $workload['review_history'] }}</strong></div>
+                                            <div class="col-12 pt-2 border-top"><span class="text-muted d-block">Total linked workflow records</span><strong>{{ $linkedRecords }}</strong></div>
+                                        </div>
+                                    </div>
+
+                                    @if ($activeWorkload > 0)
+                                        <div class="alert alert-warning text-start small">
+                                            Reassign active responsibilities before inactivation to avoid delayed approvals or inaccessible evaluation work.
+                                        </div>
+                                    @else
+                                        <div class="alert alert-info text-start small">
+                                            No active supervision or evaluation responsibility was found. Historical records will remain linked for audit purposes.
+                                        </div>
+                                    @endif
 
                                     <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
                                         <button type="button" class="btn btn-outline-secondary w-100"
                                             data-bs-dismiss="modal">Cancel</button>
-                                        <a href="{{ route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2]) }}"
-                                            class="btn btn-warning w-100">Inactivate</a>
+                                        <x-mutation-button :action="route('delete-staff-get', ['id' => Crypt::encrypt($upd->id), 'opt' => 2])"
+                                            class="btn btn-warning w-100">Inactivate</x-mutation-button>
                                     </div>
                                 </div>
                             </div>

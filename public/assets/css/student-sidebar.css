@@ -11,7 +11,13 @@
     font-family: "Inter var", Inter, Arial, sans-serif;
 }
 
-.student-work-sidebar .navbar-wrapper { display: flex; flex-direction: column; height: 100%; }
+.student-work-sidebar .navbar-wrapper {
+    display: flex !important;
+    flex-direction: column;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+}
 .student-work-sidebar .student-sidebar-heading { flex-shrink: 0; padding: 22px 20px 16px; border-bottom: 1px solid var(--student-line); }
 .student-work-sidebar .student-sidebar-brand { display: flex; align-items: center; gap: 12px; color: var(--student-ink); text-decoration: none; }
 .student-work-sidebar .student-sidebar-brand img { width: 48px; height: 44px; flex-shrink: 0; object-fit: contain; }
@@ -29,7 +35,26 @@
 .student-work-sidebar .student-programme-summary strong { display: block; }
 .student-work-sidebar .student-programme-summary span { margin-bottom: 4px; color: var(--student-muted); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .student-work-sidebar .student-programme-summary strong { color: var(--student-ink); font-size: 11px; font-weight: 600; line-height: 1.4; }
-.student-work-sidebar .navbar-content { flex: 1; min-height: 0; height: auto !important; overflow-y: auto; overscroll-behavior: contain; padding: 10px 12px 24px; background: #fff; scrollbar-color: #cbd5e1 transparent; scrollbar-width: thin; }
+.student-work-sidebar .navbar-content {
+    flex: 1 1 0;
+    min-height: 0;
+    height: 0 !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 10px 12px 24px;
+    background: #fff;
+    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-width: thin;
+}
+.student-work-sidebar .navbar-content[data-simplebar] { overflow: hidden; }
+.student-work-sidebar .navbar-content .simplebar-wrapper,
+.student-work-sidebar .navbar-content .simplebar-mask { height: 100%; }
+.student-work-sidebar .navbar-content .simplebar-content-wrapper {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+}
 .student-work-sidebar .pc-navbar { margin: 0; padding: 0; }
 .pc-sidebar.student-work-sidebar .pc-navbar > .pc-item { margin: 2px 0; }
 .pc-sidebar.student-work-sidebar .pc-caption { padding: 20px 12px 8px !important; }

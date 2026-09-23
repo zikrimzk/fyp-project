@@ -1,22 +1,61 @@
 @php
     use Carbon\Carbon;
 
-    $submissionDate = Carbon::parse($doc->submission_date);
     $dueDate = Carbon::parse($doc->submission_duedate);
+    $hasSubmission = $doc->submission_document !== '-' && !empty($doc->submission_date);
+    $submissionDate = $hasSubmission ? Carbon::parse($doc->submission_date) : null;
+    $isOverdue = in_array((int) $doc->submission_status, [1, 4]) && $dueDate->isPast();
+    $isEarly = $hasSubmission ? $submissionDate->lessThanOrEqualTo($dueDate) : false;
+    $humanDiff = $hasSubmission
+        ? $submissionDate->diffForHumans($dueDate, [
+            'parts' => 3,
+            'short' => false,
+            'syntax' => Carbon::DIFF_ABSOLUTE,
+        ])
+        : null;
 
-    $diffInSeconds = $submissionDate->diffInSeconds($dueDate);
-    $isEarly = $submissionDate->lessThan($dueDate);
+    $statusDetails = match ((int) $doc->submission_status) {
+        1 => ['Not Submitted', 'bg-light-warning text-warning', 'ti-clock'],
+        2 => ['Locked', 'bg-light-danger text-danger', 'ti-lock'],
+        3 => ['Submitted', 'bg-light-success text-success', 'ti-circle-check'],
+        4 => ['Overdue', 'bg-light-danger text-danger', 'ti-alert-triangle'],
+        default => ['Unavailable', 'bg-light text-muted', 'ti-ban'],
+    };
 
-    // Get human readable difference
-    $humanDiff = $submissionDate->diffForHumans($dueDate, [
-        'parts' => 3,
-        'short' => false,
-        'syntax' => Carbon::DIFF_ABSOLUTE,
-    ]);
+    $deadlineText = $isOverdue
+        ? 'Overdue by ' . $dueDate->diffForHumans(now(), ['parts' => 3, 'syntax' => Carbon::DIFF_ABSOLUTE])
+        : $dueDate->diffForHumans(now(), ['parts' => 3, 'syntax' => Carbon::DIFF_RELATIVE_TO_NOW]);
 @endphp
 @extends('student.layouts.main')
 
 @section('content')
+    <style>
+        .submission-summary-card {
+            border: 1px solid #e3e9f0;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, .055);
+        }
+
+        .submission-status-icon {
+            width: 2.75rem;
+            height: 2.75rem;
+            display: inline-grid;
+            place-items: center;
+            border-radius: .75rem;
+            font-size: 1.25rem;
+        }
+
+        .submission-details-table th {
+            width: 42%;
+            color: #475569;
+            background: #f8fafc;
+        }
+
+        .submission-details-table th,
+        .submission-details-table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+    </style>
     <div class="pc-container">
         <div class="pc-content">
             <!-- [ breadcrumb ] start -->
@@ -49,6 +88,9 @@
                                     </a>
                                     {{ $doc->document_name }}
                                 </h2>
+                                <p class="text-muted mb-0 ms-md-5 ps-md-2">
+                                    {{ $doc->activity_name }} · {{ $doc->isRequired ? 'Required document' : 'Optional document' }}
+                                </p>
                             </div>
 
                         </div>
@@ -92,55 +134,54 @@
                 <!-- [ Submission Document ] start -->
 
                 <div class="col-12">
-                    <div class="card">
+                    <div class="card submission-summary-card">
                         <div class="card-body p-4">
 
                             <div id="submission_status">
-                                <h4 class="mb-4">Submission Status</h4>
-                                <hr>
+                                <div class="d-flex align-items-center gap-3 mb-4">
+                                    <span class="submission-status-icon {{ $statusDetails[1] }}">
+                                        <i class="ti {{ $statusDetails[2] }}" aria-hidden="true"></i>
+                                    </span>
+                                    <div>
+                                        <h4 class="mb-1">Submission Status</h4>
+                                        <span class="badge {{ $statusDetails[1] }}">{{ $statusDetails[0] }}</span>
+                                    </div>
+                                </div>
+
+                                @if ($isOverdue && !$hasSubmission)
+                                    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert">
+                                        <i class="ti ti-alert-triangle fs-5 mt-1" aria-hidden="true"></i>
+                                        <div>
+                                            <strong>This document is overdue.</strong>
+                                            Submit it as soon as possible. The system will record the actual submission date.
+                                        </div>
+                                    </div>
+                                @endif
+
                                 <div class="table-responsive">
-                                    <table class="table table-hover table-bordered">
+                                    <table class="table table-bordered submission-details-table mb-0">
                                         <tbody>
                                             {{-- Submission Status --}}
-                                            <tr style="height:80px" class="bg-light">
+                                            <tr>
                                                 <th scope="row" class="fw-bold">Submission Status</th>
-                                                @if ($doc->submission_status == 1)
-                                                    <td class="bg-light-warning">
-                                                        No Attempt
-                                                    </td>
-                                                @elseif($doc->submission_status == 2)
-                                                    <td class="bg-light-danger">
-                                                        Locked
-                                                    </td>
-                                                @elseif($doc->submission_status == 3)
-                                                    <td class="bg-light-success">
-                                                        Submitted
-                                                    </td>
-                                                @elseif($doc->submission_status == 4)
-                                                    <td class="bg-light-danger">
-                                                        Overdue
-                                                    </td>
-                                                @else
-                                                    <span class="badge bg-secondary mt-2 mt-md-0">Prohibited</span>
-                                                @endif
+                                                <td><span class="badge {{ $statusDetails[1] }}">{{ $statusDetails[0] }}</span></td>
                                             </tr>
 
                                             {{-- Appear when only have file --}}
-                                            @if ($doc->submission_document != '-')
-                                                <tr style="height:80px">
+                                            @if ($hasSubmission)
+                                                <tr>
                                                     <th scope="row" class="fw-bold">Submission Date</th>
                                                     <td>
-                                                        {{ Carbon::parse($doc->submission_date)->format('d M Y , g:i a') }}
+                                                        {{ $submissionDate->format('d M Y, g:i a') }}
                                                     </td>
                                                 </tr>
-                                                <tr style="height:80px" class="bg-light">
-                                                    <th scope="row" class="fw-bold">Time remaining</th>
-                                                    <td class="{{ $isEarly ? 'bg-light-success' : 'bg-light-danger' }}">
-                                                        Document was submitted {{ $humanDiff }}
-                                                        {{ $isEarly ? 'earlier' : 'late' }}
+                                                <tr>
+                                                    <th scope="row" class="fw-bold">Submission Timing</th>
+                                                    <td class="{{ $isEarly ? 'text-success' : 'text-danger' }} fw-semibold">
+                                                        Submitted {{ $humanDiff }} {{ $isEarly ? 'before the deadline' : 'after the deadline' }}
                                                     </td>
                                                 </tr>
-                                                <tr style="height:80px">
+                                                <tr>
                                                     <th scope="row" class="fw-bold">File Submission</th>
                                                     <td>
                                                         <a href="{{ route('student-view-material-get', ['filename' => Crypt::encrypt($submission_dir . '/' . $doc->submission_document)]) }}"
@@ -151,19 +192,16 @@
                                                     </td>
                                                 </tr>
                                             @else
-                                                <tr style="height:80px">
+                                                <tr>
                                                     <th scope="row" class="fw-bold">Submission Due Date</th>
-                                                    <td> {{ Carbon::parse($doc->submission_duedate)->format('d M Y , g:i a') }}
+                                                    <td> {{ $dueDate->format('d M Y, g:i a') }}
                                                     </td>
                                                 </tr>
 
-                                                <tr style="height:80px" class="bg-light">
-                                                    <th scope="row" class="fw-bold">Time Remaining</th>
-                                                    <td>
-                                                        {{ Carbon::parse($doc->submission_duedate)->diffForHumans(Carbon::now(), [
-                                                            'parts' => 3,
-                                                            'syntax' => Carbon::DIFF_RELATIVE_TO_NOW,
-                                                        ]) }}
+                                                <tr>
+                                                    <th scope="row" class="fw-bold">Deadline</th>
+                                                    <td class="fw-semibold {{ $isOverdue ? 'text-danger' : '' }}">
+                                                        {{ $deadlineText }}
                                                     </td>
                                                 </tr>
                                             @endif
@@ -171,11 +209,9 @@
                                     </table>
                                 </div>
 
-                                <hr>
-
                                 <!-- [ Option Section ] start -->
-                                <div class="mb-5 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
-                                    @if ($doc->submission_document != '-')
+                                <div class="mt-4 d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                    @if ($hasSubmission)
                                         <button type="button"
                                             class="btn btn-outline-primary d-flex align-items-center gap-2"
                                             id="updateSubmissionBtn" title="Update Submission">
@@ -195,11 +231,11 @@
                                         </button>
                                     @else
                                         <button type="button"
-                                            class="btn btn-outline-primary d-flex align-items-center gap-2"
+                                            class="btn {{ $isOverdue ? 'btn-danger' : 'btn-primary' }} d-flex align-items-center gap-2"
                                             id="addSubmissionBtn" title="Add Submission">
-                                            <i class="ti ti-plus f-18"></i>
+                                            <i class="ti ti-upload f-18"></i>
                                             <span class="d-none d-sm-inline me-2">
-                                                Add Submission
+                                                Submit Document
                                             </span>
                                         </button>
                                     @endif
@@ -281,10 +317,10 @@
                                         data-bs-dismiss="modal">
                                         Cancel
                                     </button>
-                                    <a href="{{ route('student-remove-document-get', ['id' => Crypt::encrypt($doc->submission_id), 'filename' => Crypt::encrypt($submission_dir . '/' . $doc->submission_document)]) }}"
+                                    <x-mutation-button :action="route('student-remove-document-get', ['id' => Crypt::encrypt($doc->submission_id), 'filename' => Crypt::encrypt($submission_dir . '/' . $doc->submission_document)])"
                                         class="btn btn-danger w-50">
                                         Delete Anyways
-                                    </a>
+                                    </x-mutation-button>
                                 </div>
                             </div>
                         </div>

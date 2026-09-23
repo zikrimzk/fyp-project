@@ -27,6 +27,7 @@ use App\Imports\StudentSemesterImport;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use App\Services\AccountDependencyService;
 
 class SupervisionController extends Controller
 {
@@ -39,6 +40,14 @@ class SupervisionController extends Controller
             $latestSemesterSub = DB::table('student_semesters')
                 ->select('student_id', DB::raw('MAX(semester_id) as latest_semester_id'))
                 ->groupBy('student_id');
+            $semesterCountsSub = DB::table('student_semesters')
+                ->select(
+                    'student_id',
+                    DB::raw('COUNT(*) as total_semesters'),
+                    DB::raw('SUM(CASE WHEN ss_status IN (1, 4) THEN 1 ELSE 0 END) as active_semesters')
+                )
+                ->groupBy('student_id');
+            $studentReferences = app(AccountDependencyService::class)->studentReferences();
 
             $data = DB::table('students as a')
                 ->leftJoinSub($latestSemesterSub, 'latest', function ($join) {
@@ -48,9 +57,20 @@ class SupervisionController extends Controller
                     $join->on('ss.student_id', '=', 'a.id')
                         ->on('ss.semester_id', '=', 'latest.latest_semester_id');
                 })
+                ->leftJoinSub($semesterCountsSub, 'semester_counts', function ($join) {
+                    $join->on('semester_counts.student_id', '=', 'a.id');
+                })
+                ->leftJoinSub($studentReferences, 'student_references', function ($join) {
+                    $join->on('student_references.student_id', '=', 'a.id');
+                })
                 ->leftJoin('semesters as b', 'b.id', '=', 'ss.semester_id')
                 ->join('programmes as c', 'c.id', '=', 'a.programme_id')
-                ->select('a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'ss.semester_id')
+                ->select(
+                    'a.*', 'b.sem_label', 'c.prog_code', 'c.prog_mode', 'ss.semester_id',
+                    DB::raw('COALESCE(semester_counts.total_semesters, 0) as total_semesters'),
+                    DB::raw('COALESCE(semester_counts.active_semesters, 0) as active_semesters'),
+                    DB::raw('CASE WHEN student_references.student_id IS NULL THEN 0 ELSE 1 END as is_referenced')
+                )
                 ->orderBy('a.student_name');
 
             if ($req->ajax()) {
@@ -70,8 +90,6 @@ class SupervisionController extends Controller
                 if ($req->has('status') && !empty($req->input('status'))) {
                     $data->where('student_status', $req->input('status'));
                 }
-                $data = $data->get();
-
                 $table = DataTables::of($data)->addIndexColumn();
 
                 $table->addColumn('checkbox', function ($row) {
@@ -85,8 +103,8 @@ class SupervisionController extends Controller
                         : asset('storage/' . $row->student_directory . '/photo/' . $row->student_photo);
 
                     /* GET STUDENT SEMESTERS DETAILS */
-                    $totalsemester = StudentSemester::where('student_id', $row->id)->count();
-                    $totalactive = StudentSemester::where('student_id', $row->id)->whereIn('ss_status', [1, 4])->count();
+                    $totalsemester = (int) $row->total_semesters;
+                    $totalactive = (int) $row->active_semesters;
 
                     /* RETURN STUDENT DETAILS */
                     return '
@@ -145,8 +163,7 @@ class SupervisionController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
-                    $isReferenced = false;
-                    $isReferenced = DB::table('supervisions')->where('student_id', $row->id)->exists() || DB::table('student_semesters')->where('student_id', $row->id)->exists();
+                    $isReferenced = (bool) $row->is_referenced;
 
                     $buttonEdit =
                         '
@@ -285,7 +302,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', $student_name . ' has been added and enrolled successfully. An email notification has been sent.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding student: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error adding student: ' . $this->friendlyException($e));
         }
     }
 
@@ -326,7 +343,9 @@ class SupervisionController extends Controller
 
         try {
             $validated = $validator->validated();
-            $student = Student::where('id', $id)->first() ?? null;
+            $student = Student::where('id', $id)->firstOrFail();
+            $programmeChanged = (int) $validated['programme_id_up'] !== (int) $student->programme_id;
+            DB::beginTransaction();
 
             /* GET STUDENT NAME */
             $student_name = Str::upper($validated['student_name_up']);
@@ -374,16 +393,6 @@ class SupervisionController extends Controller
                 ]);
             }
 
-            /* RESET STUDENT SUBMISSION */
-            if ($req->input('programme_id_up') != $student->programme_id) {
-                /* DELETE PREVIOUS SUBMISSION */
-                Submission::where('student_id', $student->id)->delete();
-
-                /* ASSIGN SUBMISSION TO STUDENT */
-                $sc = new SubmissionController();
-                $sc->assignStudentSubmission(Str::upper($validated['student_matricno_up']));
-            }
-
             Student::where('id', $student->id)->update([
                 'student_name' => Str::headline($validated['student_name_up']),
                 'student_matricno' => Str::upper($validated['student_matricno_up']),
@@ -396,6 +405,15 @@ class SupervisionController extends Controller
                 'programme_id' => $validated['programme_id_up'],
             ]);
 
+            if ($programmeChanged) {
+                // Preserve the existing workflow, but make the programme update,
+                // submission reset and eligibility rebuild one atomic operation.
+                Submission::where('student_id', $student->id)->delete();
+                (new SubmissionController())->assignStudentSubmission(Str::upper($validated['student_matricno_up']));
+            }
+
+            DB::commit();
+
             if ($validated['student_status_up'] == 2) {
                 /* SENT EMAIL NOTIFICATION */
                 $ac = new AuthenticateController();
@@ -404,18 +422,18 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Student updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating student: ' . $e->getMessage());
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            return back()->with('error', 'Oops! Error updating student: ' . $this->friendlyException($e));
         }
     }
 
     /* Delete Student [Staff] - Function | Last Checked: 01-09-2025 */
     public function deleteStudent($id, $opt)
     {
-
-        /* DECRYPT STUDENT ID */
-        $id = decrypt($id);
-
         try {
+            $id = decrypt($id);
             /* LOAD STUDENT DATA */
             $student = Student::find($id);
 
@@ -423,32 +441,28 @@ class SupervisionController extends Controller
                 return back()->with('error', 'Student not found.');
             }
 
-            /* LOAD SUBMISSION DATA */
-            $submission = Submission::where('student_id', $id)->get();
-
-            if ($submission) {
-                foreach ($submission as $sub) {
-                    $sub->delete();
-                }
-            }
-
             /* GET STUDENT DIRECTORY */
             $dirPath = $student->student_directory;
 
             if ($opt == 1) {
+                $dependencies = app(AccountDependencyService::class)->forStudent((int) $id);
+                if (app(AccountDependencyService::class)->hasReferences($dependencies)) {
+                    $summary = app(AccountDependencyService::class)->summary($dependencies);
+                    return back()->with('error', "This student cannot be permanently deleted because the account is linked to {$summary}. Deactivate the account instead to preserve the academic record.");
+                }
+
+                DB::transaction(fn () => $student->delete());
+
                 /* DELETE STUDENT DIRECTORY */
                 if (!empty($student->student_directory) && Storage::exists($dirPath)) {
                     Storage::deleteDirectory($dirPath);
                 }
 
-                /* DELETE STUDENT */
-                $student->delete();
-
                 /* RETURN SUCCESS */
                 return back()->with('success', 'Student deleted successfully.');
             } elseif ($opt == 2) {
                 /* UPDATE STUDENT STATUS */
-                $student->update(['student_status' => 2]);
+                DB::transaction(fn () => $student->update(['student_status' => 2]));
 
                 /* SENT EMAIL NOTIFICATION */
                 $ac = new AuthenticateController();
@@ -458,7 +472,7 @@ class SupervisionController extends Controller
                 return back()->with('success', 'Student has been inactivated successfully.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting student: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting student: ' . $this->friendlyException($e));
         }
     }
 
@@ -492,7 +506,7 @@ class SupervisionController extends Controller
 
             return $response;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing student: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error importing student: ' . $this->friendlyException($e));
         }
     }
 
@@ -539,7 +553,7 @@ class SupervisionController extends Controller
             /* RETURN SUCCESS */
             return back()->with('success', $student->student_name . ' has been assigned to this semester successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error assigning student: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error assigning student: ' . $this->friendlyException($e));
         }
     }
 
@@ -549,7 +563,7 @@ class SupervisionController extends Controller
             $selectedIds = $req->query('ids');
             return Excel::download(new StudentExport($selectedIds), 'e-PGS_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error exporting students: ' . $this->friendlyException($e));
         }
     }
 
@@ -576,10 +590,17 @@ class SupervisionController extends Controller
     {
         try {
             if ($req->ajax()) {
+                $staffReferences = app(AccountDependencyService::class)->staffReferences();
 
                 $data = DB::table('staff as a')
                     ->join('departments as b', 'b.id', '=', 'a.department_id')
-                    ->select('a.*', 'b.dep_name', 'b.fac_id')
+                    ->leftJoinSub($staffReferences, 'staff_references', function ($join) {
+                        $join->on('staff_references.staff_id', '=', 'a.id');
+                    })
+                    ->select(
+                        'a.*', 'b.dep_name', 'b.fac_id',
+                        DB::raw('CASE WHEN staff_references.staff_id IS NULL THEN 0 ELSE 1 END as is_referenced')
+                    )
                     ->orderBy('staff_name', 'asc');
 
                 if ($req->has('faculty') && !empty($req->input('faculty'))) {
@@ -597,8 +618,6 @@ class SupervisionController extends Controller
                 if ($req->has('status') && !empty($req->input('status'))) {
                     $data->where('staff_status', $req->input('status'));
                 }
-
-                $data = $data->get();
 
                 $table = DataTables::of($data)->addIndexColumn();
 
@@ -662,32 +681,34 @@ class SupervisionController extends Controller
                 });
 
                 $table->addColumn('action', function ($row) {
-                    $isReferenced = false;
-                    $isReferenced = DB::table('supervisions')->where('staff_id', $row->id)->exists();
+                    $isReferenced = (bool) $row->is_referenced;
 
                     $buttonEdit =
                         '
-                             <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" data-bs-toggle="modal"
+                             <a href="javascript: void(0)" class="avtar avtar-xs btn-light-primary" title="Edit staff account"
+                                 aria-label="Edit staff account" data-bs-toggle="modal"
                                  data-bs-target="#updateModal-' . $row->id . '">
-                                 <i class="ti ti-edit f-20"></i>
+                                 <i class="ti ti-edit f-20" aria-hidden="true"></i>
                              </a>
                          ';
 
                     if (!$isReferenced) {
                         $buttonRemove =
                             '
-                                 <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-danger" data-bs-toggle="modal"
+                                 <a href="javascript: void(0)" class="avtar avtar-xs btn-light-danger" title="Delete staff account"
+                                     aria-label="Delete staff account" data-bs-toggle="modal"
                                      data-bs-target="#deleteModal-' . $row->id . '">
-                                     <i class="ti ti-trash f-20"></i>
+                                     <i class="ti ti-trash f-20" aria-hidden="true"></i>
                                  </a>
                              ';
                     } else {
 
                         $buttonRemove =
                             '
-                                 <a href="javascript: void(0)" class="avtar avtar-xs  btn-light-warning ' . ($row->staff_status == 2 ? 'disabled-a' : '') . '" data-bs-toggle="modal"
+                                 <a href="javascript: void(0)" class="avtar avtar-xs btn-light-warning ' . ($row->staff_status == 2 ? 'disabled-a' : '') . '" title="Deactivate staff account"
+                                     aria-label="Deactivate staff account" data-bs-toggle="modal"
                                      data-bs-target="#disableModal-' . $row->id . '">
-                                     <i class="ti ti-user-off f-20"></i>
+                                     <i class="ti ti-user-off f-20" aria-hidden="true"></i>
                                  </a>
                              ';
                     }
@@ -699,9 +720,37 @@ class SupervisionController extends Controller
 
                 return $table->make(true);
             }
+            $staffs = Staff::orderBy('staff_name')->get();
+            $staffWorkloads = $staffs->mapWithKeys(fn ($staff) => [(int) $staff->id => [
+                'supervisions' => 0,
+                'review_history' => 0,
+                'active_evaluator_assignments' => 0,
+                'unfinished_evaluations' => 0,
+                'evaluator_records' => 0,
+                'evaluation_records' => 0,
+            ]])->all();
+
+            $workloadSources = [
+                'supervisions' => DB::table('supervisions')->select('staff_id', DB::raw('COUNT(DISTINCT student_id) as total'))->groupBy('staff_id')->get(),
+                'review_history' => DB::table('submission_reviews')->select('staff_id', DB::raw('COUNT(*) as total'))->groupBy('staff_id')->get(),
+                'active_evaluator_assignments' => DB::table('evaluators')->where('eva_status', 3)->select('staff_id', DB::raw('COUNT(*) as total'))->groupBy('staff_id')->get(),
+                'unfinished_evaluations' => DB::table('evaluations')->where('evaluation_isFinal', 0)->select('staff_id', DB::raw('COUNT(*) as total'))->groupBy('staff_id')->get(),
+                'evaluator_records' => DB::table('evaluators')->select('staff_id', DB::raw('COUNT(*) as total'))->groupBy('staff_id')->get(),
+                'evaluation_records' => DB::table('evaluations')->select('staff_id', DB::raw('COUNT(*) as total'))->groupBy('staff_id')->get(),
+            ];
+
+            foreach ($workloadSources as $key => $rows) {
+                foreach ($rows as $row) {
+                    if (isset($staffWorkloads[(int) $row->staff_id])) {
+                        $staffWorkloads[(int) $row->staff_id][$key] = (int) $row->total;
+                    }
+                }
+            }
+
             return view('staff.supervision.staff-management', [
                 'title' => 'Staff Management',
-                'staffs' => Staff::all(),
+                'staffs' => $staffs,
+                'staffWorkloads' => $staffWorkloads,
                 'facs' => Faculty::all(),
                 'deps' => DB::table('departments as a')
                     ->join('faculties as b', 'b.id', '=', 'a.fac_id')
@@ -781,7 +830,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Staff added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding staff: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error adding staff: ' . $this->friendlyException($e));
         }
     }
 
@@ -877,7 +926,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Staff updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating staff: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating staff: ' . $this->friendlyException($e));
         }
     }
 
@@ -892,17 +941,22 @@ class SupervisionController extends Controller
             }
 
             if ($opt == 1) {
+                $dependencies = app(AccountDependencyService::class)->forStaff((int) $id);
+                if (app(AccountDependencyService::class)->hasReferences($dependencies)) {
+                    $summary = app(AccountDependencyService::class)->summary($dependencies);
+                    return back()->with('error', "This staff member cannot be permanently deleted because the account is linked to {$summary}. Deactivate the account instead to preserve the audit and academic history.");
+                }
+
+                DB::transaction(fn () => $staff->delete());
+
                 // 1 - REMOVE OLD PHOTO
                 if ($staff->staff_photo && Storage::exists($staff->staff_photo)) {
                     Storage::delete($staff->staff_photo);
                 }
 
-                // 2 - DELETE STAFF
-                $staff->delete();
-
                 return back()->with('success', 'Staff deleted successfully.');
             } elseif ($opt == 2) {
-                $staff->update(['staff_status' => 2]);
+                DB::transaction(fn () => $staff->update(['staff_status' => 2]));
 
                 /* SENT EMAIL NOTIFICATION */
                 $ac = new AuthenticateController();
@@ -910,7 +964,7 @@ class SupervisionController extends Controller
                 return back()->with('success', 'Staff has been inactivated successfully.');
             }
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting staff: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting staff: ' . $this->friendlyException($e));
         }
     }
 
@@ -935,7 +989,7 @@ class SupervisionController extends Controller
 
             return $response;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing staff: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error importing staff: ' . $this->friendlyException($e));
         }
     }
 
@@ -945,7 +999,7 @@ class SupervisionController extends Controller
             $selectedIds = $req->query('ids');
             return Excel::download(new StaffExport($selectedIds), 'e-PGS_STAFF_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error exporting students: ' . $this->friendlyException($e));
         }
     }
 
@@ -1166,7 +1220,7 @@ class SupervisionController extends Controller
                 'sems' => Semester::all(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1197,7 +1251,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Title of research updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating title of research: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating title of research: ' . $this->friendlyException($e));
         }
     }
 
@@ -1245,7 +1299,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Supervision added successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error adding supervision: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error adding supervision: ' . $this->friendlyException($e));
         }
     }
 
@@ -1289,7 +1343,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Supervision updated successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error updating supervision: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating supervision: ' . $this->friendlyException($e));
         }
     }
 
@@ -1307,7 +1361,7 @@ class SupervisionController extends Controller
 
             return back()->with('success', 'Supervision deleted successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error deleting supervision: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting supervision: ' . $this->friendlyException($e));
         }
     }
 
@@ -1317,7 +1371,7 @@ class SupervisionController extends Controller
             $selectedIds = $req->query('ids');
             return Excel::download(new SupervisionExport($selectedIds), 'e-PGS_SUPERVISION_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error exporting supervisions data: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error exporting supervisions data: ' . $this->friendlyException($e));
         }
     }
 
@@ -1414,7 +1468,7 @@ class SupervisionController extends Controller
                 'title' => 'Semester Enrollment',
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1546,7 +1600,7 @@ class SupervisionController extends Controller
                 'sems' => Semester::whereId($semID)->first(),
             ]);
         } catch (Exception $e) {
-            return abort(500, $e->getMessage());
+            return abort(500, $this->friendlyException($e));
         }
     }
 
@@ -1571,7 +1625,7 @@ class SupervisionController extends Controller
 
             return $response;
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error importing student new semester data: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error importing student new semester data: ' . $this->friendlyException($e));
         }
     }
 
@@ -1588,7 +1642,7 @@ class SupervisionController extends Controller
 
             return Excel::download(new StudentSemesterExport($selectedIds, $semesterId), 'e-PGS_' . str_replace([' ', '/'], '_', $semester->sem_label) . '_STUDENT_LIST_' . date('dMY') . '.xlsx');
         } catch (Exception $e) {
-            return back()->with('error', 'Oops! Error exporting students: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error exporting students: ' . $this->friendlyException($e));
         }
     }
 
@@ -1617,7 +1671,7 @@ class SupervisionController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error fetching student details: ' . $e->getMessage(),
+                'message' => 'Oops! Error fetching student details: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -1667,7 +1721,7 @@ class SupervisionController extends Controller
             return back()->with('success', $student->student_name . ' has been assigned to this semester successfully.');
         } catch (Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Oops! Error assigning student: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error assigning student: ' . $this->friendlyException($e));
         }
     }
 
@@ -1716,7 +1770,7 @@ class SupervisionController extends Controller
             return back()->with('success', $student->student_name . ' semester status updated successfully.');
         } catch (Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Oops! Error updating student semester status: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error updating student semester status: ' . $this->friendlyException($e));
         }
     }
 
@@ -1742,7 +1796,7 @@ class SupervisionController extends Controller
             return back()->with('success',  $student->student_name . ' semester enrollment has been deleted successfully.');
         } catch (Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Oops! Error deleting student: ' . $e->getMessage());
+            return back()->with('error', 'Oops! Error deleting student: ' . $this->friendlyException($e));
         }
     }
 
@@ -1789,7 +1843,7 @@ class SupervisionController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error updating selected student semester statuses: ' . $e->getMessage(),
+                'message' => 'Oops! Error updating selected student semester statuses: ' . $this->friendlyException($e),
             ], 500);
         }
     }
@@ -1835,7 +1889,7 @@ class SupervisionController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Oops! Error deleting selected student: ' . $e->getMessage(),
+                'message' => 'Oops! Error deleting selected student: ' . $this->friendlyException($e),
             ], 500);
         }
     }

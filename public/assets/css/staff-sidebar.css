@@ -9,7 +9,13 @@
     box-shadow: none;
     color: var(--staff-ink);
 }
-.staff-work-sidebar .navbar-wrapper { display: flex; flex-direction: column; height: 100%; }
+.staff-work-sidebar .navbar-wrapper {
+    display: flex !important;
+    flex-direction: column;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+}
 .staff-work-sidebar .staff-sidebar-heading { padding: 22px 20px 16px; border-bottom: 1px solid var(--staff-line); flex-shrink: 0; }
 .staff-work-sidebar .staff-sidebar-brand { display: flex; align-items: center; gap: 12px; color: var(--staff-ink); text-decoration: none; }
 .staff-work-sidebar .staff-sidebar-brand img { width: 48px; height: 44px; object-fit: contain; flex-shrink: 0; }
@@ -26,7 +32,25 @@
 .staff-work-sidebar .staff-other-roles:empty { display: none; }
 .staff-work-sidebar .staff-other-roles button { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; background: transparent; border: 0; color: var(--staff-muted); border-radius: 5px; font-size: 12px; padding: 6px 8px; text-align: left; }
 .staff-work-sidebar .staff-other-roles button:hover { background: #f1f5f9; color: var(--staff-accent); }
-.staff-work-sidebar .navbar-content { flex: 1; min-height: 0; height: auto !important; overflow-y: auto; overscroll-behavior: contain; padding: 10px 12px 24px; scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+.staff-work-sidebar .navbar-content {
+    flex: 1 1 0;
+    min-height: 0;
+    height: 0 !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 10px 12px 24px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+.staff-work-sidebar .navbar-content[data-simplebar] { overflow: hidden; }
+.staff-work-sidebar .navbar-content .simplebar-wrapper,
+.staff-work-sidebar .navbar-content .simplebar-mask { height: 100%; }
+.staff-work-sidebar .navbar-content .simplebar-content-wrapper {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+}
 .staff-work-sidebar .pc-navbar { padding: 0; }
 .pc-sidebar.staff-work-sidebar .pc-navbar > .pc-item { margin: 2px 0; }
 .pc-sidebar.staff-work-sidebar .pc-caption { padding: 20px 12px 8px !important; }
